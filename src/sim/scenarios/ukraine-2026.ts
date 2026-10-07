@@ -1,30 +1,58 @@
-import type { ScenarioDef } from '../core/types'
+import type { CountryId, ScenarioDef, ScenarioUnit, UnitKind } from '../core/types'
+
+const KIND_NAMES: Record<UnitKind, { name: string; feminine: boolean }> = {
+  inf: { name: "brigade d'infanterie", feminine: true },
+  mech: { name: 'brigade mécanisée', feminine: true },
+  tank: { name: 'brigade blindée', feminine: true },
+  art: { name: "brigade d'artillerie", feminine: true },
+  log: { name: 'groupement logistique', feminine: false },
+  hq: { name: 'état-major', feminine: false },
+}
+
+/** Génère un ordre de bataille numéroté, déployé automatiquement le long du front. */
+function forces(owner: CountryId, counts: Record<UnitKind, number>): ScenarioUnit[] {
+  const out: ScenarioUnit[] = []
+  for (const kind of Object.keys(counts) as UnitKind[]) {
+    for (let n = 1; n <= counts[kind]; n++) {
+      const { name, feminine } = KIND_NAMES[kind]
+      const ordinal = n === 1 ? (feminine ? '1re' : '1er') : `${n}e`
+      out.push({ owner, kind, name: `${ordinal} ${name}` })
+    }
+  }
+  return out
+}
 
 /**
  * Scénario de la tranche jouable : Ukraine – Russie, époque moderne.
  * Scénario hypothétique de jeu, sans prétention de reconstitution historique.
- * Les positions sont des placeholders pour afficher la carte ; l'ordre de bataille viendra au Jalon 1.
+ * Ligne de départ : frontières de facto des données Natural Earth. Ordres de bataille fictifs.
  */
 export const ukraine2026: ScenarioDef = {
   id: 'ukraine-2026',
   name: 'Ukraine – Russie',
   epoch: 'modern',
+  theater: 'ukraine',
   startDate: '2026-01-01T00:00:00Z',
   playerCountry: 'UKR',
   countries: [
     { id: 'UKR', name: 'Ukraine', color: [37, 99, 235] },
     { id: 'RUS', name: 'Russie', color: [220, 38, 38] },
   ],
+  supplySources: {
+    UKR: [
+      [24.03, 49.84],
+      [30.52, 50.45],
+      [30.73, 46.48],
+    ],
+    RUS: [
+      [37.62, 55.75],
+      [39.2, 51.66],
+      [39.72, 47.23],
+      [34.1, 44.95],
+    ],
+  },
   units: [
-    { owner: 'UKR', kind: 'hq', lon: 30.52, lat: 50.45, strength: 1 },
-    { owner: 'UKR', kind: 'mech', lon: 36.23, lat: 49.99, strength: 0.9 },
-    { owner: 'UKR', kind: 'inf', lon: 35.05, lat: 48.46, strength: 0.8 },
-    { owner: 'UKR', kind: 'tank', lon: 35.14, lat: 47.84, strength: 0.85 },
-    { owner: 'UKR', kind: 'art', lon: 30.73, lat: 46.48, strength: 0.7 },
-    { owner: 'RUS', kind: 'hq', lon: 39.2, lat: 51.66, strength: 1 },
-    { owner: 'RUS', kind: 'tank', lon: 36.59, lat: 50.6, strength: 0.9 },
-    { owner: 'RUS', kind: 'mech', lon: 36.19, lat: 51.73, strength: 0.85 },
-    { owner: 'RUS', kind: 'inf', lon: 39.72, lat: 47.23, strength: 0.8 },
-    { owner: 'RUS', kind: 'log', lon: 34.36, lat: 53.24, strength: 1 },
+    ...forces('UKR', { inf: 10, mech: 5, tank: 3, art: 3, log: 2, hq: 1 }),
+    ...forces('RUS', { inf: 10, mech: 6, tank: 5, art: 4, log: 2, hq: 1 }),
   ],
 }

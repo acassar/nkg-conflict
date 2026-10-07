@@ -1,29 +1,46 @@
-import type { CountryDef, SimSnapshot, UnitSnapshot } from './types'
+import type { ArmyState, GameEvent, GameOutcome, UnitState } from './types'
 
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 
 export interface SaveFile {
   version: typeof SAVE_VERSION
   savedAt: string
+  scenarioId: string
   tick: number
-  startDate: string
   speed: number
-  playerCountry: string
-  countries: CountryDef[]
-  units: UnitSnapshot[]
+  rngState: number
+  nextId: number
+  units: UnitState[]
+  armies: ArmyState[]
+  events: GameEvent[]
+  outcome: GameOutcome | null
+  aiLastOffensiveTick: number
+  /** Propriétaires de la grille, encodés par plages [valeur, longueur, …]. */
+  owner: number[]
+  /** Cellules reliées au ravitaillement par camp (par plages), pour reprendre la partie à l'identique. */
+  supplyReach: number[][]
+  /** État de combat des unités : [id, engagée avec, ravitaillée, en déroute]. */
+  runtime: Array<[number, number | null, boolean, boolean]>
+  /** Dernier propriétaire connu de chaque ville (pour détecter les prises). */
+  cityOwner: Array<[string, number]>
 }
 
-export function toSave(snapshot: SimSnapshot, now = new Date()): SaveFile {
-  return {
-    version: SAVE_VERSION,
-    savedAt: now.toISOString(),
-    tick: snapshot.tick,
-    startDate: snapshot.startDate,
-    speed: snapshot.speed,
-    playerCountry: snapshot.playerCountry,
-    countries: snapshot.countries.map((c) => ({ ...c, color: [...c.color] })),
-    units: snapshot.units.map((u) => ({ ...u })),
+export function encodeRle(arr: ArrayLike<number>): number[] {
+  const out: number[] = []
+  if (arr.length === 0) return out
+  let v = arr[0] ?? 0
+  let n = 0
+  for (let i = 0; i < arr.length; i++) {
+    const a = arr[i] ?? 0
+    if (a === v) n++
+    else {
+      out.push(v, n)
+      v = a
+      n = 1
+    }
   }
+  out.push(v, n)
+  return out
 }
 
 export function serializeSave(save: SaveFile): string {
@@ -44,11 +61,9 @@ export function parseSave(text: string): SaveFile {
     throw new Error(`Version de sauvegarde non prise en charge : ${String(d.version)}`)
   }
   if (typeof d.tick !== 'number' || d.tick < 0) throw new Error('Sauvegarde invalide : tick')
-  if (typeof d.startDate !== 'string' || Number.isNaN(Date.parse(d.startDate))) {
-    throw new Error('Sauvegarde invalide : date de départ')
-  }
-  if (!Array.isArray(d.countries) || !Array.isArray(d.units)) {
-    throw new Error('Sauvegarde invalide : pays ou unités manquants')
+  if (typeof d.scenarioId !== 'string') throw new Error('Sauvegarde invalide : scénario')
+  if (!Array.isArray(d.units) || !Array.isArray(d.armies) || !Array.isArray(d.owner)) {
+    throw new Error('Sauvegarde invalide : unités, armées ou carte manquantes')
   }
   return d as unknown as SaveFile
 }

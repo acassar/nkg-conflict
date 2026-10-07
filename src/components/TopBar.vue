@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '@/stores/game'
 
 const game = useGameStore()
+const held = computed(() => {
+  const s = game.snapshot
+  const v = s?.territoryHeld[s.playerCountry]
+  return v === undefined ? null : (v * 100).toFixed(1)
+})
 const fileInput = ref<HTMLInputElement | null>(null)
 const speeds = [1, 2, 3, 4, 5] as const
 
@@ -29,6 +34,9 @@ async function onFile(event: Event): Promise<void> {
         :style="{ background: `rgb(${game.playerCountry.color.join(',')})` }"
       />
       {{ game.playerCountry?.name ?? '…' }}
+      <span v-if="held !== null" class="held" title="Part du territoire de départ conservée">
+        {{ held }} %
+      </span>
     </div>
 
     <div class="time">
@@ -55,6 +63,7 @@ async function onFile(event: Event): Promise<void> {
     </div>
 
     <div class="files">
+      <button @click="game.newGame()">Nouvelle partie</button>
       <button @click="game.saveToFile()">Sauvegarder</button>
       <button @click="fileInput?.click()">Charger</button>
       <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
@@ -86,6 +95,11 @@ async function onFile(event: Event): Promise<void> {
   align-items: center;
   gap: 8px;
   font-weight: 600;
+}
+.held {
+  font-weight: 400;
+  color: #b8bec8;
+  font-variant-numeric: tabular-nums;
 }
 .flag {
   width: 14px;

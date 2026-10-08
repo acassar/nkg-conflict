@@ -12,7 +12,7 @@ function speedKmh(ctx: SimContext, u: UnitState): number {
   let v = ctx.catalog[u.kind].speedKmh * (0.5 + 0.5 * u.org)
   v *= terrainRule(t).speed
   const owner = grid.owner[cell] ?? 0
-  if (owner !== 0 && owner !== sideIndex(ctx, u.owner)) v *= 0.7
+  if (ctx.matrix.hostile(sideIndex(ctx, u.owner), owner)) v *= 0.7
   if (u.order.kind === 'retreat') v *= 1.2
   return v
 }
@@ -59,7 +59,8 @@ export function updateMovement(ctx: SimContext): void {
 
 function enemyNear(ctx: SimContext, u: UnitState, km: number): boolean {
   for (const e of ctx.units.values()) {
-    if (e.owner !== u.owner && distanceKm(u.lon, u.lat, e.lon, e.lat) <= km) return true
+    if (!ctx.matrix.hostile(sideIndex(ctx, u.owner), sideIndex(ctx, e.owner))) continue
+    if (distanceKm(u.lon, u.lat, e.lon, e.lat) <= km) return true
   }
   return false
 }

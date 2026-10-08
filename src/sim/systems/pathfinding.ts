@@ -1,5 +1,6 @@
 import type { LonLat } from '../core/types'
 import { terrainRule, type Grid } from '../theater/grid'
+import type { SideMatrix } from '../politics/matrix'
 
 /** Tas binaire minimal (file de priorité) sur des indices de cellules. */
 class MinHeap {
@@ -93,7 +94,10 @@ export class Pathfinder {
   private run = 0
   private readonly heap = new MinHeap()
 
-  constructor(private readonly grid: Grid) {
+  constructor(
+    private readonly grid: Grid,
+    private readonly matrix: SideMatrix,
+  ) {
     this.g = new Float32Array(grid.size)
     this.from = new Int32Array(grid.size)
     this.stamp = new Uint32Array(grid.size)
@@ -104,7 +108,7 @@ export class Pathfinder {
     const t = this.grid.terrain[i]
     let c = terrainRule(t).pathCost
     const o = this.grid.owner[i] ?? 0
-    if (o !== 0 && o !== opts.side) c *= opts.enemyCost
+    if (this.matrix.hostile(opts.side, o)) c *= opts.enemyCost
     return c
   }
 
@@ -115,8 +119,10 @@ export class Pathfinder {
     let t = grid.cellAt(goal[0], goal[1])
     if (s < 0 || t < 0) return null
     // Objectif dans l'eau ou un pays neutre : on vise la terre praticable la plus proche.
-    const goalPassable = grid.passable(t)
-    if (!goalPassable) t = this.nearestPassable(t)
+    const ok = (i: number): boolean =>
+      grid.passable(i) && this.matrix.canEnter(opts.side, grid.owner[i] ?? 0)
+    const goalPassable = ok(t)
+    if (!goalPassable) t = this.nearestPassable(t, ok)
     if (t < 0) return null
     if (s === t) return [goal]
 
@@ -159,10 +165,10 @@ export class Pathfinder {
         const ny = cy + dy
         if (!grid.inBounds(nx, ny)) continue
         const n = ny * W + nx
-        if (!grid.passable(n) || this.closed[n] === run) continue
+        if (!ok(n) || this.closed[n] === run) continue
         // Pas de passage en diagonale entre deux cellules infranchissables.
         if (dx !== 0 && dy !== 0) {
-          if (!grid.passable(cy * W + nx) || !grid.passable(ny * W + cx)) continue
+          if (!ok(cy * W + nx) || !ok(ny * W + cx)) continue
         }
         const ng = gc + len * this.cellCost(n, opts)
         if (this.stamp[n] !== run || ng < (this.g[n] ?? Infinity)) {
@@ -186,7 +192,7 @@ export class Pathfinder {
     return pts.length > 0 ? pts : null
   }
 
-  private nearestPassable(t: number): number {
+  private nearestPassable(t: number, ok: (i: number) => boolean): number {
     const grid = this.grid
     const W = grid.width
     const tx = t % W
@@ -197,7 +203,7 @@ export class Pathfinder {
           if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue
           const x = tx + dx
           const y = ty + dy
-          if (grid.inBounds(x, y) && grid.passable(y * W + x)) return y * W + x
+          if (grid.inBounds(x, y) && ok(y * W + x)) return y * W + x
         }
       }
     }

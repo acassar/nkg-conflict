@@ -2,6 +2,7 @@ import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, UnitState } from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactor, useMunitions } from '../economy/economy'
+import { moraleFactor } from '../politics/politics'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -89,10 +90,11 @@ function nearestEnemy(
   enemies: UnitState[],
   maxKm: number,
 ): UnitState | null {
+  const side = sideIndex(ctx, u.owner)
   let best: UnitState | null = null
   let bestD = maxKm
   for (const e of enemies) {
-    if (e.owner === u.owner) continue
+    if (!ctx.matrix.hostile(side, sideIndex(ctx, e.owner))) continue
     const d = distanceKm(u.lon, u.lat, e.lon, e.lat)
     if (d <= bestD) {
       bestD = d
@@ -109,7 +111,9 @@ function hit(ctx: SimContext, from: UnitState, target: UnitState, factor: number
   const ammo = useMunitions(ctx, from.owner, ctx.catalog[from.kind].supportRangeKm > 0 ? 2 : 1)
   const ratio = Math.min(4, (firePower(ctx, from) * ammo) / Math.max(0.05, defense))
   const roll = ctx.rng.range(0.8, 1.2)
-  target.strength = Math.max(0, target.strength - STRENGTH_LOSS * ratio * roll * factor)
+  const lost = Math.min(target.strength, STRENGTH_LOSS * ratio * roll * factor)
+  target.strength -= lost
+  ctx.losses.set(target.owner, (ctx.losses.get(target.owner) ?? 0) + lost)
   target.org = Math.max(0, target.org - ORG_LOSS * ratio * roll * factor)
 }
 
@@ -147,7 +151,8 @@ export function updateCombat(ctx: SimContext): void {
       const recovery = rt.supplied
         ? ORG_RECOVERY + (rt.commanded ? ORG_RECOVERY_COMMAND : 0)
         : 0.002
-      u.org = Math.min(1, u.org + recovery)
+      const morale = moraleFactor(ctx, u.owner)
+      u.org = Math.min(1, u.org + recovery * morale)
     }
     if (!rt.supplied) {
       u.hoursOutOfSupply++

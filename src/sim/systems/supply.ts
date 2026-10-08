@@ -7,16 +7,25 @@ const SOURCE_RADIUS_KM = 30
 const FRONT_TOLERANCE_KM = 12
 
 /**
- * Recalcule, pour chaque camp, les cellules reliées à ses sources de ravitaillement
- * (remplissage à travers ses propres cellules), puis l'état ravitaillé de chaque unité.
+ * Recalcule, pour chaque camp en guerre, les cellules reliées à ses sources de ravitaillement
+ * (remplissage à travers son territoire et celui de ses cobelligérants), puis l'état ravitaillé
+ * de chaque unité. Un pays en paix est entièrement ravitaillé.
  * Une unité logistique elle-même ravitaillée prolonge le ravitaillement dans son rayon.
  */
 export function updateSupply(ctx: SimContext): void {
-  const { grid } = ctx
+  const { grid, matrix } = ctx
   const { width: W, height: H, owner } = grid
   const queue = new Int32Array(grid.size)
 
   for (let side = 1; side < ctx.sides.length; side++) {
+    if (matrix.atWar[side] !== 1) {
+      // Hors guerre : pas de calcul (et on libère la mémoire d'une guerre terminée).
+      if (ctx.supplyReach[side]) {
+        delete ctx.supplyReach[side]
+        delete ctx.unsuppliedCells[side]
+      }
+      continue
+    }
     const country = ctx.sides[side] ?? ''
     let reach = ctx.supplyReach[side]
     if (!reach || reach.length !== grid.size) {
@@ -36,7 +45,7 @@ export function updateSupply(ctx: SimContext): void {
       })
     }
     const visit = (n: number): void => {
-      if (!r[n] && owner[n] === side && grid.passable(n)) {
+      if (!r[n] && matrix.friendly(side, owner[n] ?? 0) && grid.passable(n)) {
         r[n] = 1
         queue[tail++] = n
       }
@@ -50,9 +59,23 @@ export function updateSupply(ctx: SimContext): void {
       if (i < (H - 1) * W) visit(i + W)
     }
 
+    // Poches : cellules non reliées au contact de l'ennemi (une poche s'effondre par ses bords).
     const pockets: number[] = []
-    for (let i = 0; i < grid.size; i++) {
-      if (owner[i] === side && !r[i] && grid.passable(i)) pockets.push(i)
+    const hostileAt = (n: number): boolean =>
+      matrix.hostile(side, owner[n] ?? 0) && grid.passable(n)
+    for (const box of grid.contactBoxes(side, matrix.enemiesOf(side))) {
+      for (let y = box.y0; y <= box.y1; y++) {
+        for (let x = box.x0; x <= box.x1; x++) {
+          const i = y * W + x
+          if (owner[i] !== side || r[i] || !grid.passable(i)) continue
+          const edge =
+            (x > 0 && hostileAt(i - 1)) ||
+            (x < W - 1 && hostileAt(i + 1)) ||
+            (y > 0 && hostileAt(i - W)) ||
+            (y < H - 1 && hostileAt(i + W))
+          if (edge) pockets.push(i)
+        }
+      }
     }
     ctx.unsuppliedCells[side] = pockets
   }
@@ -64,6 +87,11 @@ export function updateSupply(ctx: SimContext): void {
     return reach?.[grid.cellAt(u.lon, u.lat)] === 1
   })
   for (const u of ctx.units.values()) {
+    const rt = runtimeOf(ctx, u.id)
+    if (matrix.atWar[sideIndex(ctx, u.owner)] !== 1) {
+      rt.supplied = true
+      continue
+    }
     const reach = ctx.supplyReach[sideIndex(ctx, u.owner)]
     const cell = grid.cellAt(u.lon, u.lat)
     let supplied = cell >= 0 && reach?.[cell] === 1
@@ -79,7 +107,6 @@ export function updateSupply(ctx: SimContext): void {
           distanceKm(d.lon, d.lat, u.lon, u.lat) <= ctx.catalog[d.kind].supplyRadiusKm,
       )
     }
-    const rt = runtimeOf(ctx, u.id)
     if (rt.supplied && !supplied) ctx.log(`Ravitaillement coupé : ${u.name}`, u.owner)
     rt.supplied = supplied
   }

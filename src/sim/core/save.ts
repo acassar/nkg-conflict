@@ -1,11 +1,13 @@
 import type { ArmyState, Buildings, EconomyState, GameEvent, GameOutcome, UnitState } from './types'
+import type { Alliance, CountryPolitics, PeaceOffer, War } from '../politics/types'
 
-export const SAVE_VERSION = 3
+export const SAVE_VERSION = 4
 
 export interface SaveFile {
   version: typeof SAVE_VERSION
   savedAt: string
   scenarioId: string
+  playerCountry: string
   tick: number
   speed: number
   rngState: number
@@ -14,8 +16,8 @@ export interface SaveFile {
   armies: ArmyState[]
   events: GameEvent[]
   outcome: GameOutcome | null
-  /** Dernière offensive de l'IA, par pays (un nombre seul dans les sauvegardes plus anciennes). */
-  aiLastOffensiveTick: number | Record<string, number>
+  /** Dernière offensive de l'IA militaire, par pays. */
+  aiLastOffensiveTick: Record<string, number>
   /** Propriétaires de la grille, encodés par plages [valeur, longueur, …]. */
   owner: number[]
   /** Cellules reliées au ravitaillement par camp (par plages), pour reprendre la partie à l'identique. */
@@ -26,6 +28,18 @@ export interface SaveFile {
   cities: Array<{ name: string; owner: number; buildings: Buildings }>
   economies: EconomyState[]
   autoEconomy?: boolean
+  politics: {
+    countries: CountryPolitics[]
+    relations: Array<[string, number]>
+    wars: War[]
+    alliances: Alliance[]
+    sanctions: string[]
+    offers: PeaceOffer[]
+    nextId: number
+  }
+  armylessSince: Array<[string, number]>
+  /** Pertes depuis le dernier bilan quotidien (usure politique). */
+  losses: Array<[string, number]>
 }
 
 export function encodeRle(arr: ArrayLike<number>): number[] {

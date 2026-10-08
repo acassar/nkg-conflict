@@ -27,6 +27,7 @@ import {
   REINFORCE_PER_DAY,
 } from './rules'
 import { unitName } from '../units/names'
+import { manpowerFactor, productionFactor } from '../politics/politics'
 
 const UNIT_KINDS: UnitKind[] = ['inf', 'mech', 'tank', 'art', 'log', 'hq']
 
@@ -70,22 +71,53 @@ export function initEconomies(ctx: SimContext, scenario: ScenarioDef): void {
   }
 }
 
+/** Villes par camp, recalculées au plus une fois par tick (des centaines de pays × des centaines de villes). */
+const cityIndex = new WeakMap<SimContext, { tick: number; bySide: Map<number, CityRuntime[]> }>()
+
 export function citiesOf(ctx: SimContext, country: CountryId): CityRuntime[] {
-  const side = sideIndex(ctx, country)
-  return [...ctx.cityStates.values()].filter((c) => c.owner === side)
+  let entry = cityIndex.get(ctx)
+  if (!entry || entry.tick !== ctx.tick) {
+    const bySide = new Map<number, CityRuntime[]>()
+    for (const c of ctx.cityStates.values()) {
+      const list = bySide.get(c.owner)
+      if (list) list.push(c)
+      else bySide.set(c.owner, [c])
+    }
+    entry = { tick: ctx.tick, bySide }
+    cityIndex.set(ctx, entry)
+  }
+  return entry.bySide.get(sideIndex(ctx, country)) ?? []
+}
+
+/** À appeler quand une ville change de mains en cours de tick. */
+export function invalidateCityIndex(ctx: SimContext): void {
+  cityIndex.delete(ctx)
 }
 
 /** Sources de ravitaillement : celles du scénario, plus les dépôts des villes tenues. */
 export function updateSupplySources(ctx: SimContext, scenario: ScenarioDef): void {
+  // Une passe sur les villes : dépôts, capitale et plus grande ville tenues par chaque camp.
+  const depots = new Map<number, LonLat[]>()
+  const capital = new Map<number, LonLat>()
+  const largest = new Map<number, { pop: number; at: LonLat }>()
+  for (const c of ctx.cityStates.values()) {
+    if (!c.owner) continue
+    const at: LonLat = [c.def.lon, c.def.lat]
+    if (c.buildings.depot > 0) depots.set(c.owner, [...(depots.get(c.owner) ?? []), at])
+    const owner = ctx.sides[c.owner]
+    if (c.def.capital && c.def.country === owner) capital.set(c.owner, at)
+    const best = largest.get(c.owner)
+    if (!best || c.def.pop > best.pop) largest.set(c.owner, { pop: c.def.pop, at })
+  }
   for (const country of scenario.countries) {
-    const sources: LonLat[] = (scenario.supplySources[country.id] ?? []).map((p): LonLat => [
-      p[0],
-      p[1],
-    ])
-    for (const c of citiesOf(ctx, country.id)) {
-      if (c.buildings.depot > 0) sources.push([c.def.lon, c.def.lat])
-    }
-    ctx.supplySources[country.id] = sources
+    const side = sideIndex(ctx, country.id)
+    const explicit = scenario.supplySources[country.id]
+    // Sans sources explicites : la capitale, ou à défaut la plus grande ville tenue.
+    const base: LonLat[] =
+      explicit && explicit.length > 0
+        ? explicit.map((p): LonLat => [p[0], p[1]])
+        : [capital.get(side) ?? largest.get(side)?.at].filter((p): p is LonLat => !!p)
+    ctx.supplySources[country.id] = [...base, ...(depots.get(side) ?? [])]
   }
 }
 
@@ -121,6 +153,7 @@ export function useMunitions(ctx: SimContext, owner: CountryId, shots = 1): numb
  * Les constructions et formations en cours dans la ville sont perdues.
  */
 export function onCityCaptured(ctx: SimContext, city: CityRuntime, previousOwner: number): void {
+  invalidateCityIndex(ctx)
   const b = city.buildings
   b.civ = Math.floor(b.civ / 2)
   b.mil = Math.floor(b.mil / 2)
@@ -154,11 +187,15 @@ export function dailyIncome(
     mil += c.buildings.mil
     pop += c.def.pop
   }
+  // Stabilité et sanctions pèsent sur l'industrie, le soutien à la guerre sur la conscription.
+  const industry = productionFactor(ctx, country)
+  const conscription = manpowerFactor(ctx, country)
   return {
-    construction: civ * CONSTRUCTION_PER_CIV,
-    production: mil * PRODUCTION_PER_MIL + (offMap?.productionPerDay ?? 0),
-    munitions: mil * MUNITIONS_PER_MIL + (offMap?.munitionsPerDay ?? 0),
-    manpower: (pop / 1_000_000) * MANPOWER_PER_MILLION + (offMap?.manpowerPerDay ?? 0),
+    construction: civ * CONSTRUCTION_PER_CIV * industry,
+    production: (mil * PRODUCTION_PER_MIL + (offMap?.productionPerDay ?? 0)) * industry,
+    munitions: (mil * MUNITIONS_PER_MIL + (offMap?.munitionsPerDay ?? 0)) * industry,
+    manpower:
+      ((pop / 1_000_000) * MANPOWER_PER_MILLION + (offMap?.manpowerPerDay ?? 0)) * conscription,
   }
 }
 

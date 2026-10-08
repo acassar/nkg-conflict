@@ -6,6 +6,7 @@ import type {
   ArmyState,
   BuildingKind,
   CityState,
+  CountryDef,
   CountryId,
   GameEvent,
   GameOutcome,
@@ -16,7 +17,7 @@ import type {
   UnitKind,
   UnitState,
 } from './core/types'
-import { runtimeOf, sideIndex, type SimContext } from './context'
+import { countryName, runtimeOf, sideIndex, type SimContext } from './context'
 import { decodeRle, Grid, type TheaterData } from './theater/grid'
 import { MODERN_CATALOG } from './units/catalog'
 import { Pathfinder } from './systems/pathfinding'
@@ -39,24 +40,64 @@ import {
   updateSupplySources,
 } from './economy/economy'
 import { updateAiEconomy } from './economy/ai'
+import { SideMatrix } from './politics/matrix'
+import { mobilize } from './politics/mobilization'
+import {
+  aiAcceptsPeace,
+  callAlliesToWars,
+  capitulate,
+  declareWar,
+  enemiesInWar,
+  improveRelations,
+  isAtWarWith,
+  leaveAlliance,
+  makePeace,
+  onCityLost,
+  politicsSnapshot,
+  proposeAlliance,
+  rebuildMatrix,
+  setRelation,
+  toggleSanction,
+  updatePoliticsDaily,
+  warsOf,
+  type PoliticsHooks,
+} from './politics/politics'
+import { computeNeighbors, monthlyEvents, updateDiplomacyAi } from './politics/ai'
+import type { PeaceKind, PoliticsState, War } from './politics/types'
 
-const MAX_EVENTS = 60
-const SUPPLY_EVERY = 6
+const MAX_EVENTS = 80
 const ARMIES_EVERY = 24
 const AI_EVERY = 12
 const CITIES_EVERY = 6
-const ECONOMY_EVERY = 24
+const DAY = 24
+const MONTH = 24 * 30
+/** Sans unité pendant une guerre depuis plus de 7 jours : capitulation. */
+const NO_ARMY_DAYS = 7
+const DEFAULT_FORCE_SIZE = 8
 
 export type PlayerOrder = Extract<OrderKind, 'move' | 'attack' | 'hold' | 'retreat'>
+
+function emptyPolitics(): PoliticsState {
+  return {
+    countries: new Map(),
+    relations: new Map(),
+    wars: [],
+    alliances: [],
+    sanctions: new Set(),
+    offers: [],
+    nextId: 1,
+  }
+}
 
 /** La partie : état complet, systèmes, et API d'ordres. Vit dans le Web Worker, testable sans navigateur. */
 export class Simulation {
   readonly ctx: SimContext
   readonly clock = new TickAccumulator()
   outcome: GameOutcome | null = null
+  readonly playerCountry: CountryId
   private events: GameEvent[] = []
   private nextId = 1
-  /** État de l'IA, par pays. */
+  /** État de l'IA militaire, par pays. */
   private ai = new Map<CountryId, AiState>()
   /** Vrai : l'IA commande aussi le pays du joueur (parties de test, mode spectateur). */
   aiControlsPlayer = false
@@ -64,18 +105,29 @@ export class Simulation {
   autoEconomy = false
   private initialTerritory: number[] = []
   private publishedGridVersion = -1
+  private neighbors: Map<CountryId, Set<CountryId>> | null = null
+  /** Tick depuis lequel chaque pays en guerre n'a plus aucune unité. */
+  private armylessSince = new Map<CountryId, number>()
+  private readonly hooks: PoliticsHooks
+  /** Cadence du ravitaillement : plus espacée sur les grandes grilles (coût du remplissage). */
+  private readonly supplyEvery: number
 
   private constructor(
     readonly scenario: ScenarioDef,
     readonly theater: TheaterData,
     seed: number,
+    playerCountry: CountryId,
   ) {
     const grid = new Grid(theater)
-    const sides = ['', ...scenario.countries.map((c) => c.id)]
-    // Les camps de la grille sont dans l'ordre des données du théâtre ; on vérifie qu'ils correspondent.
-    if (theater.sides.join(',') !== sides.join(',')) {
-      throw new Error(`Camps du théâtre (${theater.sides}) différents du scénario (${sides})`)
+    const sides = theater.sides
+    for (const c of scenario.countries) {
+      if (!sides.includes(c.id)) throw new Error(`Pays absent du théâtre : ${c.id}`)
     }
+    if (!scenario.countries.some((c) => c.id === playerCountry)) {
+      throw new Error(`Pays du joueur inconnu : ${playerCountry}`)
+    }
+    this.playerCountry = playerCountry
+    const matrix = new SideMatrix()
     this.ctx = {
       grid,
       rng: new Random(seed),
@@ -84,26 +136,32 @@ export class Simulation {
       armies: new Map(),
       runtime: new Map(),
       catalog: MODERN_CATALOG,
-      pathfinder: new Pathfinder(grid),
+      pathfinder: new Pathfinder(grid, matrix),
       sides,
+      sideIndex: new Map(sides.map((c, i) => [c, i])),
+      countries: new Map(scenario.countries.map((c) => [c.id, c])),
+      matrix,
+      politics: emptyPolitics(),
       supplySources: {},
       supplyReach: [],
       unsuppliedCells: [],
       cities: theater.cities,
       cityStates: new Map(),
       economies: new Map(),
+      losses: new Map(),
       allocId: () => this.nextId++,
       log: (text, owner) => this.log(text, owner),
     }
+    this.hooks = {
+      armyName: (code) =>
+        code === this.playerCountry ? '1re Armée' : `Armée (${countryName(this.ctx, code)})`,
+    }
+    this.supplyEvery = grid.size > 1_000_000 ? 24 : 6
     for (let s = 1; s < sides.length; s++) this.initialTerritory[s] = grid.countOwned(s)
   }
 
   get tick(): number {
     return this.ctx.tick
-  }
-
-  get playerCountry(): CountryId {
-    return this.scenario.playerCountry
   }
 
   get aiCountries(): CountryId[] {
@@ -120,52 +178,63 @@ export class Simulation {
     return s
   }
 
-  static fromScenario(scenario: ScenarioDef, theater: TheaterData, seed = 1): Simulation {
-    const sim = new Simulation(scenario, theater, seed)
-    const ctx = sim.ctx
-    for (const country of scenario.countries) {
-      const units = scenario.units.filter((u) => u.owner === country.id)
-      const army: ArmyState = {
-        id: sim.nextId++,
-        name:
-          country.id === scenario.playerCountry ? '1re Armée' : `Groupe d'armées (${country.name})`,
-        owner: country.id,
-        unitIds: [],
-        front: null,
-        wholeFront: true,
-        offensive: null,
-      }
-      for (const def of units) {
-        const u: UnitState = {
-          id: sim.nextId++,
-          name: def.name,
-          owner: def.owner,
-          kind: def.kind,
-          lon: def.lon ?? 0,
-          lat: def.lat ?? 0,
-          strength: def.strength ?? 1,
-          org: 1,
-          entrench: 0.5,
-          order: { kind: 'hold' },
-          path: [],
-          armyId: army.id,
-          hoursOutOfSupply: 0,
-        }
-        ctx.units.set(u.id, u)
-        army.unitIds.push(u.id)
-      }
-      ctx.armies.set(army.id, army)
-      // Déploiement initial le long du front (les unités sans position fixe).
-      const fixed = new Set(units.flatMap((d, k) => (d.lon !== undefined ? [army.unitIds[k]] : [])))
-      const auto = { ...army, unitIds: army.unitIds.filter((id) => !fixed.has(id)) }
-      assignFront(ctx, auto, true)
-      for (const id of army.unitIds) {
-        const u = ctx.units.get(id)
-        if (u) u.entrench = 0.5
-      }
+  private initPolitics(): void {
+    const ctx = this.ctx
+    const sp = this.scenario.politics
+    for (const c of this.scenario.countries) {
+      ctx.politics.countries.set(c.id, {
+        code: c.id,
+        stability: sp?.stability?.[c.id] ?? 0.65,
+        warSupport: sp?.warSupport?.[c.id] ?? 0.3,
+        mobilized: false,
+        forceSize: sp?.forceSize?.[c.id] ?? DEFAULT_FORCE_SIZE,
+        lastImproveTick: 0,
+      })
     }
+    for (const [a, b, v] of sp?.relations ?? []) {
+      if (ctx.countries.has(a) && ctx.countries.has(b)) setRelation(ctx, a, b, v)
+    }
+    ctx.politics.alliances = (sp?.alliances ?? []).map((a) => ({
+      ...a,
+      members: a.members.filter((m) => ctx.countries.has(m)),
+    }))
+    const ownerAtStart = encodeRle(ctx.grid.owner)
+    for (const w of sp?.wars ?? []) {
+      const war: War = {
+        id: ctx.politics.nextId++,
+        name: w.name,
+        attackers: [...w.attackers],
+        defenders: [...w.defenders],
+        startTick: 0,
+        startOwned: {},
+        ownerAtStart,
+      }
+      for (const c of [...w.attackers, ...w.defenders]) {
+        war.startOwned[c] = ctx.grid.countOwned(sideIndex(ctx, c))
+      }
+      for (const a of w.attackers) for (const d of w.defenders) setRelation(ctx, a, d, -100)
+      ctx.politics.wars.push(war)
+    }
+    rebuildMatrix(ctx)
+  }
+
+  static fromScenario(
+    scenario: ScenarioDef,
+    theater: TheaterData,
+    seed = 1,
+    playerCountry = scenario.playerCountry,
+  ): Simulation {
+    const sim = new Simulation(scenario, theater, seed, playerCountry)
+    const ctx = sim.ctx
     initCities(ctx)
     initEconomies(ctx, scenario)
+    sim.initPolitics()
+    // Mobilisation des pays en guerre au départ : unités explicites du scénario, ou levée générique.
+    for (const country of scenario.countries) {
+      if (ctx.matrix.atWar[sideIndex(ctx, country.id)] !== 1) continue
+      const explicit = scenario.units.filter((u) => u.owner === country.id)
+      mobilize(ctx, country, sim.hooks.armyName(country.id), explicit.length ? explicit : undefined)
+    }
     previewIncome(ctx, scenario)
     sim.afterLoad()
     return sim
@@ -175,39 +244,26 @@ export class Simulation {
     if (save.scenarioId !== scenario.id) {
       throw new Error(`Sauvegarde d'un autre scénario : ${save.scenarioId}`)
     }
-    const sim = new Simulation(scenario, theater, save.rngState)
+    const sim = new Simulation(scenario, theater, save.rngState, save.playerCountry)
     const ctx = sim.ctx
     ctx.tick = save.tick
     ctx.rng.state = save.rngState
-    const owner = decodeRle(save.owner, ctx.grid.size)
-    ctx.grid.owner.set(owner)
-    ctx.grid.version++
+    ctx.grid.owner.set(decodeRle(save.owner, ctx.grid.size))
+    ctx.grid.recount()
+    ctx.grid.takeDirty()
     for (const u of save.units) ctx.units.set(u.id, structuredClone(u))
     for (const a of save.armies) ctx.armies.set(a.id, structuredClone(a))
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
     sim.outcome = save.outcome
     sim.autoEconomy = save.autoEconomy ?? false
-    // Ancien format : un seul nombre pour l'unique pays IA.
-    const last = save.aiLastOffensiveTick
-    for (const c of scenario.countries) {
-      const tick = typeof last === 'number' ? last : (last[c.id] ?? 0)
-      sim.ai.set(c.id, { lastOffensiveTick: tick })
+    for (const [c, tick] of Object.entries(save.aiLastOffensiveTick)) {
+      sim.ai.set(c, { lastOffensiveTick: tick })
     }
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
     for (const [id, engagedWith, supplied, routed, commanded] of save.runtime) {
       ctx.runtime.set(id, { engagedWith, supplied, routed, commanded: commanded ?? false })
     }
-    save.supplyReach.forEach((rle, side) => {
-      if (side === 0) return
-      const reach = decodeRle(rle, ctx.grid.size)
-      ctx.supplyReach[side] = reach
-      const pockets: number[] = []
-      for (let i = 0; i < reach.length; i++) {
-        if (ctx.grid.owner[i] === side && !reach[i] && ctx.grid.passable(i)) pockets.push(i)
-      }
-      ctx.unsuppliedCells[side] = pockets
-    })
     initCities(ctx)
     for (const c of save.cities) {
       const city = ctx.cityStates.get(c.name)
@@ -218,7 +274,30 @@ export class Simulation {
     }
     ctx.economies.clear()
     for (const e of save.economies) ctx.economies.set(e.country, structuredClone(e))
+    const p = save.politics
+    ctx.politics = {
+      countries: new Map(p.countries.map((c) => [c.code, { ...c }])),
+      relations: new Map(p.relations),
+      wars: p.wars.map((w) => structuredClone(w)),
+      alliances: p.alliances.map((a) => ({ ...a, members: [...a.members] })),
+      sanctions: new Set(p.sanctions),
+      offers: p.offers.map((o) => ({ ...o })),
+      nextId: p.nextId,
+    }
+    for (const [c, since] of save.armylessSince) sim.armylessSince.set(c, since)
+    for (const [c, lost] of save.losses) ctx.losses.set(c, lost)
+    rebuildMatrix(ctx)
     updateSupplySources(ctx, scenario)
+    save.supplyReach.forEach((rle, side) => {
+      if (side === 0 || !rle || rle.length === 0) return
+      const reach = decodeRle(rle, ctx.grid.size)
+      ctx.supplyReach[side] = reach
+      const pockets: number[] = []
+      for (let i = 0; i < reach.length; i++) {
+        if (ctx.grid.owner[i] === side && !reach[i] && ctx.grid.passable(i)) pockets.push(i)
+      }
+      ctx.unsuppliedCells[side] = pockets
+    })
     return sim
   }
 
@@ -233,12 +312,17 @@ export class Simulation {
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS)
   }
 
+  /** Pays IA dont les forces sont levées : seuls ceux-là ont une IA militaire et économique active. */
+  private mobilizedAi(): CountryId[] {
+    return this.aiCountries.filter((c) => this.ctx.politics.countries.get(c)?.mobilized)
+  }
+
   /** Joue `count` heures de jeu. */
   step(count: number): void {
     const ctx = this.ctx
     for (let i = 0; i < count && !this.outcome; i++) {
       ctx.tick++
-      if (ctx.tick % SUPPLY_EVERY === 0) {
+      if (ctx.tick % this.supplyEvery === 0) {
         updateSupply(ctx)
         updateCommand(ctx)
       }
@@ -246,45 +330,83 @@ export class Simulation {
       updateCombat(ctx)
       updateTerritory(ctx)
       if (ctx.tick % AI_EVERY === 0) {
-        for (const c of this.aiCountries) updateAi(ctx, c, this.aiState(c))
+        for (const c of this.mobilizedAi()) {
+          if (ctx.matrix.atWar[sideIndex(ctx, c)] === 1) updateAi(ctx, c, this.aiState(c))
+        }
       }
-      if (ctx.tick % ECONOMY_EVERY === 0) {
-        updateEconomy(ctx, this.scenario)
-        const managed = this.autoEconomy
-          ? [...new Set([...this.aiCountries, this.playerCountry])]
-          : this.aiCountries
-        for (const c of managed) updateAiEconomy(ctx, c)
-        updateSupplySources(ctx, this.scenario)
-      }
+      if (ctx.tick % DAY === 0) this.daily()
+      if (ctx.tick % MONTH === 0) this.monthly()
       if (ctx.tick % ARMIES_EVERY === 0) updateArmies(ctx)
       if (ctx.tick % CITIES_EVERY === 0) this.updateCitiesAndVictory()
     }
   }
 
+  private daily(): void {
+    const ctx = this.ctx
+    updateEconomy(ctx, this.scenario)
+    const managed = this.mobilizedAi()
+    if (this.autoEconomy && !managed.includes(this.playerCountry)) managed.push(this.playerCountry)
+    for (const c of managed) updateAiEconomy(ctx, c)
+    updateSupplySources(ctx, this.scenario)
+    updatePoliticsDaily(ctx, ctx.losses)
+    ctx.losses.clear()
+  }
+
+  private monthly(): void {
+    const ctx = this.ctx
+    this.neighbors ??= computeNeighbors(ctx)
+    updateDiplomacyAi(ctx, this.aiCountries, this.playerCountry, this.neighbors, this.hooks)
+    monthlyEvents(ctx, this.playerCountry)
+  }
+
   private updateCitiesAndVictory(): void {
-    const { grid } = this.ctx
-    for (const city of this.ctx.cityStates.values()) {
+    const ctx = this.ctx
+    const { grid } = ctx
+    for (const city of ctx.cityStates.values()) {
       const c = city.def
       const now = grid.owner[grid.cellAt(c.lon, c.lat)] ?? 0
       const before = city.owner
-      if (now !== before) {
-        city.owner = now
-        onCityCaptured(this.ctx, city, before)
-        const by = this.ctx.sides[now] ?? null
-        this.log(`Ville prise (${this.countryName(by)}) : ${c.name}`, by)
-        if (c.capital && c.country === this.ctx.sides[before]) {
-          this.endGame(by ?? '', `Prise de ${c.name}, capitale`)
-          return
-        }
+      if (now === before) continue
+      city.owner = now
+      onCityCaptured(ctx, city, before)
+      const by = ctx.sides[now] ?? null
+      const loser = ctx.sides[before] ?? ''
+      onCityLost(ctx, loser, by, c.pop > 1_000_000 || c.capital)
+      ctx.log(`Ville prise (${countryName(ctx, by)}) : ${c.name}`, by)
+      // Capitale perdue face à un ennemi : capitulation.
+      if (c.capital && c.country === loser && by && isAtWarWith(ctx, by, loser)) {
+        this.onCapitulation(loser, `prise de ${c.name}`)
+        if (this.outcome) return
       }
     }
-    for (const country of this.scenario.countries) {
-      const alive = [...this.ctx.units.values()].some((u) => u.owner === country.id)
-      if (!alive) {
-        const winner = this.scenario.countries.find((c) => c.id !== country.id)
-        this.endGame(winner?.id ?? '', `Armées de ${country.name} anéanties`)
-        return
+    // Plus aucune unité pendant une guerre : capitulation au bout d'une semaine.
+    const alive = new Set([...ctx.units.values()].map((u) => u.owner))
+    for (const [code, p] of ctx.politics.countries) {
+      if (!p.mobilized || ctx.matrix.atWar[sideIndex(ctx, code)] !== 1 || alive.has(code)) {
+        this.armylessSince.delete(code)
+        continue
       }
+      const since = this.armylessSince.get(code) ?? ctx.tick
+      this.armylessSince.set(code, since)
+      if (ctx.tick - since >= NO_ARMY_DAYS * DAY) {
+        this.onCapitulation(code, 'armées anéanties')
+        if (this.outcome) return
+      }
+    }
+  }
+
+  private onCapitulation(code: CountryId, reason: string): void {
+    const ctx = this.ctx
+    // Ennemis au moment de la capitulation (pour décider d'une victoire du joueur).
+    const enemies = new Set(warsOf(ctx, code).flatMap((w) => enemiesInWar(w, code)))
+    capitulate(ctx, code, reason)
+    this.armylessSince.delete(code)
+    if (code === this.playerCountry) {
+      const winner = [...enemies][0] ?? ''
+      this.endGame(winner, `${countryName(ctx, code)} capitule : ${reason}`)
+    } else if (enemies.has(this.playerCountry) && this.scenario.countries.length === 2) {
+      // Théâtre à deux pays : la capitulation de l'adversaire termine la partie.
+      this.endGame(this.playerCountry, `${countryName(ctx, code)} capitule : ${reason}`)
     }
   }
 
@@ -292,10 +414,6 @@ export class Simulation {
     this.outcome = { winner, reason }
     this.clock.setPaused(true)
     this.log(`Fin de partie : ${reason}`, winner)
-  }
-
-  private countryName(id: CountryId | null): string {
-    return this.scenario.countries.find((c) => c.id === id)?.name ?? 'personne'
   }
 
   // ---------- Ordres du joueur ----------
@@ -404,6 +522,12 @@ export class Simulation {
     if (army.front || army.wholeFront) assignFront(this.ctx, army)
   }
 
+  private removeEmptyArmies(): void {
+    for (const [id, a] of this.ctx.armies) {
+      if (a.owner === this.playerCountry && a.unitIds.length === 0) this.ctx.armies.delete(id)
+    }
+  }
+
   // ---------- Économie du joueur ----------
 
   /** Les commandes économiques renvoient un message d'erreur pour l'interface, ou null. */
@@ -428,10 +552,71 @@ export class Simulation {
     this.autoEconomy = on
   }
 
-  private removeEmptyArmies(): void {
-    for (const [id, a] of this.ctx.armies) {
-      if (a.owner === this.playerCountry && a.unitIds.length === 0) this.ctx.armies.delete(id)
+  /** Lève les forces du joueur sans attendre une guerre (unités, armée qui tient le front). */
+  mobilizePlayer(): string | null {
+    const def = this.ctx.countries.get(this.playerCountry)
+    const pol = this.ctx.politics.countries.get(this.playerCountry)
+    if (!def || !pol) return 'Pays inconnu'
+    if (pol.mobilized) return 'Forces déjà mobilisées'
+    mobilize(this.ctx, def, this.hooks.armyName(this.playerCountry))
+    // Une mobilisation en temps de paix pèse sur la stabilité.
+    pol.stability = Math.max(0, pol.stability - 0.03)
+    this.log(`${countryName(this.ctx, this.playerCountry)} mobilise ses forces`, this.playerCountry)
+    return null
+  }
+
+  // ---------- Diplomatie du joueur ----------
+
+  declareWar(target: CountryId): string | null {
+    return declareWar(this.ctx, this.playerCountry, target, this.hooks)
+  }
+
+  /** Propose la paix dans une guerre : l'IA adverse principale décide aussitôt. */
+  proposePeace(warId: number, kind: PeaceKind): string | null {
+    const war = this.ctx.politics.wars.find((w) => w.id === warId)
+    if (!war) return 'Guerre inconnue'
+    const enemy = enemiesInWar(war, this.playerCountry)[0]
+    if (!enemy) return "Vous n'êtes pas dans cette guerre"
+    if (!aiAcceptsPeace(this.ctx, war, enemy, kind)) {
+      return `${countryName(this.ctx, enemy)} refuse la paix`
     }
+    makePeace(this.ctx, warId, this.playerCountry, kind)
+    return null
+  }
+
+  answerPeaceOffer(id: number, accept: boolean): void {
+    const pol = this.ctx.politics
+    const offer = pol.offers.find((o) => o.id === id && o.to === this.playerCountry)
+    pol.offers = pol.offers.filter((o) => o.id !== id)
+    if (!offer) return
+    if (accept) makePeace(this.ctx, offer.warId, offer.from, offer.kind)
+    else {
+      this.log(
+        `Vous refusez la paix proposée par ${countryName(this.ctx, offer.from)}`,
+        this.playerCountry,
+      )
+    }
+  }
+
+  improveRelations(target: CountryId): string | null {
+    return improveRelations(this.ctx, this.playerCountry, target)
+  }
+
+  toggleSanction(target: CountryId): void {
+    toggleSanction(this.ctx, this.playerCountry, target)
+  }
+
+  proposeAlliance(target: CountryId): string | null {
+    return proposeAlliance(this.ctx, this.playerCountry, target)
+  }
+
+  leaveAlliance(): void {
+    leaveAlliance(this.ctx, this.playerCountry)
+  }
+
+  callAllies(): string {
+    const n = callAlliesToWars(this.ctx, this.playerCountry, this.hooks)
+    return n > 0 ? `${n} allié(s) vous rejoignent` : 'Aucun allié ne vous rejoint'
   }
 
   // ---------- Publication et sauvegarde ----------
@@ -445,12 +630,27 @@ export class Simulation {
     this.clock.setPaused(paused)
   }
 
-  /** État publié vers l'interface. La grille n'est jointe que si elle a changé (ou si `forceGrid`). */
+  /**
+   * État publié vers l'interface. La grille complète n'est jointe qu'à la demande (chargement) ;
+   * sinon, seules les cellules modifiées depuis la dernière publication (si `allowGrid`).
+   */
   snapshot(forceGrid = false, allowGrid = true): SimSnapshot {
     const ctx = this.ctx
     const grid = ctx.grid
-    const includeGrid = forceGrid || (allowGrid && grid.version !== this.publishedGridVersion)
-    if (includeGrid) this.publishedGridVersion = grid.version
+    let gridPatch: number[] | null = null
+    if (forceGrid) {
+      grid.takeDirty()
+      this.publishedGridVersion = grid.version
+    } else if (allowGrid && grid.version !== this.publishedGridVersion) {
+      const cells = [...new Set(grid.takeDirty())]
+      const patch = new Array<number>(cells.length * 2)
+      cells.forEach((c, k) => {
+        patch[2 * k] = c
+        patch[2 * k + 1] = grid.owner[c] ?? 0
+      })
+      gridPatch = patch
+      this.publishedGridVersion = grid.version
+    }
 
     const territoryHeld: Record<CountryId, number> = {}
     for (let s = 1; s < ctx.sides.length; s++) {
@@ -469,6 +669,7 @@ export class Simulation {
     const economy = ctx.economies.get(this.playerCountry)
 
     return {
+      scenarioId: this.scenario.id,
       tick: ctx.tick,
       startDate: this.scenario.startDate,
       paused: this.clock.paused,
@@ -503,10 +704,11 @@ export class Simulation {
       cities,
       economy: economy ? structuredClone(economy) : null,
       autoEconomy: this.autoEconomy,
+      politics: politicsSnapshot(ctx, this.playerCountry),
       events: this.events.slice(),
       territoryHeld,
       outcome: this.outcome,
-      grid: includeGrid
+      grid: forceGrid
         ? {
             version: grid.version,
             width: grid.width,
@@ -522,16 +724,19 @@ export class Simulation {
             sides: ctx.sides.slice(),
           }
         : null,
+      gridPatch,
       gridVersion: grid.version,
     }
   }
 
   toSave(now = new Date()): SaveFile {
     const ctx = this.ctx
+    const p = ctx.politics
     return {
       version: SAVE_VERSION,
       savedAt: now.toISOString(),
       scenarioId: this.scenario.id,
+      playerCountry: this.playerCountry,
       tick: ctx.tick,
       speed: this.clock.speed,
       rngState: ctx.rng.state,
@@ -544,7 +749,8 @@ export class Simulation {
         [...this.ai.entries()].map(([c, s]) => [c, s.lastOffensiveTick]),
       ),
       owner: encodeRle(ctx.grid.owner),
-      supplyReach: ctx.supplyReach.map((r) => (r ? encodeRle(r) : [])),
+      // Tableau creux (seuls les camps en guerre ont une couverture) : on remplit les trous.
+      supplyReach: Array.from(ctx.supplyReach, (r) => (r ? encodeRle(r) : [])),
       runtime: [...ctx.runtime.entries()].map(([id, r]) => [
         id,
         r.engagedWith,
@@ -559,6 +765,17 @@ export class Simulation {
       })),
       economies: [...ctx.economies.values()].map((e) => structuredClone(e)),
       autoEconomy: this.autoEconomy,
+      politics: {
+        countries: [...p.countries.values()].map((c) => ({ ...c })),
+        relations: [...p.relations.entries()],
+        wars: p.wars.map((w) => structuredClone(w)),
+        alliances: p.alliances.map((a) => ({ ...a, members: [...a.members] })),
+        sanctions: [...p.sanctions],
+        offers: p.offers.map((o) => ({ ...o })),
+        nextId: p.nextId,
+      },
+      armylessSince: [...this.armylessSince.entries()],
+      losses: [...ctx.losses.entries()],
     }
   }
 
@@ -569,5 +786,9 @@ export class Simulation {
 
   sideOf(country: CountryId): number {
     return sideIndex(this.ctx, country)
+  }
+
+  countryDef(code: CountryId): CountryDef | undefined {
+    return this.ctx.countries.get(code)
   }
 }

@@ -38,21 +38,28 @@ export function frontCells(
   const raw: Array<{ cell: number; back: [number, number] }> = []
   const hostile = (n: number): boolean => {
     const o = owner[n] ?? 0
-    return o !== 0 && o !== side && grid.passable(n)
+    return o !== 0 && ctx.matrix.hostile(side, o) && grid.passable(n)
   }
-  for (let i = 0; i < grid.size; i++) {
-    if (owner[i] !== side) continue
-    const x = i % W
-    const y = (i - x) / W
-    // Direction vers l'arrière : somme des vecteurs qui s'éloignent des voisins ennemis.
-    let bx = 0
-    let by = 0
-    if (x > 0 && hostile(i - 1)) bx += 1
-    if (x < W - 1 && hostile(i + 1)) bx -= 1
-    if (y > 0 && hostile(i - W)) by += 1
-    if (y < H - 1 && hostile(i + W)) by -= 1
-    if ((bx !== 0 || by !== 0) && grid.passable(i)) {
-      raw.push({ cell: i, back: [Math.sign(bx), Math.sign(by)] })
+  // Balayage limité aux zones de contact avec chaque ennemi (cellules vues une seule fois).
+  if (ctx.matrix.atWar[side] !== 1) return []
+  const seen = new Set<number>()
+  for (const box of grid.contactBoxes(side, ctx.matrix.enemiesOf(side))) {
+    for (let y = box.y0; y <= box.y1; y++) {
+      for (let x = box.x0; x <= box.x1; x++) {
+        const i = y * W + x
+        if (owner[i] !== side || seen.has(i)) continue
+        // Direction vers l'arrière : somme des vecteurs qui s'éloignent des voisins ennemis.
+        let bx = 0
+        let by = 0
+        if (x > 0 && hostile(i - 1)) bx += 1
+        if (x < W - 1 && hostile(i + 1)) bx -= 1
+        if (y > 0 && hostile(i - W)) by += 1
+        if (y < H - 1 && hostile(i + W)) by -= 1
+        if ((bx !== 0 || by !== 0) && grid.passable(i)) {
+          seen.add(i)
+          raw.push({ cell: i, back: [Math.sign(bx), Math.sign(by)] })
+        }
+      }
     }
   }
   if (raw.length === 0) return []

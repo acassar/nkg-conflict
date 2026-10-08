@@ -60,8 +60,12 @@ export interface TheaterData {
   width: number
   height: number
   sides: string[]
-  owner: number[]
-  terrain: number[]
+  /** Propriétaire et terrain encodés par plages (théâtres légers, JSON)… */
+  owner?: number[]
+  terrain?: number[]
+  /** … ou en octets bruts (grille mondiale, fichier binaire). */
+  ownerBytes?: Uint8Array
+  terrainBytes?: Uint8Array
   cities: CityDef[]
 }
 
@@ -103,8 +107,18 @@ export function decodeRle(rle: number[], size: number): Uint8Array {
   return out
 }
 
+/** Emprise d'un camp sur la grille, en cellules (inclusive). Vide si x0 > x1. */
+export interface CellBox {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
+}
+
+const MAX_SIDES = 256
+
 /**
- * Grille de contrôle du théâtre. Ligne 0 = sud. Chaque cellule a un propriétaire (index de camp, 0 = aucun)
+ * Grille de contrôle. Ligne 0 = sud. Chaque cellule a un propriétaire (index de camp, 0 = aucun)
  * et un terrain. C'est la vérité de la ligne de front.
  */
 export class Grid {
@@ -115,8 +129,14 @@ export class Grid {
   readonly cell: number
   readonly owner: Uint8Array
   readonly terrain: Uint8Array
-  /** Incrémenté à chaque changement de propriétaire, pour ne republier la grille que si elle a changé. */
+  /** Incrémenté à chaque changement de propriétaire. */
   version = 0
+  /** Cellules praticables détenues par chaque camp, tenu à jour à chaque changement. */
+  readonly owned = new Int32Array(MAX_SIDES)
+  /** Emprise de chaque camp (elle ne fait que s'agrandir : sert à borner les balayages). */
+  readonly boxes: CellBox[] = []
+  /** Cellules dont le propriétaire a changé depuis la dernière publication. */
+  private dirty: number[] = []
 
   constructor(data: TheaterData) {
     this.width = data.width
@@ -125,8 +145,39 @@ export class Grid {
     this.lat0 = data.bbox.lat0
     this.cell = data.cell
     const size = data.width * data.height
-    this.owner = decodeRle(data.owner, size)
-    this.terrain = decodeRle(data.terrain, size)
+    this.owner = data.ownerBytes ? data.ownerBytes.slice() : decodeRle(data.owner ?? [], size)
+    this.terrain = data.terrainBytes
+      ? data.terrainBytes.slice()
+      : decodeRle(data.terrain ?? [], size)
+    if (this.owner.length !== size || this.terrain.length !== size) {
+      throw new Error(`Grille corrompue : ${this.owner.length} cellules au lieu de ${size}`)
+    }
+    this.recount()
+  }
+
+  /** Recalcule comptes et emprises (au chargement, ou après une restauration en bloc). */
+  recount(): void {
+    this.owned.fill(0)
+    this.boxes.length = 0
+    for (let s = 0; s < MAX_SIDES; s++)
+      this.boxes.push({ x0: Infinity, y0: Infinity, x1: -1, y1: -1 })
+    const W = this.width
+    for (let i = 0; i < this.size; i++) {
+      const o = this.owner[i] ?? 0
+      if (o === 0 || !this.passable(i)) continue
+      this.owned[o] = (this.owned[o] ?? 0) + 1
+      this.grow(o, i % W, (i - (i % W)) / W)
+    }
+    this.version++
+  }
+
+  private grow(side: number, x: number, y: number): void {
+    const b = this.boxes[side]
+    if (!b) return
+    if (x < b.x0) b.x0 = x
+    if (x > b.x1) b.x1 = x
+    if (y < b.y0) b.y0 = y
+    if (y > b.y1) b.y1 = y
   }
 
   get size(): number {
@@ -162,10 +213,47 @@ export class Grid {
   }
 
   setOwner(i: number, side: number): void {
-    if (this.owner[i] !== side) {
-      this.owner[i] = side
-      this.version++
+    const prev = this.owner[i] ?? 0
+    if (prev === side) return
+    this.owner[i] = side
+    this.version++
+    this.dirty.push(i)
+    if (this.passable(i)) {
+      if (prev) this.owned[prev] = (this.owned[prev] ?? 0) - 1
+      if (side) {
+        this.owned[side] = (this.owned[side] ?? 0) + 1
+        this.grow(side, i % this.width, Math.floor(i / this.width))
+      }
     }
+  }
+
+  /**
+   * Zones où `side` peut toucher un de ses `enemies` : intersections de son emprise avec celle de
+   * chaque ennemi élargie d'une cellule. Évite de balayer tout le pays (la Russie couvre la largeur du globe).
+   */
+  contactBoxes(side: number, enemies: number[]): CellBox[] {
+    const own = this.boxes[side]
+    if (!own || own.x1 < own.x0) return []
+    const out: CellBox[] = []
+    for (const e of enemies) {
+      const b = this.boxes[e]
+      if (!b || b.x1 < b.x0) continue
+      const box = {
+        x0: Math.max(own.x0, b.x0 - 1),
+        y0: Math.max(own.y0, b.y0 - 1),
+        x1: Math.min(own.x1, b.x1 + 1),
+        y1: Math.min(own.y1, b.y1 + 1),
+      }
+      if (box.x0 <= box.x1 && box.y0 <= box.y1) out.push(box)
+    }
+    return out
+  }
+
+  /** Cellules modifiées depuis le dernier appel (puis la liste est vidée). */
+  takeDirty(): number[] {
+    const out = this.dirty
+    this.dirty = []
+    return out
   }
 
   /** Les 4 voisins (haut, bas, gauche, droite) d'une cellule, dans la grille. */
@@ -183,7 +271,7 @@ export class Grid {
   /** Cellules dont le centre est à moins de `km` d'un point. */
   cellsWithin(lon: number, lat: number, km: number, visit: (i: number) => void): void {
     const dLat = km / KM_PER_DEG_LAT
-    const dLon = km / (KM_PER_DEG_LON_EQ * Math.cos((lat * Math.PI) / 180))
+    const dLon = km / (KM_PER_DEG_LON_EQ * Math.max(0.05, Math.cos((lat * Math.PI) / 180)))
     const x0 = Math.max(0, Math.floor((lon - dLon - this.lon0) / this.cell))
     const x1 = Math.min(this.width - 1, Math.floor((lon + dLon - this.lon0) / this.cell))
     const y0 = Math.max(0, Math.floor((lat - dLat - this.lat0) / this.cell))
@@ -196,19 +284,8 @@ export class Grid {
     }
   }
 
-  /** Vrai si la cellule touche une cellule d'un autre camp jouable (cellule de front). */
-  isFrontCell(i: number, side: number, scratch: number[] = []): boolean {
-    for (const n of this.neighbors4(i, scratch)) {
-      const o = this.owner[n] ?? 0
-      if (o !== 0 && o !== side && this.passable(n)) return true
-    }
-    return false
-  }
-
   /** Nombre de cellules praticables détenues par un camp. */
   countOwned(side: number): number {
-    let n = 0
-    for (let i = 0; i < this.size; i++) if (this.owner[i] === side && this.passable(i)) n++
-    return n
+    return this.owned[side] ?? 0
   }
 }

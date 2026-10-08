@@ -1,4 +1,4 @@
-import { runtimeOf, sideIndex, type SimContext } from '../context'
+import { countryName, runtimeOf, sideIndex, type SimContext } from '../context'
 import type { CountryId, LonLat, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { isLineUnit } from '../units/catalog'
@@ -24,7 +24,10 @@ export interface AiState {
 export function updateAi(ctx: SimContext, country: CountryId, state: AiState): void {
   const side = sideIndex(ctx, country)
   const own = [...ctx.units.values()].filter((u) => u.owner === country)
-  const enemies = [...ctx.units.values()].filter((u) => u.owner !== country)
+  const enemies = [...ctx.units.values()].filter((u) =>
+    ctx.matrix.hostile(side, sideIndex(ctx, u.owner)),
+  )
+  if (enemies.length === 0) return
   const available = own.filter(
     (u) => isLineUnit(u.kind) && u.order.kind !== 'attack' && !runtimeOf(ctx, u.id).routed,
   )
@@ -80,7 +83,7 @@ export function updateAi(ctx: SimContext, country: CountryId, state: AiState): v
     .slice(0, STRIKE_SIZE)
   for (const u of strike) attack(ctx, u, target)
   state.lastOffensiveTick = ctx.tick
-  ctx.log(`Offensive ennemie signalée près de ${nearestCity(ctx, lon, lat)}`, country)
+  ctx.log(`Offensive (${countryName(ctx, country)}) près de ${nearestCity(ctx, lon, lat)}`, country)
 }
 
 /** Préfère les unités puissantes, en forme et proches de l'objectif. */

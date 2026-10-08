@@ -1,35 +1,46 @@
 /**
  * Partie sans affichage, pour vérifier l'équilibrage et les performances.
- * Usage : npx tsx scripts/simulate.ts [jours] [fichier de sortie .json de la grille finale]
+ * Usage : npx tsx scripts/simulate.ts [jours] [--monde] [--pays=FRA] [--ia-partout]
+ *   --monde       scénario « Monde 2026 » (défaut : théâtre ukrainien)
+ *   --pays=XXX    pays du joueur
+ *   --ia-partout  l'IA joue aussi le pays du joueur (mesure de l'équilibre des règles)
+ * Graine aléatoire : variable d'environnement SEED.
  */
 import fs from 'node:fs'
 import { Simulation } from '../src/sim/simulation'
-import { ukraine2026 } from '../src/sim/scenarios/ukraine-2026'
-import type { TheaterData } from '../src/sim/theater/grid'
+import { buildScenario } from '../src/sim/scenarios'
+import { loadTheater } from '../src/sim/theater/load'
 
 const args = process.argv.slice(2)
-/** --ia-partout : l'IA joue aussi l'Ukraine (mesure de l'équilibre des règles). */
+const world = args.includes('--monde')
 const bothAi = args.includes('--ia-partout')
-const [daysArg, out] = args.filter((a) => !a.startsWith('--'))
-const days = Number(daysArg ?? 30)
+const country = args.find((a) => a.startsWith('--pays='))?.slice(7)
+const days = Number(args.find((a) => !a.startsWith('--')) ?? 30)
 const seed = Number(process.env.SEED ?? 42)
-const theater = JSON.parse(
-  fs.readFileSync(new URL('../src/sim/data/theater-ukraine.json', import.meta.url), 'utf8'),
-) as TheaterData
 
-const sim = Simulation.fromScenario(ukraine2026, theater, seed)
+const readPublic = async (p: string): Promise<ArrayBuffer> => {
+  const buf = fs.readFileSync(new URL(`../public/${p}`, import.meta.url))
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+}
+
+const loadStart = performance.now()
+const scenario = buildScenario(world ? 'world-2026' : 'ukraine-2026', country)
+const theater = await loadTheater(world ? 'world' : 'ukraine', readPublic)
+const sim = Simulation.fromScenario(scenario, theater, seed, scenario.playerCountry)
 sim.aiControlsPlayer = bothAi
+console.log(`Chargement : ${(performance.now() - loadStart).toFixed(0)} ms`)
+
 const started = performance.now()
+const watch = ['UKR', 'RUS', scenario.playerCountry].filter((c, i, a) => a.indexOf(c) === i)
 for (let d = 1; d <= days && !sim.outcome; d++) {
   sim.step(24)
+  if (d % Math.max(1, Math.floor(days / 10)) !== 0 && d !== days) continue
   const snap = sim.snapshot()
   const count = (c: string): number => snap.units.filter((u) => u.owner === c).length
-  const held = Object.entries(snap.territoryHeld)
-    .map(([c, v]) => `${c} ${(v * 100).toFixed(1)} %`)
-    .join(' · ')
-  const engaged = snap.units.filter((u) => u.engaged).length
+  const held = watch.map((c) => `${c} ${count(c)}u ${(snap.territoryHeld[c]! * 100).toFixed(1)} %`)
+  const wars = snap.politics.wars.map((w) => `${w.attackers.join('+')}→${w.defenders.join('+')}`)
   console.log(
-    `J${d} · unités UKR ${count('UKR')} RUS ${count('RUS')} · au contact ${engaged} · ${held}`,
+    `J${d} · ${held.join(' · ')} · unités ${snap.units.length} · guerres ${wars.join(', ') || 'aucune'}`,
   )
 }
 const ms = performance.now() - started
@@ -44,17 +55,4 @@ for (const u of snap.units) {
   if (Number.isNaN(u.lon) || Number.isNaN(u.strength) || Number.isNaN(u.org)) {
     throw new Error(`Valeur invalide sur ${u.name}`)
   }
-}
-if (out && snap.grid) {
-  fs.writeFileSync(
-    out,
-    JSON.stringify({
-      width: snap.grid.width,
-      height: snap.grid.height,
-      owner: Array.from(snap.grid.owner),
-      terrain: Array.from(snap.grid.terrain),
-      bbox: snap.grid.bbox,
-      units: snap.units.map((u) => [u.lon, u.lat, u.owner, u.kind]),
-    }),
-  )
 }

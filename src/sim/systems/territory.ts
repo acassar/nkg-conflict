@@ -20,12 +20,25 @@ export function updateTerritory(ctx: SimContext): void {
   const scratch: number[] = []
   const flips: Array<[number, number]> = []
 
+  // Ennemis de chaque camp, calculés une fois par tour.
+  const enemiesBySide = new Map<number, UnitState[]>()
+  const enemiesOf = (side: number): UnitState[] => {
+    let list = enemiesBySide.get(side)
+    if (!list) {
+      list = units.filter((e) => ctx.matrix.hostile(side, sideIndex(ctx, e.owner)))
+      enemiesBySide.set(side, list)
+    }
+    return list
+  }
+
   for (const u of units) {
     const side = sideIndex(ctx, u.owner)
-    const enemies = units.filter((e) => e.owner !== u.owner)
+    if (ctx.matrix.atWar[side] !== 1) continue
+    const enemies = enemiesOf(side)
     grid.cellsWithin(u.lon, u.lat, zocKm(ctx, u), (i) => {
       const owner = grid.owner[i] ?? 0
-      if (owner === side || !grid.passable(i)) return
+      // Seules les cellules d'un pays en guerre contre nous peuvent être prises.
+      if (owner === side || !ctx.matrix.hostile(side, owner) || !grid.passable(i)) return
       // La cellule doit toucher le territoire du camp.
       let touches = false
       for (const n of grid.neighbors4(i, scratch)) if (grid.owner[n] === side) touches = true
@@ -46,19 +59,28 @@ export function updateTerritory(ctx: SimContext): void {
     const candidates = ctx.unsuppliedCells[side]
     if (!reach || !candidates || candidates.length === 0) continue
     const defenders = units.filter((u) => sideIndex(ctx, u.owner) === side)
+    // Candidates du tour suivant : celles qui tiennent encore, plus l'intérieur mis à nu.
+    const next: number[] = []
     for (const i of candidates) {
       if (grid.owner[i] !== side || reach[i]) continue
       let enemySide = 0
       for (const n of grid.neighbors4(i, scratch)) {
         const o = grid.owner[n] ?? 0
-        if (o !== 0 && o !== side && grid.passable(n)) enemySide = o
+        if (o !== 0 && ctx.matrix.hostile(side, o) && grid.passable(n)) enemySide = o
       }
       if (!enemySide) continue
       const lon = grid.lonOf(i)
       const lat = grid.latOf(i)
-      if (defenders.some((d) => distanceKm(lon, lat, d.lon, d.lat) <= POCKET_GUARD_KM)) continue
+      if (defenders.some((d) => distanceKm(lon, lat, d.lon, d.lat) <= POCKET_GUARD_KM)) {
+        next.push(i)
+        continue
+      }
       flips.push([i, enemySide])
+      for (const n of grid.neighbors4(i, scratch)) {
+        if (grid.owner[n] === side && !reach[n] && grid.passable(n)) next.push(n)
+      }
     }
+    ctx.unsuppliedCells[side] = [...new Set(next)]
   }
 
   for (const [i, side] of flips) {

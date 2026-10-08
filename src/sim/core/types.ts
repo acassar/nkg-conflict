@@ -1,3 +1,5 @@
+import type { PoliticsSnapshot } from '../politics/types'
+
 /** Types partagés entre le Worker de simulation et l'interface. Données sérialisables uniquement. */
 
 export type CountryId = string
@@ -8,6 +10,12 @@ export interface CountryDef {
   name: string
   /** Couleur d'affichage [r, g, b]. */
   color: [number, number, number]
+  /** Point de repli (centre du pays) quand il n'a plus de ville. */
+  label?: LonLat
+  /** Famille de couleur de la carte politique (1 à 9, voisins différents). */
+  mapColor?: number
+  pop?: number
+  gdpB?: number
 }
 
 export type UnitKind = 'inf' | 'mech' | 'tank' | 'art' | 'log' | 'hq'
@@ -166,6 +174,7 @@ export interface GridSnapshot {
 }
 
 export interface SimSnapshot {
+  scenarioId: string
   tick: number
   startDate: string
   paused: boolean
@@ -179,12 +188,15 @@ export interface SimSnapshot {
   economy: EconomyState | null
   /** L'économie du joueur est gérée automatiquement. */
   autoEconomy: boolean
+  politics: PoliticsSnapshot
   events: GameEvent[]
   /** Part du territoire de départ conservée par chaque camp, 0 à 1. */
   territoryHeld: Record<CountryId, number>
   outcome: GameOutcome | null
-  /** Présent seulement quand la grille a changé depuis la dernière publication. */
+  /** Grille complète : seulement au chargement d'une partie. */
   grid: GridSnapshot | null
+  /** Cellules modifiées depuis la publication précédente : [cellule, propriétaire, …]. */
+  gridPatch: number[] | null
   gridVersion: number
 }
 
@@ -209,5 +221,19 @@ export interface ScenarioDef {
   /** Points d'où part le ravitaillement de chaque camp (zones de 30 km). */
   supplySources: Record<CountryId, LonLat[]>
   economy: Record<CountryId, ScenarioEconomy>
+  /** Unités explicites (théâtre) ; sinon levées à la mobilisation selon `politics.forceSize`. */
   units: ScenarioUnit[]
+  politics?: ScenarioPolitics
+}
+
+export interface ScenarioPolitics {
+  /** Unités levées à la mobilisation, par pays (défaut : 8). */
+  forceSize?: Record<CountryId, number>
+  /** Relations de départ [a, b, valeur], -100 à 100. */
+  relations?: Array<[CountryId, CountryId, number]>
+  alliances?: Array<{ id: string; name: string; members: CountryId[] }>
+  /** Guerres en cours au début de la partie. */
+  wars?: Array<{ name: string; attackers: CountryId[]; defenders: CountryId[] }>
+  stability?: Record<CountryId, number>
+  warSupport?: Record<CountryId, number>
 }

@@ -3,8 +3,12 @@ import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { formatGameDate, tickToDate } from '@/sim/core/clock'
 
+const props = withDefaults(defineProps<{ embedded?: boolean; limit?: number }>(), {
+  embedded: false,
+  limit: 7,
+})
 const game = useGameStore()
-const events = computed(() => (game.snapshot?.events ?? []).slice(-7).reverse())
+const events = computed(() => (game.snapshot?.events ?? []).slice(-props.limit).reverse())
 const colorOf = (owner: string | null): string => {
   const c = game.snapshot?.countries.find((x) => x.id === owner)?.color
   return c ? `rgb(${c.join(',')})` : '#9aa3af'
@@ -14,7 +18,7 @@ const when = (tick: number): string =>
 </script>
 
 <template>
-  <section v-if="events.length" class="log" aria-live="polite">
+  <section v-if="events.length" class="log" :class="{ embedded }" aria-live="polite">
     <p v-for="(e, k) in events" :key="`${e.tick}-${k}`">
       <span class="dot" :style="{ background: colorOf(e.owner) }" />
       <span class="when">{{ when(e.tick) }}</span>
@@ -53,9 +57,14 @@ p {
   margin-right: 6px;
   font-variant-numeric: tabular-nums;
 }
-@media (max-width: 640px) {
-  .log {
-    display: none;
-  }
+.log.embedded {
+  position: static;
+  max-width: none;
+  padding: 0;
+  background: none;
+  font-size: 13px;
+}
+.log.embedded p {
+  margin: 0 0 6px;
 }
 </style>

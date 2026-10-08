@@ -94,6 +94,13 @@ const daysLeft = (expires: number): number =>
     sans-serif;
   pointer-events: none;
 }
+@media (max-width: 759px), (max-height: 499px) {
+  .notifications {
+    top: calc(52px + env(safe-area-inset-top));
+    left: 8px;
+    width: min(360px, calc(100% - 16px));
+  }
+}
 .offer,
 .toast {
   pointer-events: auto;

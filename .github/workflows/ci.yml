@@ -37,6 +37,7 @@ jobs:
             pnpm preview --port 4173 --strictPort > ci-out/preview.log 2>&1 &
             npx --yes wait-on@8 -t 30000 http://localhost:4173
             node e2e/smoke.mjs http://localhost:4173 ci-out/smoke 2>&1 | tee ci-out/smoke.log
+            node e2e/mobile.mjs http://localhost:4173 ci-out/mobile 2>&1 | tee ci-out/mobile.log
           else
             echo "pas de build, test de fumée ignoré" | tee ci-out/smoke.log
           fi
@@ -72,3 +73,4 @@ jobs:
           cat ci-out/status.txt
           grep -q '^failed 0$' ci-out/status.txt
           grep -q 'SMOKE OK' ci-out/smoke.log
+          grep -q 'MOBILE OK' ci-out/mobile.log

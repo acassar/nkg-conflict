@@ -66,7 +66,13 @@ export const useGameStore = defineStore('game', () => {
   const selectedCountryCode = ref<CountryId | null>(null)
   const mode = ref<MapMode>({ kind: 'select' })
   /** Onglet du panneau de droite. */
-  const panelTab = ref<'units' | 'armies' | 'production' | 'country'>('units')
+  const panelTab = ref<'units' | 'armies' | 'production' | 'country' | 'log'>('units')
+  /** Tiroir du panneau sur téléphone en portrait : replié, à mi-hauteur ou plein écran. */
+  const drawer = ref<'collapsed' | 'half' | 'full'>('collapsed')
+  /** Hauteur affichée du tiroir, en pixels (pour placer les boutons flottants au-dessus). */
+  const drawerHeight = ref(0)
+  /** Sélection par zone : le prochain glisser sur la carte trace un rectangle. */
+  const lasso = ref(false)
   const selectedCityName = ref<string | null>(null)
   /** Message bref affiché en haut de l'écran (erreur de commande, par exemple). */
   const notice = ref<string | null>(null)
@@ -398,6 +404,7 @@ export const useGameStore = defineStore('game', () => {
 
   function cancelMode(): void {
     mode.value = { kind: 'select' }
+    lasso.value = false
   }
 
   function startOrder(order: Exclude<PlayerOrder, 'hold'>): void {
@@ -580,6 +587,9 @@ export const useGameStore = defineStore('game', () => {
     mode,
     modeHint,
     panelTab,
+    drawer,
+    drawerHeight,
+    lasso,
     notice,
     toasts,
     dismissToast,

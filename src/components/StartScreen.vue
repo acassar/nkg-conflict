@@ -135,7 +135,7 @@ async function onFile(event: Event): Promise<void> {
         <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
       </div>
       <p v-if="game.notice" class="error" role="alert">{{ game.notice }}</p>
-      <p class="disclaimer">
+      <p class="footnote">
         Scénario hypothétique, sans prétention de reconstitution historique.
         {{
           scenario?.theater === 'world'
@@ -152,8 +152,7 @@ async function onFile(event: Event): Promise<void> {
   position: absolute;
   inset: 0;
   z-index: 40;
-  display: grid;
-  place-items: center;
+  display: flex;
   background:
     radial-gradient(circle at 30% 20%, rgba(37, 99, 235, 0.25), transparent 50%),
     rgba(14, 17, 22, 0.88);
@@ -171,6 +170,8 @@ async function onFile(event: Event): Promise<void> {
   border-radius: 12px;
   padding: 24px 28px;
   box-sizing: border-box;
+  /* Centrée quand elle tient à l'écran, défilable sinon. */
+  margin: auto;
 }
 h1 {
   margin: 0;
@@ -285,7 +286,7 @@ input {
 .error {
   color: #fca5a5;
 }
-.disclaimer {
+.footnote {
   margin: 14px 0 0;
   color: #7d8592;
   font-size: 12px;

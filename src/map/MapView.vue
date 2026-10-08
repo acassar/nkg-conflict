@@ -12,11 +12,67 @@ import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers } from './layers'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
+import { isTouch } from '@/composables/layout'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
 const { snapshot, grid, gridTick, selection, selectedArmy, mode, selectedCity, stances, focus } =
   storeToRefs(game)
+
+// ---------- Sélection par zone ----------
+
+/** Rectangle en cours de tracé, en pixels relatifs à la carte. */
+const box = ref<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
+
+function localPoint(e: PointerEvent): { x: number; y: number } {
+  const r = container.value?.getBoundingClientRect()
+  return { x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) }
+}
+
+function onBoxDown(e: PointerEvent): void {
+  const p = localPoint(e)
+  box.value = { x0: p.x, y0: p.y, x1: p.x, y1: p.y }
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+
+function onBoxMove(e: PointerEvent): void {
+  if (!box.value) return
+  const p = localPoint(e)
+  box.value = { ...box.value, x1: p.x, y1: p.y }
+}
+
+/** Sélectionne les unités du joueur dont le pion est dans le rectangle. */
+function onBoxUp(): void {
+  const b = box.value
+  box.value = null
+  if (!b || !map) return
+  const [xa, xb] = [Math.min(b.x0, b.x1), Math.max(b.x0, b.x1)]
+  const [ya, yb] = [Math.min(b.y0, b.y1), Math.max(b.y0, b.y1)]
+  if (xb - xa < 8 && yb - ya < 8) return
+  const s = snapshot.value
+  if (!s) return
+  const ids = s.units
+    .filter((u) => u.owner === s.playerCountry)
+    .filter((u) => {
+      const p = map?.project([u.lon, u.lat])
+      return !!p && p.x >= xa && p.x <= xb && p.y >= ya && p.y <= yb
+    })
+    .map((u) => u.id)
+  game.selectUnits(ids, false)
+  game.lasso = false
+}
+
+const boxStyle = (b: {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
+}): Record<string, string> => ({
+  left: `${Math.min(b.x0, b.x1)}px`,
+  top: `${Math.min(b.y0, b.y1)}px`,
+  width: `${Math.abs(b.x1 - b.x0)}px`,
+  height: `${Math.abs(b.y1 - b.y0)}px`,
+})
 
 let map: maplibregl.Map | null = null
 const zoom = ref(4)
@@ -119,7 +175,11 @@ onMounted(() => {
     maxZoom: 11,
     attributionControl: { compact: true },
   })
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+  // Sur écran tactile, le zoom se fait au pincement : pas de boutons.
+  if (!isTouch.value) {
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+  }
+  map.touchZoomRotate.disableRotation()
   map.on('style.load', () => map && neutralizeCountryFills(map))
   // Fond de carte injoignable (hors ligne, réseau filtré) : sans style chargé, la carte ne se redessine
   // plus et le jeu paraît figé. On bascule alors sur un fond uni.
@@ -140,6 +200,8 @@ onMounted(() => {
     interleaved: false,
     layers: [],
     onClick,
+    // Au doigt, une cible de quelques pixels est difficile à toucher.
+    pickingRadius: isTouch.value ? 12 : 4,
     getCursor: ({ isHovering }) =>
       mode.value.kind !== 'select' ? 'crosshair' : isHovering ? 'pointer' : 'grab',
   })
@@ -167,11 +229,35 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="container" class="map" />
+  <div
+    v-if="game.lasso"
+    class="lasso-layer"
+    data-testid="lasso-layer"
+    @pointerdown="onBoxDown"
+    @pointermove="onBoxMove"
+    @pointerup="onBoxUp"
+    @pointercancel="box = null"
+  >
+    <div v-if="box" class="lasso-box" :style="boxStyle(box)" />
+  </div>
 </template>
 
 <style scoped>
 .map {
   position: absolute;
   inset: 0;
+}
+.lasso-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  touch-action: none;
+  cursor: crosshair;
+}
+.lasso-box {
+  position: absolute;
+  border: 2px dashed #facc15;
+  background: rgba(250, 204, 21, 0.12);
+  pointer-events: none;
 }
 </style>

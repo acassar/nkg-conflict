@@ -7,9 +7,21 @@ import EventLog from '@/components/EventLog.vue'
 import GameOver from '@/components/GameOver.vue'
 import StartScreen from '@/components/StartScreen.vue'
 import Notifications from '@/components/Notifications.vue'
+import LassoButton from '@/components/LassoButton.vue'
+import { computed } from 'vue'
+import { isMobile, isTouch, layout } from '@/composables/layout'
 import { useGameStore } from '@/stores/game'
 
 const game = useGameStore()
+
+/** Consigne du mode en cours, reformulée pour le doigt sur écran tactile. */
+const hint = computed(() => {
+  if (game.lasso) return 'Sélection par zone : glissez un rectangle sur vos unités'
+  const text = game.modeHint ?? ''
+  return isTouch.value
+    ? text.replace(/cliquez/g, 'touchez').replace(' (Échap pour annuler)', '')
+    : text
+})
 
 // Raccourcis : espace = pause, 1 à 5 = vitesse, M/A/H/R = ordres, Échap = annuler.
 function onKey(event: KeyboardEvent): void {
@@ -31,7 +43,7 @@ function onKey(event: KeyboardEvent): void {
   } else if (key === 'h') {
     game.hold()
   } else if (key === 'escape') {
-    if (game.mode.kind !== 'select') game.cancelMode()
+    if (game.mode.kind !== 'select' || game.lasso) game.cancelMode()
     else game.clearSelection()
   }
 }
@@ -44,12 +56,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <MapView />
   <template v-if="game.started">
     <TopBar />
-    <p v-if="game.modeHint" class="hint">{{ game.modeHint }}</p>
-    <p v-else-if="game.notice" class="hint notice" role="alert">{{ game.notice }}</p>
-    <CommandPanel />
-    <EventLog />
+    <p v-if="game.modeHint || game.lasso" class="hint" :class="{ mobile: isMobile }">
+      {{ hint }}
+      <button v-if="isMobile" class="hint-cancel" @click="game.cancelMode()">Annuler</button>
+    </p>
+    <p v-else-if="game.notice" class="hint notice" :class="{ mobile: isMobile }" role="alert">
+      {{ game.notice }}
+    </p>
+    <CommandPanel :key="layout" />
+    <EventLog v-if="!isMobile" />
     <Notifications />
-    <p class="disclaimer">Scénario hypothétique · sans prétention historique</p>
+    <LassoButton />
+    <p v-if="!isMobile" class="disclaimer">Scénario hypothétique · sans prétention historique</p>
     <GameOver />
   </template>
   <StartScreen v-else />
@@ -63,6 +81,11 @@ body,
   height: 100%;
   overflow: hidden;
   background: #14181f;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#app {
+  height: 100dvh;
 }
 .hint {
   position: absolute;
@@ -78,6 +101,24 @@ body,
   font:
     600 13px/1.3 system-ui,
     sans-serif;
+}
+.hint.mobile {
+  top: calc(52px + env(safe-area-inset-top));
+  left: 8px;
+  right: 8px;
+  transform: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hint-cancel {
+  background: #1f2937;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font: inherit;
 }
 .hint.notice {
   background: #fca5a5;

@@ -32,6 +32,8 @@ L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; gu
 | Armées                                | onglet « Armées » du panneau de droite     |
 | Fiche d'un pays, diplomatie           | clic sur un pays (sans unité sélectionnée) |
 
+Sur téléphone, en portrait comme en paysage : la barre du haut garde la pause, la date et la vitesse (un toucher fait défiler les vitesses), le reste passe dans le menu ☰. En portrait, le panneau devient un tiroir en bas, à tirer par sa poignée (replié, mi-hauteur, plein écran) ; en paysage, il reste sur le côté. Pour donner un ordre : bouton « Déplacer », « Attaquer » ou « Se replier », puis toucher la destination (le tiroir se replie le temps de viser). Le bouton ▢ active la sélection par zone : glisser un rectangle sur la carte sélectionne vos unités qu'il contient ; il marche aussi à la souris.
+
 Une armée peut tenir tout le front ou une portion (deux clics sur la carte) : ses unités s'y répartissent seules et suivent le front quand il bouge. Une offensive se trace en deux clics (départ, objectif), puis se lance.
 
 Lecture des pions : cadre aux couleurs du camp, symbole OTAN simplifié, jauge verte = effectifs, jauge bleue = organisation, point orange = au contact, bordure rouge pointillée = hors ravitaillement, pion pâle = en déroute.

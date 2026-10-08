@@ -86,12 +86,70 @@ export interface GameOutcome {
   reason: string
 }
 
+export type BuildingKind = 'civ' | 'mil' | 'barracks' | 'depot' | 'fort'
+export type Buildings = Record<BuildingKind, number>
+
 export interface CityState {
   name: string
   lon: number
   lat: number
   capital: boolean
   owner: CountryId | null
+  pop: number
+  buildings: Buildings
+}
+
+export interface ConstructionItem {
+  id: number
+  city: string
+  kind: BuildingKind
+  /** Points de construction déjà investis. */
+  progress: number
+  cost: number
+}
+
+export interface RecruitItem {
+  id: number
+  kind: UnitKind
+  /** Ville de caserne où l'unité sera formée puis déployée. */
+  city: string
+  /** Production militaire déjà investie. */
+  progress: number
+  cost: number
+  /** Armée rejointe à la sortie (null = réserve). */
+  armyId: number | null
+}
+
+/** Économie d'un pays. Les stocks sont en points, la main-d'œuvre en milliers d'hommes. */
+export interface EconomyState {
+  country: CountryId
+  production: number
+  munitions: number
+  manpower: number
+  construction: ConstructionItem[]
+  recruitment: RecruitItem[]
+  /** Numéro de la prochaine unité de chaque type (noms des nouvelles unités). */
+  unitCounters: Record<UnitKind, number>
+  /** Flux du dernier jour, pour l'affichage. */
+  daily: {
+    construction: number
+    production: number
+    munitions: number
+    munitionsUsed: number
+    manpower: number
+    reinforcements: number
+  }
+}
+
+/** Ressources de départ et apports extérieurs au théâtre (industrie hors carte, aide, réserves). */
+export interface ScenarioEconomy {
+  production: number
+  munitions: number
+  manpower: number
+  /** Apports quotidiens venant de hors du théâtre. */
+  productionPerDay: number
+  munitionsPerDay: number
+  manpowerPerDay: number
 }
 
 export interface GridSnapshot {
@@ -117,6 +175,10 @@ export interface SimSnapshot {
   units: UnitSnapshot[]
   armies: ArmyState[]
   cities: CityState[]
+  /** Économie du joueur (celle de l'IA n'est pas publiée). */
+  economy: EconomyState | null
+  /** L'économie du joueur est gérée automatiquement. */
+  autoEconomy: boolean
   events: GameEvent[]
   /** Part du territoire de départ conservée par chaque camp, 0 à 1. */
   territoryHeld: Record<CountryId, number>
@@ -146,5 +208,6 @@ export interface ScenarioDef {
   countries: CountryDef[]
   /** Points d'où part le ravitaillement de chaque camp (zones de 30 km). */
   supplySources: Record<CountryId, LonLat[]>
+  economy: Record<CountryId, ScenarioEconomy>
   units: ScenarioUnit[]
 }

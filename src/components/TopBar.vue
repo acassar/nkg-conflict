@@ -3,10 +3,47 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '@/stores/game'
 
 const game = useGameStore()
+const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
+const resources = computed(() => {
+  const e = game.snapshot?.economy
+  if (!e) return null
+  return [
+    {
+      label: 'Production',
+      value: fmt(e.production),
+      delta: `+${fmt(e.daily.production)}/j`,
+      title: 'Production militaire : formations et renforts',
+      low: false,
+    },
+    {
+      label: 'Munitions',
+      value: fmt(e.munitions),
+      delta: `+${fmt(e.daily.munitions)}/j`,
+      title: 'Munitions : à zéro, la puissance de feu est divisée par deux',
+      low: e.munitions < 200,
+    },
+    {
+      label: "Main-d'œuvre",
+      value: `${fmt(e.manpower)} k`,
+      delta: `+${e.daily.manpower.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} k/j`,
+      title: "Main-d'œuvre disponible, en milliers d'hommes",
+      low: e.manpower < 5,
+    },
+    {
+      label: 'Construction',
+      value: `${fmt(e.daily.construction)}/j`,
+      delta: '',
+      title: 'Points de construction par jour (usines civiles)',
+      low: false,
+    },
+  ]
+})
 const held = computed(() => {
   const s = game.snapshot
   const v = s?.territoryHeld[s.playerCountry]
-  return v === undefined ? null : (v * 100).toFixed(1)
+  return v === undefined
+    ? null
+    : (v * 100).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 })
 const fileInput = ref<HTMLInputElement | null>(null)
 const speeds = [1, 2, 3, 4, 5] as const
@@ -36,6 +73,13 @@ async function onFile(event: Event): Promise<void> {
       {{ game.playerCountry?.name ?? '…' }}
       <span v-if="held !== null" class="held" title="Part du territoire de départ conservée">
         {{ held }} %
+      </span>
+    </div>
+
+    <div v-if="resources" class="resources">
+      <span v-for="r in resources" :key="r.label" :title="r.title" :class="{ low: r.low }">
+        <span class="rlabel">{{ r.label }}</span> {{ r.value }}
+        <span class="delta">{{ r.delta }}</span>
       </span>
     </div>
 
@@ -95,6 +139,34 @@ async function onFile(event: Event): Promise<void> {
   align-items: center;
   gap: 8px;
   font-weight: 600;
+}
+.topbar * {
+  white-space: nowrap;
+}
+.resources {
+  display: flex;
+  gap: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.rlabel,
+.delta {
+  color: #9aa3af;
+}
+.delta {
+  font-size: 12px;
+}
+.resources .low {
+  color: #fca5a5;
+}
+@media (max-width: 1500px) {
+  .delta {
+    display: none;
+  }
+}
+@media (max-width: 1180px) {
+  .resources {
+    display: none;
+  }
 }
 .held {
   font-weight: 400;

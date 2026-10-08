@@ -33,8 +33,11 @@ Lecture des pions : cadre aux couleurs du camp, symbole OTAN simplifié, jauge v
 ## Règles en bref
 
 - **Front** : grille de 0,05° (~5 km). Une cellule change de camp quand elle est dans la zone de contrôle d'une unité, hors de celle de toute unité ennemie, et touche déjà le territoire de ce camp.
-- **Combat** : au contact (10 km), chaque unité frappe l'ennemi le plus proche. L'artillerie frappe à 30 km. Défense renforcée en ville, derrière un fleuve et avec le retranchement. Sous 15 % d'organisation, une unité décroche.
-- **Ravitaillement** : relié aux sources de chaque camp à travers son propre territoire. Les unités logistiques le prolongent de 60 km. Hors ravitaillement : combat à 60 %, attrition après 3 jours. Les poches sans défenseur s'effondrent.
+- **Terrain** : forêts, collines, montagnes, marais, fleuves et villes modifient vitesse, défense et itinéraires (table `TERRAIN_RULES` dans `src/sim/theater/grid.ts`).
+- **Combat** : au contact (10 km), chaque unité frappe l'ennemi le plus proche. L'artillerie frappe à 30 km. Défense renforcée par le terrain, le retranchement et les fortifications. Sous 15 % d'organisation, une unité décroche et continue de reculer jusqu'à se rallier. Chaque tir consomme des munitions : à court, la puissance de feu est divisée par deux.
+- **Commandement** : une unité à moins de 120 km d'un QG de son camp gagne 15 % au combat et récupère plus vite.
+- **Ravitaillement** : relié aux sources de chaque camp et à ses dépôts, à travers son propre territoire. Les unités logistiques le prolongent de 60 km. Hors ravitaillement : combat à 60 %, attrition après 3 jours. Les poches sans défenseur s'effondrent.
+- **Économie** : les villes portent les bâtiments (usines civiles et militaires, casernes, dépôts, fortifications). Chaque jour : points de construction, production militaire, munitions et main-d'œuvre. Une caserne forme une unité à la fois ; les unités ravitaillées hors combat reçoivent des renforts. Une ville prise perd la moitié de ses usines, ses fortifications et son dépôt. Option « Gestion automatique » dans l'onglet Production.
 
 ## Fond de carte
 
@@ -46,7 +49,7 @@ VITE_PMTILES_URL=https://ton-domaine/tiles/monde.pmtiles
 
 ## Données du théâtre
 
-`src/sim/data/theater-ukraine.json` est généré depuis [Natural Earth](https://www.naturalearthdata.com/) (domaine public) : frontières de facto, fleuves majeurs, villes de plus de 250 000 habitants.
+`src/sim/data/theater-ukraine.json` est généré depuis [Natural Earth](https://www.naturalearthdata.com/) (domaine public) : frontières de facto, fleuves majeurs, villes de plus de 250 000 habitants. Le relief (AWS Terrain Tiles) et l'occupation du sol ([ESA WorldCover 2021](https://esa-worldcover.org/), CC BY 4.0) viennent de `data/terrain-raw.json.gz`, produit par le workflow « Données du théâtre » (`scripts/fetch-terrain.py`) et publié sur la branche `data-results`.
 
 ```bash
 pnpm theater chemin/vers/natural-earth-vector/geojson
@@ -57,6 +60,7 @@ pnpm theater chemin/vers/natural-earth-vector/geojson
 - `src/sim/` : simulation en TypeScript pur, exécutée dans un Web Worker (`worker.ts`, via Comlink).
   - `simulation.ts` : état de la partie, boucle des systèmes, ordres du joueur, sauvegarde.
   - `systems/` : ravitaillement, mouvement, combat, territoire, armées, IA, pathfinding (A\*).
+  - `economy/` : bâtiments, revenus, constructions, formations, renforts, IA économique.
   - `theater/grid.ts` : grille de contrôle (propriétaire et terrain par cellule).
   - `units/catalog.ts` : types d'unités de l'époque moderne.
   - `scenarios/` : scénarios de départ.

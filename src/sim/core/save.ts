@@ -1,6 +1,6 @@
-import type { ArmyState, GameEvent, GameOutcome, UnitState } from './types'
+import type { ArmyState, Buildings, EconomyState, GameEvent, GameOutcome, UnitState } from './types'
 
-export const SAVE_VERSION = 2
+export const SAVE_VERSION = 3
 
 export interface SaveFile {
   version: typeof SAVE_VERSION
@@ -22,8 +22,10 @@ export interface SaveFile {
   supplyReach: number[][]
   /** État de combat des unités : [id, engagée avec, ravitaillée, en déroute, commandée]. */
   runtime: Array<[number, number | null, boolean, boolean, boolean?]>
-  /** Dernier propriétaire connu de chaque ville (pour détecter les prises). */
-  cityOwner: Array<[string, number]>
+  /** Villes : propriétaire (index de camp) et bâtiments. */
+  cities: Array<{ name: string; owner: number; buildings: Buildings }>
+  economies: EconomyState[]
+  autoEconomy?: boolean
 }
 
 export function encodeRle(arr: ArrayLike<number>): number[] {

@@ -1,5 +1,5 @@
 import type { Random } from './core/random'
-import type { ArmyState, CountryId, LonLat, UnitState } from './core/types'
+import type { ArmyState, Buildings, CountryId, EconomyState, LonLat, UnitState } from './core/types'
 import type { CityDef, Grid } from './theater/grid'
 import type { UnitType } from './units/catalog'
 import type { UnitKind } from './core/types'
@@ -12,6 +12,13 @@ export interface UnitRuntime {
   routed: boolean
   /** À portée d'un QG de son camp : bonus de combat et récupération plus rapide. */
   commanded: boolean
+}
+
+/** Ville de la partie : propriétaire courant (index de camp) et bâtiments. */
+export interface CityRuntime {
+  def: CityDef
+  owner: number
+  buildings: Buildings
 }
 
 /** Tout ce que les systèmes partagent. Les systèmes sont des fonctions pures sur ce contexte. */
@@ -33,6 +40,11 @@ export interface SimContext {
   /** Cellules praticables d'un camp non reliées à son ravitaillement au dernier calcul (poches). */
   unsuppliedCells: number[][]
   cities: CityDef[]
+  /** État des villes (propriétaire, bâtiments), par nom. */
+  cityStates: Map<string, CityRuntime>
+  economies: Map<CountryId, EconomyState>
+  /** Nouvel identifiant unique (unités, armées, files d'attente). */
+  allocId(): number
   log(text: string, owner: CountryId | null): void
 }
 

@@ -41,6 +41,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <TopBar />
   <MapView />
   <p v-if="game.modeHint" class="hint">{{ game.modeHint }}</p>
+  <p v-else-if="game.notice" class="hint notice" role="alert">{{ game.notice }}</p>
   <CommandPanel />
   <EventLog />
   <p class="disclaimer">Scénario hypothétique · pas une reconstitution historique</p>
@@ -70,6 +71,9 @@ body,
   font:
     600 13px/1.3 system-ui,
     sans-serif;
+}
+.hint.notice {
+  background: #fca5a5;
 }
 .disclaimer {
   position: absolute;

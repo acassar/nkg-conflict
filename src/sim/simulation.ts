@@ -4,6 +4,7 @@ import { Random } from './core/random'
 import { encodeRle, SAVE_VERSION, type SaveFile } from './core/save'
 import type {
   ArmyState,
+  BuildingKind,
   CityState,
   CountryId,
   GameEvent,
@@ -12,6 +13,7 @@ import type {
   OrderKind,
   ScenarioDef,
   SimSnapshot,
+  UnitKind,
   UnitState,
 } from './core/types'
 import { runtimeOf, sideIndex, type SimContext } from './context'
@@ -24,12 +26,26 @@ import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, updateArmies } from './systems/armies'
 import { updateAi, nearestCity, type AiState } from './systems/ai'
+import {
+  cancelConstruction,
+  cancelRecruit,
+  initCities,
+  initEconomies,
+  onCityCaptured,
+  previewIncome,
+  queueConstruction,
+  queueRecruit,
+  updateEconomy,
+  updateSupplySources,
+} from './economy/economy'
+import { updateAiEconomy } from './economy/ai'
 
 const MAX_EVENTS = 60
 const SUPPLY_EVERY = 6
 const ARMIES_EVERY = 24
 const AI_EVERY = 12
 const CITIES_EVERY = 6
+const ECONOMY_EVERY = 24
 
 export type PlayerOrder = Extract<OrderKind, 'move' | 'attack' | 'hold' | 'retreat'>
 
@@ -44,7 +60,8 @@ export class Simulation {
   private ai = new Map<CountryId, AiState>()
   /** Vrai : l'IA commande aussi le pays du joueur (parties de test, mode spectateur). */
   aiControlsPlayer = false
-  private cityOwner = new Map<string, number>()
+  /** Vrai : l'IA gère l'économie du joueur (constructions et formations), le joueur garde ses armées. */
+  autoEconomy = false
   private initialTerritory: number[] = []
   private publishedGridVersion = -1
 
@@ -69,10 +86,13 @@ export class Simulation {
       catalog: MODERN_CATALOG,
       pathfinder: new Pathfinder(grid),
       sides,
-      supplySources: scenario.supplySources,
+      supplySources: {},
       supplyReach: [],
       unsuppliedCells: [],
       cities: theater.cities,
+      cityStates: new Map(),
+      economies: new Map(),
+      allocId: () => this.nextId++,
       log: (text, owner) => this.log(text, owner),
     }
     for (let s = 1; s < sides.length; s++) this.initialTerritory[s] = grid.countOwned(s)
@@ -144,6 +164,9 @@ export class Simulation {
         if (u) u.entrench = 0.5
       }
     }
+    initCities(ctx)
+    initEconomies(ctx, scenario)
+    previewIncome(ctx, scenario)
     sim.afterLoad()
     return sim
   }
@@ -164,6 +187,7 @@ export class Simulation {
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
     sim.outcome = save.outcome
+    sim.autoEconomy = save.autoEconomy ?? false
     // Ancien format : un seul nombre pour l'unique pays IA.
     const last = save.aiLastOffensiveTick
     for (const c of scenario.countries) {
@@ -184,20 +208,24 @@ export class Simulation {
       }
       ctx.unsuppliedCells[side] = pockets
     })
-    sim.cityOwner = new Map(save.cityOwner)
+    initCities(ctx)
+    for (const c of save.cities) {
+      const city = ctx.cityStates.get(c.name)
+      if (city) {
+        city.owner = c.owner
+        city.buildings = { ...c.buildings }
+      }
+    }
+    ctx.economies.clear()
+    for (const e of save.economies) ctx.economies.set(e.country, structuredClone(e))
+    updateSupplySources(ctx, scenario)
     return sim
   }
 
   private afterLoad(): void {
+    updateSupplySources(this.ctx, this.scenario)
     updateSupply(this.ctx)
     updateCommand(this.ctx)
-    this.indexCities()
-  }
-
-  private indexCities(): void {
-    for (const c of this.ctx.cities) {
-      this.cityOwner.set(c.name, this.ctx.grid.owner[this.ctx.grid.cellAt(c.lon, c.lat)] ?? 0)
-    }
   }
 
   private log(text: string, owner: CountryId | null): void {
@@ -220,6 +248,14 @@ export class Simulation {
       if (ctx.tick % AI_EVERY === 0) {
         for (const c of this.aiCountries) updateAi(ctx, c, this.aiState(c))
       }
+      if (ctx.tick % ECONOMY_EVERY === 0) {
+        updateEconomy(ctx, this.scenario)
+        const managed = this.autoEconomy
+          ? [...new Set([...this.aiCountries, this.playerCountry])]
+          : this.aiCountries
+        for (const c of managed) updateAiEconomy(ctx, c)
+        updateSupplySources(ctx, this.scenario)
+      }
       if (ctx.tick % ARMIES_EVERY === 0) updateArmies(ctx)
       if (ctx.tick % CITIES_EVERY === 0) this.updateCitiesAndVictory()
     }
@@ -227,11 +263,13 @@ export class Simulation {
 
   private updateCitiesAndVictory(): void {
     const { grid } = this.ctx
-    for (const c of this.ctx.cities) {
+    for (const city of this.ctx.cityStates.values()) {
+      const c = city.def
       const now = grid.owner[grid.cellAt(c.lon, c.lat)] ?? 0
-      const before = this.cityOwner.get(c.name) ?? 0
+      const before = city.owner
       if (now !== before) {
-        this.cityOwner.set(c.name, now)
+        city.owner = now
+        onCityCaptured(this.ctx, city, before)
         const by = this.ctx.sides[now] ?? null
         this.log(`Ville prise (${this.countryName(by)}) : ${c.name}`, by)
         if (c.capital && c.country === this.ctx.sides[before]) {
@@ -352,6 +390,44 @@ export class Simulation {
     army.offensive = null
   }
 
+  /** Ajoute des unités du joueur à une armée existante (elles quittent leur armée précédente). */
+  addUnitsToArmy(armyId: number, unitIds: number[]): void {
+    const army = this.playerArmy(armyId)
+    for (const u of this.playerUnits(unitIds)) {
+      if (u.armyId === armyId) continue
+      const prev = u.armyId !== null ? this.ctx.armies.get(u.armyId) : undefined
+      if (prev) prev.unitIds = prev.unitIds.filter((x) => x !== u.id)
+      u.armyId = armyId
+      army.unitIds.push(u.id)
+    }
+    this.removeEmptyArmies()
+    if (army.front || army.wholeFront) assignFront(this.ctx, army)
+  }
+
+  // ---------- Économie du joueur ----------
+
+  /** Les commandes économiques renvoient un message d'erreur pour l'interface, ou null. */
+  queueConstruction(city: string, kind: BuildingKind): string | null {
+    return queueConstruction(this.ctx, this.playerCountry, city, kind)
+  }
+
+  cancelConstruction(id: number): void {
+    cancelConstruction(this.ctx, this.playerCountry, id)
+  }
+
+  queueRecruit(kind: UnitKind, city: string, armyId: number | null): string | null {
+    if (armyId !== null) this.playerArmy(armyId)
+    return queueRecruit(this.ctx, this.playerCountry, kind, city, armyId)
+  }
+
+  cancelRecruit(id: number): void {
+    cancelRecruit(this.ctx, this.playerCountry, id)
+  }
+
+  setAutoEconomy(on: boolean): void {
+    this.autoEconomy = on
+  }
+
   private removeEmptyArmies(): void {
     for (const [id, a] of this.ctx.armies) {
       if (a.owner === this.playerCountry && a.unitIds.length === 0) this.ctx.armies.delete(id)
@@ -381,13 +457,16 @@ export class Simulation {
       const initial = this.initialTerritory[s] ?? 1
       territoryHeld[ctx.sides[s] ?? ''] = grid.countOwned(s) / Math.max(1, initial)
     }
-    const cities: CityState[] = ctx.cities.map((c) => ({
-      name: c.name,
-      lon: c.lon,
-      lat: c.lat,
-      capital: c.capital,
-      owner: ctx.sides[grid.owner[grid.cellAt(c.lon, c.lat)] ?? 0] || null,
+    const cities: CityState[] = [...ctx.cityStates.values()].map((c) => ({
+      name: c.def.name,
+      lon: c.def.lon,
+      lat: c.def.lat,
+      capital: c.def.capital,
+      owner: ctx.sides[c.owner] || null,
+      pop: c.def.pop,
+      buildings: { ...c.buildings },
     }))
+    const economy = ctx.economies.get(this.playerCountry)
 
     return {
       tick: ctx.tick,
@@ -422,6 +501,8 @@ export class Simulation {
         .filter((a) => a.owner === this.playerCountry)
         .map((a) => structuredClone(a)),
       cities,
+      economy: economy ? structuredClone(economy) : null,
+      autoEconomy: this.autoEconomy,
       events: this.events.slice(),
       territoryHeld,
       outcome: this.outcome,
@@ -471,7 +552,13 @@ export class Simulation {
         r.routed,
         r.commanded,
       ]),
-      cityOwner: [...this.cityOwner.entries()],
+      cities: [...ctx.cityStates.values()].map((c) => ({
+        name: c.def.name,
+        owner: c.owner,
+        buildings: { ...c.buildings },
+      })),
+      economies: [...ctx.economies.values()].map((e) => structuredClone(e)),
+      autoEconomy: this.autoEconomy,
     }
   }
 

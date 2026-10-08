@@ -3,7 +3,14 @@ import { computed, ref, shallowRef } from 'vue'
 import * as Comlink from 'comlink'
 import { formatGameDate, isSpeed, tickToDate } from '@/sim/core/clock'
 import { terrainRule } from '@/sim/theater/grid'
-import type { GridSnapshot, LonLat, SimSnapshot, UnitSnapshot } from '@/sim/core/types'
+import type {
+  BuildingKind,
+  GridSnapshot,
+  LonLat,
+  SimSnapshot,
+  UnitKind,
+  UnitSnapshot,
+} from '@/sim/core/types'
 import type { PlayerOrder } from '@/sim/simulation'
 import type { SimApi } from '@/sim/worker'
 
@@ -34,6 +41,12 @@ export const useGameStore = defineStore('game', () => {
   const selection = ref<number[]>([])
   const selectedArmyId = ref<number | null>(null)
   const mode = ref<MapMode>({ kind: 'select' })
+  /** Onglet du panneau de droite. */
+  const panelTab = ref<'units' | 'armies' | 'production'>('units')
+  const selectedCityName = ref<string | null>(null)
+  /** Message bref affiché en haut de l'écran (erreur de commande, par exemple). */
+  const notice = ref<string | null>(null)
+  let noticeTimer: ReturnType<typeof setTimeout> | undefined
 
   void sim.subscribe(
     Comlink.proxy((next: SimSnapshot) => {
@@ -72,6 +85,10 @@ export const useGameStore = defineStore('game', () => {
   const armies = computed(() => snapshot.value?.armies ?? [])
   const selectedArmy = computed(
     () => armies.value.find((a) => a.id === selectedArmyId.value) ?? null,
+  )
+  const economy = computed(() => snapshot.value?.economy ?? null)
+  const selectedCity = computed(
+    () => snapshot.value?.cities.find((c) => c.name === selectedCityName.value) ?? null,
   )
   const modeHint = computed(() => {
     const m = mode.value
@@ -183,11 +200,42 @@ export const useGameStore = defineStore('game', () => {
     if (selection.value.length > 0) void sim.orderUnits(ids(), 'hold')
   }
 
+  // ---------- Villes et économie ----------
+
+  function showNotice(text: string): void {
+    notice.value = text
+    clearTimeout(noticeTimer)
+    noticeTimer = setTimeout(() => (notice.value = null), 4000)
+  }
+
+  function selectCity(name: string | null): void {
+    selectedCityName.value = name
+    if (name) panelTab.value = 'production'
+  }
+
+  async function queueConstruction(city: string, kind: BuildingKind): Promise<void> {
+    const error = await sim.queueConstruction(city, kind)
+    if (error) showNotice(error)
+  }
+
+  async function queueRecruit(kind: UnitKind, city: string, armyId: number | null): Promise<void> {
+    const error = await sim.queueRecruit(kind, city, armyId)
+    if (error) showNotice(error)
+  }
+
+  const cancelConstruction = (id: number): Promise<void> => sim.cancelConstruction(id)
+  const cancelRecruit = (id: number): Promise<void> => sim.cancelRecruit(id)
+  const setAutoEconomy = (on: boolean): Promise<void> => sim.setAutoEconomy(on)
+
   // ---------- Armées ----------
 
   async function createArmyFromSelection(name: string): Promise<void> {
     if (selection.value.length === 0) return
     selectedArmyId.value = await sim.createArmy(name, ids())
+  }
+
+  function addSelectionToArmy(armyId: number): Promise<void> {
+    return sim.addUnitsToArmy(armyId, ids())
   }
 
   const disbandArmy = (id: number): Promise<void> => sim.disbandArmy(id)
@@ -213,6 +261,7 @@ export const useGameStore = defineStore('game', () => {
 
   function newGame(): Promise<void> {
     selection.value = []
+    selectedCityName.value = null
     selectedArmyId.value = null
     cancelMode()
     return sim.newGame()
@@ -231,6 +280,7 @@ export const useGameStore = defineStore('game', () => {
 
   async function loadFromFile(file: File): Promise<void> {
     selection.value = []
+    selectedCityName.value = null
     selectedArmyId.value = null
     await sim.load(await file.text())
   }
@@ -245,6 +295,17 @@ export const useGameStore = defineStore('game', () => {
     selectedArmyId,
     mode,
     modeHint,
+    panelTab,
+    notice,
+    economy,
+    selectedCity,
+    selectCity,
+    queueConstruction,
+    queueRecruit,
+    cancelConstruction,
+    cancelRecruit,
+    setAutoEconomy,
+    addSelectionToArmy,
     paused,
     speed,
     dateLabel,

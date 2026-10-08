@@ -1,6 +1,7 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, UnitState } from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
+import { fortFactor, useMunitions } from '../economy/economy'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -77,6 +78,7 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     supplyFactor(ctx, u) *
     commandFactor(ctx, u) *
     terrainDefense(ctx, u) *
+    fortFactor(ctx, u) *
     (1 + 0.5 * u.entrench)
   )
 }
@@ -103,7 +105,9 @@ function nearestEnemy(
 function hit(ctx: SimContext, from: UnitState, target: UnitState, factor: number): void {
   let defense = defenseValue(ctx, target)
   if (isOffensive(from) && riverBetween(ctx, from, target)) defense *= 1.4
-  const ratio = Math.min(4, firePower(ctx, from) / Math.max(0.05, defense))
+  // Chaque tir consomme des munitions ; l'artillerie en consomme deux fois plus.
+  const ammo = useMunitions(ctx, from.owner, ctx.catalog[from.kind].supportRangeKm > 0 ? 2 : 1)
+  const ratio = Math.min(4, (firePower(ctx, from) * ammo) / Math.max(0.05, defense))
   const roll = ctx.rng.range(0.8, 1.2)
   target.strength = Math.max(0, target.strength - STRENGTH_LOSS * ratio * roll * factor)
   target.org = Math.max(0, target.org - ORG_LOSS * ratio * roll * factor)

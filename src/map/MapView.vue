@@ -6,7 +6,7 @@ import { MapboxOverlay } from '@deck.gl/mapbox'
 import type { PickingInfo } from '@deck.gl/core'
 import { Protocol } from 'pmtiles'
 import { storeToRefs } from 'pinia'
-import type { LonLat } from '@/sim/core/types'
+import type { CityState, LonLat } from '@/sim/core/types'
 import { isStack, type MapUnit } from './clusters'
 import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills } from './style'
@@ -15,7 +15,7 @@ import { terrainCanvas, territoryCanvas } from './territoryImage'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
-const { snapshot, grid, selection, selectedArmy, mode } = storeToRefs(game)
+const { snapshot, grid, selection, selectedArmy, mode, selectedCity } = storeToRefs(game)
 
 let map: maplibregl.Map | null = null
 const zoom = ref(5)
@@ -46,6 +46,7 @@ function refresh(): void {
       selectedArmy: selectedArmy.value,
       pendingPoint: m.kind === 'front' || m.kind === 'offensive' ? m.first : null,
       zoom: zoom.value,
+      selectedCity: selectedCity.value?.name ?? null,
     }),
   })
 }
@@ -53,6 +54,10 @@ function refresh(): void {
 function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
   const point = info.coordinate ? ([info.coordinate[0], info.coordinate[1]] as LonLat) : null
   if (point && game.mapClick(point)) return
+  if (info.layer?.id === 'cities' && info.object) {
+    game.selectCity((info.object as CityState).name)
+    return
+  }
   const item = info.layer?.id === 'units' ? (info.object as MapUnit | undefined) : undefined
   const additive = event.srcEvent?.shiftKey ?? false
   if (item && isStack(item)) {
@@ -101,7 +106,7 @@ onMounted(() => {
   refresh()
 })
 
-watch([snapshot, grid, selection, selectedArmy, mode, zoom], refresh, { deep: false })
+watch([snapshot, grid, selection, selectedArmy, mode, zoom, selectedCity], refresh, { deep: false })
 
 onBeforeUnmount(() => {
   map?.remove()

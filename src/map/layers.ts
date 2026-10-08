@@ -24,6 +24,7 @@ export interface LayerInput {
   pendingPoint: LonLat | null
   /** Zoom de la carte : sert à regrouper les pions qui se chevauchent à l'écran. */
   zoom: number
+  selectedCity: string | null
 }
 
 type Rgb = [number, number, number]
@@ -76,17 +77,52 @@ export function buildLayers(input: LayerInput): Layer[] {
   }
 
   layers.push(
+    // Fortifications : anneau gris d'autant plus épais que le niveau est élevé.
+    new ScatterplotLayer<CityState>({
+      id: 'city-forts',
+      data: snapshot.cities.filter((c) => c.buildings.fort > 0),
+      getPosition: (c) => [c.lon, c.lat],
+      filled: false,
+      stroked: true,
+      getLineColor: [55, 60, 70, 230],
+      getLineWidth: (c) => 1.5 * c.buildings.fort,
+      lineWidthUnits: 'pixels',
+      radiusUnits: 'pixels',
+      getRadius: (c) => (c.capital ? 11 : 9),
+      updateTriggers: { getLineWidth: snapshot.cities.map((c) => c.buildings.fort).join() },
+    }),
+    // Dépôts : carré blanc sous la ville.
+    new TextLayer<CityState>({
+      id: 'city-depots',
+      data: snapshot.cities.filter((c) => c.buildings.depot > 0),
+      getPosition: (c) => [c.lon, c.lat],
+      getText: () => '■',
+      getSize: 11,
+      getColor: [250, 250, 250, 255],
+      getPixelOffset: [0, 12],
+      outlineWidth: 2,
+      outlineColor: [20, 24, 31, 255],
+      fontSettings: { sdf: true },
+      characterSet: ['■'],
+    }),
     new ScatterplotLayer<CityState>({
       id: 'cities',
       data: snapshot.cities,
       getPosition: (c) => [c.lon, c.lat],
       getFillColor: (c) => [...colorOf(c.owner), 255],
-      getLineColor: [20, 24, 31, 255],
+      getLineColor: (c) =>
+        c.name === input.selectedCity ? [250, 204, 21, 255] : [20, 24, 31, 255],
+      getLineWidth: (c) => (c.name === input.selectedCity ? 3 : 1),
+      lineWidthUnits: 'pixels',
       stroked: true,
-      lineWidthMinPixels: 1,
       radiusUnits: 'pixels',
-      getRadius: (c) => (c.capital ? 6 : 3.5),
-      updateTriggers: { getFillColor: snapshot.cities.map((c) => c.owner).join() },
+      getRadius: (c) => (c.capital ? 6 : 4),
+      pickable: true,
+      updateTriggers: {
+        getFillColor: snapshot.cities.map((c) => c.owner).join(),
+        getLineColor: input.selectedCity,
+        getLineWidth: input.selectedCity,
+      },
     }),
     new TextLayer<CityState>({
       id: 'city-names',

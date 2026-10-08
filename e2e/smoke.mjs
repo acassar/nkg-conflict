@@ -100,6 +100,28 @@ try {
   step('ordre clic droit', { ordre: ordered })
   if (ordered !== 'move') report.errors.push(`ordre clic droit non appliqué (${ordered})`)
 
+  // Production : ville sélectionnée, chantier et formation lancés par les boutons du panneau.
+  await page.evaluate(() => window.__nkg.selectCity('Kyiv'))
+  await page.waitForTimeout(300)
+  const queues = () =>
+    page.evaluate(() => {
+      const e = window.__nkg.snapshot.economy
+      return { construction: e.construction.length, recruitment: e.recruitment.length }
+    })
+  const before = await queues()
+  await page.getByRole('button', { name: 'Construire' }).first().click()
+  await page.getByRole('button', { name: 'Infanterie', exact: true }).click()
+  await page.waitForTimeout(500)
+  const afterQueue = await queues()
+  step('production', { avant: before, apres: afterQueue })
+  if (afterQueue.construction !== before.construction + 1) {
+    report.errors.push('construction non lancée depuis le panneau')
+  }
+  if (afterQueue.recruitment !== before.recruitment + 1) {
+    report.errors.push('formation non lancée depuis le panneau')
+  }
+  await shot('02b-production')
+
   // Lecture à vitesse 5 pendant 8 s.
   await page.keyboard.press('5')
   await page.keyboard.press('Space')

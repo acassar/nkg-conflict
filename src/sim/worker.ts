@@ -2,7 +2,7 @@
 import * as Comlink from 'comlink'
 import { isSpeed } from './core/clock'
 import { parseSave, serializeSave } from './core/save'
-import type { LonLat, SimSnapshot } from './core/types'
+import type { BuildingKind, LonLat, SimSnapshot, UnitKind } from './core/types'
 import theaterJson from './data/theater-ukraine.json'
 import { ukraine2026 } from './scenarios/ukraine-2026'
 import { Simulation, type PlayerOrder } from './simulation'
@@ -86,6 +86,28 @@ const api = {
   },
   cancelOffensive(id: number): void {
     act(() => sim.cancelOffensive(id))
+  },
+  addUnitsToArmy(armyId: number, ids: number[]): void {
+    act(() => sim.addUnitsToArmy(armyId, ids))
+  },
+  queueConstruction(city: string, kind: BuildingKind): string | null {
+    const error = sim.queueConstruction(city, kind)
+    publish()
+    return error
+  },
+  cancelConstruction(id: number): void {
+    act(() => sim.cancelConstruction(id))
+  },
+  queueRecruit(kind: UnitKind, city: string, armyId: number | null): string | null {
+    const error = sim.queueRecruit(kind, city, armyId)
+    publish()
+    return error
+  },
+  cancelRecruit(id: number): void {
+    act(() => sim.cancelRecruit(id))
+  },
+  setAutoEconomy(on: boolean): void {
+    act(() => sim.setAutoEconomy(on))
   },
   newGame(): void {
     sim = Simulation.fromScenario(ukraine2026, theater, Date.now() & 0x7fffffff)

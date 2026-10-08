@@ -2,12 +2,12 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
+import ProductionTab from './ProductionTab.vue'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import type { OrderKind, UnitSnapshot } from '@/sim/core/types'
 
 const game = useGameStore()
-const { selectedUnits, armies, selectedArmy, selectedArmyId } = storeToRefs(game)
-const tab = ref<'units' | 'armies'>('units')
+const { selectedUnits, armies, selectedArmy, selectedArmyId, panelTab: tab } = storeToRefs(game)
 const armyName = ref('')
 const collapsed = ref(false)
 
@@ -40,6 +40,12 @@ const unitsOfArmy = computed(() => {
   return game.snapshot?.units.filter((u) => ids.has(u.id)) ?? []
 })
 
+const attachTo = ref<number | null>(null)
+async function attach(): Promise<void> {
+  const id = attachTo.value ?? armies.value[0]?.id
+  if (id !== undefined && id !== null) await game.addSelectionToArmy(id)
+}
+
 async function createArmy(): Promise<void> {
   await game.createArmyFromSelection(armyName.value)
   armyName.value = ''
@@ -56,6 +62,9 @@ async function createArmy(): Promise<void> {
         </button>
         <button :class="{ active: tab === 'armies' }" @click="tab = 'armies'">
           Armées ({{ armies.length }})
+        </button>
+        <button :class="{ active: tab === 'production' }" @click="tab = 'production'">
+          Production
         </button>
       </nav>
       <button
@@ -99,12 +108,20 @@ async function createArmy(): Promise<void> {
               <div class="status" :class="{ warn: u.routed || !u.supplied }">{{ status(u) }}</div>
             </li>
           </ul>
+          <form v-if="armies.length" class="create" @submit.prevent="attach">
+            <select v-model="attachTo" aria-label="Armée à rejoindre">
+              <option v-for="a in armies" :key="a.id" :value="a.id">{{ a.name }}</option>
+            </select>
+            <button type="submit">Rattacher la sélection à cette armée</button>
+          </form>
           <form class="create" @submit.prevent="createArmy">
             <input v-model="armyName" placeholder="Nom de la nouvelle armée" maxlength="40" />
             <button type="submit">Créer une armée</button>
           </form>
         </template>
       </template>
+
+      <ProductionTab v-else-if="tab === 'production'" />
 
       <!-- Armées -->
       <template v-else>
@@ -169,7 +186,7 @@ async function createArmy(): Promise<void> {
   top: 60px;
   right: 12px;
   z-index: 10;
-  width: 300px;
+  width: 320px;
   max-height: calc(100% - 140px);
   display: flex;
   flex-direction: column;
@@ -277,7 +294,8 @@ ul {
   gap: 4px;
   margin-top: 8px;
 }
-input {
+input,
+select {
   background: #11151b;
   border: 1px solid #3b4250;
   border-radius: 6px;

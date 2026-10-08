@@ -1,23 +1,11 @@
 import type { CountryId, ScenarioDef, ScenarioUnit, UnitKind } from '../core/types'
-
-const KIND_NAMES: Record<UnitKind, { name: string; feminine: boolean }> = {
-  inf: { name: "brigade d'infanterie", feminine: true },
-  mech: { name: 'brigade mécanisée', feminine: true },
-  tank: { name: 'brigade blindée', feminine: true },
-  art: { name: "brigade d'artillerie", feminine: true },
-  log: { name: 'groupement logistique', feminine: false },
-  hq: { name: 'état-major', feminine: false },
-}
+import { unitName } from '../units/names'
 
 /** Génère un ordre de bataille numéroté, déployé automatiquement le long du front. */
 function forces(owner: CountryId, counts: Record<UnitKind, number>): ScenarioUnit[] {
   const out: ScenarioUnit[] = []
   for (const kind of Object.keys(counts) as UnitKind[]) {
-    for (let n = 1; n <= counts[kind]; n++) {
-      const { name, feminine } = KIND_NAMES[kind]
-      const ordinal = n === 1 ? (feminine ? '1re' : '1er') : `${n}e`
-      out.push({ owner, kind, name: `${ordinal} ${name}` })
-    }
+    for (let n = 1; n <= counts[kind]; n++) out.push({ owner, kind, name: unitName(kind, n) })
   }
   return out
 }
@@ -50,6 +38,25 @@ export const ukraine2026: ScenarioDef = {
       [39.72, 47.23],
       [34.1, 44.95],
     ],
+  },
+  // Apports hors théâtre : aide extérieure pour l'Ukraine, industrie et réserves hors carte pour la Russie.
+  economy: {
+    UKR: {
+      production: 1500,
+      munitions: 1500,
+      manpower: 60,
+      productionPerDay: 40,
+      munitionsPerDay: 25,
+      manpowerPerDay: 1.2,
+    },
+    RUS: {
+      production: 2000,
+      munitions: 2000,
+      manpower: 90,
+      productionPerDay: 50,
+      munitionsPerDay: 30,
+      manpowerPerDay: 1.8,
+    },
   },
   units: [
     ...forces('UKR', { inf: 10, mech: 5, tank: 3, art: 3, log: 2, hq: 2 }),

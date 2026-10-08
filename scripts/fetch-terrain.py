@@ -2,9 +2,10 @@
 """
 Télécharge le relief et l'occupation du sol du théâtre, et les agrège sur la grille du jeu.
 
-Sources (tuiles web, échelle ~1 km) :
-- Altitude : tuiles « terrarium » d'AWS Terrain Tiles (domaine public / sources ouvertes).
-- Occupation du sol : ESA WorldCover 2021 (CC BY 4.0), via le service WMTS de Terrascope.
+Sources :
+- Altitude : tuiles « terrarium » d'AWS Terrain Tiles (sources ouvertes), zoom 7 (~1 km).
+- Occupation du sol : ESA WorldCover 2021 v200 (CC BY 4.0), fichiers COG publics sur AWS,
+  lus en basse résolution grâce à leurs aperçus internes (quelques Mo au lieu de plusieurs Go).
 
 Usage : python3 scripts/fetch-terrain.py <lon0> <lat0> <lon1> <lat1> <cellule°> <sortie.json.gz>
 Sortie : pour chaque cellule (ligne 0 = sud), altitude moyenne, dénivelé (max - min),
@@ -17,32 +18,21 @@ import math
 import sys
 import urllib.request
 
+import numpy as np
 from PIL import Image
 
 ZOOM = 7
-SAMPLES = 5  # points échantillonnés par cellule et par axe
+SAMPLES = 5  # points d'altitude échantillonnés par cellule et par axe
 
 TERRARIUM = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
 WORLDCOVER = (
-    "https://services.terrascope.be/wmts/v2?layer=WORLDCOVER_2021_MAP&style=&tilematrixset=EPSG:3857"
-    "&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/png"
-    "&TileMatrix=EPSG:3857:{z}&TileCol={x}&TileRow={y}"
+    "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/"
+    "ESA_WorldCover_10m_2021_v200_{ns}{lat:02d}{ew}{lon:03d}_Map.tif"
 )
-
-# Couleurs officielles des classes WorldCover.
-WC_CLASSES = {
-    "tree": (0, 100, 0),
-    "shrub": (255, 187, 34),
-    "grass": (255, 255, 76),
-    "crop": (240, 150, 255),
-    "built": (250, 0, 0),
-    "bare": (180, 180, 180),
-    "snow": (240, 240, 240),
-    "water": (0, 100, 200),
-    "wetland": (0, 150, 160),
-    "mangrove": (0, 207, 117),
-    "moss": (250, 230, 160),
-}
+WC_TILE_DEG = 3
+WC_RES = 0.01  # degrés par pixel lu (5 × 5 par cellule de 0,05°)
+WC_TREE = 10
+WC_WETLAND = 90
 
 
 def tile_xy(lon, lat, z):
@@ -60,6 +50,8 @@ def fetch(url):
 
 
 class TileSource:
+    """Tuiles web Mercator, chargées à la demande et gardées en mémoire."""
+
     def __init__(self, template, name):
         self.template = template
         self.name = name
@@ -86,13 +78,42 @@ class TileSource:
         return img.getpixel((px, py))
 
 
-def nearest_class(rgb):
-    best, best_d = None, 1e9
-    for name, c in WC_CLASSES.items():
-        d = sum((a - b) ** 2 for a, b in zip(rgb, c))
-        if d < best_d:
-            best, best_d = name, d
-    return best
+def read_worldcover(lon0, lat0, lon1, lat1):
+    """Mosaïque WorldCover sur l'emprise, à WC_RES degrés par pixel, ligne 0 = nord. 0 = pas de donnée."""
+    import rasterio
+    from rasterio.enums import Resampling
+
+    width = round((lon1 - lon0) / WC_RES)
+    height = round((lat1 - lat0) / WC_RES)
+    mosaic = np.zeros((height, width), dtype=np.uint8)
+    failures = 0
+    n = round(WC_TILE_DEG / WC_RES)
+    lat_start = math.floor(lat0 / WC_TILE_DEG) * WC_TILE_DEG
+    lon_start = math.floor(lon0 / WC_TILE_DEG) * WC_TILE_DEG
+    for tlat in range(lat_start, math.ceil(lat1), WC_TILE_DEG):
+        for tlon in range(lon_start, math.ceil(lon1), WC_TILE_DEG):
+            url = WORLDCOVER.format(
+                ns="N" if tlat >= 0 else "S",
+                lat=abs(tlat),
+                ew="E" if tlon >= 0 else "W",
+                lon=abs(tlon),
+            )
+            try:
+                with rasterio.open(url) as src:
+                    tile = src.read(1, out_shape=(n, n), resampling=Resampling.nearest)
+            except Exception as e:  # noqa: BLE001  (les tuiles en pleine mer n'existent pas)
+                failures += 1
+                print(f"worldcover: {tlat},{tlon}: {e}", file=sys.stderr)
+                continue
+            # Collage de la tuile (nord en haut) dans la mosaïque.
+            row0 = round((lat1 - (tlat + WC_TILE_DEG)) / WC_RES)
+            col0 = round((tlon - lon0) / WC_RES)
+            r0, c0 = max(0, row0), max(0, col0)
+            r1, c1 = min(height, row0 + n), min(width, col0 + n)
+            if r1 > r0 and c1 > c0:
+                mosaic[r0:r1, c0:c1] = tile[r0 - row0 : r1 - row0, c0 - col0 : c1 - col0]
+            print(f"worldcover: {tlat},{tlon} ok", file=sys.stderr)
+    return mosaic, failures
 
 
 def main():
@@ -101,12 +122,14 @@ def main():
     width = round((lon1 - lon0) / cell)
     height = round((lat1 - lat0) / cell)
     elev = TileSource(TERRARIUM, "altitude")
-    cover = TileSource(WORLDCOVER, "worldcover")
+    cover, cover_failures = read_worldcover(lon0, lat0, lon1, lat1)
+    per = round(cell / WC_RES)
+    cover_h = cover.shape[0]
 
     mean, relief, forest, wetland = [], [], [], []
     for y in range(height):
         for x in range(width):
-            heights, trees, wet, seen = [], 0, 0, 0
+            heights = []
             for sy in range(SAMPLES):
                 for sx in range(SAMPLES):
                     lon = lon0 + (x + (sx + 0.5) / SAMPLES) * cell
@@ -114,17 +137,15 @@ def main():
                     p = elev.pixel(lon, lat)
                     if p is not None:
                         heights.append(p[0] * 256 + p[1] + p[2] / 256 - 32768)
-                    c = cover.pixel(lon, lat)
-                    if c is not None and c != (0, 0, 0):
-                        seen += 1
-                        cls = nearest_class(c)
-                        trees += cls == "tree"
-                        wet += cls == "wetland"
             mean.append(round(sum(heights) / len(heights)) if heights else 0)
             relief.append(round(max(heights) - min(heights)) if heights else 0)
-            forest.append(round(100 * trees / seen) if seen else 0)
-            wetland.append(round(100 * wet / seen) if seen else 0)
-        print(f"ligne {y + 1}/{height}", file=sys.stderr) if y % 20 == 0 else None
+            # Occupation du sol : le bloc de per × per pixels de la cellule (mosaïque nord en haut).
+            block = cover[cover_h - (y + 1) * per : cover_h - y * per, x * per : (x + 1) * per]
+            seen = int((block > 0).sum())
+            forest.append(round(100 * int((block == WC_TREE).sum()) / seen) if seen else 0)
+            wetland.append(round(100 * int((block == WC_WETLAND).sum()) / seen) if seen else 0)
+        if y % 20 == 0:
+            print(f"ligne {y + 1}/{height}", file=sys.stderr)
 
     data = {
         "bbox": [lon0, lat0, lon1, lat1],
@@ -133,9 +154,9 @@ def main():
         "height": height,
         "sources": {
             "altitude": "AWS Terrain Tiles (terrarium)",
-            "occupation": "ESA WorldCover 2021, CC BY 4.0",
+            "occupation": "ESA WorldCover 2021 v200, CC BY 4.0",
         },
-        "failures": {"altitude": elev.failures, "worldcover": cover.failures},
+        "failures": {"altitude": elev.failures, "worldcover": cover_failures},
         "meanElevation": mean,
         "relief": relief,
         "forestPct": forest,
@@ -143,14 +164,14 @@ def main():
     }
     with gzip.open(out, "wt", encoding="utf-8") as f:
         json.dump(data, f, separators=(",", ":"))
-    land = [v for v in forest]
     print(
         json.dumps(
             {
                 "cellules": width * height,
-                "tuiles": {"altitude": len(elev.cache), "worldcover": len(cover.cache)},
+                "tuiles_altitude": len(elev.cache),
                 "echecs": data["failures"],
-                "foret_moyenne_pct": round(sum(land) / len(land), 1),
+                "foret_moyenne_pct": round(sum(forest) / len(forest), 1),
+                "zones_humides_moyenne_pct": round(sum(wetland) / len(wetland), 2),
                 "altitude_max": max(mean),
                 "denivele_max": max(relief),
             },

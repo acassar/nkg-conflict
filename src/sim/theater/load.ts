@@ -2,8 +2,14 @@ import type { TheaterData } from './grid'
 import ukraineTheater from '../data/theater-ukraine.json'
 import { WORLD_TABLE } from '../scenarios'
 
-/** Décompresse un fichier gzip avec l'API du navigateur (aussi disponible dans Node 18+). */
+/**
+ * Décompresse un fichier gzip avec l'API du navigateur (aussi disponible dans Node 18+).
+ * Certains serveurs envoient le fichier avec `Content-Encoding: gzip` : le navigateur l'a alors déjà
+ * décompressé, ce que l'on reconnaît à l'absence de l'en-tête gzip (1f 8b).
+ */
 async function gunzip(buffer: ArrayBuffer): Promise<Uint8Array> {
+  const head = new Uint8Array(buffer, 0, Math.min(2, buffer.byteLength))
+  if (head[0] !== 0x1f || head[1] !== 0x8b) return new Uint8Array(buffer)
   const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'))
   return new Uint8Array(await new Response(stream).arrayBuffer())
 }

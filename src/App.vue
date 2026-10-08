@@ -5,6 +5,8 @@ import TopBar from '@/components/TopBar.vue'
 import CommandPanel from '@/components/CommandPanel.vue'
 import EventLog from '@/components/EventLog.vue'
 import GameOver from '@/components/GameOver.vue'
+import StartScreen from '@/components/StartScreen.vue'
+import Notifications from '@/components/Notifications.vue'
 import { useGameStore } from '@/stores/game'
 
 const game = useGameStore()
@@ -13,6 +15,7 @@ const game = useGameStore()
 function onKey(event: KeyboardEvent): void {
   const target = event.target
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+  if (!game.started) return
   const key = event.key.toLowerCase()
   if (event.code === 'Space') {
     event.preventDefault()
@@ -38,14 +41,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <TopBar />
   <MapView />
-  <p v-if="game.modeHint" class="hint">{{ game.modeHint }}</p>
-  <p v-else-if="game.notice" class="hint notice" role="alert">{{ game.notice }}</p>
-  <CommandPanel />
-  <EventLog />
-  <p class="disclaimer">Scénario hypothétique · pas une reconstitution historique</p>
-  <GameOver />
+  <template v-if="game.started">
+    <TopBar />
+    <p v-if="game.modeHint" class="hint">{{ game.modeHint }}</p>
+    <p v-else-if="game.notice" class="hint notice" role="alert">{{ game.notice }}</p>
+    <CommandPanel />
+    <EventLog />
+    <Notifications />
+    <p class="disclaimer">Scénario hypothétique · sans prétention historique</p>
+    <GameOver />
+  </template>
+  <StartScreen v-else />
 </template>
 
 <style>

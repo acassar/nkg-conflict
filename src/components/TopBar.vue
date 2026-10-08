@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useGameStore } from '@/stores/game'
+import { STANCE_COLORS } from '@/map/territoryImage'
 
 const game = useGameStore()
 const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
@@ -46,6 +47,16 @@ const held = computed(() => {
     : (v * 100).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 })
 const fileInput = ref<HTMLInputElement | null>(null)
+const pctOf = (v: number): string => `${Math.round(v * 100)} %`
+
+function openCountry(): void {
+  game.selectCountry(null)
+  game.panelTab = 'country'
+}
+
+function quit(): void {
+  if (confirm('Revenir au menu ? Pensez à sauvegarder la partie en cours.')) game.quitToMenu()
+}
 const speeds = [1, 2, 3, 4, 5] as const
 
 async function onFile(event: Event): Promise<void> {
@@ -68,11 +79,20 @@ async function onFile(event: Event): Promise<void> {
       <span
         v-if="game.playerCountry"
         class="flag"
-        :style="{ background: `rgb(${game.playerCountry.color.join(',')})` }"
+        :style="{ background: `rgb(${STANCE_COLORS.player.join(',')})` }"
       />
       {{ game.playerCountry?.name ?? '…' }}
       <span v-if="held !== null" class="held" title="Part du territoire de départ conservée">
         {{ held }} %
+      </span>
+      <span
+        v-if="game.playerPolitics"
+        class="held gauge"
+        title="Stabilité · soutien à la guerre (cliquez pour la diplomatie)"
+        @click="openCountry"
+      >
+        Stab. {{ pctOf(game.playerPolitics.stability) }} · Guerre
+        {{ pctOf(game.playerPolitics.warSupport) }}
       </span>
     </div>
 
@@ -112,7 +132,7 @@ async function onFile(event: Event): Promise<void> {
     </div>
 
     <div class="files">
-      <button title="Nouvelle partie" @click="game.newGame()">Nouvelle</button>
+      <button title="Revenir au menu (la partie en cours sera perdue)" @click="quit">Menu</button>
       <button title="Sauvegarder la partie dans un fichier" @click="game.saveToFile()">
         Sauver
       </button>
@@ -180,6 +200,14 @@ async function onFile(event: Event): Promise<void> {
   font-weight: 400;
   color: #b8bec8;
   font-variant-numeric: tabular-nums;
+}
+.gauge {
+  cursor: pointer;
+}
+@media (max-width: 1300px) {
+  .gauge {
+    display: none;
+  }
 }
 .flag {
   width: 14px;

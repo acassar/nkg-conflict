@@ -5,6 +5,7 @@ import { formatGameDate, isSpeed, tickToDate } from '@/sim/core/clock'
 import { terrainRule } from '@/sim/theater/grid'
 import type {
   BuildingKind,
+  CountryId,
   GridSnapshot,
   LonLat,
   SimSnapshot,
@@ -12,6 +13,8 @@ import type {
   UnitSnapshot,
 } from '@/sim/core/types'
 import type { PlayerOrder } from '@/sim/simulation'
+import type { PeaceKind } from '@/sim/politics/types'
+import type { ScenarioInfo } from '@/sim/scenarios'
 import type { SimApi } from '@/sim/worker'
 
 /**
@@ -24,11 +27,23 @@ export type MapMode =
   | { kind: 'front'; armyId: number; first: LonLat | null }
   | { kind: 'offensive'; armyId: number; first: LonLat | null }
 
+/** Relation d'un pays avec le joueur, pour les couleurs de la carte. */
+export type Stance = 'player' | 'enemy' | 'ally' | 'war' | 'neutral'
+
+export interface Toast {
+  id: number
+  text: string
+  tone: 'info' | 'danger' | 'success'
+}
+
 const ORDER_LABELS: Record<Exclude<PlayerOrder, 'hold'>, string> = {
   move: 'Déplacer',
   attack: 'Attaquer',
   retreat: 'Se replier',
 }
+
+/** Événements du journal qui méritent une notification quand ils concernent le joueur. */
+const IMPORTANT = /déclare la guerre|capitule|paix|entre en guerre|propose la paix|Fin de partie/
 
 /** Pont entre l'interface et le Worker de simulation. L'interface ne fait que lire l'état publié. */
 export const useGameStore = defineStore('game', () => {
@@ -37,21 +52,63 @@ export const useGameStore = defineStore('game', () => {
 
   // shallowRef : chaque snapshot remplace le précédent, inutile de rendre ses objets réactifs.
   const snapshot = shallowRef<SimSnapshot | null>(null)
+  /** Grille de la partie : reçue entière au chargement, puis tenue à jour par les patchs. */
   const grid = shallowRef<GridSnapshot | null>(null)
+  /** Incrémenté à chaque patch appliqué (la carte redessine les cellules modifiées). */
+  const gridTick = ref(0)
+  /** Cellules modifiées en attente de dessin (vidées par la carte). */
+  let pendingCells: number[] = []
+  const scenarios = ref<ScenarioInfo[]>([])
+  const loading = ref(false)
   const selection = ref<number[]>([])
   const selectedArmyId = ref<number | null>(null)
+  const selectedCountryCode = ref<CountryId | null>(null)
   const mode = ref<MapMode>({ kind: 'select' })
   /** Onglet du panneau de droite. */
-  const panelTab = ref<'units' | 'armies' | 'production'>('units')
+  const panelTab = ref<'units' | 'armies' | 'production' | 'country'>('units')
   const selectedCityName = ref<string | null>(null)
   /** Message bref affiché en haut de l'écran (erreur de commande, par exemple). */
   const notice = ref<string | null>(null)
   let noticeTimer: ReturnType<typeof setTimeout> | undefined
+  const toasts = ref<Toast[]>([])
+  let toastId = 0
+  /** Tick du dernier événement déjà examiné pour les notifications. */
+  let lastEventTick = -1
+  /** Demande de recentrage de la carte (début de partie). */
+  const focus = ref<{ at: LonLat; zoom: number; nonce: number } | null>(null)
+  /** Recentrer la carte dès l'arrivée du prochain état (nouvelle partie ou chargement). */
+  let focusPending = false
+
+  void sim.scenarios().then((list) => (scenarios.value = list))
 
   void sim.subscribe(
     Comlink.proxy((next: SimSnapshot) => {
+      if (next.grid) {
+        grid.value = next.grid
+        pendingCells = []
+        gridTick.value++
+      } else if (next.gridPatch && grid.value) {
+        const owner = grid.value.owner
+        const patch = next.gridPatch
+        for (let k = 0; k < patch.length; k += 2) {
+          const cell = patch[k] ?? 0
+          owner[cell] = patch[k + 1] ?? 0
+          pendingCells.push(cell)
+        }
+        if (patch.length) gridTick.value++
+      }
+      const previous = snapshot.value
       snapshot.value = next
-      if (next.grid) grid.value = next.grid
+      // L'état publié peut arriver après la réponse de newGame : le recentrage se fait ici.
+      if (focusPending) {
+        focusPending = false
+        focusOnPlayer()
+      }
+      if (!previous || previous.scenarioId !== next.scenarioId || next.tick < previous.tick) {
+        lastEventTick = next.events.at(-1)?.tick ?? -1
+      } else {
+        notifyEvents(next)
+      }
       // On retire de la sélection les unités disparues.
       const alive = new Set(next.units.map((u) => u.id))
       if (selection.value.some((id) => !alive.has(id))) {
@@ -66,6 +123,37 @@ export const useGameStore = defineStore('game', () => {
     }),
   )
 
+  /** Cellules modifiées depuis le dernier appel (pour un dessin incrémental). */
+  function takePendingCells(): number[] {
+    const out = pendingCells
+    pendingCells = []
+    return out
+  }
+
+  /** Notifications pour les événements importants qui concernent le joueur. */
+  function notifyEvents(s: SimSnapshot): void {
+    const fresh = s.events.filter((e) => e.tick > lastEventTick)
+    if (fresh.length === 0) return
+    lastEventTick = s.events.at(-1)?.tick ?? lastEventTick
+    const me = s.countries.find((c) => c.id === s.playerCountry)?.name ?? ''
+    for (const e of fresh) {
+      if (!IMPORTANT.test(e.text)) continue
+      if (e.owner !== s.playerCountry && !e.text.includes(me)) continue
+      pushToast(e.text, /capitule|déclare la guerre/.test(e.text) ? 'danger' : 'info')
+    }
+  }
+
+  function pushToast(text: string, tone: Toast['tone'] = 'info'): void {
+    const id = ++toastId
+    toasts.value = [...toasts.value.slice(-3), { id, text, tone }]
+    setTimeout(() => dismissToast(id), 9000)
+  }
+
+  function dismissToast(id: number): void {
+    toasts.value = toasts.value.filter((t) => t.id !== id)
+  }
+
+  const started = computed(() => snapshot.value !== null)
   const paused = computed(() => snapshot.value?.paused ?? true)
   const speed = computed(() => snapshot.value?.speed ?? 1)
   const dateLabel = computed(() => {
@@ -76,11 +164,21 @@ export const useGameStore = defineStore('game', () => {
     const s = snapshot.value
     return s?.countries.find((c) => c.id === s.playerCountry) ?? null
   })
+  const countryByCode = computed(
+    () => new Map((snapshot.value?.countries ?? []).map((c) => [c.id, c])),
+  )
+  const politicsByCode = computed(
+    () => new Map((snapshot.value?.politics.countries ?? []).map((p) => [p.code, p])),
+  )
+  const playerPolitics = computed(() => {
+    const s = snapshot.value
+    return s ? (politicsByCode.value.get(s.playerCountry) ?? null) : null
+  })
   const selectedUnits = computed<UnitSnapshot[]>(() => {
     const s = snapshot.value
     if (!s) return []
-    const ids = new Set(selection.value)
-    return s.units.filter((u) => ids.has(u.id))
+    const set = new Set(selection.value)
+    return s.units.filter((u) => set.has(u.id))
   })
   const armies = computed(() => snapshot.value?.armies ?? [])
   const selectedArmy = computed(
@@ -90,6 +188,61 @@ export const useGameStore = defineStore('game', () => {
   const selectedCity = computed(
     () => snapshot.value?.cities.find((c) => c.name === selectedCityName.value) ?? null,
   )
+  const selectedCountry = computed(() =>
+    selectedCountryCode.value ? (countryByCode.value.get(selectedCountryCode.value) ?? null) : null,
+  )
+  const offers = computed(() => snapshot.value?.politics.offers ?? [])
+
+  /**
+   * Position de chaque pays vis-à-vis du joueur (couleurs de la carte et des pions).
+   * La clé change seulement quand les guerres ou les alliances changent.
+   */
+  const stances = computed(() => {
+    const s = snapshot.value
+    const map = new Map<CountryId, Stance>()
+    if (!s) return { map, key: '' }
+    const me = s.playerCountry
+    for (const w of s.politics.wars) {
+      for (const c of [...w.attackers, ...w.defenders]) if (!map.has(c)) map.set(c, 'war')
+      const mine = w.attackers.includes(me)
+        ? w.attackers
+        : w.defenders.includes(me)
+          ? w.defenders
+          : null
+      if (!mine) continue
+      const theirs = mine === w.attackers ? w.defenders : w.attackers
+      for (const c of mine) map.set(c, 'ally')
+      for (const c of theirs) map.set(c, 'enemy')
+    }
+    for (const a of s.politics.alliances) {
+      if (!a.members.includes(me)) continue
+      for (const m of a.members) if (map.get(m) !== 'enemy') map.set(m, 'ally')
+    }
+    map.set(me, 'player')
+    const key = JSON.stringify([s.politics.wars, s.politics.alliances.map((a) => a.members), me])
+    return { map, key }
+  })
+
+  /** Paires de camps en guerre (indices de la grille, a × 256 + b), pour tracer les lignes de front. */
+  const hostilePairs = computed(() => {
+    const s = snapshot.value
+    const g = grid.value
+    const set = new Set<number>()
+    if (!s || !g) return set
+    const index = new Map(g.sides.map((c, i) => [c, i]))
+    for (const w of s.politics.wars) {
+      for (const a of w.attackers) {
+        for (const d of w.defenders) {
+          const x = index.get(a) ?? 0
+          const y = index.get(d) ?? 0
+          set.add(x * 256 + y)
+          set.add(y * 256 + x)
+        }
+      }
+    }
+    return set
+  })
+
   const modeHint = computed(() => {
     const m = mode.value
     if (m.kind === 'order')
@@ -112,15 +265,91 @@ export const useGameStore = defineStore('game', () => {
   const ids = (): number[] => [...selection.value]
   const lonLat = (p: LonLat): LonLat => [p[0], p[1]]
 
-  /** Nom du terrain sous un point (pour le panneau). */
-  function terrainNameAt(lon: number, lat: number): string {
+  function cellAt(lon: number, lat: number): number {
     const g = grid.value
-    if (!g) return ''
+    if (!g) return -1
     const [lon0, lat0, lon1, lat1] = g.bbox
     const x = Math.floor(((lon - lon0) / (lon1 - lon0)) * g.width)
     const y = Math.floor(((lat - lat0) / (lat1 - lat0)) * g.height)
-    if (x < 0 || y < 0 || x >= g.width || y >= g.height) return ''
-    return terrainRule(g.terrain[y * g.width + x]).name
+    if (x < 0 || y < 0 || x >= g.width || y >= g.height) return -1
+    return y * g.width + x
+  }
+
+  /** Nom du terrain sous un point (pour le panneau). */
+  function terrainNameAt(lon: number, lat: number): string {
+    const i = cellAt(lon, lat)
+    return i < 0 || !grid.value ? '' : terrainRule(grid.value.terrain[i]).name
+  }
+
+  /** Pays qui contrôle un point de la carte. */
+  function ownerAt(lon: number, lat: number): CountryId | null {
+    const i = cellAt(lon, lat)
+    const g = grid.value
+    if (i < 0 || !g) return null
+    return g.sides[g.owner[i] ?? 0] || null
+  }
+
+  function showNotice(text: string): void {
+    notice.value = text
+    clearTimeout(noticeTimer)
+    noticeTimer = setTimeout(() => (notice.value = null), 4000)
+  }
+
+  /** Affiche l'erreur renvoyée par une commande, ou le message de réussite. */
+  function report(error: string | null | undefined, success?: string): void {
+    if (error) showNotice(error)
+    else if (success) pushToast(success, 'success')
+  }
+
+  function resetUi(): void {
+    selection.value = []
+    selectedArmyId.value = null
+    selectedCityName.value = null
+    selectedCountryCode.value = null
+    panelTab.value = 'units'
+    toasts.value = []
+    cancelMode()
+  }
+
+  // ---------- Partie ----------
+
+  async function newGame(scenarioId: string, country: CountryId): Promise<void> {
+    loading.value = true
+    try {
+      resetUi()
+      focusPending = true
+      await sim.newGame(scenarioId, country)
+    } catch (e) {
+      focusPending = false
+      showNotice(e instanceof Error ? e.message : String(e))
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /** Centre la carte sur la capitale du joueur. */
+  function focusOnPlayer(): void {
+    const s = snapshot.value
+    if (!s) return
+    const capital = s.cities.find((c) => c.capital && c.owner === s.playerCountry)
+    const at: LonLat = capital
+      ? [capital.lon, capital.lat]
+      : lonLat(playerCountry.value?.label ?? [0, 30])
+    focus.value = { at, zoom: s.scenarioId === 'world-2026' ? 4.3 : 5, nonce: Date.now() }
+  }
+
+  function playableCountries(
+    scenarioId: string,
+  ): Promise<Array<{ code: CountryId; name: string; pop: number }>> {
+    return sim.playableCountries(scenarioId)
+  }
+
+  /** Revient à l'écran de choix (la partie en cours est abandonnée). */
+  function quitToMenu(): void {
+    void sim.setPaused(true)
+    snapshot.value = null
+    grid.value = null
+    resetUi()
   }
 
   // ---------- Sélection ----------
@@ -134,10 +363,10 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /** Sélectionne plusieurs unités à la fois (pile de pions) ; seules celles du joueur sont retenues. */
-  function selectUnits(ids: number[], additive: boolean): void {
+  function selectUnits(list: number[], additive: boolean): void {
     const s = snapshot.value
     if (!s) return
-    const mine = s.units.filter((u) => ids.includes(u.id) && u.owner === s.playerCountry)
+    const mine = s.units.filter((u) => list.includes(u.id) && u.owner === s.playerCountry)
     const picked = mine.map((u) => u.id)
     selection.value = additive ? [...new Set([...selection.value, ...picked])] : picked
   }
@@ -150,6 +379,16 @@ export const useGameStore = defineStore('game', () => {
     selectedArmyId.value = id
     const army = armies.value.find((a) => a.id === id)
     if (army) selection.value = [...army.unitIds]
+  }
+
+  function selectCity(name: string | null): void {
+    selectedCityName.value = name
+    if (name) panelTab.value = 'production'
+  }
+
+  function selectCountry(code: CountryId | null, openPanel = true): void {
+    selectedCountryCode.value = code
+    if (code && openPanel) panelTab.value = 'country'
   }
 
   // ---------- Clics sur la carte ----------
@@ -200,38 +439,58 @@ export const useGameStore = defineStore('game', () => {
     if (selection.value.length > 0) void sim.orderUnits(ids(), 'hold')
   }
 
-  // ---------- Villes et économie ----------
-
-  function showNotice(text: string): void {
-    notice.value = text
-    clearTimeout(noticeTimer)
-    noticeTimer = setTimeout(() => (notice.value = null), 4000)
-  }
-
-  function selectCity(name: string | null): void {
-    selectedCityName.value = name
-    if (name) panelTab.value = 'production'
-  }
+  // ---------- Économie ----------
 
   async function queueConstruction(city: string, kind: BuildingKind): Promise<void> {
-    const error = await sim.queueConstruction(city, kind)
-    if (error) showNotice(error)
+    report(await sim.queueConstruction(city, kind))
   }
 
   async function queueRecruit(kind: UnitKind, city: string, armyId: number | null): Promise<void> {
-    const error = await sim.queueRecruit(kind, city, armyId)
-    if (error) showNotice(error)
+    report(await sim.queueRecruit(kind, city, armyId))
   }
 
   const cancelConstruction = (id: number): Promise<void> => sim.cancelConstruction(id)
   const cancelRecruit = (id: number): Promise<void> => sim.cancelRecruit(id)
   const setAutoEconomy = (on: boolean): Promise<void> => sim.setAutoEconomy(on)
 
+  // ---------- Diplomatie ----------
+
+  async function declareWar(target: CountryId): Promise<void> {
+    report(await sim.declareWar(target))
+  }
+
+  async function proposePeace(warId: number, kind: PeaceKind): Promise<void> {
+    report(await sim.proposePeace(warId, kind), 'Paix acceptée')
+  }
+
+  const answerOffer = (id: number, accept: boolean): Promise<void> =>
+    sim.answerPeaceOffer(id, accept)
+
+  async function improveRelations(target: CountryId): Promise<void> {
+    report(await sim.improveRelations(target), 'Relations améliorées')
+  }
+
+  const toggleSanction = (target: CountryId): Promise<void> => sim.toggleSanction(target)
+
+  async function proposeAlliance(target: CountryId): Promise<void> {
+    report(await sim.proposeAlliance(target), 'Alliance conclue')
+  }
+
+  const leaveAlliance = (): Promise<void> => sim.leaveAlliance()
+
+  async function callAllies(): Promise<void> {
+    pushToast(await sim.callAllies())
+  }
+
+  async function mobilize(): Promise<void> {
+    report(await sim.mobilize(), 'Forces mobilisées')
+  }
+
   // ---------- Armées ----------
 
   async function createArmyFromSelection(name: string): Promise<void> {
     if (selection.value.length === 0) return
-    selectedArmyId.value = await sim.createArmy(name, ids())
+    selectedArmyId.value = (await sim.createArmy(name, ids())) ?? null
   }
 
   function addSelectionToArmy(armyId: number): Promise<void> {
@@ -259,35 +518,40 @@ export const useGameStore = defineStore('game', () => {
     return sim.step(ticks)
   }
 
-  function newGame(): Promise<void> {
-    selection.value = []
-    selectedCityName.value = null
-    selectedArmyId.value = null
-    cancelMode()
-    return sim.newGame()
-  }
-
   async function saveToFile(): Promise<void> {
     const text = await sim.save()
     const blob = new Blob([text], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `nkg-conflict-${snapshot.value?.tick ?? 0}.json`
+    a.download = `nkg-conflict-${snapshot.value?.playerCountry ?? ''}-${snapshot.value?.tick ?? 0}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
 
   async function loadFromFile(file: File): Promise<void> {
-    selection.value = []
-    selectedCityName.value = null
-    selectedArmyId.value = null
-    await sim.load(await file.text())
+    loading.value = true
+    try {
+      resetUi()
+      focusPending = true
+      await sim.load(await file.text())
+    } catch (e) {
+      focusPending = false
+      showNotice(e instanceof Error ? e.message : String(e))
+    } finally {
+      loading.value = false
+    }
   }
 
   return {
     snapshot,
     grid,
+    gridTick,
+    takePendingCells,
+    scenarios,
+    loading,
+    started,
+    focus,
     selection,
     selectedUnits,
     armies,
@@ -297,24 +561,33 @@ export const useGameStore = defineStore('game', () => {
     modeHint,
     panelTab,
     notice,
+    toasts,
+    dismissToast,
     economy,
     selectedCity,
-    selectCity,
-    queueConstruction,
-    queueRecruit,
-    cancelConstruction,
-    cancelRecruit,
-    setAutoEconomy,
-    addSelectionToArmy,
+    selectedCountry,
+    selectedCountryCode,
+    countryByCode,
+    politicsByCode,
+    playerPolitics,
+    stances,
+    hostilePairs,
+    offers,
     paused,
     speed,
     dateLabel,
     playerCountry,
+    newGame,
+    playableCountries,
+    quitToMenu,
     selectUnit,
     selectUnits,
     terrainNameAt,
+    ownerAt,
     clearSelection,
     selectArmy,
+    selectCity,
+    selectCountry,
     cancelMode,
     startOrder,
     startFront,
@@ -322,7 +595,22 @@ export const useGameStore = defineStore('game', () => {
     mapClick,
     quickMove,
     hold,
+    queueConstruction,
+    queueRecruit,
+    cancelConstruction,
+    cancelRecruit,
+    setAutoEconomy,
+    declareWar,
+    proposePeace,
+    answerOffer,
+    improveRelations,
+    toggleSanction,
+    proposeAlliance,
+    leaveAlliance,
+    callAllies,
+    mobilize,
     createArmyFromSelection,
+    addSelectionToArmy,
     disbandArmy,
     setWholeFront,
     clearFront,
@@ -331,7 +619,6 @@ export const useGameStore = defineStore('game', () => {
     togglePause,
     setSpeed,
     step,
-    newGame,
     saveToFile,
     loadFromFile,
   }

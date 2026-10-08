@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
 import ProductionTab from './ProductionTab.vue'
+import CountryTab from './CountryTab.vue'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import type { OrderKind, UnitSnapshot } from '@/sim/core/types'
 
@@ -66,6 +67,13 @@ async function createArmy(): Promise<void> {
         <button :class="{ active: tab === 'production' }" @click="tab = 'production'">
           Production
         </button>
+        <button
+          :class="{ active: tab === 'country' }"
+          data-testid="tab-country"
+          @click="tab = 'country'"
+        >
+          Diplomatie
+        </button>
       </nav>
       <button
         class="toggle"
@@ -122,6 +130,8 @@ async function createArmy(): Promise<void> {
       </template>
 
       <ProductionTab v-else-if="tab === 'production'" />
+
+      <CountryTab v-else-if="tab === 'country'" />
 
       <!-- Armées -->
       <template v-else>

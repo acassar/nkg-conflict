@@ -53,11 +53,15 @@ const state = () =>
     if (!s) return null
     return {
       tick: s.tick,
+      player: s.playerCountry,
+      wars: s.politics.wars.map((w) => `${w.attackers.join('+')}→${w.defenders.join('+')}`),
       paused: s.paused,
       units: s.units.length,
       engaged: s.units.filter((u) => u.engaged).length,
       armies: s.armies.length,
-      territoryHeld: s.territoryHeld,
+      territoryHeld: Object.fromEntries(
+        [s.playerCountry, 'RUS'].map((c) => [c, Math.round((s.territoryHeld[c] ?? 0) * 1000) / 10]),
+      ),
       gridVersion: s.gridVersion,
       hasGrid: !!g.grid,
       events: s.events.slice(-5).map((e) => e.text),
@@ -66,11 +70,22 @@ const state = () =>
 
 try {
   await page.goto(url, { waitUntil: 'load' })
+
+  // Écran de départ : scénario « Monde 2026 », recherche de l'Ukraine, lancement.
+  await page.getByTestId('start-screen').waitFor({ timeout: 30_000 })
+  await page.locator('[data-country]').first().waitFor({ timeout: 30_000 })
+  await page.waitForTimeout(2000) // tuiles du fond de carte
+  await shot('00-ecran-depart')
+  await page.getByRole('searchbox', { name: 'Rechercher un pays' }).fill('ukr')
+  await page.locator('[data-country="UKR"]').click()
+  await page.getByRole('button', { name: /^Jouer / }).click()
   await page.waitForFunction(() => window.__nkg?.snapshot && window.__nkg?.grid, null, {
-    timeout: 30_000,
+    timeout: 60_000,
   })
-  await page.waitForTimeout(4000) // tuiles du fond de carte
-  step('chargement', await state())
+  await page.waitForTimeout(4000)
+  const start = await state()
+  step('chargement', start)
+  if (start?.player !== 'UKR') report.errors.push(`pays du joueur inattendu (${start?.player})`)
   await shot('01-depart')
 
   // Sélection de l'armée du joueur et ouverture de l'onglet Armées.
@@ -122,6 +137,24 @@ try {
   }
   await shot('02b-production')
 
+  // Diplomatie : fiche de son pays, puis d'un pays voisin via un clic sur la carte.
+  await page.evaluate(() => window.__nkg.clearSelection())
+  await page.getByTestId('tab-country').click()
+  await page.getByTestId('country-tab').waitFor()
+  await shot('02c-diplomatie')
+  await page.evaluate(() => window.__nkg.selectCountry('POL'))
+  const relationBefore = await page.evaluate(
+    () => window.__nkg.snapshot.politics.playerRelations.POL ?? 0,
+  )
+  await page.getByRole('button', { name: 'Améliorer les relations' }).click()
+  await page.waitForTimeout(400)
+  const relationAfter = await page.evaluate(
+    () => window.__nkg.snapshot.politics.playerRelations.POL ?? 0,
+  )
+  step('diplomatie', { avant: relationBefore, apres: relationAfter })
+  if (!(relationAfter > relationBefore)) report.errors.push('relations non améliorées')
+  await shot('02d-fiche-pologne')
+
   // Lecture à vitesse 5 pendant 8 s.
   await page.keyboard.press('5')
   await page.keyboard.press('Space')
@@ -132,10 +165,11 @@ try {
   step('après 8 s en vitesse 5', after)
   await shot('03-apres-lecture')
 
-  // Zoom sur le front.
-  await page.mouse.move(900, 420)
-  for (let k = 0; k < 4; k++) await page.mouse.wheel(0, -300)
-  await page.waitForTimeout(2500)
+  // Zoom sur le front, autour de Kharkiv.
+  await page.evaluate(() => {
+    window.__nkg.focus = { at: [36.2, 49.2], zoom: 6.5, nonce: Date.now() }
+  })
+  await page.waitForTimeout(3500)
   await shot('04-zoom-front')
 
   report.ok = !!after && after.tick > 0 && report.errors.length === 0

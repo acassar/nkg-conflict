@@ -2,35 +2,57 @@
 import * as Comlink from 'comlink'
 import { isSpeed } from './core/clock'
 import { parseSave, serializeSave } from './core/save'
-import type { BuildingKind, LonLat, SimSnapshot, UnitKind } from './core/types'
-import theaterJson from './data/theater-ukraine.json'
-import { ukraine2026 } from './scenarios/ukraine-2026'
+import type { BuildingKind, CountryId, LonLat, SimSnapshot, UnitKind } from './core/types'
+import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
+import { loadTheater } from './theater/load'
 import type { TheaterData } from './theater/grid'
+import type { PeaceKind } from './politics/types'
 
 const FRAME_MS = 50
-/** La grille (≈ 220 Ko) n'est republiée qu'au plus 4 fois par seconde. */
+/** Les cellules modifiées ne sont publiées qu'au plus 4 fois par seconde. */
 const GRID_MIN_INTERVAL_MS = 250
 
-const theater = theaterJson as unknown as TheaterData
-
-let sim = Simulation.fromScenario(ukraine2026, theater, Date.now() & 0x7fffffff)
+let sim: Simulation | null = null
 let listener: ((snapshot: SimSnapshot) => void) | null = null
 let last = performance.now()
 let lastGridAt = 0
+const theaters = new Map<string, Promise<TheaterData>>()
+
+/** Fichiers binaires servis à côté du jeu (grille mondiale). */
+async function fetchBinary(path: string): Promise<ArrayBuffer> {
+  const res = await fetch(`${import.meta.env.BASE_URL}${path}`)
+  if (!res.ok) throw new Error(`Chargement impossible : ${path} (${res.status})`)
+  return res.arrayBuffer()
+}
+
+function theater(id: 'ukraine' | 'world'): Promise<TheaterData> {
+  let t = theaters.get(id)
+  if (!t) {
+    t = loadTheater(id, fetchBinary)
+    theaters.set(id, t)
+  }
+  return t
+}
 
 function publish(forceGrid = false): void {
-  if (!listener) return
+  if (!listener || !sim) return
   const now = performance.now()
   const allowGrid = forceGrid || now - lastGridAt >= GRID_MIN_INTERVAL_MS
   const snapshot = sim.snapshot(forceGrid, allowGrid)
-  if (snapshot.grid) lastGridAt = now
-  listener(snapshot)
+  if (snapshot.grid || snapshot.gridPatch) lastGridAt = now
+  // La grille complète (≈ 10 Mo) est transférée sans copie.
+  const transfer = snapshot.grid ? [snapshot.grid.owner.buffer, snapshot.grid.terrain.buffer] : []
+  listener(Comlink.transfer(snapshot, transfer))
 }
 
 // Boucle temps réel : le Worker convertit le temps écoulé en ticks, puis publie l'état.
 setInterval(() => {
   const now = performance.now()
+  if (!sim) {
+    last = now
+    return
+  }
   const ticks = sim.clock.advance(now - last)
   last = now
   if (ticks > 0) {
@@ -40,84 +62,136 @@ setInterval(() => {
 }, FRAME_MS)
 
 /** Applique une action du joueur puis republie l'état. */
-function act(fn: () => void): void {
-  fn()
+function act<T>(fn: (s: Simulation) => T): T | undefined {
+  if (!sim) return undefined
+  const result = fn(sim)
   publish()
+  return result
 }
 
 const api = {
+  scenarios() {
+    return SCENARIOS
+  },
+  /** Pays jouables d'un scénario, du plus peuplé au moins peuplé. */
+  playableCountries(scenarioId: string): Array<{ code: CountryId; name: string; pop: number }> {
+    const info = SCENARIOS.find((s) => s.id === scenarioId)
+    if (!info) return []
+    const all = buildScenario(scenarioId).countries
+    return all
+      .filter((c) => !info.playable || info.playable.includes(c.id))
+      .map((c) => ({ code: c.id, name: c.name, pop: c.pop ?? 0 }))
+      .sort((a, b) => b.pop - a.pop)
+  },
   subscribe(callback: (snapshot: SimSnapshot) => void): void {
     listener = callback
     publish(true)
   },
+  async newGame(scenarioId: string, country: CountryId): Promise<void> {
+    const info = SCENARIOS.find((s) => s.id === scenarioId)
+    if (!info) throw new Error(`Scénario inconnu : ${scenarioId}`)
+    const data = await theater(info.theater)
+    sim = Simulation.fromScenario(
+      buildScenario(scenarioId, country),
+      data,
+      Date.now() & 0x7fffffff,
+      country,
+    )
+    last = performance.now()
+    publish(true)
+  },
   setPaused(paused: boolean): void {
+    if (!sim) return
     sim.setPaused(paused)
     last = performance.now()
-    // À la pause, on force la grille pour ne pas garder un front en retard sur l'écran.
-    publish(paused)
+    publish()
   },
   setSpeed(speed: number): void {
     if (!isSpeed(speed)) throw new Error(`Vitesse invalide : ${speed}`)
-    act(() => sim.setSpeed(speed))
+    act((s) => s.setSpeed(speed))
   },
   /** Mode tour par tour : joue un nombre fixe d'heures. */
   step(ticks: number): void {
-    act(() => sim.step(Math.max(0, Math.floor(ticks))))
+    act((s) => s.step(Math.max(0, Math.floor(ticks))))
   },
   orderUnits(ids: number[], kind: PlayerOrder, target?: LonLat): void {
-    act(() => sim.orderUnits(ids, kind, target))
+    act((s) => s.orderUnits(ids, kind, target))
   },
-  createArmy(name: string, ids: number[]): number {
-    const id = sim.createArmy(name, ids)
-    publish()
-    return id
+  createArmy(name: string, ids: number[]): number | undefined {
+    return act((s) => s.createArmy(name, ids))
   },
   disbandArmy(id: number): void {
-    act(() => sim.disbandArmy(id))
+    act((s) => s.disbandArmy(id))
   },
   setArmyFront(id: number, front: [LonLat, LonLat] | 'whole' | null): void {
-    act(() => sim.setArmyFront(id, front))
+    act((s) => s.setArmyFront(id, front))
   },
   planOffensive(id: number, from: LonLat, to: LonLat): void {
-    act(() => sim.planOffensive(id, from, to))
+    act((s) => s.planOffensive(id, from, to))
   },
   launchOffensive(id: number): void {
-    act(() => sim.launchOffensive(id))
+    act((s) => s.launchOffensive(id))
   },
   cancelOffensive(id: number): void {
-    act(() => sim.cancelOffensive(id))
+    act((s) => s.cancelOffensive(id))
   },
   addUnitsToArmy(armyId: number, ids: number[]): void {
-    act(() => sim.addUnitsToArmy(armyId, ids))
+    act((s) => s.addUnitsToArmy(armyId, ids))
   },
   queueConstruction(city: string, kind: BuildingKind): string | null {
-    const error = sim.queueConstruction(city, kind)
-    publish()
-    return error
+    return act((s) => s.queueConstruction(city, kind)) ?? null
   },
   cancelConstruction(id: number): void {
-    act(() => sim.cancelConstruction(id))
+    act((s) => s.cancelConstruction(id))
   },
   queueRecruit(kind: UnitKind, city: string, armyId: number | null): string | null {
-    const error = sim.queueRecruit(kind, city, armyId)
-    publish()
-    return error
+    return act((s) => s.queueRecruit(kind, city, armyId)) ?? null
   },
   cancelRecruit(id: number): void {
-    act(() => sim.cancelRecruit(id))
+    act((s) => s.cancelRecruit(id))
   },
   setAutoEconomy(on: boolean): void {
-    act(() => sim.setAutoEconomy(on))
+    act((s) => s.setAutoEconomy(on))
   },
-  newGame(): void {
-    sim = Simulation.fromScenario(ukraine2026, theater, Date.now() & 0x7fffffff)
-    publish(true)
+  // Diplomatie : chaque commande renvoie un message d'erreur, ou null.
+  declareWar(target: CountryId): string | null {
+    return act((s) => s.declareWar(target)) ?? null
+  },
+  proposePeace(warId: number, kind: PeaceKind): string | null {
+    return act((s) => s.proposePeace(warId, kind)) ?? null
+  },
+  answerPeaceOffer(id: number, accept: boolean): void {
+    act((s) => s.answerPeaceOffer(id, accept))
+  },
+  improveRelations(target: CountryId): string | null {
+    return act((s) => s.improveRelations(target)) ?? null
+  },
+  toggleSanction(target: CountryId): void {
+    act((s) => s.toggleSanction(target))
+  },
+  proposeAlliance(target: CountryId): string | null {
+    return act((s) => s.proposeAlliance(target)) ?? null
+  },
+  leaveAlliance(): void {
+    act((s) => s.leaveAlliance())
+  },
+  callAllies(): string {
+    return act((s) => s.callAllies()) ?? ''
+  },
+  mobilize(): string | null {
+    return act((s) => s.mobilizePlayer()) ?? null
   },
   save(): string {
+    if (!sim) throw new Error('Aucune partie en cours')
     return serializeSave(sim.toSave())
   },
-  load(text: string): void {
-    sim = Simulation.fromSave(parseSave(text), ukraine2026, theater)
+  async load(text: string): Promise<void> {
+    const save = parseSave(text)
+    const info = SCENARIOS.find((s) => s.id === save.scenarioId)
+    if (!info) throw new Error(`Scénario inconnu : ${save.scenarioId}`)
+    const data = await theater(info.theater)
+    sim = Simulation.fromSave(save, buildScenario(save.scenarioId, save.playerCountry), data)
+    last = performance.now()
     publish(true)
   },
 }

@@ -95,16 +95,23 @@ export function invalidateCityIndex(ctx: SimContext): void {
 }
 
 /** Sources de ravitaillement : celles du scénario, plus les dépôts des villes tenues. */
+/** Population à partir de laquelle une ville nationale sert de source de ravitaillement. */
+const HUB_MIN_POP = 300_000
+
 export function updateSupplySources(ctx: SimContext, scenario: ScenarioDef): void {
   // Une passe sur les villes : dépôts, capitale et plus grande ville tenues par chaque camp.
   const depots = new Map<number, LonLat[]>()
   const capital = new Map<number, LonLat>()
   const largest = new Map<number, { pop: number; at: LonLat }>()
+  const hubs = new Map<number, LonLat[]>()
   for (const c of ctx.cityStates.values()) {
     if (!c.owner) continue
     const at: LonLat = [c.def.lon, c.def.lat]
     if (c.buildings.depot > 0) depots.set(c.owner, [...(depots.get(c.owner) ?? []), at])
     const owner = ctx.sides[c.owner]
+    if (c.def.country === owner && c.def.pop >= HUB_MIN_POP) {
+      hubs.set(c.owner, [...(hubs.get(c.owner) ?? []), at])
+    }
     if (c.def.capital && c.def.country === owner) capital.set(c.owner, at)
     const best = largest.get(c.owner)
     if (!best || c.def.pop > best.pop) largest.set(c.owner, { pop: c.def.pop, at })
@@ -112,11 +119,14 @@ export function updateSupplySources(ctx: SimContext, scenario: ScenarioDef): voi
   for (const country of scenario.countries) {
     const side = sideIndex(ctx, country.id)
     const explicit = scenario.supplySources[country.id]
-    // Sans sources explicites : la capitale, ou à défaut la plus grande ville tenue.
+    // Sans sources explicites : la capitale (ou à défaut la plus grande ville tenue) et les grandes
+    // villes nationales, qui ravitaillent aussi les territoires séparés du reste du pays (îles, enclaves).
     const base: LonLat[] =
       explicit && explicit.length > 0
         ? explicit.map((p): LonLat => [p[0], p[1]])
-        : [capital.get(side) ?? largest.get(side)?.at].filter((p): p is LonLat => !!p)
+        : [capital.get(side) ?? largest.get(side)?.at, ...(hubs.get(side) ?? [])].filter(
+            (p): p is LonLat => !!p,
+          )
     ctx.supplySources[country.id] = [...base, ...(depots.get(side) ?? [])]
   }
 }

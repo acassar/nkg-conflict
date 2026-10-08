@@ -46,6 +46,9 @@ const MARSH_PCT = 25
 const FOREST_PCT = 50
 const MAX_RIVER_RANK = 5
 const MIN_CITY_POP = 750_000
+/** Territoire séparé assez grand pour recevoir une ville (≈ 15 000 km² aux latitudes moyennes). */
+const MIN_REGION_CELLS = 150
+const MIN_REGION_CITY_POP = 50_000
 
 const read = (name) => JSON.parse(fs.readFileSync(path.join(neDir, `${name}.geojson`), 'utf8'))
 const polygonsOf = (geom) =>
@@ -206,6 +209,60 @@ for (const f of read('ne_10m_populated_places_simple').features) {
   }
 }
 for (const c of capitalOf.values()) c.capital = true
+
+// 5. Territoires séparés (îles, enclaves comme Kaliningrad ou la Crimée) sans grande ville : on y ajoute
+// leur ville la plus peuplée, qui sert de source de ravitaillement et d'objectif.
+const component = new Int32Array(SIZE).fill(-1)
+const components = []
+for (let start = 0; start < SIZE; start++) {
+  if (component[start] !== -1 || !owner[start] || !isLand(terrain[start])) continue
+  const id = components.length
+  const side = owner[start]
+  const queue = [start]
+  component[start] = id
+  let cells = 0
+  while (queue.length) {
+    const i = queue.pop()
+    cells++
+    const x = i % WIDTH
+    const y = (i - x) / WIDTH
+    for (const n of [x > 0 ? i - 1 : -1, x < WIDTH - 1 ? i + 1 : -1, i - WIDTH, i + WIDTH]) {
+      if (n < 0 || n >= SIZE || component[n] !== -1) continue
+      if (owner[n] !== side || !isLand(terrain[n])) continue
+      component[n] = id
+      queue.push(n)
+    }
+  }
+  components.push({ side, cells, hasCity: false, best: null })
+}
+for (const c of cities) {
+  const comp = components[component[idx(toX(c.lon), toY(c.lat))]]
+  if (comp) comp.hasCity = true
+}
+for (const f of read('ne_10m_populated_places_simple').features) {
+  const [lon, lat] = f.geometry.coordinates
+  const x = toX(lon)
+  const y = toY(lat)
+  if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) continue
+  const comp = components[component[idx(x, y)]]
+  if (!comp || comp.hasCity || comp.cells < MIN_REGION_CELLS) continue
+  if (!comp.best || f.properties.pop_max > comp.best.pop_max)
+    comp.best = { ...f.properties, lon, lat }
+}
+let regional = 0
+for (const comp of components) {
+  if (!comp.best || comp.best.pop_max < MIN_REGION_CITY_POP) continue
+  regional++
+  cities.push({
+    name: comp.best.name,
+    country: sides[comp.side],
+    lon: +comp.best.lon.toFixed(3),
+    lat: +comp.best.lat.toFixed(3),
+    pop: comp.best.pop_max,
+    capital: false,
+  })
+}
+console.log(`${regional} villes ajoutées dans des territoires séparés`)
 cities.sort((a, b) => b.pop - a.pop)
 
 // 5. Écriture.

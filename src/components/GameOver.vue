@@ -13,7 +13,7 @@ const won = computed(() => outcome.value?.winner === game.snapshot?.playerCountr
       <h2>{{ won ? 'Victoire' : 'Défaite' }}</h2>
       <p>{{ outcome.reason }}</p>
       <p class="date">{{ game.dateLabel }}</p>
-      <button @click="game.newGame()">Nouvelle partie</button>
+      <button @click="game.quitToMenu()">Nouvelle partie</button>
     </div>
   </div>
 </template>

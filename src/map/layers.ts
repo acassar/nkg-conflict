@@ -11,13 +11,17 @@ import type { ArmyState, CityState, LonLat, SimSnapshot, UnitSnapshot } from '@/
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { stackIcon, unitIcon } from './unitIcons'
 import { isStack, stackUnits, type MapUnit } from './clusters'
+import { stanceColor, type TerritoryTile } from './territoryImage'
+import type { Stance } from '@/stores/game'
 
 export interface LayerInput {
   snapshot: SimSnapshot | null
-  territory: HTMLCanvasElement | null
+  /** Territoire en tuiles (seules les tuiles modifiées changent de canvas). */
+  territory: TerritoryTile[]
   /** Relief, forêts et marais (fixe). */
-  terrain: HTMLCanvasElement | null
-  bbox: [number, number, number, number] | null
+  terrain: TerritoryTile[]
+  /** Position de chaque pays vis-à-vis du joueur (couleurs). */
+  stances: Map<string, Stance>
   selection: Set<number>
   selectedArmy: ArmyState | null
   /** Premier point posé d'un tracé en cours (front ou offensive). */
@@ -44,43 +48,58 @@ function arrowHead(from: LonLat, to: LonLat, size = 0.12): LonLat[] {
   ]
 }
 
+/**
+ * Villes affichées selon le zoom : sur la carte du monde, seules les capitales et les très grandes villes
+ * apparaissent de loin ; tout s'affiche en zoomant.
+ */
+function visibleCities(snapshot: SimSnapshot, zoom: number): CityState[] {
+  if (snapshot.cities.length < 120 || zoom >= 5.5) return snapshot.cities
+  const atWar = new Set(snapshot.politics.wars.flatMap((w) => [...w.attackers, ...w.defenders]))
+  return snapshot.cities.filter((c) => {
+    if (c.owner === snapshot.playerCountry && (c.capital || zoom >= 4)) return true
+    if (zoom >= 4.5) return c.capital || c.pop >= 1_500_000
+    if (zoom >= 3.5) return c.capital && (c.pop >= 1_000_000 || atWar.has(c.owner ?? ''))
+    return c.capital && atWar.has(c.owner ?? '') && c.pop >= 1_000_000
+  })
+}
+
 export function buildLayers(input: LayerInput): Layer[] {
-  const { snapshot, territory, bbox, selection, selectedArmy, pendingPoint } = input
+  const { snapshot, selection, selectedArmy, pendingPoint } = input
   if (!snapshot) return []
-  const colors = new Map<string, Rgb>(snapshot.countries.map((c) => [c.id, c.color]))
+  const colors = new Map<string, Rgb>(
+    snapshot.countries.map((c) => [
+      c.id,
+      stanceColor(input.stances.get(c.id) ?? 'neutral', c.color),
+    ]),
+  )
   const colorOf = (id: string | null): Rgb => (id ? colors.get(id) : undefined) ?? [140, 140, 140]
   const selectedUnits = snapshot.units.filter((u) => selection.has(u.id))
+  const cities = visibleCities(snapshot, input.zoom)
   const layers: Layer[] = []
 
-  if (input.terrain && bbox) {
-    layers.push(
-      new BitmapLayer({
-        id: 'terrain',
-        image: input.terrain,
-        bounds: bbox,
-        _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
-        textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
-      }),
-    )
-  }
-  if (territory && bbox) {
-    layers.push(
-      new BitmapLayer({
-        id: 'territory',
-        image: territory,
-        bounds: bbox,
-        // La grille est en lon/lat régulières : deck.gl la reprojette sur la carte Web Mercator.
-        _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
-        textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
-      }),
-    )
+  // Relief puis territoire, en tuiles reprojetées de lon/lat vers Web Mercator.
+  for (const [prefix, tiles] of [
+    ['terrain', input.terrain],
+    ['territory', input.territory],
+  ] as const) {
+    for (const t of tiles) {
+      layers.push(
+        new BitmapLayer({
+          id: `${prefix}-${t.id}`,
+          image: t.canvas,
+          bounds: t.bounds,
+          _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
+          textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
+        }),
+      )
+    }
   }
 
   layers.push(
     // Fortifications : anneau gris d'autant plus épais que le niveau est élevé.
     new ScatterplotLayer<CityState>({
       id: 'city-forts',
-      data: snapshot.cities.filter((c) => c.buildings.fort > 0),
+      data: cities.filter((c) => c.buildings.fort > 0),
       getPosition: (c) => [c.lon, c.lat],
       filled: false,
       stroked: true,
@@ -94,7 +113,7 @@ export function buildLayers(input: LayerInput): Layer[] {
     // Dépôts : carré blanc sous la ville.
     new TextLayer<CityState>({
       id: 'city-depots',
-      data: snapshot.cities.filter((c) => c.buildings.depot > 0),
+      data: cities.filter((c) => c.buildings.depot > 0),
       getPosition: (c) => [c.lon, c.lat],
       getText: () => '■',
       getSize: 11,
@@ -107,7 +126,7 @@ export function buildLayers(input: LayerInput): Layer[] {
     }),
     new ScatterplotLayer<CityState>({
       id: 'cities',
-      data: snapshot.cities,
+      data: cities,
       getPosition: (c) => [c.lon, c.lat],
       getFillColor: (c) => [...colorOf(c.owner), 255],
       getLineColor: (c) =>
@@ -119,14 +138,14 @@ export function buildLayers(input: LayerInput): Layer[] {
       getRadius: (c) => (c.capital ? 6 : 4),
       pickable: true,
       updateTriggers: {
-        getFillColor: snapshot.cities.map((c) => c.owner).join(),
+        getFillColor: [snapshot.cities.map((c) => c.owner).join(), input.stances],
         getLineColor: input.selectedCity,
         getLineWidth: input.selectedCity,
       },
     }),
     new TextLayer<CityState>({
       id: 'city-names',
-      data: snapshot.cities,
+      data: cities,
       getPosition: (c) => [c.lon, c.lat],
       getText: (c) => c.name,
       getSize: (c) => (c.capital ? 14 : 11),
@@ -235,7 +254,7 @@ export function buildLayers(input: LayerInput): Layer[] {
       getSize: 34,
       sizeUnits: 'pixels',
       pickable: true,
-      updateTriggers: { getIcon: [...selection].join() },
+      updateTriggers: { getIcon: [[...selection].join(), input.stances] },
     }),
   )
   return layers

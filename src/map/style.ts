@@ -45,3 +45,10 @@ export function baseStyle(): StyleSpecification | string {
     layers: layers('protomaps', namedFlavor('light'), { lang: 'fr' }),
   }
 }
+
+/** Style minimal sans réseau (mer unie) : utilisé si le fond de carte distant est injoignable. */
+export const OFFLINE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {},
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#9fb7c9' } }],
+}

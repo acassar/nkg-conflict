@@ -5984,6 +5984,14 @@
       "capital": true
     },
     {
+      "name": "Monrovia",
+      "country": "LBR",
+      "lon": -10.8,
+      "lat": 6.315,
+      "pop": 1041000,
+      "capital": false
+    },
+    {
       "name": "São Luís",
       "country": "BRA",
       "lon": -44.268,
@@ -7948,12 +7956,36 @@
       "capital": true
     },
     {
+      "name": "Pontianak",
+      "country": "IDN",
+      "lon": 109.32,
+      "lat": -0.03,
+      "pop": 607311,
+      "capital": false
+    },
+    {
       "name": "Vilnius",
       "country": "LTU",
       "lon": 25.317,
       "lat": 54.683,
       "pop": 542366,
       "capital": true
+    },
+    {
+      "name": "Göteborg",
+      "country": "SWE",
+      "lon": 11.979,
+      "lat": 57.709,
+      "pop": 537797,
+      "capital": false
+    },
+    {
+      "name": "Matsuyama",
+      "country": "JPN",
+      "lon": 132.766,
+      "lat": 33.846,
+      "pop": 533541,
+      "capital": false
     },
     {
       "name": "Skopje",
@@ -7988,6 +8020,22 @@
       "capital": false
     },
     {
+      "name": "Belfast",
+      "country": "GBR",
+      "lon": -5.928,
+      "lat": 54.594,
+      "pop": 450406,
+      "capital": false
+    },
+    {
+      "name": "Kaliningrad",
+      "country": "RUS",
+      "lon": 20.497,
+      "lat": 54.7,
+      "pop": 434954,
+      "capital": false
+    },
+    {
       "name": "Bratislava",
       "country": "SVK",
       "lon": 17.117,
@@ -8012,12 +8060,44 @@
       "capital": true
     },
     {
+      "name": "Sevastopol",
+      "country": "RUS",
+      "lon": 33.524,
+      "lat": 44.604,
+      "pop": 379200,
+      "capital": false
+    },
+    {
+      "name": "Manukau",
+      "country": "NZL",
+      "lon": 174.885,
+      "lat": -37,
+      "pop": 375600,
+      "capital": false
+    },
+    {
       "name": "Valletta",
       "country": "MLT",
       "lon": 14.515,
       "lat": 35.9,
       "pop": 368250,
       "capital": true
+    },
+    {
+      "name": "Christchurch",
+      "country": "NZL",
+      "lon": 172.63,
+      "lat": -43.535,
+      "pop": 363200,
+      "capital": false
+    },
+    {
+      "name": "Sanya",
+      "country": "CHN",
+      "lon": 109.504,
+      "lat": 18.259,
+      "pop": 362689,
+      "capital": false
     },
     {
       "name": "Maseru",
@@ -8076,6 +8156,14 @@
       "capital": false
     },
     {
+      "name": "Cagliari",
+      "country": "ITA",
+      "lon": 9.104,
+      "lat": 39.222,
+      "pop": 291511,
+      "capital": false
+    },
+    {
       "name": "Port Moresby",
       "country": "PNG",
       "lon": 147.193,
@@ -8100,12 +8188,36 @@
       "capital": true
     },
     {
+      "name": "Anchorage",
+      "country": "USA",
+      "lon": -149.887,
+      "lat": 61.214,
+      "pop": 260283,
+      "capital": false
+    },
+    {
+      "name": "Tampere",
+      "country": "FIN",
+      "lon": 23.75,
+      "lat": 61.5,
+      "pop": 259279,
+      "capital": false
+    },
+    {
       "name": "Paramaribo",
       "country": "SUR",
       "lon": -55.167,
       "lat": 5.835,
       "pop": 254169,
       "capital": true
+    },
+    {
+      "name": "Århus",
+      "country": "DNK",
+      "lon": 10.211,
+      "lat": 56.157,
+      "pop": 237551,
+      "capital": false
     },
     {
       "name": "Dili",
@@ -8164,6 +8276,23 @@
       "capital": false
     },
     {
+      "name": "Yuzhno Sakhalinsk",
+      "country": "RUS",
+      "lon": 142.74,
+      "lat": 46.965,
+      "pop": 176484,
+      "capital": false
+    },
+    { "name": "Bo", "country": "SLE", "lon": -11.74, "lat": 7.97, "pop": 174354, "capital": false },
+    {
+      "name": "Jayapura",
+      "country": "IDN",
+      "lon": 140.7,
+      "lat": -2.533,
+      "pop": 169341,
+      "capital": false
+    },
+    {
       "name": "Malabo",
       "country": "GNQ",
       "lon": 8.783,
@@ -8205,6 +8334,14 @@
       "capital": true
     },
     {
+      "name": "Salto",
+      "country": "URY",
+      "lon": -57.969,
+      "lat": -31.39,
+      "pop": 105690,
+      "capital": false
+    },
+    {
       "name": "Thimphu",
       "country": "BTN",
       "lon": 89.639,
@@ -8221,6 +8358,14 @@
       "capital": true
     },
     {
+      "name": "Hobart",
+      "country": "AUS",
+      "lon": 147.295,
+      "lat": -42.85,
+      "pop": 80870,
+      "capital": false
+    },
+    {
       "name": "Honiara",
       "country": "SLB",
       "lon": 159.95,
@@ -8235,6 +8380,22 @@
       "lat": -13.836,
       "pop": 61916,
       "capital": true
+    },
+    {
+      "name": "Cayenne",
+      "country": "FRA",
+      "lon": -52.33,
+      "lat": 4.933,
+      "pop": 61550,
+      "capital": false
+    },
+    {
+      "name": "Ushuaia",
+      "country": "ARG",
+      "lon": -68.31,
+      "lat": -54.79,
+      "pop": 58028,
+      "capital": false
     },
     {
       "name": "Andorra",

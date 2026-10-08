@@ -40,7 +40,10 @@ export class Simulation {
   outcome: GameOutcome | null = null
   private events: GameEvent[] = []
   private nextId = 1
-  private ai: AiState = { lastOffensiveTick: 0 }
+  /** État de l'IA, par pays. */
+  private ai = new Map<CountryId, AiState>()
+  /** Vrai : l'IA commande aussi le pays du joueur (parties de test, mode spectateur). */
+  aiControlsPlayer = false
   private cityOwner = new Map<string, number>()
   private initialTerritory: number[] = []
   private publishedGridVersion = -1
@@ -84,7 +87,17 @@ export class Simulation {
   }
 
   get aiCountries(): CountryId[] {
-    return this.scenario.countries.map((c) => c.id).filter((id) => id !== this.playerCountry)
+    const all = this.scenario.countries.map((c) => c.id)
+    return this.aiControlsPlayer ? all : all.filter((id) => id !== this.playerCountry)
+  }
+
+  private aiState(country: CountryId): AiState {
+    let s = this.ai.get(country)
+    if (!s) {
+      s = { lastOffensiveTick: 0 }
+      this.ai.set(country, s)
+    }
+    return s
   }
 
   static fromScenario(scenario: ScenarioDef, theater: TheaterData, seed = 1): Simulation {
@@ -151,7 +164,12 @@ export class Simulation {
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
     sim.outcome = save.outcome
-    sim.ai.lastOffensiveTick = save.aiLastOffensiveTick
+    // Ancien format : un seul nombre pour l'unique pays IA.
+    const last = save.aiLastOffensiveTick
+    for (const c of scenario.countries) {
+      const tick = typeof last === 'number' ? last : (last[c.id] ?? 0)
+      sim.ai.set(c.id, { lastOffensiveTick: tick })
+    }
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
     for (const [id, engagedWith, supplied, routed, commanded] of save.runtime) {
       ctx.runtime.set(id, { engagedWith, supplied, routed, commanded: commanded ?? false })
@@ -200,7 +218,7 @@ export class Simulation {
       updateCombat(ctx)
       updateTerritory(ctx)
       if (ctx.tick % AI_EVERY === 0) {
-        for (const c of this.aiCountries) updateAi(ctx, c, this.ai)
+        for (const c of this.aiCountries) updateAi(ctx, c, this.aiState(c))
       }
       if (ctx.tick % ARMIES_EVERY === 0) updateArmies(ctx)
       if (ctx.tick % CITIES_EVERY === 0) this.updateCitiesAndVictory()
@@ -441,7 +459,9 @@ export class Simulation {
       armies: [...ctx.armies.values()].map((a) => structuredClone(a)),
       events: this.events.slice(),
       outcome: this.outcome,
-      aiLastOffensiveTick: this.ai.lastOffensiveTick,
+      aiLastOffensiveTick: Object.fromEntries(
+        [...this.ai.entries()].map(([c, s]) => [c, s.lastOffensiveTick]),
+      ),
       owner: encodeRle(ctx.grid.owner),
       supplyReach: ctx.supplyReach.map((r) => (r ? encodeRle(r) : [])),
       runtime: [...ctx.runtime.entries()].map(([id, r]) => [

@@ -114,7 +114,9 @@ export class Pathfinder {
     const s = grid.cellAt(start[0], start[1])
     let t = grid.cellAt(goal[0], goal[1])
     if (s < 0 || t < 0) return null
-    if (!grid.passable(t)) t = this.nearestPassable(t)
+    // Objectif dans l'eau ou un pays neutre : on vise la terre praticable la plus proche.
+    const goalPassable = grid.passable(t)
+    if (!goalPassable) t = this.nearestPassable(t)
     if (t < 0) return null
     if (s === t) return [goal]
 
@@ -180,7 +182,7 @@ export class Pathfinder {
     }
     cells.reverse()
     const pts = simplify(cells, W).map((c): LonLat => [grid.lonOf(c), grid.latOf(c)])
-    if (best === t) pts[pts.length - 1] = goal
+    if (best === t && goalPassable) pts[pts.length - 1] = goal
     return pts.length > 0 ? pts : null
   }
 

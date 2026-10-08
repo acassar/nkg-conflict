@@ -140,3 +140,14 @@ describe('partie', () => {
     expect(pos(b)).toBe(pos(a))
   })
 })
+
+describe('itinéraires vers la mer', () => {
+  it('un objectif en mer s’arrête sur la côte, jamais dans l’eau', () => {
+    const sim = newGame()
+    const g = sim.ctx.grid
+    const path = sim.ctx.pathfinder.find([36.2, 47.3], [37.33, 46.46], { side: 1, enemyCost: 1 })
+    const last = path?.at(-1)
+    if (!last) throw new Error('pas de chemin')
+    expect(g.passable(g.cellAt(last[0], last[1]))).toBe(true)
+  })
+})

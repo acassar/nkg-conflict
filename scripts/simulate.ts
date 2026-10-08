@@ -7,13 +7,18 @@ import { Simulation } from '../src/sim/simulation'
 import { ukraine2026 } from '../src/sim/scenarios/ukraine-2026'
 import type { TheaterData } from '../src/sim/theater/grid'
 
-const days = Number(process.argv[2] ?? 30)
-const out = process.argv[3]
+const args = process.argv.slice(2)
+/** --ia-partout : l'IA joue aussi l'Ukraine (mesure de l'équilibre des règles). */
+const bothAi = args.includes('--ia-partout')
+const [daysArg, out] = args.filter((a) => !a.startsWith('--'))
+const days = Number(daysArg ?? 30)
+const seed = Number(process.env.SEED ?? 42)
 const theater = JSON.parse(
   fs.readFileSync(new URL('../src/sim/data/theater-ukraine.json', import.meta.url), 'utf8'),
 ) as TheaterData
 
-const sim = Simulation.fromScenario(ukraine2026, theater, 42)
+const sim = Simulation.fromScenario(ukraine2026, theater, seed)
+sim.aiControlsPlayer = bothAi
 const started = performance.now()
 for (let d = 1; d <= days && !sim.outcome; d++) {
   sim.step(24)

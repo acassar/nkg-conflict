@@ -14,7 +14,8 @@ export interface SaveFile {
   armies: ArmyState[]
   events: GameEvent[]
   outcome: GameOutcome | null
-  aiLastOffensiveTick: number
+  /** Dernière offensive de l'IA, par pays (un nombre seul dans les sauvegardes plus anciennes). */
+  aiLastOffensiveTick: number | Record<string, number>
   /** Propriétaires de la grille, encodés par plages [valeur, longueur, …]. */
   owner: number[]
   /** Cellules reliées au ravitaillement par camp (par plages), pour reprendre la partie à l'identique. */

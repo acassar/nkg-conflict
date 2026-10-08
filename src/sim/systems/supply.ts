@@ -2,6 +2,9 @@ import { runtimeOf, sideIndex, type SimContext } from '../context'
 import { distanceKm } from '../theater/grid'
 
 const SOURCE_RADIUS_KM = 30
+/** Une unité au contact peut déborder sur une cellule adverse : elle reste ravitaillée si une cellule
+ * reliée de son camp est à cette distance. */
+const FRONT_TOLERANCE_KM = 12
 
 /**
  * Recalcule, pour chaque camp, les cellules reliées à ses sources de ravitaillement
@@ -64,6 +67,11 @@ export function updateSupply(ctx: SimContext): void {
     const reach = ctx.supplyReach[sideIndex(ctx, u.owner)]
     const cell = grid.cellAt(u.lon, u.lat)
     let supplied = cell >= 0 && reach?.[cell] === 1
+    if (!supplied && reach) {
+      grid.cellsWithin(u.lon, u.lat, FRONT_TOLERANCE_KM, (i) => {
+        if (reach[i] === 1) supplied = true
+      })
+    }
     if (!supplied) {
       supplied = depots.some(
         (d) =>

@@ -148,7 +148,12 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         return
       }
       const prev = u.order.kind === 'front' ? u.order.target : undefined
-      if (prev && distanceKm(prev[0], prev[1], target[0], target[1]) < SLOT_TOLERANCE_KM) return
+      const sameSlot =
+        prev && distanceKm(prev[0], prev[1], target[0], target[1]) < SLOT_TOLERANCE_KM
+      // Même poste : on ne recalcule rien, sauf si l'unité est arrêtée loin de ce poste.
+      const stuck =
+        u.path.length === 0 && distanceKm(u.lon, u.lat, target[0], target[1]) > SLOT_TOLERANCE_KM
+      if (sameSlot && !stuck) return
       u.order = { kind: 'front', target }
       planPath(ctx, u, target)
     })

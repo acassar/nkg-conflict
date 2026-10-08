@@ -61,7 +61,7 @@ export function territoryCanvas(grid: GridSnapshot, countries: CountryDef[]): HT
 
 /** Teintes discrètes du terrain (forêt, collines, montagnes, marais), sous la couche de territoire. */
 const TERRAIN_TINTS: Record<number, [number, number, number, number]> = {
-  5: [34, 110, 50, 80],
+  5: [34, 110, 50, 55],
   6: [150, 120, 70, 55],
   7: [110, 75, 45, 110],
   8: [40, 150, 150, 90],

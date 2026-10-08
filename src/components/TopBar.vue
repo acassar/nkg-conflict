@@ -77,7 +77,12 @@ async function onFile(event: Event): Promise<void> {
     </div>
 
     <div v-if="resources" class="resources">
-      <span v-for="r in resources" :key="r.label" :title="r.title" :class="{ low: r.low }">
+      <span
+        v-for="r in resources"
+        :key="r.label"
+        :title="r.title"
+        :class="{ low: r.low, secondary: r.label === 'Construction' }"
+      >
         <span class="rlabel">{{ r.label }}</span> {{ r.value }}
         <span class="delta">{{ r.delta }}</span>
       </span>
@@ -107,9 +112,11 @@ async function onFile(event: Event): Promise<void> {
     </div>
 
     <div class="files">
-      <button @click="game.newGame()">Nouvelle partie</button>
-      <button @click="game.saveToFile()">Sauvegarder</button>
-      <button @click="fileInput?.click()">Charger</button>
+      <button title="Nouvelle partie" @click="game.newGame()">Nouvelle</button>
+      <button title="Sauvegarder la partie dans un fichier" @click="game.saveToFile()">
+        Sauver
+      </button>
+      <button title="Charger une partie sauvegardée" @click="fileInput?.click()">Charger</button>
       <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
     </div>
   </header>
@@ -145,7 +152,7 @@ async function onFile(event: Event): Promise<void> {
 }
 .resources {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   font-variant-numeric: tabular-nums;
 }
 .rlabel,
@@ -159,7 +166,8 @@ async function onFile(event: Event): Promise<void> {
   color: #fca5a5;
 }
 @media (max-width: 1500px) {
-  .delta {
+  .delta,
+  .resources .secondary {
     display: none;
   }
 }

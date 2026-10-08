@@ -8,7 +8,7 @@ import { Protocol } from 'pmtiles'
 import { storeToRefs } from 'pinia'
 import type { LonLat, UnitSnapshot } from '@/sim/core/types'
 import { useGameStore } from '@/stores/game'
-import { baseStyle } from './style'
+import { baseStyle, neutralizeCountryFills } from './style'
 import { buildLayers } from './layers'
 import { territoryCanvas } from './territoryImage'
 
@@ -69,6 +69,7 @@ onMounted(() => {
     attributionControl: { compact: true },
   })
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+  map.on('style.load', () => map && neutralizeCountryFills(map))
   // Clic droit : déplacement direct des unités sélectionnées.
   map.on('contextmenu', (e) => game.quickMove([e.lngLat.lng, e.lngLat.lat]))
 

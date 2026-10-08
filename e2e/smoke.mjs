@@ -20,14 +20,29 @@ const step = (name, data = {}) => {
 }
 
 const browser = await chromium.launch({
+  // CHROMIUM_PATH : navigateur déjà installé (sinon celui téléchargé par Playwright).
+  executablePath: process.env.CHROMIUM_PATH || undefined,
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
 })
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
 page.on('pageerror', (e) => report.errors.push(`pageerror: ${e.message}`))
+// Les ressources externes (fond de carte) peuvent être injoignables selon l'environnement :
+// elles sont notées à part et ne font pas échouer le test.
+const external = (u) => !u.startsWith(new URL(url).origin)
+report.network = []
+page.on('requestfailed', (r) => report.network.push(`échec ${r.url()}`))
+page.on('response', (r) => {
+  if (r.status() >= 400) {
+    const line = `${r.status()} ${r.url()}`
+    report.network.push(line)
+    if (!external(r.url())) report.errors.push(`http: ${line}`)
+  }
+})
 page.on('console', (m) => {
   const line = `${m.type()}: ${m.text()}`
   report.console.push(line)
-  if (m.type() === 'error') report.errors.push(line)
+  const networkNoise = /Failed to load resource|Failed to fetch/.test(m.text())
+  if (m.type() === 'error' && !networkNoise) report.errors.push(line)
 })
 
 const shot = (name) => page.screenshot({ path: path.join(out, `${name}.png`) })
@@ -76,8 +91,14 @@ try {
     if (u) g.selectUnit(u.id, false)
   })
   await page.mouse.click(720, 450, { button: 'right' })
-  await page.waitForTimeout(300)
-  step('ordre clic droit', await state())
+  await page.waitForTimeout(500)
+  const ordered = await page.evaluate(() => {
+    const g = window.__nkg
+    const id = g.selection[0]
+    return g.snapshot.units.find((u) => u.id === id)?.order ?? null
+  })
+  step('ordre clic droit', { ordre: ordered })
+  if (ordered !== 'move') report.errors.push(`ordre clic droit non appliqué (${ordered})`)
 
   // Lecture à vitesse 5 pendant 8 s.
   await page.keyboard.press('5')

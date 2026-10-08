@@ -18,12 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Pas encore de pnpm-lock.yaml commité : la CI le génère et le publie sur la branche ci-results.
-      - run: pnpm install --no-frozen-lockfile
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
 
       - name: Vérifications (format, types, tests, build, partie simulée)
         run: bash ci/checks.sh
@@ -47,11 +49,14 @@ jobs:
           set -e
           mkdir -p /tmp/results
           cp -r ci-out /tmp/results/ || true
-          cp pnpm-lock.yaml /tmp/results/ || true
           [ -d dist ] && cp -r dist /tmp/results/dist || true
-          tar -czf /tmp/node_modules.tgz node_modules
-          mkdir -p /tmp/results/cache
-          split -b 90m /tmp/node_modules.tgz /tmp/results/cache/node_modules.tgz.part-
+          # Dépendances installées : seulement si package.json ou le lockfile ont changé (≈ 50 Mo).
+          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(package.json|pnpm-lock.yaml)$' \
+            || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tar -czf /tmp/node_modules.tgz node_modules
+            mkdir -p /tmp/results/cache
+            split -b 90m /tmp/node_modules.tgz /tmp/results/cache/node_modules.tgz.part-
+          fi
           echo "${GITHUB_SHA}" > /tmp/results/SHA
           du -sh /tmp/results/* | tee /tmp/results/sizes.txt
           cd /tmp/results

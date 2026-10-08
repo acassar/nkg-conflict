@@ -4,6 +4,21 @@ import { layers, namedFlavor } from '@protomaps/basemaps'
 /** Style de secours tant qu'aucun fichier .pmtiles n'est configuré : carte mondiale légère de MapLibre. */
 const FALLBACK_STYLE_URL = 'https://demotiles.maplibre.org/style.json'
 
+/** Teinte unique des terres : le fond de démo colore chaque pays, ce qui brouille le territoire du jeu. */
+const LAND_COLOR = '#ece8de'
+
+/** Uniformise les aplats de pays du fond de carte, pour que seule la couche de territoire porte la couleur. */
+export function neutralizeCountryFills(map: {
+  getStyle(): { layers?: Array<{ id: string; type: string }> } | undefined
+  setPaintProperty(layer: string, name: string, value: unknown): void
+}): void {
+  for (const layer of map.getStyle()?.layers ?? []) {
+    if (layer.type === 'fill' && /countr|land/i.test(layer.id)) {
+      map.setPaintProperty(layer.id, 'fill-color', LAND_COLOR)
+    }
+  }
+}
+
 /**
  * Renvoie le style du fond de carte.
  * Avec VITE_PMTILES_URL (ex. un fichier hébergé sur le VPS), on utilise le fond Protomaps.

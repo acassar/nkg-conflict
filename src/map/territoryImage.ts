@@ -2,7 +2,7 @@ import type { CountryDef, GridSnapshot } from '@/sim/core/types'
 
 const WATER = 1
 const NEUTRAL = 2
-const AREA_ALPHA = 70
+const AREA_ALPHA = 105
 const FRONT_ALPHA = 235
 
 /**

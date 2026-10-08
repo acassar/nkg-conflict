@@ -89,6 +89,11 @@ export const useGameStore = defineStore('game', () => {
     return null
   })
 
+  // Les valeurs réactives de Vue sont des Proxy que postMessage ne sait pas copier :
+  // tout ce qui part vers le Worker est d'abord recopié en tableaux simples.
+  const ids = (): number[] => [...selection.value]
+  const lonLat = (p: LonLat): LonLat => [p[0], p[1]]
+
   // ---------- Sélection ----------
 
   function selectUnit(id: number, additive: boolean): void {
@@ -131,7 +136,7 @@ export const useGameStore = defineStore('game', () => {
   function mapClick(point: LonLat): boolean {
     const m = mode.value
     if (m.kind === 'order') {
-      void sim.orderUnits(selection.value, m.order, point)
+      void sim.orderUnits(ids(), m.order, point)
       cancelMode()
       return true
     }
@@ -140,8 +145,8 @@ export const useGameStore = defineStore('game', () => {
         mode.value = { ...m, first: point }
         return true
       }
-      if (m.kind === 'front') void sim.setArmyFront(m.armyId, [m.first, point])
-      else void sim.planOffensive(m.armyId, m.first, point)
+      if (m.kind === 'front') void sim.setArmyFront(m.armyId, [lonLat(m.first), point])
+      else void sim.planOffensive(m.armyId, lonLat(m.first), point)
       cancelMode()
       return true
     }
@@ -150,18 +155,18 @@ export const useGameStore = defineStore('game', () => {
 
   /** Clic droit : déplacement direct de la sélection. */
   function quickMove(point: LonLat): void {
-    if (selection.value.length > 0) void sim.orderUnits(selection.value, 'move', point)
+    if (selection.value.length > 0) void sim.orderUnits(ids(), 'move', point)
   }
 
   function hold(): void {
-    if (selection.value.length > 0) void sim.orderUnits(selection.value, 'hold')
+    if (selection.value.length > 0) void sim.orderUnits(ids(), 'hold')
   }
 
   // ---------- Armées ----------
 
   async function createArmyFromSelection(name: string): Promise<void> {
     if (selection.value.length === 0) return
-    selectedArmyId.value = await sim.createArmy(name, selection.value)
+    selectedArmyId.value = await sim.createArmy(name, ids())
   }
 
   const disbandArmy = (id: number): Promise<void> => sim.disbandArmy(id)

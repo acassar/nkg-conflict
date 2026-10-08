@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
 import type { Stance } from '@/stores/game'
 import { stanceColor } from '@/map/territoryImage'
+import { AID_LEVEL_NAMES, AID_SHARE } from '@/sim/politics/aidLevels'
+import type { AidLevel } from '@/sim/politics/types'
 
 const game = useGameStore()
 
@@ -58,6 +60,29 @@ const owned = computed(() => {
 const unitCount = computed(
   () => game.snapshot?.units.filter((u) => u.owner === code.value).length ?? 0,
 )
+
+// ---------- Aide étrangère ----------
+
+const LEVEL_NAMES = AID_LEVEL_NAMES
+const LEVELS: AidLevel[] = [1, 2, 3]
+// Sur la fiche d'un autre pays, l'aide échangée avec le joueur est affichée à part.
+const involvesMe = (a: { from: string; to: string }): boolean =>
+  !isMe.value && (a.from === me.value || a.to === me.value)
+const received = computed(() => game.aids.filter((a) => a.to === code.value && !involvesMe(a)))
+const given = computed(() => game.aids.filter((a) => a.from === code.value && !involvesMe(a)))
+/** Aide entre le joueur et le pays affiché (dans un sens ou dans l'autre). */
+const myAidTo = computed(() => game.aids.find((a) => a.from === me.value && a.to === code.value))
+const myAidFrom = computed(() => game.aids.find((a) => a.from === code.value && a.to === me.value))
+const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
+const flow = (a: {
+  lastDay: { munitions: number; production: number; construction: number; equipment: number }
+}): string => {
+  const d = a.lastDay
+  if (d.munitions + d.production + d.construction + d.equipment === 0) {
+    return 'Premier versement à la fin de la journée'
+  }
+  return `Par jour : ${fmt(d.munitions)} munitions · ${fmt(d.production)} production · ${fmt(d.equipment)} matériel · ${fmt(d.construction)} construction`
+}
 
 const name = (c: string): string => game.countryByCode.get(c)?.name ?? c
 const names = (list: string[]): string => list.map(name).join(', ')
@@ -214,6 +239,76 @@ function confirmWar(): void {
         </div>
       </li>
     </ul>
+    <h3>Aide étrangère</h3>
+    <div class="aid" data-testid="aid-section">
+      <!-- Entre le joueur et ce pays -->
+      <template v-if="!isMe && !atWarWithMe">
+        <div v-if="myAidFrom" class="aid-row">
+          <div>
+            Vous aide (<strong>{{ LEVEL_NAMES[myAidFrom.level] }}</strong
+            >), {{ myAidFrom.unitsDelivered }} unité(s) livrée(s)
+            <div class="meta">{{ flow(myAidFrom) }}</div>
+          </div>
+          <button class="small" @click="game.revokeAid(myAidFrom.id)">Renoncer</button>
+        </div>
+        <button
+          v-else
+          title="Le pays décide selon vos relations, vos alliances et vos ennemis communs"
+          @click="game.requestAid(country.id)"
+        >
+          Demander une aide
+        </button>
+        <div v-if="myAidTo" class="aid-row">
+          <div>
+            Vous l'aidez (<strong>{{ LEVEL_NAMES[myAidTo.level] }}</strong
+            >)
+            <div class="meta">{{ flow(myAidTo) }}</div>
+          </div>
+          <div class="levels">
+            <button
+              v-for="l in LEVELS"
+              :key="l"
+              :class="{ active: myAidTo.level === l }"
+              @click="game.setAidLevel(myAidTo.id, l)"
+            >
+              {{ LEVEL_NAMES[l] }}
+            </button>
+            <button class="danger" @click="game.revokeAid(myAidTo.id)">Arrêter</button>
+          </div>
+        </div>
+        <div v-else class="levels">
+          <span class="label">Accorder une aide :</span>
+          <button
+            v-for="l in LEVELS"
+            :key="l"
+            :title="`Prélève ${Math.round(AID_SHARE[l] * 100)} % de vos revenus militaires et civils chaque jour`"
+            @click="game.grantAid(country.id, l)"
+          >
+            {{ LEVEL_NAMES[l] }}
+          </button>
+        </div>
+      </template>
+
+      <!-- Aides du pays affiché -->
+      <ul class="aid-list">
+        <li v-for="a in received" :key="`r${a.id}`">
+          <span
+            >Reçue de <strong>{{ name(a.from) }}</strong> ({{ LEVEL_NAMES[a.level] }})</span
+          >
+          <span class="meta">{{ flow(a) }}</span>
+          <button v-if="isMe" class="small" @click="game.revokeAid(a.id)">Renoncer</button>
+        </li>
+        <li v-for="a in given" :key="`g${a.id}`">
+          <span
+            >Accordée à <strong>{{ name(a.to) }}</strong> ({{ LEVEL_NAMES[a.level] }})</span
+          >
+          <span class="meta">{{ flow(a) }}</span>
+          <button v-if="isMe" class="small danger" @click="game.revokeAid(a.id)">Arrêter</button>
+        </li>
+        <li v-if="received.length + given.length === 0" class="meta">Aucune aide en cours</li>
+      </ul>
+    </div>
+
     <p v-if="isMe" class="tip">Cliquez sur un pays de la carte pour ouvrir sa fiche.</p>
   </div>
 </template>
@@ -309,6 +404,53 @@ meter {
 h3 {
   margin: 12px 0 4px;
   font-size: 14px;
+}
+.aid-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.aid-row > button {
+  align-self: flex-start;
+}
+.aid > button {
+  margin-bottom: 6px;
+}
+.levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.levels button.active {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+.label {
+  color: #9aa3af;
+}
+.meta {
+  color: #9aa3af;
+  font-size: 12px;
+}
+.aid-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 180px;
+  overflow: auto;
+}
+.aid-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+  border-top: 1px solid #262c35;
+}
+.aid-list li button {
+  align-self: flex-start;
 }
 .tip {
   color: #9aa3af;

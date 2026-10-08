@@ -63,7 +63,18 @@ import {
   type PoliticsHooks,
 } from './politics/politics'
 import { computeNeighbors, monthlyEvents, updateDiplomacyAi } from './politics/ai'
-import type { PeaceKind, PoliticsState, War } from './politics/types'
+import {
+  aidRelationsMonthly,
+  answerAidRequest,
+  applyAidFlows,
+  deliverEquipment,
+  grantAid,
+  requestAid,
+  revokeAid,
+  setAidLevel,
+  updateAidAi,
+} from './politics/aid'
+import type { AidLevel, PeaceKind, PoliticsState, War } from './politics/types'
 
 const MAX_EVENTS = 80
 const ARMIES_EVERY = 24
@@ -85,6 +96,9 @@ function emptyPolitics(): PoliticsState {
     alliances: [],
     sanctions: new Set(),
     offers: [],
+    aids: [],
+    aidRequests: [],
+    aidRefusals: new Map(),
     nextId: 1,
   }
 }
@@ -216,6 +230,19 @@ export class Simulation {
       ctx.politics.wars.push(war)
     }
     rebuildMatrix(ctx)
+    for (const a of sp?.aids ?? []) {
+      if (!ctx.countries.has(a.from) || !ctx.countries.has(a.to)) continue
+      ctx.politics.aids.push({
+        id: ctx.politics.nextId++,
+        from: a.from,
+        to: a.to,
+        level: a.level,
+        startTick: 0,
+        equipment: 0,
+        unitsDelivered: 0,
+        lastDay: { munitions: 0, production: 0, construction: 0, equipment: 0 },
+      })
+    }
   }
 
   static fromScenario(
@@ -282,6 +309,9 @@ export class Simulation {
       alliances: p.alliances.map((a) => ({ ...a, members: [...a.members] })),
       sanctions: new Set(p.sanctions),
       offers: p.offers.map((o) => ({ ...o })),
+      aids: (p.aids ?? []).map((a) => structuredClone(a)),
+      aidRequests: (p.aidRequests ?? []).map((r) => ({ ...r })),
+      aidRefusals: new Map(p.aidRefusals ?? []),
       nextId: p.nextId,
     }
     for (const [c, since] of save.armylessSince) sim.armylessSince.set(c, since)
@@ -343,7 +373,8 @@ export class Simulation {
 
   private daily(): void {
     const ctx = this.ctx
-    updateEconomy(ctx, this.scenario)
+    updateEconomy(ctx, this.scenario, (incomes) => applyAidFlows(ctx, incomes))
+    deliverEquipment(ctx)
     const managed = this.mobilizedAi()
     if (this.autoEconomy && !managed.includes(this.playerCountry)) managed.push(this.playerCountry)
     for (const c of managed) updateAiEconomy(ctx, c)
@@ -356,6 +387,8 @@ export class Simulation {
     const ctx = this.ctx
     this.neighbors ??= computeNeighbors(ctx)
     updateDiplomacyAi(ctx, this.aiCountries, this.playerCountry, this.neighbors, this.hooks)
+    updateAidAi(ctx, this.aiCountries, this.playerCountry)
+    aidRelationsMonthly(ctx)
     monthlyEvents(ctx, this.playerCountry)
   }
 
@@ -619,6 +652,31 @@ export class Simulation {
     return n > 0 ? `${n} allié(s) vous rejoignent` : 'Aucun allié ne vous rejoint'
   }
 
+  // ---------- Aide étrangère ----------
+
+  /** Demande d'aide du joueur à un pays IA, qui décide aussitôt. */
+  requestAid(donor: CountryId): string | null {
+    return requestAid(this.ctx, this.playerCountry, donor)
+  }
+
+  /** Aide accordée par le joueur (ou changement de niveau d'une aide existante). */
+  grantAid(recipient: CountryId, level: AidLevel): string | null {
+    return grantAid(this.ctx, this.playerCountry, recipient, level)
+  }
+
+  setAidLevel(id: number, level: AidLevel): void {
+    setAidLevel(this.ctx, id, this.playerCountry, level)
+  }
+
+  /** Met fin à une aide donnée ou reçue par le joueur. */
+  revokeAid(id: number): void {
+    revokeAid(this.ctx, id, this.playerCountry)
+  }
+
+  answerAidRequest(id: number, accept: boolean, level: AidLevel = 1): string | null {
+    return answerAidRequest(this.ctx, id, this.playerCountry, accept, level)
+  }
+
   // ---------- Publication et sauvegarde ----------
 
   setSpeed(speed: Speed): void {
@@ -772,6 +830,9 @@ export class Simulation {
         alliances: p.alliances.map((a) => ({ ...a, members: [...a.members] })),
         sanctions: [...p.sanctions],
         offers: p.offers.map((o) => ({ ...o })),
+        aids: p.aids.map((a) => structuredClone(a)),
+        aidRequests: p.aidRequests.map((r) => ({ ...r })),
+        aidRefusals: [...p.aidRefusals.entries()],
         nextId: p.nextId,
       },
       armylessSince: [...this.armylessSince.entries()],

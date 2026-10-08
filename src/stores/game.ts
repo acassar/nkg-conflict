@@ -13,7 +13,7 @@ import type {
   UnitSnapshot,
 } from '@/sim/core/types'
 import type { PlayerOrder } from '@/sim/simulation'
-import type { PeaceKind } from '@/sim/politics/types'
+import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
 import type { SimApi } from '@/sim/worker'
 
@@ -43,7 +43,8 @@ const ORDER_LABELS: Record<Exclude<PlayerOrder, 'hold'>, string> = {
 }
 
 /** Événements du journal qui méritent une notification quand ils concernent le joueur. */
-const IMPORTANT = /déclare la guerre|capitule|paix|entre en guerre|propose la paix|Fin de partie/
+const IMPORTANT =
+  /déclare la guerre|capitule|paix|entre en guerre|propose la paix|Fin de partie|aide|Matériel livré/
 
 /** Pont entre l'interface et le Worker de simulation. L'interface ne fait que lire l'état publié. */
 export const useGameStore = defineStore('game', () => {
@@ -192,6 +193,8 @@ export const useGameStore = defineStore('game', () => {
     selectedCountryCode.value ? (countryByCode.value.get(selectedCountryCode.value) ?? null) : null,
   )
   const offers = computed(() => snapshot.value?.politics.offers ?? [])
+  const aids = computed(() => snapshot.value?.politics.aids ?? [])
+  const aidRequests = computed(() => snapshot.value?.politics.aidRequests ?? [])
 
   /**
    * Position de chaque pays vis-à-vis du joueur (couleurs de la carte et des pions).
@@ -482,6 +485,23 @@ export const useGameStore = defineStore('game', () => {
     pushToast(await sim.callAllies())
   }
 
+  // ---------- Aide étrangère ----------
+
+  async function requestAid(donor: CountryId): Promise<void> {
+    report(await sim.requestAid(donor))
+  }
+
+  async function grantAid(recipient: CountryId, level: AidLevel): Promise<void> {
+    report(await sim.grantAid(recipient, level))
+  }
+
+  const setAidLevel = (id: number, level: AidLevel): Promise<void> => sim.setAidLevel(id, level)
+  const revokeAid = (id: number): Promise<void> => sim.revokeAid(id)
+
+  async function answerAidRequest(id: number, accept: boolean, level: AidLevel = 1): Promise<void> {
+    report(await sim.answerAidRequest(id, accept, level))
+  }
+
   async function mobilize(): Promise<void> {
     report(await sim.mobilize(), 'Forces mobilisées')
   }
@@ -573,6 +593,8 @@ export const useGameStore = defineStore('game', () => {
     stances,
     hostilePairs,
     offers,
+    aids,
+    aidRequests,
     paused,
     speed,
     dateLabel,
@@ -609,6 +631,11 @@ export const useGameStore = defineStore('game', () => {
     leaveAlliance,
     callAllies,
     mobilize,
+    requestAid,
+    grantAid,
+    setAidLevel,
+    revokeAid,
+    answerAidRequest,
     createArmyFromSelection,
     addSelectionToArmy,
     disbandArmy,

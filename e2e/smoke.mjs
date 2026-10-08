@@ -155,6 +155,17 @@ try {
   if (!(relationAfter > relationBefore)) report.errors.push('relations non améliorées')
   await shot('02d-fiche-pologne')
 
+  // Aide étrangère : demande à l'Espagne (membre de l'OTAN, ennemie de la Russie).
+  await page.evaluate(() => window.__nkg.selectCountry('ESP'))
+  await page.getByRole('button', { name: 'Demander une aide' }).click()
+  await page.waitForTimeout(400)
+  const aid = await page.evaluate(() =>
+    window.__nkg.aids.find((a) => a.from === 'ESP' && a.to === 'UKR'),
+  )
+  step('aide demandée', { niveau: aid?.level ?? null })
+  if (!aid) report.errors.push("l'Espagne n'a pas accordé d'aide")
+  await shot('02e-aide-espagne')
+
   // Lecture à vitesse 5 pendant 8 s.
   await page.keyboard.press('5')
   await page.keyboard.press('Space')

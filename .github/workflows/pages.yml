@@ -45,3 +45,39 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Test de fumée sur le site publié ; résultats sur la branche pages-results.
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Test de fumée sur le site publié
+        run: |
+          mkdir -p ci-out
+          pnpm exec playwright install --with-deps chromium > ci-out/playwright-install.log 2>&1
+          sleep 20 # propagation du déploiement
+          node e2e/smoke.mjs "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" ci-out/smoke 2>&1 | tee ci-out/smoke.log
+      - name: Publier les résultats sur la branche pages-results
+        if: always()
+        run: |
+          set -e
+          mkdir -p /tmp/results
+          cp -r ci-out /tmp/results/ || true
+          echo "${GITHUB_SHA}" > /tmp/results/SHA
+          cd /tmp/results
+          git init -q -b pages-results
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Vérification du site pour ${GITHUB_SHA}"
+          git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" pages-results
+      - run: grep -q 'SMOKE OK' ci-out/smoke.log

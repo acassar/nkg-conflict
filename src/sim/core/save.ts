@@ -1,10 +1,12 @@
 import type { ArmyState, Buildings, EconomyState, GameEvent, GameOutcome, UnitState } from './types'
-import type { Alliance, CountryPolitics, PeaceOffer, War } from '../politics/types'
+import type { Aid, AidRequest, Alliance, CountryPolitics, PeaceOffer, War } from '../politics/types'
 
-export const SAVE_VERSION = 4
+export const SAVE_VERSION = 5
+/** Versions encore lisibles (les champs ajoutés depuis prennent leur valeur par défaut). */
+const READABLE_VERSIONS = [4, 5]
 
 export interface SaveFile {
-  version: typeof SAVE_VERSION
+  version: number
   savedAt: string
   scenarioId: string
   playerCountry: string
@@ -35,6 +37,10 @@ export interface SaveFile {
     alliances: Alliance[]
     sanctions: string[]
     offers: PeaceOffer[]
+    /** Absents des sauvegardes de version 4. */
+    aids?: Aid[]
+    aidRequests?: AidRequest[]
+    aidRefusals?: Array<[string, number]>
     nextId: number
   }
   armylessSince: Array<[string, number]>
@@ -74,7 +80,7 @@ export function parseSave(text: string): SaveFile {
   }
   if (typeof data !== 'object' || data === null) throw new Error('Sauvegarde invalide')
   const d = data as Record<string, unknown>
-  if (d.version !== SAVE_VERSION) {
+  if (typeof d.version !== 'number' || !READABLE_VERSIONS.includes(d.version)) {
     throw new Error(`Version de sauvegarde non prise en charge : ${String(d.version)}`)
   }
   if (typeof d.tick !== 'number' || d.tick < 0) throw new Error('Sauvegarde invalide : tick')

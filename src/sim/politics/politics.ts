@@ -416,5 +416,7 @@ export function politicsSnapshot(ctx: SimContext, player: CountryId): PoliticsSn
     alliances: ctx.politics.alliances.map((a) => ({ ...a, members: [...a.members] })),
     sanctions: [...ctx.politics.sanctions],
     offers: ctx.politics.offers.filter((o) => o.to === player).map((o) => ({ ...o })),
+    aids: ctx.politics.aids.map((a) => structuredClone(a)),
+    aidRequests: ctx.politics.aidRequests.filter((r) => r.to === player).map((r) => ({ ...r })),
   }
 }

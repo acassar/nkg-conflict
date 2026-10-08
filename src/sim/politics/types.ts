@@ -45,6 +45,32 @@ export interface PeaceOffer {
   expiresTick: number
 }
 
+/** Niveau d'une aide : part des revenus militaires et civils du donneur qui part chez le receveur. */
+export type AidLevel = 1 | 2 | 3
+
+/** Aide étrangère en cours : prélevée chaque jour sur le donneur. */
+export interface Aid {
+  id: number
+  from: CountryId
+  to: CountryId
+  level: AidLevel
+  startTick: number
+  /** Production destinée au matériel, convertie en unité livrée quand elle suffit. */
+  equipment: number
+  /** Unités livrées depuis le début. */
+  unitsDelivered: number
+  /** Dernière journée : munitions, production, construction et matériel transférés. */
+  lastDay: { munitions: number; production: number; construction: number; equipment: number }
+}
+
+/** Demande d'aide d'une IA au joueur, en attente de réponse. */
+export interface AidRequest {
+  id: number
+  from: CountryId
+  to: CountryId
+  expiresTick: number
+}
+
 export interface PoliticsState {
   countries: Map<CountryId, CountryPolitics>
   /** Relations entre deux pays, de -100 à 100 (clé « A|B » triée). */
@@ -54,6 +80,10 @@ export interface PoliticsState {
   /** Sanctions en cours, clé « auteur>cible ». */
   sanctions: Set<string>
   offers: PeaceOffer[]
+  aids: Aid[]
+  aidRequests: AidRequest[]
+  /** Dernière demande d'aide refusée, clé « demandeur>donneur » (tick). */
+  aidRefusals: Map<string, number>
   nextId: number
 }
 
@@ -72,4 +102,6 @@ export interface PoliticsSnapshot {
   alliances: Alliance[]
   sanctions: string[]
   offers: PeaceOffer[]
+  aids: Aid[]
+  aidRequests: AidRequest[]
 }

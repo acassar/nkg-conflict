@@ -216,14 +216,26 @@ export function previewIncome(ctx: SimContext, scenario: ScenarioDef): void {
   }
 }
 
-/** Une journée d'économie pour chaque pays : revenus, constructions, renforts, formations. */
-export function updateEconomy(ctx: SimContext, scenario: ScenarioDef): void {
+export type Income = ReturnType<typeof dailyIncome>
+
+/**
+ * Une journée d'économie pour chaque pays : revenus, constructions, renforts, formations.
+ * `transfers` peut modifier les revenus de tous les pays avant leur emploi (aides étrangères).
+ */
+export function updateEconomy(
+  ctx: SimContext,
+  scenario: ScenarioDef,
+  transfers?: (incomes: Map<CountryId, Income>) => void,
+): void {
+  const incomes = new Map<CountryId, Income>()
   for (const eco of ctx.economies.values()) {
-    const { construction, production, munitions, manpower } = dailyIncome(
-      ctx,
-      scenario,
-      eco.country,
-    )
+    incomes.set(eco.country, dailyIncome(ctx, scenario, eco.country))
+  }
+  transfers?.(incomes)
+  for (const eco of ctx.economies.values()) {
+    const income = incomes.get(eco.country)
+    if (!income) continue
+    const { construction, production, munitions, manpower } = income
     eco.production += production
     eco.munitions = Math.min(MUNITIONS_CAP, eco.munitions + munitions)
     eco.manpower += manpower

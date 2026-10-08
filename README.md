@@ -18,7 +18,7 @@ pnpm dev
 
 ## Jouer
 
-L'écran de départ propose le scénario, l'époque (moderne pour l'instant) et votre pays. Un pays capitule quand sa capitale tombe ou quand il n'a plus d'unités pendant 7 jours. Votre capitulation met fin à la partie ; dans le théâtre ukrainien, celle de l'adversaire vous donne la victoire.
+L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; guerre froide, 1939, 1914 et époque napoléonienne sont prévues) et votre pays. Un pays capitule quand sa capitale tombe ou quand il n'a plus d'unités pendant 7 jours. Votre capitulation met fin à la partie ; dans le théâtre ukrainien, celle de l'adversaire vous donne la victoire.
 
 | Action                                | Commande                                   |
 | ------------------------------------- | ------------------------------------------ |
@@ -46,6 +46,7 @@ Onglet « Diplomatie » : stabilité, soutien à la guerre, relations, alliances
 - **Paix** : paix blanche (retour aux frontières d'avant-guerre) ou paix sur les lignes (chacun garde ce qu'il tient). L'adversaire accepte selon le terrain gagné ou perdu et son soutien à la guerre. L'IA peut aussi vous proposer la paix ; l'offre expire au bout de 15 jours.
 - **Améliorer les relations** (+10, une fois par mois et par pays), **sanctionner** (production réduite de 10 % par pays qui sanctionne), **proposer une alliance** (relations d'au moins +60), **appeler les alliés**, **quitter son alliance**.
 - **Mobiliser** : en paix, vos forces ne sont pas levées ; la mobilisation coûte un peu de stabilité.
+- **Aide étrangère** : un donneur verse chaque jour au receveur une part de ses revenus (6 %, 12 % ou 20 % selon le niveau : limitée, soutenue, massive) en munitions, production et points de construction ; la moitié de la production envoyée devient du matériel, livré sous forme d'unités équipées (le receveur fournit les hommes). Vous pouvez demander une aide (le pays décide selon vos relations, vos alliances et vos ennemis communs), en accorder une, changer son niveau ou y mettre fin ; les IA en guerre vous en demandent aussi. Aider un pays améliore vos relations avec lui et les dégrade avec ses ennemis. Au début de « Monde 2026 », l'Ukraine reçoit l'aide de 12 pays occidentaux, la Russie celle de la Corée du Nord et de l'Iran.
 
 ## Règles en bref
 

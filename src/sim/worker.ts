@@ -7,7 +7,7 @@ import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
 import { loadTheater } from './theater/load'
 import type { TheaterData } from './theater/grid'
-import type { PeaceKind } from './politics/types'
+import type { AidLevel, PeaceKind } from './politics/types'
 
 const FRAME_MS = 50
 /** Les cellules modifiées ne sont publiées qu'au plus 4 fois par seconde. */
@@ -177,6 +177,21 @@ const api = {
   },
   callAllies(): string {
     return act((s) => s.callAllies()) ?? ''
+  },
+  requestAid(donor: CountryId): string | null {
+    return act((s) => s.requestAid(donor)) ?? null
+  },
+  grantAid(recipient: CountryId, level: AidLevel): string | null {
+    return act((s) => s.grantAid(recipient, level)) ?? null
+  },
+  setAidLevel(id: number, level: AidLevel): void {
+    act((s) => s.setAidLevel(id, level))
+  },
+  revokeAid(id: number): void {
+    act((s) => s.revokeAid(id))
+  },
+  answerAidRequest(id: number, accept: boolean, level: AidLevel): string | null {
+    return act((s) => s.answerAidRequest(id, accept, level)) ?? null
   },
   mobilize(): string | null {
     return act((s) => s.mobilizePlayer()) ?? null

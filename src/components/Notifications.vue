@@ -5,6 +5,14 @@ import { useGameStore } from '@/stores/game'
 const game = useGameStore()
 const name = (c: string): string => game.countryByCode.get(c)?.name ?? c
 const offers = computed(() => game.offers.filter((o) => o.to === game.snapshot?.playerCountry))
+const requests = computed(() =>
+  game.aidRequests.filter((r) => r.to === game.snapshot?.playerCountry),
+)
+const LEVELS = [
+  { level: 1, name: 'Limitée' },
+  { level: 2, name: 'Soutenue' },
+  { level: 3, name: 'Massive' },
+] as const
 const daysLeft = (expires: number): number =>
   Math.max(0, Math.ceil((expires - (game.snapshot?.tick ?? 0)) / 24))
 </script>
@@ -30,6 +38,32 @@ const daysLeft = (expires: number): number =>
       <div class="row">
         <button class="ok" @click="game.answerOffer(o.id, true)">Accepter</button>
         <button @click="game.answerOffer(o.id, false)">Refuser</button>
+      </div>
+    </div>
+    <div
+      v-for="r in requests"
+      :key="`a${r.id}`"
+      class="offer aid"
+      role="alertdialog"
+      data-testid="aid-request"
+    >
+      <strong>{{ name(r.from) }} demande votre aide</strong>
+      <p>
+        Une part de vos munitions, de votre production et de vos points de construction lui sera
+        versée chaque jour.
+        <span class="muted">Expire dans {{ daysLeft(r.expiresTick) }} j.</span>
+      </p>
+      <div class="row">
+        <button
+          v-for="l in LEVELS"
+          :key="l.level"
+          class="ok"
+          :title="`Aide ${l.name.toLowerCase()}`"
+          @click="game.answerAidRequest(r.id, true, l.level)"
+        >
+          {{ l.name }}
+        </button>
+        <button @click="game.answerAidRequest(r.id, false)">Refuser</button>
       </div>
     </div>
     <div
@@ -72,6 +106,9 @@ const daysLeft = (expires: number): number =>
 }
 .offer {
   border-left-color: #10b981;
+}
+.offer.aid {
+  border-left-color: #f59e0b;
 }
 .offer p {
   margin: 4px 0 6px;

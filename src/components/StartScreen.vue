@@ -19,8 +19,10 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 const EPOCHS = [
   { id: 'modern', name: 'Époque moderne (2026)', available: true },
-  { id: 'near', name: 'Futur proche (2040)', available: false },
-  { id: 'far', name: 'Futur lointain (2070)', available: false },
+  { id: 'cold-war', name: 'Guerre froide (~1985)', available: false },
+  { id: 'ww2', name: 'Seconde Guerre mondiale (1939)', available: false },
+  { id: 'ww1', name: 'Première Guerre mondiale (1914)', available: false },
+  { id: 'napoleon', name: 'Époque napoléonienne (~1805)', available: false },
 ]
 
 const scenario = computed(() => game.scenarios.find((s) => s.id === scenarioId.value) ?? null)

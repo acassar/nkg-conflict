@@ -236,4 +236,6 @@ export interface ScenarioPolitics {
   wars?: Array<{ name: string; attackers: CountryId[]; defenders: CountryId[] }>
   stability?: Record<CountryId, number>
   warSupport?: Record<CountryId, number>
+  /** Aides étrangères en place au début de la partie (niveau 1 à 3). */
+  aids?: Array<{ from: CountryId; to: CountryId; level: 1 | 2 | 3 }>
 }

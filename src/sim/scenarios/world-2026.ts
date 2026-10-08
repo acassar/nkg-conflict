@@ -104,6 +104,18 @@ const TENSIONS: Array<[CountryId, CountryId, number]> = [
   ['CHN', 'USA', -25],
 ]
 
+/** Aides en cours au début de 2026 (niveau 1 limitée, 2 soutenue, 3 massive). Hypothèses de jeu. */
+const AIDS_2026: Array<{ from: CountryId; to: CountryId; level: 1 | 2 | 3 }> = [
+  ...(['USA', 'DEU', 'GBR'] as const).map((from) => ({ from, to: 'UKR', level: 2 as const })),
+  ...(['POL', 'FRA', 'NLD', 'CAN', 'SWE', 'DNK', 'NOR', 'ITA', 'FIN'] as const).map((from) => ({
+    from,
+    to: 'UKR',
+    level: 1 as const,
+  })),
+  { from: 'PRK', to: 'RUS', level: 2 },
+  { from: 'IRN', to: 'RUS', level: 1 },
+]
+
 function economyOf(row: WorldCountryRow): ScenarioEconomy {
   const popM = row.pop / 1e6
   const gdp = Math.max(0, row.gdpB)
@@ -168,6 +180,7 @@ export function buildWorld2026(rows: WorldCountryRow[]): ScenarioDef {
       ],
       wars: [{ name: 'Guerre russo-ukrainienne', attackers: ['RUS'], defenders: ['UKR'] }],
       warSupport: { UKR: 0.7, RUS: 0.55 },
+      aids: AIDS_2026,
     },
   }
 }

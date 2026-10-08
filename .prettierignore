@@ -1,0 +1,4 @@
+pnpm-lock.yaml
+dist
+ci-out
+src/sim/data/*.json

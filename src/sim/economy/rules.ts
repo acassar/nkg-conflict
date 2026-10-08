@@ -100,6 +100,13 @@ export function emptyBuildings(): Buildings {
 }
 
 /** Bâtiments de départ d'une ville selon sa population (industrie concentrée dans les grandes villes). */
+/** Modèle national : l'industrie existante est comptée au niveau du pays ; les villes n'ont que des casernes. */
+export function initialNationalBuildings(pop: number, capital: boolean): Buildings {
+  const b = emptyBuildings()
+  b.barracks = (pop >= 300_000 ? 1 : 0) + (capital ? 1 : 0)
+  return b
+}
+
 export function initialBuildings(pop: number, capital: boolean): Buildings {
   const b = emptyBuildings()
   b.civ = Math.min(6, Math.max(1, Math.round(pop / 350_000)))

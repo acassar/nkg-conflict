@@ -3,6 +3,7 @@ import type { LonLat, UnitState } from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactor, useMunitions } from '../economy/economy'
 import { moraleFactor } from '../politics/politics'
+import { WarIndex } from './spatial'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -27,13 +28,17 @@ function commandFactor(ctx: SimContext, u: UnitState): number {
 
 /** Marque les unités à portée d'un QG de leur camp qui n'est pas en déroute. */
 export function updateCommand(ctx: SimContext): void {
-  const hqs = [...ctx.units.values()].filter(
-    (u) => ctx.catalog[u.kind].commandRadiusKm > 0 && !runtimeOf(ctx, u.id).routed,
-  )
+  const hqsByOwner = new Map<string, UnitState[]>()
   for (const u of ctx.units.values()) {
+    if (ctx.catalog[u.kind].commandRadiusKm <= 0 || runtimeOf(ctx, u.id).routed) continue
+    const list = hqsByOwner.get(u.owner)
+    if (list) list.push(u)
+    else hqsByOwner.set(u.owner, [u])
+  }
+  for (const u of ctx.units.values()) {
+    const hqs = hqsByOwner.get(u.owner) ?? []
     runtimeOf(ctx, u.id).commanded = hqs.some(
       (h) =>
-        h.owner === u.owner &&
         h.id !== u.id &&
         distanceKm(h.lon, h.lat, u.lon, u.lat) <= ctx.catalog[h.kind].commandRadiusKm,
     )
@@ -84,26 +89,6 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
   )
 }
 
-function nearestEnemy(
-  ctx: SimContext,
-  u: UnitState,
-  enemies: UnitState[],
-  maxKm: number,
-): UnitState | null {
-  const side = sideIndex(ctx, u.owner)
-  let best: UnitState | null = null
-  let bestD = maxKm
-  for (const e of enemies) {
-    if (!ctx.matrix.hostile(side, sideIndex(ctx, e.owner))) continue
-    const d = distanceKm(u.lon, u.lat, e.lon, e.lat)
-    if (d <= bestD) {
-      bestD = d
-      best = e
-    }
-  }
-  return best
-}
-
 function hit(ctx: SimContext, from: UnitState, target: UnitState, factor: number): void {
   let defense = defenseValue(ctx, target)
   if (isOffensive(from) && riverBetween(ctx, from, target)) defense *= 1.4
@@ -120,16 +105,17 @@ function hit(ctx: SimContext, from: UnitState, target: UnitState, factor: number
 /** Une heure de combat : contacts, tirs, appui d'artillerie, décrochages, unités détruites. */
 export function updateCombat(ctx: SimContext): void {
   const units = [...ctx.units.values()]
+  const index = new WarIndex(ctx)
 
-  // 1. Contacts.
+  // 1. Contacts (seules les unités des camps en guerre peuvent en avoir).
   for (const u of units) {
     const rt = runtimeOf(ctx, u.id)
-    const e = nearestEnemy(ctx, u, units, CONTACT_KM)
+    const e = index.has(u) ? index.nearestEnemy(u, CONTACT_KM) : null
     rt.engagedWith = e ? e.id : null
   }
 
   // 2. Tirs directs (chaque unité au contact frappe son adversaire le plus proche).
-  for (const u of units) {
+  for (const u of index.units) {
     const rt = runtimeOf(ctx, u.id)
     if (rt.engagedWith === null || rt.routed) continue
     const target = ctx.units.get(rt.engagedWith)
@@ -137,10 +123,10 @@ export function updateCombat(ctx: SimContext): void {
   }
 
   // 3. Artillerie : frappe l'ennemi le plus proche à portée, même sans contact direct.
-  for (const u of units) {
+  for (const u of index.units) {
     const range = ctx.catalog[u.kind].supportRangeKm
     if (range <= 0 || runtimeOf(ctx, u.id).routed) continue
-    const target = nearestEnemy(ctx, u, units, range)
+    const target = index.nearestEnemy(u, range)
     if (target) hit(ctx, u, target, ARTILLERY_FACTOR)
   }
 
@@ -164,7 +150,7 @@ export function updateCombat(ctx: SimContext): void {
       rt.routed = true
       u.entrench = 0
       ctx.log(`Décrochage : ${u.name}`, u.owner)
-      retreatFromEnemy(ctx, u, units)
+      retreatFromEnemy(ctx, u, index)
     } else if (rt.routed && u.org >= RALLY_ORG) {
       rt.routed = false
       u.order = { kind: 'hold' }
@@ -180,8 +166,8 @@ export function updateCombat(ctx: SimContext): void {
 }
 
 /** Fait reculer une unité de ~25 km à l'opposé de l'ennemi le plus proche, vers son territoire. */
-export function retreatFromEnemy(ctx: SimContext, u: UnitState, units: UnitState[]): void {
-  const e = nearestEnemy(ctx, u, units, 60)
+export function retreatFromEnemy(ctx: SimContext, u: UnitState, index?: WarIndex): void {
+  const e = (index ?? new WarIndex(ctx)).nearestEnemy(u, 60)
   const side = sideIndex(ctx, u.owner)
   const found: { best: LonLat | null } = { best: null }
   let bestScore = -Infinity

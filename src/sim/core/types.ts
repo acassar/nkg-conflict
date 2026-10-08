@@ -154,10 +154,14 @@ export interface ScenarioEconomy {
   production: number
   munitions: number
   manpower: number
-  /** Apports quotidiens venant de hors du théâtre. */
+  /**
+   * Revenus quotidiens hors bâtiments. Modèle « villes » : apports venant de hors du théâtre.
+   * Modèle « national » : revenus du pays entier, au prorata du territoire national tenu.
+   */
   productionPerDay: number
   munitionsPerDay: number
   manpowerPerDay: number
+  constructionPerDay?: number
 }
 
 export interface GridSnapshot {
@@ -224,6 +228,12 @@ export interface ScenarioDef {
   /** Unités explicites (théâtre) ; sinon levées à la mobilisation selon `politics.forceSize`. */
   units: ScenarioUnit[]
   politics?: ScenarioPolitics
+  /**
+   * Origine des revenus. « cities » (défaut) : usines des villes, d'après leur population.
+   * « national » : PIB et population du pays au prorata du territoire tenu ; les villes ne portent
+   * que les bâtiments construits en cours de partie (et casernes de départ).
+   */
+  economyModel?: 'cities' | 'national'
 }
 
 export interface ScenarioPolitics {
@@ -236,6 +246,14 @@ export interface ScenarioPolitics {
   wars?: Array<{ name: string; attackers: CountryId[]; defenders: CountryId[] }>
   stability?: Record<CountryId, number>
   warSupport?: Record<CountryId, number>
+  /** Organisations régionales : +`bonus` de relations entre membres au départ, rapprochement mensuel. */
+  organizations?: Array<{ id: string; name: string; members: CountryId[]; bonus: number }>
+  /** Bonus de relations entre voisins (frontière terrestre), sauf paires de `relations`. */
+  neighborRelation?: number
+  /** Sanctions en cours au départ [auteur, cible]. */
+  sanctions?: Array<[CountryId, CountryId]>
+  /** Tous les pays ont leurs armées sur la carte dès le départ (en garnison s'ils sont en paix). */
+  armiesAtStart?: boolean
   /** Aides étrangères en place au début de la partie (niveau 1 à 3). */
   aids?: Array<{ from: CountryId; to: CountryId; level: 1 | 2 | 3 }>
 }

@@ -71,12 +71,21 @@ export interface AidRequest {
   expiresTick: number
 }
 
+/** Organisation régionale (UE, ASEAN…) : rapproche ses membres, sans obligation militaire. */
+export interface Organization {
+  id: string
+  name: string
+  members: CountryId[]
+}
+
 export interface PoliticsState {
   countries: Map<CountryId, CountryPolitics>
   /** Relations entre deux pays, de -100 à 100 (clé « A|B » triée). */
   relations: Map<string, number>
   wars: War[]
   alliances: Alliance[]
+  /** Organisations régionales (fixes, données par le scénario). */
+  organizations: Organization[]
   /** Sanctions en cours, clé « auteur>cible ». */
   sanctions: Set<string>
   offers: PeaceOffer[]
@@ -100,6 +109,7 @@ export interface PoliticsSnapshot {
   playerRelations: Record<CountryId, number>
   wars: Array<{ id: number; name: string; attackers: CountryId[]; defenders: CountryId[] }>
   alliances: Alliance[]
+  organizations: Organization[]
   sanctions: string[]
   offers: PeaceOffer[]
   aids: Aid[]

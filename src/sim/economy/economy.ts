@@ -16,6 +16,7 @@ import {
   FORT_BONUS_PER_LEVEL,
   FORT_RADIUS_KM,
   initialBuildings,
+  initialNationalBuildings,
   MANPOWER_PER_MILLION,
   MAX_PARALLEL_CONSTRUCTION,
   MUNITIONS_CAP,
@@ -28,19 +29,23 @@ import {
 } from './rules'
 import { unitName } from '../units/names'
 import { manpowerFactor, productionFactor } from '../politics/politics'
+import { OCCUPATION_MANPOWER, OCCUPATION_YIELD, territoryShares } from './national'
 
 const UNIT_KINDS: UnitKind[] = ['inf', 'mech', 'tank', 'art', 'log', 'hq']
 
 // ---------- Initialisation ----------
 
 /** Villes : propriétaire d'après la grille, bâtiments d'après la population. */
-export function initCities(ctx: SimContext): void {
+export function initCities(ctx: SimContext, scenario?: ScenarioDef): void {
   ctx.cityStates.clear()
+  const national = scenario?.economyModel === 'national'
   for (const def of ctx.cities) {
     ctx.cityStates.set(def.name, {
       def,
       owner: ctx.grid.owner[ctx.grid.cellAt(def.lon, def.lat)] ?? 0,
-      buildings: initialBuildings(def.pop, def.capital),
+      buildings: national
+        ? initialNationalBuildings(def.pop, def.capital)
+        : initialBuildings(def.pop, def.capital),
     })
   }
 }
@@ -182,7 +187,7 @@ export function onCityCaptured(ctx: SimContext, city: CityRuntime, previousOwner
 
 // ---------- Journée économique ----------
 
-/** Revenus quotidiens d'un pays, d'après les villes qu'il tient et ses apports hors théâtre. */
+/** Revenus quotidiens d'un pays : bâtiments de ses villes, plus apports du scénario (voir `economyModel`). */
 export function dailyIncome(
   ctx: SimContext,
   scenario: ScenarioDef,
@@ -197,15 +202,44 @@ export function dailyIncome(
     mil += c.buildings.mil
     pop += c.def.pop
   }
+  // Apports hors bâtiments : fixes (modèle « villes ») ou au prorata du territoire (modèle national).
+  let base = {
+    production: offMap?.productionPerDay ?? 0,
+    munitions: offMap?.munitionsPerDay ?? 0,
+    construction: offMap?.constructionPerDay ?? 0,
+    manpower: offMap?.manpowerPerDay ?? 0,
+  }
+  let cityManpower = (pop / 1_000_000) * MANPOWER_PER_MILLION
+  if (scenario.economyModel === 'national') {
+    const shares = territoryShares(ctx)
+    const side = sideIndex(ctx, country)
+    const own = shares.home[side] ?? 0
+    base = {
+      production: base.production * own,
+      munitions: base.munitions * own,
+      construction: base.construction * own,
+      manpower: base.manpower * own,
+    }
+    // Territoires occupés : une partie de leur rendement revient à l'occupant.
+    for (const [orig, share] of shares.occupied.get(side) ?? []) {
+      const theirs = scenario.economy[ctx.sides[orig] ?? '']
+      if (!theirs) continue
+      base.production += theirs.productionPerDay * share * OCCUPATION_YIELD
+      base.munitions += theirs.munitionsPerDay * share * OCCUPATION_YIELD
+      base.construction += (theirs.constructionPerDay ?? 0) * share * OCCUPATION_YIELD
+      base.manpower += theirs.manpowerPerDay * share * OCCUPATION_MANPOWER
+    }
+    // La population des villes est déjà comptée dans celle du pays.
+    cityManpower = 0
+  }
   // Stabilité et sanctions pèsent sur l'industrie, le soutien à la guerre sur la conscription.
   const industry = productionFactor(ctx, country)
   const conscription = manpowerFactor(ctx, country)
   return {
-    construction: civ * CONSTRUCTION_PER_CIV * industry,
-    production: (mil * PRODUCTION_PER_MIL + (offMap?.productionPerDay ?? 0)) * industry,
-    munitions: (mil * MUNITIONS_PER_MIL + (offMap?.munitionsPerDay ?? 0)) * industry,
-    manpower:
-      ((pop / 1_000_000) * MANPOWER_PER_MILLION + (offMap?.manpowerPerDay ?? 0)) * conscription,
+    construction: (civ * CONSTRUCTION_PER_CIV + base.construction) * industry,
+    production: (mil * PRODUCTION_PER_MIL + base.production) * industry,
+    munitions: (mil * MUNITIONS_PER_MIL + base.munitions) * industry,
+    manpower: (cityManpower + base.manpower) * conscription,
   }
 }
 
@@ -270,7 +304,7 @@ function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number)
     if (!city || city.owner !== side) continue
     if (city.buildings[item.kind] < type.maxPerCity) {
       city.buildings[item.kind]++
-      ctx.log(`${type.name} achevée à ${item.city}`, eco.country)
+      ctx.log(`${type.name} achevée à ${item.city}`, eco.country, true)
     }
   }
 }
@@ -346,7 +380,7 @@ function deployRecruit(
   }
   ctx.units.set(u.id, u)
   if (u.armyId !== null) army?.unitIds.push(u.id)
-  ctx.log(`Nouvelle unité à ${city.def.name} : ${u.name}`, eco.country)
+  ctx.log(`Nouvelle unité à ${city.def.name} : ${u.name}`, eco.country, true)
 }
 
 // ---------- Commandes ----------

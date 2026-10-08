@@ -28,10 +28,22 @@ describe('monde', () => {
     expect(g.owner[g.cellAt(2.35, 48.86)]).toBe(sim.sideOf('FRA'))
   })
 
-  it('ne mobilise au départ que les pays en guerre', () => {
+  it('chaque pays a ses armées dès le départ, en garnison sur son territoire', () => {
     const sim = newWorld()
+    const g = sim.ctx.grid
     const owners = new Set([...sim.ctx.units.values()].map((u) => u.owner))
-    expect([...owners].sort()).toEqual(['RUS', 'UKR'])
+    for (const c of ['FRA', 'USA', 'CHN', 'BRA', 'JPN', 'UKR', 'RUS'])
+      expect(owners.has(c)).toBe(true)
+    for (const u of sim.ctx.units.values()) {
+      if (u.owner === 'UKR' || u.owner === 'RUS') continue
+      const cell = g.cellAt(u.lon, u.lat)
+      expect(g.passable(cell)).toBe(true)
+      expect(g.owner[cell]).toBe(sim.sideOf(u.owner))
+    }
+    // Les garnisons françaises sont réparties entre plusieurs villes.
+    const french = [...sim.ctx.units.values()].filter((u) => u.owner === 'FRA')
+    const spots = new Set(french.map((u) => sim.describeLocation(u.lon, u.lat)))
+    expect(spots.size).toBeGreaterThan(3)
   })
 
   it('ferme les frontières des pays en paix', () => {

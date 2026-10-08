@@ -12,6 +12,8 @@ export const IMPROVE_COOLDOWN_TICKS = 24 * 30
 export const IMPROVE_STEP = 10
 const SANCTION_PRODUCTION = 0.9
 const SANCTION_FLOOR = 0.6
+/** Perte de production maximale si toute l'économie mondiale sanctionne un pays. */
+const SANCTION_MAX_LOSS = 0.4
 
 // ---------- Relations ----------
 
@@ -53,10 +55,34 @@ function shift(
 export function productionFactor(ctx: SimContext, code: CountryId): number {
   const p = politicsOf(ctx, code)
   let f = 0.5 + 0.5 * (p?.stability ?? 1)
-  let sanctions = 0
-  for (const s of ctx.politics.sanctions) if (s.endsWith(`>${code}`)) sanctions++
-  f *= Math.max(SANCTION_FLOOR, SANCTION_PRODUCTION ** sanctions)
+  f *= sanctionFactor(ctx, code)
   return f
+}
+
+/** PIB mondial (somme des pays de la partie), calculé une fois. */
+const worldGdp = new WeakMap<SimContext, number>()
+
+/**
+ * Effet des sanctions subies. Avec des PIB connus (carte du monde), il dépend du poids économique
+ * des pays qui sanctionnent ; sinon, chaque pays qui sanctionne retire 10 %.
+ */
+export function sanctionFactor(ctx: SimContext, code: CountryId): number {
+  let total = worldGdp.get(ctx)
+  if (total === undefined) {
+    total = 0
+    for (const c of ctx.countries.values()) total += Math.max(0, c.gdpB ?? 0)
+    worldGdp.set(ctx, total)
+  }
+  let count = 0
+  let gdp = 0
+  for (const s of ctx.politics.sanctions) {
+    if (!s.endsWith(`>${code}`)) continue
+    count++
+    gdp += Math.max(0, ctx.countries.get(s.slice(0, s.indexOf('>')))?.gdpB ?? 0)
+  }
+  if (count === 0) return 1
+  if (total > 0) return 1 - SANCTION_MAX_LOSS * Math.min(1, gdp / total)
+  return Math.max(SANCTION_FLOOR, SANCTION_PRODUCTION ** count)
 }
 
 /** Multiplicateur de main-d'œuvre : le soutien à la guerre facilite la conscription. */
@@ -297,35 +323,33 @@ export function allianceOf(ctx: SimContext, code: CountryId): string | null {
   return ctx.politics.alliances.find((a) => a.members.includes(code))?.id ?? null
 }
 
+/** Les deux pays sont-ils membres d'une même alliance (un pays peut en avoir plusieurs) ? */
+export function sameAlliance(ctx: SimContext, a: CountryId, b: CountryId): boolean {
+  return ctx.politics.alliances.some((al) => al.members.includes(a) && al.members.includes(b))
+}
+
 /** Propose une alliance : acceptée si les relations sont excellentes. Renvoie une erreur ou null. */
 export function proposeAlliance(ctx: SimContext, from: CountryId, to: CountryId): string | null {
   if (isAtWarWith(ctx, from, to)) return 'Vous êtes en guerre avec ce pays'
   const rel = relation(ctx, from, to)
   if (rel < 60)
     return `${countryName(ctx, to)} refuse : relations insuffisantes (${Math.round(rel)}/60)`
-  const theirs = ctx.politics.alliances.find((a) => a.members.includes(to))
-  const mine = ctx.politics.alliances.find((a) => a.members.includes(from))
-  if (theirs && mine && theirs !== mine)
-    return `${countryName(ctx, to)} appartient déjà à ${theirs.name}`
-  if (theirs) {
-    if (!theirs.members.includes(from)) theirs.members.push(from)
-  } else if (mine) {
-    mine.members.push(to)
-  } else {
-    ctx.politics.alliances.push({
-      id: `alliance-${ctx.politics.nextId++}`,
-      name: `Alliance de ${countryName(ctx, from)}`,
-      members: [from, to],
-    })
-  }
+  if (sameAlliance(ctx, from, to)) return `Vous êtes déjà alliés`
+  // Un pacte bilatéral : chacun garde ses autres alliances.
+  ctx.politics.alliances.push({
+    id: `alliance-${ctx.politics.nextId++}`,
+    name: `Pacte ${countryName(ctx, from)} – ${countryName(ctx, to)}`,
+    members: [from, to],
+  })
   addRelation(ctx, from, to, 10)
   ctx.log(`Alliance conclue : ${countryName(ctx, from)} et ${countryName(ctx, to)}`, from)
   return null
 }
 
-export function leaveAlliance(ctx: SimContext, code: CountryId): void {
+/** Quitte une alliance (toutes si `id` est absent). */
+export function leaveAlliance(ctx: SimContext, code: CountryId, id?: string): void {
   for (const a of ctx.politics.alliances) {
-    if (!a.members.includes(code)) continue
+    if (!a.members.includes(code) || (id !== undefined && a.id !== id)) continue
     a.members = a.members.filter((m) => m !== code)
     for (const m of a.members) addRelation(ctx, code, m, -20)
     ctx.log(`${countryName(ctx, code)} quitte ${a.name}`, code)
@@ -414,6 +438,7 @@ export function politicsSnapshot(ctx: SimContext, player: CountryId): PoliticsSn
       defenders: [...w.defenders],
     })),
     alliances: ctx.politics.alliances.map((a) => ({ ...a, members: [...a.members] })),
+    organizations: ctx.politics.organizations,
     sanctions: [...ctx.politics.sanctions],
     offers: ctx.politics.offers.filter((o) => o.to === player).map((o) => ({ ...o })),
     aids: ctx.politics.aids.map((a) => structuredClone(a)),

@@ -4,10 +4,13 @@ import type { BuildingKind, CountryId, UnitKind } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { citiesOf, queueConstruction, queueRecruit } from './economy'
 import { BUILDINGS, RECRUIT_COSTS } from './rules'
+import { relation } from '../politics/politics'
 
 /** Composition visée des nouvelles unités de l'IA (cycle). */
 const RECRUIT_CYCLE: UnitKind[] = ['inf', 'mech', 'inf', 'tank', 'art', 'inf', 'mech', 'log']
 const FRONT_CITY_KM = 60
+/** Relations sous lesquelles un pays se sent menacé et renforce son armée en temps de paix. */
+const TENSION_RELATION = -50
 
 /** Distance d'une ville au front (échantillon de cellules de front), Infinity sans front. */
 function distanceToFront(city: CityRuntime, front: Array<[number, number]>): number {
@@ -19,10 +22,24 @@ function distanceToFront(city: CityRuntime, front: Array<[number, number]>): num
   return best
 }
 
+/** Effectif visé en paix : celui de la mobilisation, relevé d'un quart face à un pays hostile. */
+function peaceTarget(ctx: SimContext, country: CountryId): number {
+  const base = ctx.politics.countries.get(country)?.forceSize ?? 0
+  let tense = false
+  for (const other of ctx.countries.keys()) {
+    if (other !== country && relation(ctx, country, other) <= TENSION_RELATION) {
+      tense = true
+      break
+    }
+  }
+  return tense ? Math.ceil(base * 1.25) : base
+}
+
 /**
  * Économie de l'IA, une fois par jour :
  * - deux chantiers au plus : fortifications dans les villes du front, sinon usines loin du front ;
  * - autant de formations que de casernes, dans la caserne la plus proche du front ;
+ *   en paix, seulement pour entretenir l'effectif visé (relevé en cas de tension) ;
  * - les nouvelles unités rejoignent l'armée qui tient tout le front.
  */
 export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
@@ -68,8 +85,7 @@ export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
   // En paix, on n'entretient que l'effectif de mobilisation.
   const atWar = ctx.matrix.atWar[sideIndex(ctx, country)] === 1
   const owned = [...ctx.units.values()].filter((u) => u.owner === country).length
-  const target = ctx.politics.countries.get(country)?.forceSize ?? 0
-  if (!atWar && owned + eco.recruitment.length >= target) return
+  if (!atWar && owned + eco.recruitment.length >= peaceTarget(ctx, country)) return
   // Position dans le cycle : unités déjà commandées depuis le début de la partie.
   const ordered = (): number =>
     Object.values(eco.unitCounters).reduce((n, v) => n + v, 0) + eco.recruitment.length

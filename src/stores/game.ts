@@ -486,7 +486,7 @@ export const useGameStore = defineStore('game', () => {
     report(await sim.proposeAlliance(target), 'Alliance conclue')
   }
 
-  const leaveAlliance = (): Promise<void> => sim.leaveAlliance()
+  const leaveAlliance = (id?: string): Promise<void> => sim.leaveAlliance(id)
 
   async function callAllies(): Promise<void> {
     pushToast(await sim.callAllies())

@@ -2,6 +2,7 @@ import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, UnitState } from '../core/types'
 import { distanceKm, moveToward, terrainRule } from '../theater/grid'
 import { CONTACT_KM, retreatFromEnemy } from './combat'
+import { WarIndex } from './spatial'
 
 const ENTRENCH_PER_HOUR = 0.01
 
@@ -26,11 +27,14 @@ export function planPath(ctx: SimContext, u: UnitState, target: LonLat): void {
 
 /** Une heure de déplacement. Une unité au contact ne progresse pas, sauf si elle se replie. */
 export function updateMovement(ctx: SimContext): void {
+  // Index des camps en guerre, construit seulement s'il y a une unité en déroute à l'arrêt.
+  let index: WarIndex | null = null
   for (const u of ctx.units.values()) {
     const rt = runtimeOf(ctx, u.id)
     // Une unité en déroute continue de décrocher tant qu'un ennemi est proche, jusqu'à se rallier.
-    if (rt.routed && u.path.length === 0 && enemyNear(ctx, u, CONTACT_KM * 3)) {
-      retreatFromEnemy(ctx, u, [...ctx.units.values()])
+    if (rt.routed && u.path.length === 0) {
+      index ??= new WarIndex(ctx)
+      if (index.nearestEnemy(u, CONTACT_KM * 3)) retreatFromEnemy(ctx, u, index)
     }
     const moving = u.path.length > 0
     const blocked = rt.engagedWith !== null && u.order.kind !== 'retreat'
@@ -55,14 +59,6 @@ export function updateMovement(ctx: SimContext): void {
       if (budget >= 0) u.path.shift()
     }
   }
-}
-
-function enemyNear(ctx: SimContext, u: UnitState, km: number): boolean {
-  for (const e of ctx.units.values()) {
-    if (!ctx.matrix.hostile(sideIndex(ctx, u.owner), sideIndex(ctx, e.owner))) continue
-    if (distanceKm(u.lon, u.lat, e.lon, e.lat) <= km) return true
-  }
-  return false
 }
 
 /** Ordre terminé : déplacement et repli deviennent « tenir », l'attaque aussi une fois l'objectif atteint. */

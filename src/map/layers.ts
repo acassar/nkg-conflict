@@ -143,20 +143,6 @@ export function buildLayers(input: LayerInput): Layer[] {
         getLineWidth: input.selectedCity,
       },
     }),
-    new TextLayer<CityState>({
-      id: 'city-names',
-      data: cities,
-      getPosition: (c) => [c.lon, c.lat],
-      getText: (c) => c.name,
-      getSize: (c) => (c.capital ? 14 : 11),
-      getColor: [30, 34, 40, 255],
-      getPixelOffset: [0, -12],
-      fontWeight: 600,
-      outlineWidth: 3,
-      outlineColor: [255, 255, 255, 200],
-      fontSettings: { sdf: true },
-      characterSet: 'auto',
-    }),
   )
 
   // Rayon de commandement des QG sélectionnés.
@@ -238,23 +224,53 @@ export function buildLayers(input: LayerInput): Layer[] {
     )
   }
 
+  // Pions : ceux des pays neutres (garnisons du temps de paix) plus petits et plus discrets.
+  const involved = snapshot.units.filter(
+    (u) => (input.stances.get(u.owner) ?? 'neutral') !== 'neutral' || selection.has(u.id),
+  )
+  const neutral = snapshot.units.filter(
+    (u) => (input.stances.get(u.owner) ?? 'neutral') === 'neutral' && !selection.has(u.id),
+  )
+  for (const [id, list, size, opacity] of [
+    ['units-neutral', neutral, 24, 0.75],
+    ['units', involved, 34, 1],
+  ] as const) {
+    layers.push(
+      new IconLayer<MapUnit>({
+        id,
+        data: stackUnits(list, input.zoom, size + 4),
+        getPosition: (m) => [m.lon, m.lat],
+        getIcon: (m) =>
+          isStack(m)
+            ? stackIcon(
+                m.units,
+                colorOf(m.owner),
+                m.units.some((u) => selection.has(u.id)),
+              )
+            : unitIcon(m, colorOf(m.owner), selection.has(m.id)),
+        getSize: size,
+        sizeUnits: 'pixels',
+        opacity,
+        pickable: true,
+        updateTriggers: { getIcon: [[...selection].join(), input.stances] },
+      }),
+    )
+  }
+  // Noms des villes au-dessus des pions, pour rester lisibles.
   layers.push(
-    new IconLayer<MapUnit>({
-      id: 'units',
-      data: stackUnits(snapshot.units, input.zoom),
-      getPosition: (m) => [m.lon, m.lat],
-      getIcon: (m) =>
-        isStack(m)
-          ? stackIcon(
-              m.units,
-              colorOf(m.owner),
-              m.units.some((u) => selection.has(u.id)),
-            )
-          : unitIcon(m, colorOf(m.owner), selection.has(m.id)),
-      getSize: 34,
-      sizeUnits: 'pixels',
-      pickable: true,
-      updateTriggers: { getIcon: [[...selection].join(), input.stances] },
+    new TextLayer<CityState>({
+      id: 'city-names',
+      data: cities,
+      getPosition: (c) => [c.lon, c.lat],
+      getText: (c) => c.name,
+      getSize: (c) => (c.capital ? 14 : 11),
+      getColor: [30, 34, 40, 255],
+      getPixelOffset: [0, -12],
+      fontWeight: 600,
+      outlineWidth: 3,
+      outlineColor: [255, 255, 255, 200],
+      fontSettings: { sdf: true },
+      characterSet: 'auto',
     }),
   )
   return layers

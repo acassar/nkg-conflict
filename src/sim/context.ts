@@ -57,6 +57,8 @@ export interface SimContext {
   /** Cellules praticables d'un camp non reliées à son ravitaillement au dernier calcul (poches). */
   unsuppliedCells: number[][]
   cities: CityDef[]
+  /** Propriétaire de chaque cellule au début de la partie (territoire national de chaque pays). */
+  homeOwner: Uint8Array
   /** État des villes (propriétaire, bâtiments), par nom. */
   cityStates: Map<string, CityRuntime>
   economies: Map<CountryId, EconomyState>
@@ -64,7 +66,8 @@ export interface SimContext {
   losses: Map<CountryId, number>
   /** Nouvel identifiant unique (unités, armées, files d'attente). */
   allocId(): number
-  log(text: string, owner: CountryId | null): void
+  /** `minor` : gardé seulement pour le joueur et les pays en guerre. */
+  log(text: string, owner: CountryId | null, minor?: boolean): void
 }
 
 export function sideIndex(ctx: SimContext, country: CountryId): number {

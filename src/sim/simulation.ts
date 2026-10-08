@@ -56,6 +56,7 @@ import {
   politicsSnapshot,
   proposeAlliance,
   rebuildMatrix,
+  addRelation,
   setRelation,
   toggleSanction,
   updatePoliticsDaily,
@@ -74,7 +75,7 @@ import {
   setAidLevel,
   updateAidAi,
 } from './politics/aid'
-import type { AidLevel, PeaceKind, PoliticsState, War } from './politics/types'
+import type { AidLevel, Organization, PeaceKind, PoliticsState, War } from './politics/types'
 
 const MAX_EVENTS = 80
 const ARMIES_EVERY = 24
@@ -88,12 +89,22 @@ const DEFAULT_FORCE_SIZE = 8
 
 export type PlayerOrder = Extract<OrderKind, 'move' | 'attack' | 'hold' | 'retreat'>
 
+/** Organisations régionales du scénario, limitées aux pays présents. */
+function organizationsOf(scenario: ScenarioDef, ctx: SimContext): Organization[] {
+  return (scenario.politics?.organizations ?? []).map((o) => ({
+    id: o.id,
+    name: o.name,
+    members: o.members.filter((m) => ctx.countries.has(m)),
+  }))
+}
+
 function emptyPolitics(): PoliticsState {
   return {
     countries: new Map(),
     relations: new Map(),
     wars: [],
     alliances: [],
+    organizations: [],
     sanctions: new Set(),
     offers: [],
     aids: [],
@@ -159,12 +170,13 @@ export class Simulation {
       supplySources: {},
       supplyReach: [],
       unsuppliedCells: [],
+      homeOwner: grid.owner.slice(),
       cities: theater.cities,
       cityStates: new Map(),
       economies: new Map(),
       losses: new Map(),
       allocId: () => this.nextId++,
-      log: (text, owner) => this.log(text, owner),
+      log: (text, owner, minor) => this.log(text, owner, minor),
     }
     this.hooks = {
       armyName: (code) =>
@@ -212,6 +224,23 @@ export class Simulation {
       ...a,
       members: a.members.filter((m) => ctx.countries.has(m)),
     }))
+    ctx.politics.organizations = organizationsOf(this.scenario, ctx)
+    // Voisins : léger rapprochement, sauf pour les paires déjà fixées par le scénario.
+    if (sp?.neighborRelation) {
+      const fixed = new Set(
+        (sp.relations ?? []).map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)),
+      )
+      this.neighbors = computeNeighbors(ctx)
+      for (const [a, list] of this.neighbors) {
+        for (const b of list) {
+          if (a < b && !fixed.has(`${a}|${b}`)) addRelation(ctx, a, b, sp.neighborRelation)
+        }
+      }
+    }
+    for (const [from, to] of sp?.sanctions ?? []) {
+      if (ctx.countries.has(from) && ctx.countries.has(to))
+        ctx.politics.sanctions.add(`${from}>${to}`)
+    }
     const ownerAtStart = encodeRle(ctx.grid.owner)
     for (const w of sp?.wars ?? []) {
       const war: War = {
@@ -253,7 +282,7 @@ export class Simulation {
   ): Simulation {
     const sim = new Simulation(scenario, theater, seed, playerCountry)
     const ctx = sim.ctx
-    initCities(ctx)
+    initCities(ctx, scenario)
     initEconomies(ctx, scenario)
     sim.initPolitics()
     // Mobilisation des pays en guerre au départ : unités explicites du scénario, ou levée générique.
@@ -261,6 +290,14 @@ export class Simulation {
       if (ctx.matrix.atWar[sideIndex(ctx, country.id)] !== 1) continue
       const explicit = scenario.units.filter((u) => u.owner === country.id)
       mobilize(ctx, country, sim.hooks.armyName(country.id), explicit.length ? explicit : undefined)
+    }
+    // Armées du temps de paix : chaque pays a déjà ses forces, en garnison dans ses villes.
+    if (scenario.politics?.armiesAtStart) {
+      for (const country of scenario.countries) {
+        // Micro-États absents de la grille (Vatican, Monaco…) : pas d'armée.
+        if (ctx.grid.countOwned(sideIndex(ctx, country.id)) === 0) continue
+        mobilize(ctx, country, sim.hooks.armyName(country.id))
+      }
     }
     previewIncome(ctx, scenario)
     sim.afterLoad()
@@ -291,7 +328,7 @@ export class Simulation {
     for (const [id, engagedWith, supplied, routed, commanded] of save.runtime) {
       ctx.runtime.set(id, { engagedWith, supplied, routed, commanded: commanded ?? false })
     }
-    initCities(ctx)
+    initCities(ctx, scenario)
     for (const c of save.cities) {
       const city = ctx.cityStates.get(c.name)
       if (city) {
@@ -307,6 +344,7 @@ export class Simulation {
       relations: new Map(p.relations),
       wars: p.wars.map((w) => structuredClone(w)),
       alliances: p.alliances.map((a) => ({ ...a, members: [...a.members] })),
+      organizations: organizationsOf(scenario, ctx),
       sanctions: new Set(p.sanctions),
       offers: p.offers.map((o) => ({ ...o })),
       aids: (p.aids ?? []).map((a) => structuredClone(a)),
@@ -337,7 +375,15 @@ export class Simulation {
     updateCommand(this.ctx)
   }
 
-  private log(text: string, owner: CountryId | null): void {
+  /**
+   * Ajoute un événement au journal. Les événements mineurs (chantier achevé, nouvelle unité) ne sont
+   * gardés que pour le joueur et les pays en guerre : sinon 240 pays rempliraient le journal.
+   */
+  private log(text: string, owner: CountryId | null, minor = false): void {
+    if (minor && owner !== this.playerCountry) {
+      const side = owner ? sideIndex(this.ctx, owner) : -1
+      if (this.ctx.matrix.atWar[side] !== 1) return
+    }
     this.events.push({ tick: this.ctx.tick, text, owner })
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS)
   }
@@ -643,8 +689,8 @@ export class Simulation {
     return proposeAlliance(this.ctx, this.playerCountry, target)
   }
 
-  leaveAlliance(): void {
-    leaveAlliance(this.ctx, this.playerCountry)
+  leaveAlliance(id?: string): void {
+    leaveAlliance(this.ctx, this.playerCountry, id)
   }
 
   callAllies(): string {

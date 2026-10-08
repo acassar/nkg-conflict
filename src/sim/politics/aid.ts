@@ -3,7 +3,7 @@ import type { CountryId, UnitKind, UnitState } from '../core/types'
 import { citiesOf } from '../economy/economy'
 import { RECRUIT_COSTS } from '../economy/rules'
 import { unitName } from '../units/names'
-import { addRelation, allianceOf, enemiesInWar, isAtWarWith, relation } from './politics'
+import { addRelation, enemiesInWar, isAtWarWith, relation, sameAlliance } from './politics'
 import type { Aid, AidLevel } from './types'
 import { AID_LEVEL_NAMES, AID_SHARE } from './aidLevels'
 
@@ -28,11 +28,6 @@ export interface DailyIncome {
 }
 
 const refusalKey = (from: CountryId, to: CountryId): string => `${from}>${to}`
-
-function sameAlliance(ctx: SimContext, a: CountryId, b: CountryId): boolean {
-  const al = allianceOf(ctx, a)
-  return al !== null && al === allianceOf(ctx, b)
-}
 
 function atWar(ctx: SimContext, code: CountryId): boolean {
   return ctx.matrix.atWar[sideIndex(ctx, code)] === 1

@@ -141,7 +141,7 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
     game.selectCity((info.object as CityState).name)
     return
   }
-  const item = info.layer?.id === 'units' ? (info.object as MapUnit | undefined) : undefined
+  const item = info.layer?.id.startsWith('units') ? (info.object as MapUnit | undefined) : undefined
   const additive = event.srcEvent?.shiftKey ?? false
   if (item && isStack(item)) {
     // Clic sur une pile : sélectionne toutes ses unités (celles du joueur seulement).

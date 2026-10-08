@@ -6,7 +6,7 @@ Version jouable : https://acassar.github.io/nkg-conflict/
 
 Scénarios hypothétiques, sans prétention de reconstitution historique :
 
-- **Monde 2026** (par défaut) : tous les pays de la carte, au choix du joueur ; la guerre russo-ukrainienne est en cours au départ.
+- **Monde 2026** (par défaut) : tous les pays de la carte, au choix du joueur ; la guerre russo-ukrainienne est en cours au départ. Chaque pays a déjà son armée (en garnison dans ses villes s'il est en paix), son économie et ses liens politiques : alliances (OTAN, OTSC, pactes de défense comme États-Unis–Japon ou Chine–Corée du Nord), organisations régionales (UE, ASEAN, Ligue arabe, Union africaine, OCS, Mercosur, CCG), affinités de langue et de voisinage, tensions, sanctions occidentales contre la Russie, la Biélorussie, l'Iran et la Corée du Nord.
 - **Ukraine – Russie (théâtre)** : le seul théâtre ukrainien, à grande échelle (cellules de 5 km), en Ukraine ou en Russie.
 
 ## Démarrer
@@ -46,8 +46,8 @@ Onglet « Diplomatie » : stabilité, soutien à la guerre, relations, alliances
 
 - **Déclarer la guerre** : les alliés de la cible entrent en guerre contre vous. Impossible contre un membre de votre alliance.
 - **Paix** : paix blanche (retour aux frontières d'avant-guerre) ou paix sur les lignes (chacun garde ce qu'il tient). L'adversaire accepte selon le terrain gagné ou perdu et son soutien à la guerre. L'IA peut aussi vous proposer la paix ; l'offre expire au bout de 15 jours.
-- **Améliorer les relations** (+10, une fois par mois et par pays), **sanctionner** (production réduite de 10 % par pays qui sanctionne), **proposer une alliance** (relations d'au moins +60), **appeler les alliés**, **quitter son alliance**.
-- **Mobiliser** : en paix, vos forces ne sont pas levées ; la mobilisation coûte un peu de stabilité.
+- **Améliorer les relations** (+10, une fois par mois et par pays), **sanctionner** (sur la carte du monde, la production du pays visé baisse selon le poids économique des sanctionneurs, jusqu'à −40 % si le monde entier sanctionne ; sur le théâtre ukrainien, −10 % par pays), **proposer une alliance** (relations d'au moins +60), **appeler les alliés**, **quitter une alliance** (un pays peut en avoir plusieurs ; une alliance proposée devient un pacte bilatéral). Les organisations régionales rapprochent leurs membres, sans obligation militaire.
+- **Mobiliser** (théâtre ukrainien et pays sans armée) : lève les forces ; en paix, coûte un peu de stabilité.
 - **Aide étrangère** : un donneur verse chaque jour au receveur une part de ses revenus (6 %, 12 % ou 20 % selon le niveau : limitée, soutenue, massive) en munitions, production et points de construction ; la moitié de la production envoyée devient du matériel, livré sous forme d'unités équipées (le receveur fournit les hommes). Vous pouvez demander une aide (le pays décide selon vos relations, vos alliances et vos ennemis communs), en accorder une, changer son niveau ou y mettre fin ; les IA en guerre vous en demandent aussi. Aider un pays améliore vos relations avec lui et les dégrade avec ses ennemis. Au début de « Monde 2026 », l'Ukraine reçoit l'aide de 12 pays occidentaux, la Russie celle de la Corée du Nord et de l'Iran.
 
 ## Règles en bref
@@ -59,7 +59,7 @@ Onglet « Diplomatie » : stabilité, soutien à la guerre, relations, alliances
 - **Combat** : au contact (10 km), chaque unité frappe l'ennemi le plus proche. L'artillerie frappe à 30 km. Défense renforcée par le terrain, le retranchement et les fortifications. Sous 15 % d'organisation, une unité décroche et continue de reculer jusqu'à se rallier. Chaque tir consomme des munitions : à court, la puissance de feu est divisée par deux.
 - **Commandement** : une unité à moins de 120 km d'un QG de son camp gagne 15 % au combat et récupère plus vite.
 - **Ravitaillement** : relié aux sources de chaque camp (capitale et grandes villes nationales sur la carte du monde) et à ses dépôts, à travers son propre territoire. Les unités logistiques le prolongent de 60 km. Hors ravitaillement : combat à 60 %, attrition après 3 jours. Les poches sans défenseur s'effondrent.
-- **Économie** : les villes portent les bâtiments (usines civiles et militaires, casernes, dépôts, fortifications). Chaque jour : points de construction, production militaire, munitions et main-d'œuvre. Une caserne forme une unité à la fois ; les unités ravitaillées hors combat reçoivent des renforts. Une ville prise perd la moitié de ses usines, ses fortifications et son dépôt. Option « Gestion automatique » dans l'onglet Production.
+- **Économie** : sur la carte du monde, les revenus viennent du pays entier : industrie d'après le PIB (plus ou moins tournée vers l'armée selon le pays), main-d'œuvre d'après la population, au prorata du territoire national tenu ; un territoire occupé rapporte 30 % de son rendement à l'occupant. Les bâtiments construits en cours de partie s'y ajoutent. Sur le théâtre ukrainien, les usines de départ dépendent de la population des villes. Dans les deux cas, les villes portent les bâtiments (usines civiles et militaires, casernes, dépôts, fortifications). Chaque jour : points de construction, production militaire, munitions et main-d'œuvre. Une caserne forme une unité à la fois ; les unités ravitaillées hors combat reçoivent des renforts. Une ville prise perd la moitié de ses usines, ses fortifications et son dépôt. Option « Gestion automatique » dans l'onglet Production. En paix, l'IA entretient son armée à son effectif de départ, relevé d'un quart face à un pays hostile.
 
 ## Fond de carte
 

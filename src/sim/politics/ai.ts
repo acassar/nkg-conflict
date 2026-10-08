@@ -122,6 +122,15 @@ export function updateDiplomacyAi(
   for (const al of pol.alliances) {
     for (const a of al.members) for (const b of al.members) if (a < b) addRelation(ctx, a, b, 1)
   }
+  // Les organisations régionales entretiennent de bonnes relations entre leurs membres.
+  for (const org of pol.organizations) {
+    for (const a of org.members) {
+      for (const b of org.members) {
+        if (a < b && relation(ctx, a, b) < 30 && !isAtWarWith(ctx, a, b))
+          addRelation(ctx, a, b, 0.5)
+      }
+    }
+  }
 }
 
 interface EventDef {

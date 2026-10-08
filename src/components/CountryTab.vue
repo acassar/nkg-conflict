@@ -28,8 +28,11 @@ const politics = computed(() => game.snapshot?.politics ?? null)
 const alliances = computed(
   () => politics.value?.alliances.filter((a) => a.members.includes(code.value)) ?? [],
 )
-const myAlliance = computed(
-  () => politics.value?.alliances.find((a) => a.members.includes(me.value)) ?? null,
+const myAlliances = computed(
+  () => politics.value?.alliances.filter((a) => a.members.includes(me.value)) ?? [],
+)
+const organizations = computed(
+  () => politics.value?.organizations.filter((o) => o.members.includes(code.value)) ?? [],
 )
 const wars = computed(
   () =>
@@ -50,9 +53,7 @@ const sanctioned = computed(
 const sanctionsAgainst = computed(
   () => politics.value?.sanctions.filter((s) => s.endsWith(`>${code.value}`)).length ?? 0,
 )
-const sameAlliance = computed(
-  () => !!myAlliance.value && myAlliance.value.members.includes(code.value),
-)
+const sameAlliance = computed(() => myAlliances.value.some((a) => a.members.includes(code.value)))
 const owned = computed(() => {
   const v = game.snapshot?.territoryHeld[code.value]
   return v === undefined ? null : Math.round(v * 100)
@@ -98,10 +99,10 @@ const relationLabel = (v: number): string =>
           ? 'Tendues'
           : 'Hostiles'
 
-function confirmLeave(): void {
-  const a = myAlliance.value
-  if (a && confirm(`Quitter ${a.name} ? Ses membres ne vous défendront plus.`))
-    void game.leaveAlliance()
+function confirmLeave(a: { id: string; name: string }): void {
+  if (confirm(`Quitter ${a.name} ? Ses membres ne vous défendront plus.`)) {
+    void game.leaveAlliance(a.id)
+  }
 }
 
 function confirmWar(): void {
@@ -165,8 +166,12 @@ function confirmWar(): void {
           {{ relationLabel(relation) }} ({{ relation > 0 ? '+' : '' }}{{ Math.round(relation) }})
         </dd>
       </template>
-      <dt>Alliance</dt>
+      <dt>Alliances</dt>
       <dd>{{ alliances.map((a) => a.name).join(', ') || 'Aucune' }}</dd>
+      <template v-if="organizations.length">
+        <dt>Organisations</dt>
+        <dd>{{ organizations.map((o) => o.name).join(', ') }}</dd>
+      </template>
       <template v-if="sanctionsAgainst">
         <dt>Sanctions subies</dt>
         <dd class="bad">{{ sanctionsAgainst }} pays</dd>
@@ -206,11 +211,11 @@ function confirmWar(): void {
       >
         Mobiliser
       </button>
-      <button v-if="wars.length && myAlliance" @click="game.callAllies()">
+      <button v-if="wars.length && myAlliances.length" @click="game.callAllies()">
         Appeler les alliés
       </button>
-      <button v-if="myAlliance" class="danger" @click="confirmLeave">
-        Quitter {{ myAlliance.name }}
+      <button v-for="a in myAlliances" :key="a.id" class="danger" @click="confirmLeave(a)">
+        Quitter {{ a.name }}
       </button>
     </div>
 

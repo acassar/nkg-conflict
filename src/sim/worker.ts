@@ -172,8 +172,8 @@ const api = {
   proposeAlliance(target: CountryId): string | null {
     return act((s) => s.proposeAlliance(target)) ?? null
   },
-  leaveAlliance(): void {
-    act((s) => s.leaveAlliance())
+  leaveAlliance(id?: string): void {
+    act((s) => s.leaveAlliance(id))
   },
   callAllies(): string {
     return act((s) => s.callAllies()) ?? ''

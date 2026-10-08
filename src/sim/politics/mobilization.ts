@@ -61,6 +61,74 @@ export function homeOf(ctx: SimContext, country: CountryDef): LonLat {
   return best?.at ?? country.label ?? [0, 0]
 }
 
+/** Ramène un point sur la terre ferme du camp (pion tombé en mer, ville côtière). */
+function onOwnLand(ctx: SimContext, side: number, lon: number, lat: number): LonLat | null {
+  const g = ctx.grid
+  const ok = (i: number): boolean => i >= 0 && g.passable(i) && g.owner[i] === side
+  if (ok(g.cellAt(lon, lat))) return [lon, lat]
+  for (const km of [15, 40, 100, 250]) {
+    let best = -1
+    let bestD = Infinity
+    g.cellsWithin(lon, lat, km, (i) => {
+      if (!ok(i)) return
+      const d = (g.lonOf(i) - lon) ** 2 + (g.latOf(i) - lat) ** 2
+      if (d < bestD) {
+        bestD = d
+        best = i
+      }
+    })
+    if (best >= 0) return [g.lonOf(best), g.latOf(best)]
+  }
+  return null
+}
+
+/**
+ * Emplacements de garnison de `count` unités : réparties entre les villes du pays au prorata de leur
+ * population (la capitale en premier), avec un léger décalage pour que les pions ne se superposent pas.
+ */
+function garrisons(ctx: SimContext, country: CountryDef, count: number): Array<LonLat | null> {
+  const side = sideIndex(ctx, country.id)
+  const cities = [...ctx.cityStates.values()]
+    .filter((c) => c.owner === side)
+    .sort((a, b) => Number(b.def.capital) - Number(a.def.capital) || b.def.pop - a.def.pop)
+  if (cities.length === 0) {
+    const home = homeOf(ctx, country)
+    return Array.from({ length: count }, (_, k): LonLat | null =>
+      onOwnLand(
+        ctx,
+        side,
+        home[0] + ((k % 5) - 2) * 0.15,
+        home[1] + (Math.floor(k / 5) % 5) * 0.1 - 0.2,
+      ),
+    )
+  }
+  // Part de chaque ville (racine de la population : les petites villes ont aussi leur garnison).
+  const weights = cities.map((c) => Math.sqrt(c.def.pop) * (c.def.capital ? 2 : 1))
+  const total = weights.reduce((a, b) => a + b, 0)
+  const quota = weights.map((w) => (w / total) * count)
+  const placed = cities.map(() => 0)
+  const out: Array<LonLat | null> = []
+  for (let k = 0; k < count; k++) {
+    // Ville la plus en retard sur son quota.
+    let best = 0
+    for (let i = 1; i < cities.length; i++) {
+      if ((quota[i] ?? 0) - (placed[i] ?? 0) > (quota[best] ?? 0) - (placed[best] ?? 0)) best = i
+    }
+    const n = placed[best] ?? 0
+    placed[best] = n + 1
+    const c = cities[best]
+    if (!c) continue
+    // Petite spirale autour de la ville (~8 km entre pions).
+    const angle = n * 2.4
+    // Premier pion à côté de la ville, pas dessus : le nom de la ville reste visible.
+    const r = 0.12 + 0.035 * Math.sqrt(n)
+    out.push(
+      onOwnLand(ctx, side, c.def.lon + r * Math.cos(angle), c.def.lat + r * Math.sin(angle) * 0.7),
+    )
+  }
+  return out
+}
+
 /**
  * Lève les forces d'un pays : unités créées, regroupées dans une armée qui tient tout le front,
  * déployées le long du front si le pays en a un, sinon autour de sa capitale.
@@ -94,16 +162,19 @@ export function mobilize(
         return { kind: k, name: unitName(k, number) }
       }),
     )
-  const home = homeOf(ctx, country)
+  const spots = garrisons(ctx, country, defs.length)
   const fixed = new Set<number>()
   for (const [k, def] of defs.entries()) {
+    const spot = spots[k]
+    // Pas de terre ferme pour cette garnison (territoire minuscule ou impraticable).
+    if (def.lon === undefined && !spot) continue
     const u: UnitState = {
       id: ctx.allocId(),
       name: def.name,
       owner: country.id,
       kind: def.kind,
-      lon: def.lon ?? home[0] + ((k % 5) - 2) * 0.15,
-      lat: def.lat ?? home[1] + (Math.floor(k / 5) % 5) * 0.1 - 0.2,
+      lon: def.lon ?? spot?.[0] ?? 0,
+      lat: def.lat ?? spot?.[1] ?? 0,
       strength: def.strength ?? 1,
       org: 1,
       entrench: 0.5,

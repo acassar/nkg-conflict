@@ -58,6 +58,7 @@ export interface UnitSnapshot {
   engaged: boolean
   supplied: boolean
   routed: boolean
+  commanded: boolean
 }
 
 export interface ArmyState {

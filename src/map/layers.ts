@@ -8,7 +8,9 @@ import {
   TextLayer,
 } from '@deck.gl/layers'
 import type { ArmyState, CityState, LonLat, SimSnapshot, UnitSnapshot } from '@/sim/core/types'
-import { unitIcon } from './unitIcons'
+import { MODERN_CATALOG } from '@/sim/units/catalog'
+import { stackIcon, unitIcon } from './unitIcons'
+import { isStack, stackUnits, type MapUnit } from './clusters'
 
 export interface LayerInput {
   snapshot: SimSnapshot | null
@@ -18,6 +20,8 @@ export interface LayerInput {
   selectedArmy: ArmyState | null
   /** Premier point posé d'un tracé en cours (front ou offensive). */
   pendingPoint: LonLat | null
+  /** Zoom de la carte : sert à regrouper les pions qui se chevauchent à l'écran. */
+  zoom: number
 }
 
 type Rgb = [number, number, number]
@@ -87,6 +91,23 @@ export function buildLayers(input: LayerInput): Layer[] {
     }),
   )
 
+  // Rayon de commandement des QG sélectionnés.
+  const commandRange = (u: UnitSnapshot): number => MODERN_CATALOG[u.kind].commandRadiusKm
+  layers.push(
+    new ScatterplotLayer<UnitSnapshot>({
+      id: 'command-range',
+      data: selectedUnits.filter((u) => commandRange(u) > 0),
+      getPosition: (u) => [u.lon, u.lat],
+      getRadius: (u) => commandRange(u) * 1000,
+      radiusUnits: 'meters',
+      filled: true,
+      getFillColor: [250, 204, 21, 25],
+      stroked: true,
+      getLineColor: [250, 204, 21, 200],
+      lineWidthMinPixels: 1.5,
+    }),
+  )
+
   // Chemins et objectifs des unités sélectionnées.
   layers.push(
     new PathLayer<UnitSnapshot>({
@@ -150,11 +171,18 @@ export function buildLayers(input: LayerInput): Layer[] {
   }
 
   layers.push(
-    new IconLayer<UnitSnapshot>({
+    new IconLayer<MapUnit>({
       id: 'units',
-      data: snapshot.units,
-      getPosition: (u) => [u.lon, u.lat],
-      getIcon: (u) => unitIcon(u, colorOf(u.owner), selection.has(u.id)),
+      data: stackUnits(snapshot.units, input.zoom),
+      getPosition: (m) => [m.lon, m.lat],
+      getIcon: (m) =>
+        isStack(m)
+          ? stackIcon(
+              m.units,
+              colorOf(m.owner),
+              m.units.some((u) => selection.has(u.id)),
+            )
+          : unitIcon(m, colorOf(m.owner), selection.has(m.id)),
       getSize: 34,
       sizeUnits: 'pixels',
       pickable: true,

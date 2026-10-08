@@ -20,7 +20,7 @@ import { MODERN_CATALOG } from './units/catalog'
 import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
 import { updateMovement, planPath } from './systems/movement'
-import { updateCombat } from './systems/combat'
+import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, updateArmies } from './systems/armies'
 import { updateAi, nearestCity, type AiState } from './systems/ai'
@@ -153,8 +153,8 @@ export class Simulation {
     sim.outcome = save.outcome
     sim.ai.lastOffensiveTick = save.aiLastOffensiveTick
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
-    for (const [id, engagedWith, supplied, routed] of save.runtime) {
-      ctx.runtime.set(id, { engagedWith, supplied, routed })
+    for (const [id, engagedWith, supplied, routed, commanded] of save.runtime) {
+      ctx.runtime.set(id, { engagedWith, supplied, routed, commanded: commanded ?? false })
     }
     save.supplyReach.forEach((rle, side) => {
       if (side === 0) return
@@ -172,6 +172,7 @@ export class Simulation {
 
   private afterLoad(): void {
     updateSupply(this.ctx)
+    updateCommand(this.ctx)
     this.indexCities()
   }
 
@@ -191,7 +192,10 @@ export class Simulation {
     const ctx = this.ctx
     for (let i = 0; i < count && !this.outcome; i++) {
       ctx.tick++
-      if (ctx.tick % SUPPLY_EVERY === 0) updateSupply(ctx)
+      if (ctx.tick % SUPPLY_EVERY === 0) {
+        updateSupply(ctx)
+        updateCommand(ctx)
+      }
       updateMovement(ctx)
       updateCombat(ctx)
       updateTerritory(ctx)
@@ -393,6 +397,7 @@ export class Simulation {
           engaged: rt.engagedWith !== null,
           supplied: rt.supplied,
           routed: rt.routed,
+          commanded: rt.commanded,
         }
       }),
       armies: [...ctx.armies.values()]
@@ -444,6 +449,7 @@ export class Simulation {
         r.engagedWith,
         r.supplied,
         r.routed,
+        r.commanded,
       ]),
       cityOwner: [...this.cityOwner.entries()],
     }

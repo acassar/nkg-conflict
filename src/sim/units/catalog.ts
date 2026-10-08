@@ -14,6 +14,8 @@ export interface UnitType {
   zocKm: number
   /** Une unité logistique prolonge le ravitaillement autour d'elle. */
   supplyRadiusKm: number
+  /** Un QG commande les unités de son camp dans ce rayon (0 = pas de commandement). */
+  commandRadiusKm: number
 }
 
 /** Catalogue de l'époque moderne. Valeurs de départ, à équilibrer en jouant. */
@@ -27,6 +29,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     supportRangeKm: 0,
     zocKm: 12,
     supplyRadiusKm: 0,
+    commandRadiusKm: 0,
   },
   mech: {
     kind: 'mech',
@@ -37,6 +40,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     supportRangeKm: 0,
     zocKm: 12,
     supplyRadiusKm: 0,
+    commandRadiusKm: 0,
   },
   tank: {
     kind: 'tank',
@@ -47,6 +51,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     supportRangeKm: 0,
     zocKm: 12,
     supplyRadiusKm: 0,
+    commandRadiusKm: 0,
   },
   art: {
     kind: 'art',
@@ -57,6 +62,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     supportRangeKm: 30,
     zocKm: 6,
     supplyRadiusKm: 0,
+    commandRadiusKm: 0,
   },
   log: {
     kind: 'log',
@@ -67,6 +73,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     supportRangeKm: 0,
     zocKm: 4,
     supplyRadiusKm: 60,
+    commandRadiusKm: 0,
   },
   hq: {
     kind: 'hq',
@@ -77,6 +84,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     supportRangeKm: 0,
     zocKm: 4,
     supplyRadiusKm: 0,
+    commandRadiusKm: 120,
   },
 }
 

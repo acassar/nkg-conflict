@@ -5,11 +5,13 @@ import type { UnitType } from './units/catalog'
 import type { UnitKind } from './core/types'
 import type { Pathfinder } from './systems/pathfinding'
 
-/** État de tour calculé par les systèmes, non sauvegardé (recalculé à la demande). */
+/** État calculé par les systèmes à chaque tour (contact, ravitaillement, déroute, commandement). */
 export interface UnitRuntime {
   engagedWith: number | null
   supplied: boolean
   routed: boolean
+  /** À portée d'un QG de son camp : bonus de combat et récupération plus rapide. */
+  commanded: boolean
 }
 
 /** Tout ce que les systèmes partagent. Les systèmes sont des fonctions pures sur ce contexte. */
@@ -41,7 +43,7 @@ export function sideIndex(ctx: SimContext, country: CountryId): number {
 export function runtimeOf(ctx: SimContext, id: number): UnitRuntime {
   let r = ctx.runtime.get(id)
   if (!r) {
-    r = { engagedWith: null, supplied: true, routed: false }
+    r = { engagedWith: null, supplied: true, routed: false, commanded: false }
     ctx.runtime.set(id, r)
   }
   return r

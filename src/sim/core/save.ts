@@ -19,8 +19,8 @@ export interface SaveFile {
   owner: number[]
   /** Cellules reliées au ravitaillement par camp (par plages), pour reprendre la partie à l'identique. */
   supplyReach: number[][]
-  /** État de combat des unités : [id, engagée avec, ravitaillée, en déroute]. */
-  runtime: Array<[number, number | null, boolean, boolean]>
+  /** État de combat des unités : [id, engagée avec, ravitaillée, en déroute, commandée]. */
+  runtime: Array<[number, number | null, boolean, boolean, boolean?]>
   /** Dernier propriétaire connu de chaque ville (pour détecter les prises). */
   cityOwner: Array<[string, number]>
 }

@@ -104,6 +104,15 @@ export const useGameStore = defineStore('game', () => {
     else selection.value = [...selection.value, id]
   }
 
+  /** Sélectionne plusieurs unités à la fois (pile de pions) ; seules celles du joueur sont retenues. */
+  function selectUnits(ids: number[], additive: boolean): void {
+    const s = snapshot.value
+    if (!s) return
+    const mine = s.units.filter((u) => ids.includes(u.id) && u.owner === s.playerCountry)
+    const picked = mine.map((u) => u.id)
+    selection.value = additive ? [...new Set([...selection.value, ...picked])] : picked
+  }
+
   function clearSelection(): void {
     selection.value = []
   }
@@ -229,6 +238,7 @@ export const useGameStore = defineStore('game', () => {
     dateLabel,
     playerCountry,
     selectUnit,
+    selectUnits,
     clearSelection,
     selectArmy,
     cancelMode,

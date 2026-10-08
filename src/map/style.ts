@@ -7,13 +7,16 @@ const FALLBACK_STYLE_URL = 'https://demotiles.maplibre.org/style.json'
 /** Teinte unique des terres : le fond de démo colore chaque pays, ce qui brouille le territoire du jeu. */
 const LAND_COLOR = '#ece8de'
 
-/** Uniformise les aplats de pays du fond de carte, pour que seule la couche de territoire porte la couleur. */
+/** Uniformise tous les aplats de terres du fond de carte, pour que seule la couche de territoire porte la couleur. */
 export function neutralizeCountryFills(map: {
   getStyle(): { layers?: Array<{ id: string; type: string }> } | undefined
   setPaintProperty(layer: string, name: string, value: unknown): void
 }): void {
+  // Le fond Protomaps a déjà des terres neutres, et ses aplats d'eau ne doivent pas être touchés.
+  if (import.meta.env.VITE_PMTILES_URL) return
   for (const layer of map.getStyle()?.layers ?? []) {
-    if (layer.type === 'fill' && /countr|land/i.test(layer.id)) {
+    // Le fond de démo n'a que des aplats de terres (pays, Crimée…) : l'eau est la couche « background ».
+    if (layer.type === 'fill') {
       map.setPaintProperty(layer.id, 'fill-color', LAND_COLOR)
     }
   }

@@ -18,7 +18,7 @@ if (!neDir) {
   process.exit(1)
 }
 
-const BBOX = { lon0: 22, lat0: 44, lon1: 44, lat1: 56.5 }
+const BBOX = { lon0: 20, lat0: 43, lon1: 46, lat1: 57.5 }
 const CELL = 0.05
 const WIDTH = Math.round((BBOX.lon1 - BBOX.lon0) / CELL)
 const HEIGHT = Math.round((BBOX.lat1 - BBOX.lat0) / CELL)

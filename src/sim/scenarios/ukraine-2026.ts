@@ -52,7 +52,7 @@ export const ukraine2026: ScenarioDef = {
     ],
   },
   units: [
-    ...forces('UKR', { inf: 10, mech: 5, tank: 3, art: 3, log: 2, hq: 1 }),
-    ...forces('RUS', { inf: 10, mech: 6, tank: 5, art: 4, log: 2, hq: 1 }),
+    ...forces('UKR', { inf: 10, mech: 5, tank: 3, art: 3, log: 2, hq: 2 }),
+    ...forces('RUS', { inf: 10, mech: 6, tank: 5, art: 4, log: 2, hq: 2 }),
   ],
 }

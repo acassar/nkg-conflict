@@ -13,6 +13,30 @@ const STRENGTH_LOSS = 0.0025
 const ORG_LOSS = 0.02
 const ARTILLERY_FACTOR = 0.6
 const OUT_OF_SUPPLY_FACTOR = 0.6
+/** Bonus de combat d'une unité commandée par un QG proche. */
+const COMMAND_FACTOR = 1.15
+/** Récupération d'organisation hors combat, par heure (ravitaillée / commandée en plus). */
+const ORG_RECOVERY = 0.01
+const ORG_RECOVERY_COMMAND = 0.005
+
+function commandFactor(ctx: SimContext, u: UnitState): number {
+  return runtimeOf(ctx, u.id).commanded ? COMMAND_FACTOR : 1
+}
+
+/** Marque les unités à portée d'un QG de leur camp qui n'est pas en déroute. */
+export function updateCommand(ctx: SimContext): void {
+  const hqs = [...ctx.units.values()].filter(
+    (u) => ctx.catalog[u.kind].commandRadiusKm > 0 && !runtimeOf(ctx, u.id).routed,
+  )
+  for (const u of ctx.units.values()) {
+    runtimeOf(ctx, u.id).commanded = hqs.some(
+      (h) =>
+        h.owner === u.owner &&
+        h.id !== u.id &&
+        distanceKm(h.lon, h.lat, u.lon, u.lat) <= ctx.catalog[h.kind].commandRadiusKm,
+    )
+  }
+}
 
 function supplyFactor(ctx: SimContext, u: UnitState): number {
   return runtimeOf(ctx, u.id).supplied ? 1 : OUT_OF_SUPPLY_FACTOR
@@ -41,7 +65,7 @@ function isOffensive(u: UnitState): boolean {
 export function firePower(ctx: SimContext, u: UnitState): number {
   const type = ctx.catalog[u.kind]
   const base = isOffensive(u) ? type.attack : type.defense
-  return base * u.strength * (0.25 + 0.75 * u.org) * supplyFactor(ctx, u)
+  return base * u.strength * (0.25 + 0.75 * u.org) * supplyFactor(ctx, u) * commandFactor(ctx, u)
 }
 
 export function defenseValue(ctx: SimContext, u: UnitState): number {
@@ -51,6 +75,7 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     u.strength *
     (0.25 + 0.75 * u.org) *
     supplyFactor(ctx, u) *
+    commandFactor(ctx, u) *
     terrainDefense(ctx, u) *
     (1 + 0.5 * u.entrench)
   )
@@ -115,7 +140,10 @@ export function updateCombat(ctx: SimContext): void {
   for (const u of units) {
     const rt = runtimeOf(ctx, u.id)
     if (rt.engagedWith === null) {
-      u.org = Math.min(1, u.org + (rt.supplied ? 0.01 : 0.002))
+      const recovery = rt.supplied
+        ? ORG_RECOVERY + (rt.commanded ? ORG_RECOVERY_COMMAND : 0)
+        : 0.002
+      u.org = Math.min(1, u.org + recovery)
     }
     if (!rt.supplied) {
       u.hoursOutOfSupply++

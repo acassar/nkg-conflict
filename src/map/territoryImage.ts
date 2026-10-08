@@ -4,6 +4,8 @@ const WATER = 1
 const NEUTRAL = 2
 const AREA_ALPHA = 105
 const FRONT_ALPHA = 235
+/** Largeur (en cellules) du fondu sur les bords du théâtre, pour éviter une coupure nette. */
+const EDGE_FADE = 24
 
 /**
  * Dessine la grille de contrôle dans un canvas (1 pixel = 1 cellule), ligne du nord en haut.
@@ -45,10 +47,11 @@ export function territoryCanvas(grid: GridSnapshot, countries: CountryDef[]): HT
         px[p + 2] = color[2] * 0.55
         px[p + 3] = FRONT_ALPHA
       } else {
+        const edge = Math.min(x, y, W - 1 - x, H - 1 - y)
         px[p] = color[0]
         px[p + 1] = color[1]
         px[p + 2] = color[2]
-        px[p + 3] = AREA_ALPHA
+        px[p + 3] = AREA_ALPHA * Math.min(1, edge / EDGE_FADE)
       }
     }
   }

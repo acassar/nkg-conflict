@@ -75,6 +75,27 @@ describe('ordres', () => {
   })
 })
 
+describe('commandement', () => {
+  it('une unité proche d’un QG est commandée, une unité lointaine non', () => {
+    const sim = newGame()
+    const units = [...sim.ctx.units.values()].filter((u) => u.owner === 'UKR')
+    const hqs = units.filter((u) => u.kind === 'hq')
+    const other = units.find((u) => u.kind === 'inf')
+    if (!other || hqs.length === 0) throw new Error('unités introuvables')
+    const hq = hqs[0]
+    if (!hq) throw new Error('QG introuvable')
+    // Les autres QG partent loin pour ne pas fausser le test.
+    for (const h of hqs.slice(1)) [h.lon, h.lat] = [24, 49.8]
+    ;[other.lon, other.lat] = [hq.lon + 0.3, hq.lat]
+    sim.step(6)
+    expect(sim.snapshot().units.find((u) => u.id === other.id)?.commanded).toBe(true)
+    ;[other.lon, other.lat] = [hq.lon - 4, hq.lat]
+    other.path = []
+    sim.step(6)
+    expect(sim.snapshot().units.find((u) => u.id === other.id)?.commanded).toBe(false)
+  })
+})
+
 describe('partie', () => {
   it('fait bouger le front sans valeurs invalides sur deux semaines', () => {
     const sim = newGame()

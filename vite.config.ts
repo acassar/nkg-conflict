@@ -4,6 +4,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
+  // Sous-dossier de publication (GitHub Pages : /nkg-conflict/), racine par défaut.
+  base: process.env.VITE_BASE ?? '/',
   plugins: [vue()],
   resolve: {
     alias: {

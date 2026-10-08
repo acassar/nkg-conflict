@@ -78,9 +78,10 @@ export function citiesOf(ctx: SimContext, country: CountryId): CityRuntime[] {
 /** Sources de ravitaillement : celles du scénario, plus les dépôts des villes tenues. */
 export function updateSupplySources(ctx: SimContext, scenario: ScenarioDef): void {
   for (const country of scenario.countries) {
-    const sources: LonLat[] = (scenario.supplySources[country.id] ?? []).map(
-      (p): LonLat => [p[0], p[1]],
-    )
+    const sources: LonLat[] = (scenario.supplySources[country.id] ?? []).map((p): LonLat => [
+      p[0],
+      p[1],
+    ])
     for (const c of citiesOf(ctx, country.id)) {
       if (c.buildings.depot > 0) sources.push([c.def.lon, c.def.lat])
     }

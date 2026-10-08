@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import * as Comlink from 'comlink'
 import { formatGameDate, isSpeed, tickToDate } from '@/sim/core/clock'
+import { terrainRule } from '@/sim/theater/grid'
 import type { GridSnapshot, LonLat, SimSnapshot, UnitSnapshot } from '@/sim/core/types'
 import type { PlayerOrder } from '@/sim/simulation'
 import type { SimApi } from '@/sim/worker'
@@ -93,6 +94,17 @@ export const useGameStore = defineStore('game', () => {
   // tout ce qui part vers le Worker est d'abord recopié en tableaux simples.
   const ids = (): number[] => [...selection.value]
   const lonLat = (p: LonLat): LonLat => [p[0], p[1]]
+
+  /** Nom du terrain sous un point (pour le panneau). */
+  function terrainNameAt(lon: number, lat: number): string {
+    const g = grid.value
+    if (!g) return ''
+    const [lon0, lat0, lon1, lat1] = g.bbox
+    const x = Math.floor(((lon - lon0) / (lon1 - lon0)) * g.width)
+    const y = Math.floor(((lat - lat0) / (lat1 - lat0)) * g.height)
+    if (x < 0 || y < 0 || x >= g.width || y >= g.height) return ''
+    return terrainRule(g.terrain[y * g.width + x]).name
+  }
 
   // ---------- Sélection ----------
 
@@ -239,6 +251,7 @@ export const useGameStore = defineStore('game', () => {
     playerCountry,
     selectUnit,
     selectUnits,
+    terrainNameAt,
     clearSelection,
     selectArmy,
     cancelMode,

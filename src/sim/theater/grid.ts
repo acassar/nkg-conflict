@@ -5,8 +5,44 @@ export const Terrain = {
   NEUTRAL: 2,
   RIVER: 3,
   URBAN: 4,
+  FOREST: 5,
+  HILLS: 6,
+  MOUNTAINS: 7,
+  MARSH: 8,
 } as const
 export type TerrainCode = (typeof Terrain)[keyof typeof Terrain]
+
+export interface TerrainRule {
+  name: string
+  /** Multiplicateur de vitesse des unités. */
+  speed: number
+  /** Multiplicateur de défense de l'unité qui s'y trouve. */
+  defense: number
+  /** Coût de passage pour le calcul d'itinéraire (1 = plaine). */
+  pathCost: number
+}
+
+/**
+ * Effets de chaque terrain. Eau et pays neutres sont infranchissables (voir Grid.passable) ;
+ * leur vitesse reste à 1 pour qu'une unité qui en frôle une cellule entre deux points ne reste pas bloquée.
+ */
+export const TERRAIN_RULES: Record<number, TerrainRule> = {
+  [Terrain.PLAIN]: { name: 'Plaine', speed: 1, defense: 1, pathCost: 1 },
+  [Terrain.WATER]: { name: 'Eau', speed: 1, defense: 1, pathCost: Infinity },
+  [Terrain.NEUTRAL]: { name: 'Pays neutre', speed: 1, defense: 1, pathCost: Infinity },
+  [Terrain.RIVER]: { name: 'Fleuve', speed: 0.3, defense: 1.2, pathCost: 4 },
+  [Terrain.URBAN]: { name: 'Ville', speed: 0.7, defense: 1.5, pathCost: 1.5 },
+  [Terrain.FOREST]: { name: 'Forêt', speed: 0.7, defense: 1.25, pathCost: 1.4 },
+  [Terrain.HILLS]: { name: 'Collines', speed: 0.8, defense: 1.2, pathCost: 1.3 },
+  [Terrain.MOUNTAINS]: { name: 'Montagnes', speed: 0.4, defense: 1.6, pathCost: 2.5 },
+  [Terrain.MARSH]: { name: 'Marais', speed: 0.4, defense: 1.3, pathCost: 2.5 },
+}
+
+const PLAIN_RULE: TerrainRule = { name: 'Plaine', speed: 1, defense: 1, pathCost: 1 }
+
+export function terrainRule(code: number | undefined): TerrainRule {
+  return TERRAIN_RULES[code ?? 0] ?? PLAIN_RULE
+}
 
 export interface CityDef {
   name: string

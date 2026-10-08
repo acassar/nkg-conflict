@@ -15,6 +15,8 @@ import { isStack, stackUnits, type MapUnit } from './clusters'
 export interface LayerInput {
   snapshot: SimSnapshot | null
   territory: HTMLCanvasElement | null
+  /** Relief, forêts et marais (fixe). */
+  terrain: HTMLCanvasElement | null
   bbox: [number, number, number, number] | null
   selection: Set<number>
   selectedArmy: ArmyState | null
@@ -49,6 +51,17 @@ export function buildLayers(input: LayerInput): Layer[] {
   const selectedUnits = snapshot.units.filter((u) => selection.has(u.id))
   const layers: Layer[] = []
 
+  if (input.terrain && bbox) {
+    layers.push(
+      new BitmapLayer({
+        id: 'terrain',
+        image: input.terrain,
+        bounds: bbox,
+        _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
+        textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
+      }),
+    )
+  }
   if (territory && bbox) {
     layers.push(
       new BitmapLayer({

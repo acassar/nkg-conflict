@@ -58,3 +58,37 @@ export function territoryCanvas(grid: GridSnapshot, countries: CountryDef[]): HT
   ctx.putImageData(image, 0, 0)
   return canvas
 }
+
+/** Teintes discrètes du terrain (forêt, collines, montagnes, marais), sous la couche de territoire. */
+const TERRAIN_TINTS: Record<number, [number, number, number, number]> = {
+  5: [34, 110, 50, 80],
+  6: [150, 120, 70, 55],
+  7: [110, 75, 45, 110],
+  8: [40, 150, 150, 90],
+}
+
+/** Dessine le terrain une fois pour toutes : il ne change pas pendant la partie. */
+export function terrainCanvas(grid: GridSnapshot): HTMLCanvasElement {
+  const { width: W, height: H, terrain } = grid
+  const canvas = document.createElement('canvas')
+  canvas.width = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas
+  const image = ctx.createImageData(W, H)
+  const px = image.data
+  for (let y = 0; y < H; y++) {
+    const row = (H - 1 - y) * W
+    for (let x = 0; x < W; x++) {
+      const tint = TERRAIN_TINTS[terrain[y * W + x] ?? 0]
+      if (!tint) continue
+      const p = (row + x) * 4
+      px[p] = tint[0]
+      px[p + 1] = tint[1]
+      px[p + 2] = tint[2]
+      px[p + 3] = tint[3]
+    }
+  }
+  ctx.putImageData(image, 0, 0)
+  return canvas
+}

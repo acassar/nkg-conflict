@@ -1,6 +1,6 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, UnitState } from '../core/types'
-import { distanceKm, Terrain } from '../theater/grid'
+import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -44,7 +44,7 @@ function supplyFactor(ctx: SimContext, u: UnitState): number {
 
 function terrainDefense(ctx: SimContext, u: UnitState): number {
   const t = ctx.grid.terrain[ctx.grid.cellAt(u.lon, u.lat)]
-  return t === Terrain.URBAN ? 1.5 : t === Terrain.RIVER ? 1.2 : 1
+  return terrainRule(t).defense
 }
 
 /** Vrai si un fleuve sépare les deux unités (échantillonnage du segment). */

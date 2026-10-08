@@ -1,6 +1,6 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, UnitState } from '../core/types'
-import { distanceKm, moveToward, Terrain } from '../theater/grid'
+import { distanceKm, moveToward, terrainRule } from '../theater/grid'
 
 const ENTRENCH_PER_HOUR = 0.01
 
@@ -9,8 +9,7 @@ function speedKmh(ctx: SimContext, u: UnitState): number {
   const cell = grid.cellAt(u.lon, u.lat)
   const t = grid.terrain[cell]
   let v = ctx.catalog[u.kind].speedKmh * (0.5 + 0.5 * u.org)
-  if (t === Terrain.RIVER) v *= 0.3
-  else if (t === Terrain.URBAN) v *= 0.7
+  v *= terrainRule(t).speed
   const owner = grid.owner[cell] ?? 0
   if (owner !== 0 && owner !== sideIndex(ctx, u.owner)) v *= 0.7
   if (u.order.kind === 'retreat') v *= 1.2

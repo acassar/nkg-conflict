@@ -88,7 +88,10 @@ async function createArmy(): Promise<void> {
           <ul class="units">
             <li v-for="u in selectedUnits" :key="u.id">
               <div class="name">{{ u.name }}</div>
-              <div class="meta">{{ MODERN_CATALOG[u.kind].name }} · {{ armyOf(u.armyId) }}</div>
+              <div class="meta">
+                {{ MODERN_CATALOG[u.kind].name }} · {{ armyOf(u.armyId) }} ·
+                {{ game.terrainNameAt(u.lon, u.lat) }}
+              </div>
               <div class="bars">
                 <span title="Effectifs">Eff. {{ pct(u.strength) }}</span>
                 <span title="Organisation">Org. {{ pct(u.org) }}</span>

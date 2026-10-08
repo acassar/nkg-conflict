@@ -11,7 +11,7 @@ import { isStack, type MapUnit } from './clusters'
 import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills } from './style'
 import { buildLayers } from './layers'
-import { territoryCanvas } from './territoryImage'
+import { terrainCanvas, territoryCanvas } from './territoryImage'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
@@ -25,6 +25,7 @@ const protocol = new Protocol()
 // Le canvas du territoire n'est redessiné que lorsqu'une nouvelle grille arrive.
 let territory: HTMLCanvasElement | null = null
 let territoryVersion = -1
+let terrain: HTMLCanvasElement | null = null
 
 function refresh(): void {
   const s = snapshot.value
@@ -32,12 +33,14 @@ function refresh(): void {
   if (s && g && g.version !== territoryVersion) {
     territory = territoryCanvas(g, s.countries)
     territoryVersion = g.version
+    terrain ??= terrainCanvas(g)
   }
   const m = mode.value
   overlay?.setProps({
     layers: buildLayers({
       snapshot: s,
       territory,
+      terrain,
       bbox: g?.bbox ?? null,
       selection: new Set(selection.value),
       selectedArmy: selectedArmy.value,

@@ -19,6 +19,21 @@ describe('théâtre', () => {
   })
 })
 
+describe('terrain', () => {
+  it('contient forêts, collines, montagnes et marais', () => {
+    const t = newGame().ctx.grid.terrain
+    for (const code of [Terrain.FOREST, Terrain.HILLS, Terrain.MOUNTAINS, Terrain.MARSH]) {
+      expect(t.includes(code)).toBe(true)
+    }
+  })
+
+  it('place les Carpates en montagne', () => {
+    const g = newGame().ctx.grid
+    // Hoverla, point culminant des Carpates ukrainiennes.
+    expect(g.terrain[g.cellAt(24.5, 48.16)]).toBe(Terrain.MOUNTAINS)
+  })
+})
+
 describe('déploiement', () => {
   it('place chaque unité sur une cellule praticable de son camp', () => {
     const sim = newGame()

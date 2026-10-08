@@ -11,6 +11,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import zlib from 'node:zlib'
 
 const [, , neDir] = process.argv
 if (!neDir) {
@@ -26,7 +27,26 @@ const HEIGHT = Math.round((BBOX.lat1 - BBOX.lat0) / CELL)
 /** Pays jouables : index dans la grille des propriétaires (0 = aucun). */
 const SIDES = ['', 'UKR', 'RUS']
 /** Terrain : 0 plaine, 1 eau (infranchissable), 2 pays neutre (infranchissable), 3 fleuve, 4 urbain. */
-const T = { PLAIN: 0, WATER: 1, NEUTRAL: 2, RIVER: 3, URBAN: 4 }
+const T = {
+  PLAIN: 0,
+  WATER: 1,
+  NEUTRAL: 2,
+  RIVER: 3,
+  URBAN: 4,
+  FOREST: 5,
+  HILLS: 6,
+  MOUNTAINS: 7,
+  MARSH: 8,
+}
+/** Relief et occupation du sol agrégés par la CI (scripts/fetch-terrain.py). */
+const TERRAIN_RAW = path.resolve('data/terrain-raw.json.gz')
+/** Seuils de classification, en mètres (dénivelé dans la cellule, altitude moyenne) et en %. */
+const MOUNTAIN_RELIEF = 500
+const MOUNTAIN_ELEVATION = 1200
+const HILL_RELIEF = 150
+const HILL_ELEVATION = 600
+const MARSH_PCT = 25
+const FOREST_PCT = 50
 const RIVERS = new Set([
   'Dnipro',
   'Dnepre',
@@ -110,6 +130,33 @@ for (let y = 0; y < HEIGHT; y++) {
   }
 }
 
+// 1 bis. Relief, forêts et marais sur les terres jouables.
+const isLand = (t) => t !== T.WATER && t !== T.NEUTRAL
+if (fs.existsSync(TERRAIN_RAW)) {
+  const raw = JSON.parse(zlib.gunzipSync(fs.readFileSync(TERRAIN_RAW)).toString('utf8'))
+  const same =
+    raw.width === WIDTH &&
+    raw.height === HEIGHT &&
+    raw.bbox.join() === [BBOX.lon0, BBOX.lat0, BBOX.lon1, BBOX.lat1].join()
+  if (!same) {
+    console.error(
+      `${TERRAIN_RAW} ne correspond pas à l'emprise de la grille : relance le workflow de données`,
+    )
+    process.exit(1)
+  }
+  for (let i = 0; i < WIDTH * HEIGHT; i++) {
+    if (terrain[i] !== T.PLAIN) continue
+    const relief = raw.relief[i]
+    const elev = raw.meanElevation[i]
+    if (relief >= MOUNTAIN_RELIEF || elev >= MOUNTAIN_ELEVATION) terrain[i] = T.MOUNTAINS
+    else if (raw.wetlandPct[i] >= MARSH_PCT) terrain[i] = T.MARSH
+    else if (raw.forestPct[i] >= FOREST_PCT) terrain[i] = T.FOREST
+    else if (relief >= HILL_RELIEF || elev >= HILL_ELEVATION) terrain[i] = T.HILLS
+  }
+} else {
+  console.warn(`${TERRAIN_RAW} absent : pas de relief ni de forêts`)
+}
+
 // 2. Fleuves majeurs, tracés cellule par cellule sur les terres des deux camps.
 function drawLine(a, b) {
   const steps = Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) / (CELL / 2)) + 1
@@ -119,7 +166,7 @@ function drawLine(a, b) {
     const y = toY(a[1] + (b[1] - a[1]) * t)
     if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) continue
     const i = idx(x, y)
-    if (terrain[i] === T.PLAIN) terrain[i] = T.RIVER
+    if (isLand(terrain[i]) && terrain[i] !== T.URBAN) terrain[i] = T.RIVER
   }
 }
 for (const f of read('ne_10m_rivers_lake_centerlines').features) {
@@ -155,7 +202,7 @@ for (const f of read('ne_10m_populated_places_simple').features) {
       const y = cy + dy
       if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) continue
       const i = idx(x, y)
-      if (terrain[i] === T.PLAIN || terrain[i] === T.RIVER) terrain[i] = T.URBAN
+      if (isLand(terrain[i])) terrain[i] = T.URBAN
     }
   }
 }
@@ -180,7 +227,8 @@ function rle(arr) {
 
 const result = {
   id: 'ukraine',
-  source: 'Natural Earth (domaine public), frontières de facto',
+  source:
+    'Natural Earth (domaine public), frontières de facto ; AWS Terrain Tiles ; ESA WorldCover 2021 (CC BY 4.0)',
   bbox: BBOX,
   cell: CELL,
   width: WIDTH,
@@ -194,6 +242,10 @@ const out = path.resolve('src/sim/data/theater-ukraine.json')
 fs.mkdirSync(path.dirname(out), { recursive: true })
 fs.writeFileSync(out, JSON.stringify(result))
 const count = (arr, v) => arr.reduce((n, a) => n + (a === v ? 1 : 0), 0)
+const landCount = (code) => count(terrain, code)
+console.log(
+  `forêts ${landCount(T.FOREST)} · collines ${landCount(T.HILLS)} · montagnes ${landCount(T.MOUNTAINS)} · marais ${landCount(T.MARSH)}`,
+)
 console.log(
   `${WIDTH}×${HEIGHT} cellules · UKR ${count(owner, 1)} · RUS ${count(owner, 2)} · fleuves ${count(terrain, T.RIVER)} · urbain ${count(terrain, T.URBAN)} · ${cities.length} villes → ${out} (${(fs.statSync(out).size / 1024).toFixed(0)} Ko)`,
 )

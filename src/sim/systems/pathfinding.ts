@@ -1,5 +1,5 @@
 import type { LonLat } from '../core/types'
-import { Terrain, type Grid } from '../theater/grid'
+import { terrainRule, type Grid } from '../theater/grid'
 
 /** Tas binaire minimal (file de priorité) sur des indices de cellules. */
 class MinHeap {
@@ -102,7 +102,7 @@ export class Pathfinder {
 
   private cellCost(i: number, opts: PathOptions): number {
     const t = this.grid.terrain[i]
-    let c = t === Terrain.RIVER ? 4 : t === Terrain.URBAN ? 1.5 : 1
+    let c = terrainRule(t).pathCost
     const o = this.grid.owner[i] ?? 0
     if (o !== 0 && o !== opts.side) c *= opts.enemyCost
     return c

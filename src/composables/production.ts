@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
-import { MAX_PARALLEL_CONSTRUCTION } from '@/sim/economy/rules'
+import { constructionSlots } from '@/sim/economy/rules'
 
 /**
  * Indicateurs de production du joueur : chantiers et formations en cours face aux capacités,
@@ -18,10 +18,11 @@ export function useProductionStats() {
     const active = eco.recruitment.slice(0, barracks)
     const busyByCity = new Map<string, number>()
     for (const q of active) busyByCity.set(q.city, (busyByCity.get(q.city) ?? 0) + 1)
+    const slots = constructionSlots(eco.daily.construction)
     return {
       construction: {
-        active: Math.min(eco.construction.length, MAX_PARALLEL_CONSTRUCTION),
-        max: MAX_PARALLEL_CONSTRUCTION,
+        active: Math.min(eco.construction.length, slots),
+        max: slots,
         queued: eco.construction.length,
         used: eco.daily.constructionUsed ?? 0,
         gain: eco.daily.construction,

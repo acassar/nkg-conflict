@@ -18,7 +18,7 @@ import {
   initialBuildings,
   initialNationalBuildings,
   MANPOWER_PER_MILLION,
-  MAX_PARALLEL_CONSTRUCTION,
+  constructionSlots,
   MUNITIONS_CAP,
   MUNITIONS_PER_MIL,
   MUNITIONS_PER_SHOT,
@@ -295,7 +295,7 @@ export function updateEconomy(
 function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number): number {
   const side = sideIndex(ctx, eco.country)
   let left = points
-  for (const item of eco.construction.slice(0, MAX_PARALLEL_CONSTRUCTION)) {
+  for (const item of eco.construction.slice(0, constructionSlots(points))) {
     if (left <= 0) break
     const type = BUILDINGS[item.kind]
     const step = Math.min(left, item.cost / type.minDays, item.cost - item.progress)

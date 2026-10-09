@@ -3,7 +3,13 @@ import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { onCityCaptured } from '@/sim/economy/economy'
-import { BUILDINGS, RECRUIT_COSTS } from '@/sim/economy/rules'
+import {
+  BUILDINGS,
+  CONSTRUCTION_PER_CIV,
+  constructionSlots,
+  MAX_PARALLEL_CONSTRUCTION,
+  RECRUIT_COSTS,
+} from '@/sim/economy/rules'
 import type { TheaterData } from '@/sim/theater/grid'
 
 const theater = theaterJson as unknown as TheaterData
@@ -43,6 +49,35 @@ describe('économie', () => {
     expect(city(sim, 'Lviv').buildings.depot).toBe(before)
     sim.step(24 * 2)
     expect(city(sim, 'Lviv').buildings.depot).toBe(before + 1)
+  })
+
+  it('une usine demande plusieurs mois, quels que soient les points disponibles', () => {
+    const sim = newGame()
+    const before = city(sim, 'Lviv').buildings.civ
+    expect(sim.queueConstruction('Lviv', 'civ')).toBe(null)
+    sim.step(24 * 120)
+    expect(city(sim, 'Lviv').buildings.civ).toBe(before)
+    expect(BUILDINGS.civ.minDays).toBeGreaterThanOrEqual(180)
+    expect(BUILDINGS.mil.minDays).toBeGreaterThanOrEqual(120)
+    // Une usine civile ne rembourse pas son coût en moins d'un an.
+    expect(BUILDINGS.civ.cost / CONSTRUCTION_PER_CIV).toBeGreaterThan(365)
+  })
+
+  it('le nombre de chantiers dépend des points de construction', () => {
+    expect(constructionSlots(0)).toBe(1)
+    expect(constructionSlots(20)).toBe(1)
+    expect(constructionSlots(40)).toBe(2)
+    expect(constructionSlots(1000)).toBe(MAX_PARALLEL_CONSTRUCTION)
+    // Les chantiers au-delà de la capacité attendent sans avancer.
+    const sim = newGame()
+    const eco = ecoOf(sim)
+    for (const name of ['Lviv', 'Kyiv', 'Odessa', 'Vinnytsya', 'Poltava', 'Zhytomyr']) {
+      expect(sim.queueConstruction(name, 'mil')).toBe(null)
+    }
+    sim.step(24)
+    const slots = constructionSlots(eco.daily.construction)
+    const moving = eco.construction.filter((q) => q.progress > 0).length
+    expect(moving).toBe(Math.min(slots, eco.construction.length))
   })
 
   it('refuse de construire dans une ville adverse ou au-delà du maximum', () => {

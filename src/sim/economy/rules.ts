@@ -12,45 +12,49 @@ export interface BuildingType {
   description: string
 }
 
-/** Bâtiments de l'époque moderne. Valeurs de départ, à équilibrer en jouant. */
+/**
+ * Bâtiments de l'époque moderne. Valeurs provisoires (la refonte de l'économie viendra en phase F) :
+ * une usine se construit en plusieurs mois et un chantier n'absorbe que coût / durée minimale par jour,
+ * soit 10 points pour une usine ; une usine civile rembourse son coût en 600 jours environ.
+ */
 export const BUILDINGS: Record<BuildingKind, BuildingType> = {
   civ: {
     kind: 'civ',
     name: 'Usine civile',
-    cost: 400,
-    minDays: 20,
+    cost: 2400,
+    minDays: 240,
     maxPerCity: 10,
     description: 'Fournit des points de construction',
   },
   mil: {
     kind: 'mil',
     name: 'Usine militaire',
-    cost: 350,
-    minDays: 20,
+    cost: 1800,
+    minDays: 180,
     maxPerCity: 10,
     description: 'Fournit de la production militaire et des munitions',
   },
   barracks: {
     kind: 'barracks',
     name: 'Caserne',
-    cost: 200,
-    minDays: 10,
+    cost: 600,
+    minDays: 60,
     maxPerCity: 3,
     description: 'Forme une unité à la fois et la déploie dans la ville',
   },
   depot: {
     kind: 'depot',
     name: 'Dépôt',
-    cost: 250,
-    minDays: 10,
+    cost: 300,
+    minDays: 30,
     maxPerCity: 1,
     description: 'Source de ravitaillement (30 km autour de la ville)',
   },
   fort: {
     kind: 'fort',
     name: 'Fortification',
-    cost: 150,
-    minDays: 7,
+    cost: 210,
+    minDays: 14,
     maxPerCity: 3,
     description: '+15 % de défense par niveau à moins de 15 km de la ville',
   },
@@ -69,6 +73,16 @@ export const FORT_BONUS_PER_LEVEL = 0.15
 export const FORT_RADIUS_KM = 15
 /** Constructions menées en parallèle au maximum. */
 export const MAX_PARALLEL_CONSTRUCTION = 5
+/** Points de construction quotidiens par chantier ouvert : un petit pays mène moins de chantiers. */
+export const CONSTRUCTION_POINTS_PER_SITE = 20
+
+/** Chantiers menés en parallèle selon les points de construction du jour (1 à 5). */
+export function constructionSlots(pointsPerDay: number): number {
+  return Math.max(
+    1,
+    Math.min(MAX_PARALLEL_CONSTRUCTION, Math.ceil(pointsPerDay / CONSTRUCTION_POINTS_PER_SITE)),
+  )
+}
 
 export interface RecruitCost {
   /** Production militaire. */

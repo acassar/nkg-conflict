@@ -24,13 +24,9 @@ export const FALLBACK_KM = 20
 const FALLBACK_TICKS = 48
 
 /** Motif de la décision d'une unité menacée. */
-export type StanceReason =
-  | 'reinforcements'
-  | 'strongPoint'
-  | 'tenable'
-  | 'encircled'
-  | 'unsupplied'
-  | 'outnumbered'
+type HoldReason = 'reinforcements' | 'strongPoint' | 'tenable'
+type WithdrawReason = 'encircled' | 'unsupplied' | 'outnumbered'
+export type StanceReason = HoldReason | WithdrawReason
 
 /** Décision d'une unité menacée : tenir retranchée ou décrocher vers la ligne suivante. */
 export interface Stance {
@@ -74,9 +70,8 @@ function punch(ctx: SimContext, u: UnitState): number {
 /** Valeur défensive d'une cellule pour un camp (terrain × fortifications), hors unité. */
 function cellValue(ctx: SimContext, side: number, i: number): number {
   const { grid } = ctx
-  return (
-    terrainRule(grid.terrain[i]).defense * fortFactorAt(ctx, side, grid.lonOf(i), grid.latOf(i))
-  )
+  const fort = fortFactorAt(ctx, side, grid.lonOf(i), grid.latOf(i))
+  return terrainRule(grid.terrain[i]).defense * fort
 }
 
 /** Part de cellules ennemies autour d'un point (0 à 1). */
@@ -151,12 +146,10 @@ export function assess(
   const ring = hostileShare(ctx, side, u.lon, u.lat)
   const supplied = runtimeOf(ctx, u.id).supplied
   const cell = ctx.grid.cellAt(u.lon, u.lat)
-  const strongPoint =
-    ctx.grid.terrain[cell] === Terrain.URBAN || fortFactorAt(ctx, side, u.lon, u.lat) > 1
-  const risk =
-    (threat / Math.max(0.05, defense)) *
-    (1 + 2 * Math.max(0, ring - RING_SHARE)) *
-    (supplied ? 1 : 1.5)
+  const urban = ctx.grid.terrain[cell] === Terrain.URBAN
+  const strongPoint = urban || fortFactorAt(ctx, side, u.lon, u.lat) > 1
+  const ringFactor = 1 + 2 * Math.max(0, ring - RING_SHARE)
+  const risk = (threat / Math.max(0.05, defense)) * ringFactor * (supplied ? 1 : 1.5)
   return { threat, defense, ring, supplied, helped, strongPoint, risk }
 }
 
@@ -167,8 +160,9 @@ export function decide(a: Assessment): Stance {
   if (a.risk < limit) {
     return { decision: 'hold', reason: a.strongPoint ? 'strongPoint' : 'tenable', risk: a.risk }
   }
-  const reason: StanceReason =
-    a.ring > RING_SHARE + 0.1 ? 'encircled' : !a.supplied ? 'unsupplied' : 'outnumbered'
+  let reason: WithdrawReason = 'outnumbered'
+  if (!a.supplied) reason = 'unsupplied'
+  if (a.ring > RING_SHARE + 0.1) reason = 'encircled'
   return { decision: 'withdraw', reason, risk: a.risk }
 }
 
@@ -192,10 +186,8 @@ export function fallbackPoint(ctx: SimContext, u: UnitState, enemies: UnitState[
     const lat = grid.latOf(i)
     const gain = distanceKm(lon, lat, cx, cy) - from
     if (gain < FALLBACK_KM / 2) return
-    const score =
-      -Math.abs(gain - FALLBACK_KM) +
-      8 * (cellValue(ctx, side, i) - 1) +
-      (ctx.supplyReach[side]?.[i] === 1 ? 6 : 0)
+    const supplied = ctx.supplyReach[side]?.[i] === 1 ? 6 : 0
+    const score = 8 * (cellValue(ctx, side, i) - 1) + supplied - Math.abs(gain - FALLBACK_KM)
     if (score > bestScore) {
       bestScore = score
       best = [lon, lat]
@@ -239,12 +231,9 @@ export function holdOrFallBack(ctx: SimContext): void {
     if (ctx.matrix.atWar[side] !== 1) continue
     let enemies = enemiesBySide.get(side)
     if (!enemies) {
-      enemies = [...ctx.units.values()].filter(
-        (e) =>
-          isLineUnit(e.kind) &&
-          ctx.matrix.hostile(side, sideIndex(ctx, e.owner)) &&
-          !runtimeOf(ctx, e.id).routed,
-      )
+      const hostile = (e: UnitState): boolean =>
+        ctx.matrix.hostile(side, sideIndex(ctx, e.owner)) && !runtimeOf(ctx, e.id).routed
+      enemies = [...ctx.units.values()].filter((e) => isLineUnit(e.kind) && hostile(e))
       enemiesBySide.set(side, enemies)
     }
     const friends = army.unitIds
@@ -262,13 +251,11 @@ export function holdOrFallBack(ctx: SimContext): void {
       y1 = Math.max(y1, f.lat)
     }
     const cos = Math.max(0.2, Math.cos((((y0 + y1) / 2) * Math.PI) / 180))
-    const nearby = enemies.filter(
-      (e) =>
-        e.lat >= y0 - pad &&
-        e.lat <= y1 + pad &&
-        e.lon >= x0 - pad / cos &&
-        e.lon <= x1 + pad / cos,
-    )
+    const inBox = (e: UnitState): boolean => {
+      const inLat = e.lat >= y0 - pad && e.lat <= y1 + pad
+      return inLat && e.lon >= x0 - pad / cos && e.lon <= x1 + pad / cos
+    }
+    const nearby = enemies.filter(inBox)
     if (nearby.length === 0) {
       for (const u of friends) {
         const rt = runtimeOf(ctx, u.id)

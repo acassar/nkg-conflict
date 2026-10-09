@@ -15,6 +15,7 @@ import type { Pathfinder } from './systems/pathfinding'
 import type { SideMatrix } from './politics/matrix'
 import type { PoliticsState } from './politics/types'
 import type { ObstacleField } from './systems/obstacles'
+import type { Reaction } from './systems/breakthrough'
 
 /** État calculé par les systèmes à chaque tour (contact, ravitaillement, déroute, commandement). */
 export interface UnitRuntime {
@@ -23,6 +24,8 @@ export interface UnitRuntime {
   routed: boolean
   /** À portée d'un QG de son camp : bonus de combat et récupération plus rapide. */
   commanded: boolean
+  /** Riposte en cours à une percée (bloquer, couper la base ou contre-attaquer). */
+  reaction?: Reaction
 }
 
 /** Ville de la partie : propriétaire courant (index de camp) et bâtiments. */

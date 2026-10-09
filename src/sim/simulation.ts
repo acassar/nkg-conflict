@@ -27,6 +27,7 @@ import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
 import { updateMovement, updatePursuits, planPath } from './systems/movement'
 import { updatePostureReflexes } from './systems/postures'
+import { reactToBreakthroughs } from './systems/breakthrough'
 import { battleReport } from './systems/battle'
 import {
   autoDetachment,
@@ -346,8 +347,14 @@ export class Simulation {
       sim.ai.set(c, { lastOffensiveTick: tick })
     }
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
-    for (const [id, engagedWith, supplied, routed, commanded] of save.runtime) {
-      ctx.runtime.set(id, { engagedWith, supplied, routed, commanded: commanded ?? false })
+    for (const [id, engagedWith, supplied, routed, commanded, reaction] of save.runtime) {
+      ctx.runtime.set(id, {
+        engagedWith,
+        supplied,
+        routed,
+        commanded: commanded ?? false,
+        ...(reaction ? { reaction } : {}),
+      })
     }
     initCities(ctx, scenario)
     for (const c of save.cities) {
@@ -434,6 +441,7 @@ export class Simulation {
         updatePursuits(ctx)
         updateEncirclements(ctx)
         updatePostureReflexes(ctx)
+        reactToBreakthroughs(ctx)
       }
       updateMovement(ctx)
       updateCombat(ctx)
@@ -1054,13 +1062,11 @@ export class Simulation {
       owner: encodeRle(ctx.grid.owner),
       // Tableau creux (seuls les camps en guerre ont une couverture) : on remplit les trous.
       supplyReach: Array.from(ctx.supplyReach, (r) => (r ? encodeRle(r) : [])),
-      runtime: [...ctx.runtime.entries()].map(([id, r]) => [
-        id,
-        r.engagedWith,
-        r.supplied,
-        r.routed,
-        r.commanded,
-      ]),
+      runtime: [...ctx.runtime.entries()].map(([id, r]): SaveFile['runtime'][number] =>
+        r.reaction
+          ? [id, r.engagedWith, r.supplied, r.routed, r.commanded, { ...r.reaction }]
+          : [id, r.engagedWith, r.supplied, r.routed, r.commanded],
+      ),
       cities: [...ctx.cityStates.values()].map((c) => ({
         name: c.def.name,
         owner: c.owner,

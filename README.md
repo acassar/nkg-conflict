@@ -48,6 +48,8 @@ Onglet Production : jauges des chantiers en cours (de 1 à 5 en parallèle, un p
 
 Une armée peut tenir tout le front ou une portion (deux clics sur la carte) : les extrémités tracées s'accrochent au front réel le plus proche (jusqu'à 150 km), la carte montre la ligne tenue, et chaque unité prend le poste libre le plus proche d'elle, sans traverser la carte. Les unités suivent le front quand il bouge. Une offensive se trace en deux clics (départ, objectif), puis se lance avec toute l'armée ou avec les seules unités sélectionnées (bouton « Avec la sélection ») : les autres continuent de tenir le front. Si toutes les unités d'une armée partent encercler, l'armée encercle elle-même, sans nouveau groupe, puis reprend son front.
 
+Riposte aux percées (toutes les 6 heures, joueur et IA) : une unité ennemie sur le territoire d'une armée, ou à la pointe d'un saillant (plus de 55 % de cellules adverses dans un rayon de 25 km), est une percée. Les unités de ligne de l'armée à moins de 60 km et retranchées à moins de 60 % réagissent, deux au plus par percée et un cinquième de l'armée au plus : contre-attaque de la pointe si elles sont au moins 1,5 fois plus fortes, attaque de sa base 15 km en arrière pour couper son axe si elles sont au moins aussi fortes, sinon poste de blocage 12 km devant elle. Elles reprennent leur poste quand la percée disparaît, au bout de 3 jours, ou à la fin de leur attaque.
+
 Postures (unité ou armée entière ; une recrue reçoit celle de son armée) : elles modifient le combat et le comportement automatique.
 
 | Posture     | Attaque | Défense | Décroche sous | Retranchement | Réflexe                                                       |

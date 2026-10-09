@@ -232,7 +232,12 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   const members = army.unitIds
     .map((id) => ctx.units.get(id))
     .filter(
-      (u): u is UnitState => !!u && !isOffensiveOrder(u.order.kind) && !runtimeOf(ctx, u.id).routed,
+      (u): u is UnitState =>
+        !!u &&
+        !isOffensiveOrder(u.order.kind) &&
+        !runtimeOf(ctx, u.id).routed &&
+        // Unités parties riposter à une percée : elles reprennent leur poste ensuite.
+        !runtimeOf(ctx, u.id).reaction,
     )
   const line = members.filter((u) => isLineUnit(u.kind))
   const rear = members.filter((u) => !isLineUnit(u.kind))

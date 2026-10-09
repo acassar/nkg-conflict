@@ -1,3 +1,4 @@
+import type { Reaction } from '../systems/breakthrough'
 import type { ArmyState, Buildings, EconomyState, GameEvent, GameOutcome, UnitState } from './types'
 import type { Aid, AidRequest, Alliance, CountryPolitics, PeaceOffer, War } from '../politics/types'
 
@@ -24,8 +25,8 @@ export interface SaveFile {
   owner: number[]
   /** Cellules reliées au ravitaillement par camp (par plages), pour reprendre la partie à l'identique. */
   supplyReach: number[][]
-  /** État de combat des unités : [id, engagée avec, ravitaillée, en déroute, commandée]. */
-  runtime: Array<[number, number | null, boolean, boolean, boolean?]>
+  /** État de combat des unités : [id, engagée avec, ravitaillée, en déroute, commandée, riposte]. */
+  runtime: Array<[number, number | null, boolean, boolean, boolean?, Reaction?]>
   /** Villes : propriétaire (index de camp) et bâtiments. */
   cities: Array<{ name: string; owner: number; buildings: Buildings }>
   economies: EconomyState[]

@@ -14,6 +14,7 @@ import { buildLayers } from './layers'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
 import { isTouch } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
+import { useBattles } from '@/composables/battles'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
@@ -76,6 +77,7 @@ const boxStyle = (b: {
 })
 
 const productionStats = useProductionStats()
+const battles = useBattles()
 let map: maplibregl.Map | null = null
 const zoom = ref(4)
 let overlay: MapboxOverlay | null = null
@@ -132,6 +134,7 @@ function refresh(): void {
       pendingPoint: m.kind === 'front' || m.kind === 'offensive' ? m.first : null,
       zoom: zoom.value,
       selectedCity: selectedCity.value?.name ?? null,
+      battles: battles.value,
       production:
         game.panelTab === 'production' ? (productionStats.value?.busyByCity ?? null) : null,
     }),
@@ -142,6 +145,10 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
   const point = info.coordinate ? ([info.coordinate[0], info.coordinate[1]] as LonLat) : null
   const me = game.snapshot?.playerCountry
   const additive = event.srcEvent?.shiftKey ?? false
+  if (info.layer?.id === 'battles' && info.object) {
+    game.openBattle((info.object as { ids: number[] }).ids)
+    return
+  }
   const item = info.layer?.id.startsWith('units') ? (info.object as MapUnit | undefined) : undefined
   if (item) {
     const units = isStack(item) ? item.units : [item]
@@ -241,6 +248,72 @@ watch(
     deep: false,
   },
 )
+
+// ---------- Caméra au clavier : ZQSD / WASD (touches physiques) et flèches ----------
+
+const PAN_KEYS: Record<string, [number, number]> = {
+  KeyW: [0, -1],
+  ArrowUp: [0, -1],
+  KeyS: [0, 1],
+  ArrowDown: [0, 1],
+  KeyA: [-1, 0],
+  ArrowLeft: [-1, 0],
+  KeyD: [1, 0],
+  ArrowRight: [1, 0],
+}
+const held = new Set<string>()
+let fast = false
+let panFrame = 0
+
+function panLoop(): void {
+  panFrame = 0
+  if (!map || held.size === 0) return
+  let dx = 0
+  let dy = 0
+  for (const code of held) {
+    const d = PAN_KEYS[code]
+    if (d) {
+      dx += d[0]
+      dy += d[1]
+    }
+  }
+  const speed = fast ? 28 : 12
+  if (dx || dy) map.panBy([dx * speed, dy * speed], { duration: 0 })
+  panFrame = requestAnimationFrame(panLoop)
+}
+
+function onPanKey(event: KeyboardEvent): void {
+  const target = event.target
+  if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+  if (target instanceof HTMLSelectElement) return
+  if (!game.started || !(event.code in PAN_KEYS)) return
+  if (event.ctrlKey || event.metaKey || event.altKey) return
+  fast = event.shiftKey
+  event.preventDefault()
+  if (event.type === 'keydown') {
+    held.add(event.code)
+    if (!panFrame) panFrame = requestAnimationFrame(panLoop)
+  } else {
+    held.delete(event.code)
+  }
+}
+
+function releaseKeys(): void {
+  held.clear()
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onPanKey)
+  window.addEventListener('keyup', onPanKey)
+  window.addEventListener('blur', releaseKeys)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onPanKey)
+  window.removeEventListener('keyup', onPanKey)
+  window.removeEventListener('blur', releaseKeys)
+  if (panFrame) cancelAnimationFrame(panFrame)
+})
 
 onBeforeUnmount(() => {
   map?.remove()

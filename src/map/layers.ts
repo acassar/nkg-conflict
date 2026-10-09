@@ -34,6 +34,20 @@ export interface LayerInput {
    * Les villes du joueur affichent alors leurs casernes (occupées/total) et leurs fortifications.
    */
   production: Map<string, number> | null
+  /** Batailles en cours (icône cliquable). */
+  battles: Array<{ key: string; ids: number[]; at: LonLat; mine: boolean }>
+}
+
+/** Icône de bataille : deux sabres croisés sur un disque. */
+function battleIcon(mine: boolean): { url: string; width: number; height: number; id: string } {
+  const fill = mine ? '#b91c1c' : '#57534e'
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="${fill}" stroke="#fff" stroke-width="4"/><g stroke="#fff" stroke-width="6" stroke-linecap="round"><path d="M18 18 L46 46"/><path d="M46 18 L18 46"/></g><g stroke="#fff" stroke-width="4" stroke-linecap="round"><path d="M14 40 L24 50"/><path d="M50 40 L40 50"/></g></svg>`
+  return {
+    id: mine ? 'battle-mine' : 'battle-other',
+    url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
+    width: 64,
+    height: 64,
+  }
 }
 
 type Rgb = [number, number, number]
@@ -231,12 +245,18 @@ export function buildLayers(input: LayerInput): Layer[] {
   )
 
   // Front et offensive de l'armée sélectionnée.
-  if (selectedArmy?.front) {
+  // Front tenu par l'armée sélectionnée : le tracé réel, à défaut les deux extrémités.
+  const frontLines = selectedArmy?.frontLine?.length
+    ? selectedArmy.frontLine
+    : selectedArmy?.front
+      ? [selectedArmy.front]
+      : []
+  if (frontLines.length) {
     layers.push(
       new PathLayer({
         id: 'army-front',
-        data: [selectedArmy.front],
-        getPath: (f: [LonLat, LonLat]) => f,
+        data: frontLines,
+        getPath: (f: LonLat[]) => f,
         getColor: [250, 204, 21, 230],
         getWidth: 5,
         widthUnits: 'pixels',
@@ -312,6 +332,19 @@ export function buildLayers(input: LayerInput): Layer[] {
       }),
     )
   }
+  // Batailles : icône au-dessus des pions, clic pour le détail.
+  layers.push(
+    new IconLayer<{ key: string; ids: number[]; at: LonLat; mine: boolean }>({
+      id: 'battles',
+      data: input.battles,
+      getPosition: (b) => b.at,
+      getIcon: (b) => battleIcon(b.mine),
+      getSize: 22,
+      sizeUnits: 'pixels',
+      getPixelOffset: [0, -26],
+      pickable: true,
+    }),
+  )
   // Noms des villes au-dessus des pions, pour rester lisibles.
   layers.push(
     new TextLayer<CityState>({

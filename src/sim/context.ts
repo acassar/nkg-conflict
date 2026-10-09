@@ -74,6 +74,11 @@ export function sideIndex(ctx: SimContext, country: CountryId): number {
   return ctx.sideIndex.get(country) ?? -1
 }
 
+/** Pays hors carte : présent seulement par son économie et sa diplomatie. */
+export function isOffMap(ctx: SimContext, country: CountryId): boolean {
+  return ctx.countries.get(country)?.offMap === true
+}
+
 /** Les deux pays sont-ils en guerre l'un contre l'autre ? */
 export function hostileCountries(ctx: SimContext, a: CountryId, b: CountryId): boolean {
   return ctx.matrix.hostile(sideIndex(ctx, a), sideIndex(ctx, b))

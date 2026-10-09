@@ -8,6 +8,7 @@ import GameOver from '@/components/GameOver.vue'
 import StartScreen from '@/components/StartScreen.vue'
 import Notifications from '@/components/Notifications.vue'
 import LassoButton from '@/components/LassoButton.vue'
+import BattleDialog from '@/components/BattleDialog.vue'
 import { computed } from 'vue'
 import { isMobile, isTouch, layout } from '@/composables/layout'
 import { useGameStore } from '@/stores/game'
@@ -23,7 +24,8 @@ const hint = computed(() => {
     : text
 })
 
-// Raccourcis : espace = pause, 1 à 5 = vitesse, M/A/H/R = ordres, Échap = annuler.
+// Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, Échap = annuler.
+// ZQSD (WASD en QWERTY) et les flèches déplacent la carte (voir MapView).
 function onKey(event: KeyboardEvent): void {
   const target = event.target
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
@@ -36,14 +38,15 @@ function onKey(event: KeyboardEvent): void {
     void game.setSpeed(Number(key))
   } else if (key === 'm') {
     game.startOrder('move')
-  } else if (key === 'a') {
+  } else if (key === 't') {
     game.startOrder('attack')
   } else if (key === 'r') {
     game.startOrder('retreat')
   } else if (key === 'h') {
     game.hold()
   } else if (key === 'escape') {
-    if (game.mode.kind !== 'select' || game.lasso) game.cancelMode()
+    if (game.battleIds) game.closeBattle()
+    else if (game.mode.kind !== 'select' || game.lasso) game.cancelMode()
     else game.clearSelection()
   }
 }
@@ -67,6 +70,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <EventLog v-if="!isMobile" />
     <Notifications />
     <LassoButton />
+    <BattleDialog />
     <p v-if="!isMobile" class="disclaimer">Scénario hypothétique · sans prétention historique</p>
     <GameOver />
   </template>

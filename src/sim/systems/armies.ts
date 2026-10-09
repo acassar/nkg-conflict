@@ -129,8 +129,12 @@ function slots(cells: FrontCell[], count: number): FrontCell[] {
  */
 export function assignFront(ctx: SimContext, army: ArmyState, teleport = false): void {
   const side = sideIndex(ctx, army.owner)
-  if (!army.front && !army.wholeFront) return
+  if (!army.front && !army.wholeFront) {
+    army.frontLine = undefined
+    return
+  }
   const cells = frontCells(ctx, side, army.wholeFront ? null : army.front)
+  army.frontLine = traceFront(ctx, cells)
   if (cells.length === 0) return
   const members = army.unitIds
     .map((id) => ctx.units.get(id))
@@ -141,20 +145,30 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   const rear = members.filter((u) => !isLineUnit(u.kind))
 
   const place = (units: UnitState[], depth: number): void => {
-    // On trie les unités le long du front pour éviter qu'elles se croisent.
-    const ordered = units
-      .map((u) => ({ u, t: nearestT(ctx, cells, u) }))
-      .sort((p, q) => p.t - q.t)
-      .map((p) => p.u)
-    slots(cells, ordered.length).forEach((slot, k) => {
-      const u = ordered[k]
-      if (!u) return
-      const target = behind(ctx, side, slot, depth)
+    const posts = slots(cells, units.length).map((slot) => behind(ctx, side, slot, depth))
+    // Chaque poste revient à l'unité la plus proche encore libre (paires triées par distance) :
+    // une unité n'est jamais envoyée à l'autre bout du front quand un poste l'attend à côté.
+    const pairs: Array<{ u: number; p: number; d: number }> = []
+    units.forEach((u, ui) => {
+      posts.forEach((p, pi) =>
+        pairs.push({ u: ui, p: pi, d: distanceKm(u.lon, u.lat, p[0], p[1]) }),
+      )
+    })
+    pairs.sort((x, y) => x.d - y.d)
+    const unitDone = new Set<number>()
+    const postDone = new Set<number>()
+    for (const { u: ui, p: pi } of pairs) {
+      if (unitDone.has(ui) || postDone.has(pi)) continue
+      unitDone.add(ui)
+      postDone.add(pi)
+      const u = units[ui]
+      const target = posts[pi]
+      if (!u || !target) continue
       if (teleport) {
         ;[u.lon, u.lat] = target
         u.order = { kind: 'front', target }
         u.path = []
-        return
+        continue
       }
       const prev = u.order.kind === 'front' ? u.order.target : undefined
       const sameSlot =
@@ -162,13 +176,64 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       // Même poste : on ne recalcule rien, sauf si l'unité est arrêtée loin de ce poste.
       const stuck =
         u.path.length === 0 && distanceKm(u.lon, u.lat, target[0], target[1]) > SLOT_TOLERANCE_KM
-      if (sameSlot && !stuck) return
+      if (sameSlot && !stuck) continue
       u.order = { kind: 'front', target }
       planPath(ctx, u, target)
-    })
+    }
   }
   place(line, 2)
   place(rear, 7)
+}
+
+/**
+ * Tracé du front (pour l'affichage) : cellules échantillonnées le long de la portion, coupé en
+ * plusieurs lignes là où le front s'interrompt (plusieurs secteurs).
+ */
+function traceFront(ctx: SimContext, cells: FrontCell[]): LonLat[][] {
+  if (cells.length === 0) return []
+  const step = Math.max(1, Math.floor(cells.length / 120))
+  const lines: LonLat[][] = []
+  let current: LonLat[] = []
+  let last: LonLat | null = null
+  for (let k = 0; k < cells.length; k += step) {
+    const c = cells[k]
+    if (!c) continue
+    const p: LonLat = [ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)]
+    if (last && distanceKm(last[0], last[1], p[0], p[1]) > 60) {
+      if (current.length > 1) lines.push(current)
+      current = []
+    }
+    current.push(p)
+    last = p
+  }
+  if (current.length > 1) lines.push(current)
+  return lines
+}
+
+/**
+ * Accroche les extrémités d'une portion tracée par le joueur aux cellules de front les plus proches,
+ * pour que la portion suive le front réel.
+ */
+export function snapToFront(
+  ctx: SimContext,
+  side: number,
+  segment: [LonLat, LonLat],
+): [LonLat, LonLat] {
+  const cells = frontCells(ctx, side, null)
+  const snap = (p: LonLat): LonLat => {
+    let best: LonLat = p
+    let bestD = 150
+    for (const c of cells) {
+      const q: LonLat = [ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)]
+      const d = distanceKm(p[0], p[1], q[0], q[1])
+      if (d < bestD) {
+        bestD = d
+        best = q
+      }
+    }
+    return best
+  }
+  return [snap(segment[0]), snap(segment[1])]
 }
 
 function nearestT(ctx: SimContext, cells: FrontCell[], u: UnitState): number {
@@ -194,10 +259,15 @@ function nearestT(ctx: SimContext, cells: FrontCell[], u: UnitState): number {
 export function launchOffensive(ctx: SimContext, army: ArmyState): void {
   const off = army.offensive
   if (!off || off.launched) return
+  const chosen = off.unitIds ? new Set(off.unitIds) : null
   const members = army.unitIds
+    .filter((id) => !chosen || chosen.has(id))
     .map((id) => ctx.units.get(id))
     .filter((u): u is UnitState => !!u && !runtimeOf(ctx, u.id).routed)
-  const line = members.filter((u) => isLineUnit(u.kind))
+  // Unités choisies : toutes participent (y compris hors ligne) ; sinon les unités de ligne.
+  const line = chosen
+    ? members.filter((u) => u.kind !== 'art')
+    : members.filter((u) => isLineUnit(u.kind))
   const [fx, fy] = off.from
   const [tx, ty] = off.to
   // Perpendiculaire à la flèche, normalisée en degrés approximatifs.

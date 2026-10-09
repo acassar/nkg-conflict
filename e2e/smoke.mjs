@@ -223,6 +223,27 @@ try {
   if (pursuing === 0) report.errors.push('ordre de poursuite non appliqué')
   await shot('02g-poursuite')
 
+  // Annuler l'ordre : les unités poursuivantes s'arrêtent.
+  await page.getByTestId('cancel-order').click()
+  await page.waitForTimeout(500)
+  const stillPursuing = await page.evaluate(
+    () => window.__nkg.selectedUnits.filter((u) => u.order === 'pursue').length,
+  )
+  step('ordre annulé', { poursuivent: stillPursuing })
+  if (stillPursuing !== 0) report.errors.push("l'ordre n'a pas été annulé")
+
+  // Posture : « Dégâts max » pour la sélection.
+  await page.getByTestId('posture').getByRole('button', { name: 'Dégâts max' }).click()
+  await page.waitForTimeout(500)
+  const postures = await page.evaluate(() => [
+    ...new Set(window.__nkg.selectedUnits.map((u) => u.posture)),
+  ])
+  step('posture', { postures })
+  if (postures.length !== 1 || postures[0] !== 'maxDamage') {
+    report.errors.push(`posture non appliquée (${postures.join(', ')})`)
+  }
+  await shot('02g1-posture')
+
   // Encerclement par la même sélection, puis retour à l'armée sur ordre.
   await page.getByTestId('order-encircle').click()
   const at2 = await page.evaluate((id) => {
@@ -278,12 +299,73 @@ try {
   step('après 8 s en vitesse 5', after)
   await shot('03-apres-lecture')
 
+  // Écran de bataille : un combat du joueur, ouvert comme par un clic sur son icône.
+  const battleOpened = await page.evaluate(() => {
+    const g = window.__nkg
+    const u = g.snapshot.units.find((x) => x.owner === g.snapshot.playerCountry && x.engagedWith)
+    if (!u) return false
+    g.openBattle([u.id, u.engagedWith])
+    window.__nkgMap.jumpTo({ center: [u.lon, u.lat], zoom: 8 })
+    return true
+  })
+  if (battleOpened) {
+    await page.getByTestId('battle-dialog').waitFor()
+    await page.waitForTimeout(1200)
+    const sides = await page.getByTestId('battle-dialog').locator('section.side').count()
+    step('écran de bataille', { camps: sides })
+    if (sides !== 2) report.errors.push(`écran de bataille incomplet (${sides} camps)`)
+    await page.getByTestId('battle-dialog').locator('li').first().click()
+    await page.waitForTimeout(300)
+    await shot('03b-bataille')
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(300)
+    if (await page.getByTestId('battle-dialog').isVisible()) {
+      report.errors.push("Échap ne ferme pas l'écran de bataille")
+    }
+  } else {
+    step('écran de bataille', { camps: 0, note: 'aucun combat en cours' })
+  }
+
+  // Caméra au clavier : D (ou flèche droite) déplace la carte vers l'est.
+  const lonBefore = await page.evaluate(() => window.__nkgMap.getCenter().lng)
+  await page.keyboard.down('KeyD')
+  await page.waitForTimeout(400)
+  await page.keyboard.up('KeyD')
+  const lonAfter = await page.evaluate(() => window.__nkgMap.getCenter().lng)
+  step('caméra clavier', { avant: lonBefore, apres: lonAfter })
+  if (!(lonAfter > lonBefore)) report.errors.push('la touche D ne déplace pas la carte')
+
   // Zoom sur le front, autour de Kharkiv.
   await page.evaluate(() => {
     window.__nkg.focus = { at: [36.2, 49.2], zoom: 6.5, nonce: Date.now() }
   })
   await page.waitForTimeout(3500)
   await shot('04-zoom-front')
+
+  // Théâtre Ukraine – Russie : donneurs hors carte, avec leur fiche.
+  page.once('dialog', (d) => d.accept())
+  await page.getByTestId('menu-button').click()
+  await page.getByRole('button', { name: 'Menu principal' }).click()
+  await page.getByTestId('start-screen').waitFor({ timeout: 15_000 })
+  await page.locator('[data-scenario="ukraine-2026"]').click()
+  await page.locator('[data-country="UKR"]').click()
+  await page.getByRole('button', { name: /^Jouer / }).click()
+  await page.waitForFunction(
+    () => window.__nkg?.snapshot?.scenarioId === 'ukraine-2026' && window.__nkg?.grid,
+    null,
+    { timeout: 60_000 },
+  )
+  await page.waitForTimeout(2000)
+  await page.getByTestId('tab-country').click()
+  await page.getByTestId('offmap-list').waitFor()
+  const donors = await page.evaluate(() => window.__nkg.aids.filter((a) => a.to === 'UKR').length)
+  await page.locator('[data-offmap="USA"]').click()
+  await page.waitForTimeout(400)
+  const sheet = await page.evaluate(() => window.__nkg.selectedCountryCode)
+  step('donneurs hors carte', { aides: donors, fiche: sheet })
+  if (donors < 5) report.errors.push(`aides du théâtre ukrainien manquantes (${donors})`)
+  if (sheet !== 'USA') report.errors.push('fiche des États-Unis non ouverte')
+  await shot('05-donneur-hors-carte')
 
   report.ok = !!after && after.tick > 0 && report.errors.length === 0
 } catch (e) {

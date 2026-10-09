@@ -2,8 +2,10 @@ import { runtimeOf, sideIndex, type SimContext } from '../context'
 import { isOffensiveOrder, type LonLat, type UnitState } from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactor, useMunitions } from '../economy/economy'
+import { NO_MUNITIONS_FACTOR } from '../economy/rules'
 import { moraleFactor } from '../politics/politics'
 import { WarIndex } from './spatial'
+import { postureOf } from '../units/postures'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -55,13 +57,56 @@ function terrainDefense(ctx: SimContext, u: UnitState): number {
 }
 
 /** Vrai si un fleuve sépare les deux unités (échantillonnage du segment). */
-function riverBetween(ctx: SimContext, a: UnitState, b: UnitState): boolean {
+export function riverBetween(ctx: SimContext, a: UnitState, b: UnitState): boolean {
   for (let k = 1; k < 6; k++) {
     const t = k / 6
     const c = ctx.grid.cellAt(a.lon + (b.lon - a.lon) * t, a.lat + (b.lat - a.lat) * t)
     if (ctx.grid.terrain[c] === Terrain.RIVER) return true
   }
   return false
+}
+
+/** Modificateur, pour l'écran de bataille : libellé et facteur multiplicatif. */
+export interface Modifier {
+  label: string
+  value: number
+}
+
+/**
+ * Détail des modificateurs d'une unité (mêmes règles que le combat) : ce qui multiplie sa puissance
+ * de feu et sa défense.
+ */
+export function combatModifiers(
+  ctx: SimContext,
+  u: UnitState,
+): { attack: Modifier[]; defense: Modifier[] } {
+  const posture = postureOf(u.posture)
+  const shared: Modifier[] = [
+    { label: 'Effectifs', value: u.strength },
+    { label: 'Organisation', value: 0.25 + 0.75 * u.org },
+    { label: 'Ravitaillement', value: supplyFactor(ctx, u) },
+    { label: 'Commandement', value: commandFactor(ctx, u) },
+  ]
+  const eco = ctx.economies.get(u.owner)
+  const ammo = eco && eco.munitions <= 0 ? NO_MUNITIONS_FACTOR : 1
+  const cell = ctx.grid.cellAt(u.lon, u.lat)
+  return {
+    attack: [
+      ...shared,
+      { label: `Posture (${posture.name})`, value: posture.attack },
+      { label: 'Munitions', value: ammo },
+    ],
+    defense: [
+      ...shared,
+      {
+        label: `Terrain (${terrainRule(ctx.grid.terrain[cell]).name})`,
+        value: terrainDefense(ctx, u),
+      },
+      { label: 'Retranchement', value: 1 + 0.5 * u.entrench },
+      { label: 'Fortifications', value: fortFactor(ctx, u) },
+      { label: `Posture (${posture.name})`, value: posture.defense },
+    ],
+  }
 }
 
 function isOffensive(u: UnitState): boolean {
@@ -72,7 +117,14 @@ function isOffensive(u: UnitState): boolean {
 export function firePower(ctx: SimContext, u: UnitState): number {
   const type = ctx.catalog[u.kind]
   const base = isOffensive(u) ? type.attack : type.defense
-  return base * u.strength * (0.25 + 0.75 * u.org) * supplyFactor(ctx, u) * commandFactor(ctx, u)
+  return (
+    base *
+    u.strength *
+    (0.25 + 0.75 * u.org) *
+    supplyFactor(ctx, u) *
+    commandFactor(ctx, u) *
+    postureOf(u.posture).attack
+  )
 }
 
 export function defenseValue(ctx: SimContext, u: UnitState): number {
@@ -85,7 +137,8 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     commandFactor(ctx, u) *
     terrainDefense(ctx, u) *
     fortFactor(ctx, u) *
-    (1 + 0.5 * u.entrench)
+    (1 + 0.5 * u.entrench) *
+    postureOf(u.posture).defense
   )
 }
 
@@ -146,7 +199,7 @@ export function updateCombat(ctx: SimContext): void {
     } else {
       u.hoursOutOfSupply = 0
     }
-    if (!rt.routed && u.org < ROUT_ORG) {
+    if (!rt.routed && u.org < postureOf(u.posture).routOrg) {
       rt.routed = true
       u.entrench = 0
       ctx.log(`Décrochage : ${u.name}`, u.owner)

@@ -2,7 +2,15 @@
 import * as Comlink from 'comlink'
 import { isSpeed } from './core/clock'
 import { parseSave, serializeSave } from './core/save'
-import type { BuildingKind, CountryId, LonLat, SimSnapshot, UnitKind } from './core/types'
+import type {
+  BattleReport,
+  BuildingKind,
+  CountryId,
+  LonLat,
+  Posture,
+  SimSnapshot,
+  UnitKind,
+} from './core/types'
 import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
 import { loadTheater } from './theater/load'
@@ -79,7 +87,7 @@ const api = {
     if (!info) return []
     const all = buildScenario(scenarioId).countries
     return all
-      .filter((c) => !info.playable || info.playable.includes(c.id))
+      .filter((c) => !c.offMap && (!info.playable || info.playable.includes(c.id)))
       .map((c) => ({ code: c.id, name: c.name, pop: c.pop ?? 0 }))
       .sort((a, b) => b.pop - a.pop)
   },
@@ -121,6 +129,18 @@ const api = {
   orderUnits(ids: number[], kind: PlayerOrder, target?: LonLat): void {
     act((s) => s.orderUnits(ids, kind, target))
   },
+  battleReport(ids: number[]): BattleReport | null {
+    return sim?.battleReport(ids) ?? null
+  },
+  setPosture(ids: number[], posture: Posture): void {
+    act((s) => s.setPosture(ids, posture))
+  },
+  setArmyPosture(armyId: number, posture: Posture): void {
+    act((s) => s.setArmyPosture(armyId, posture))
+  },
+  cancelOrders(ids: number[]): void {
+    act((s) => s.cancelOrders(ids))
+  },
   pursueUnit(ids: number[], targetId: number): string | null {
     return act((s) => s.pursueUnit(ids, targetId)) ?? null
   },
@@ -145,8 +165,8 @@ const api = {
   setArmyFront(id: number, front: [LonLat, LonLat] | 'whole' | null): void {
     act((s) => s.setArmyFront(id, front))
   },
-  planOffensive(id: number, from: LonLat, to: LonLat): void {
-    act((s) => s.planOffensive(id, from, to))
+  planOffensive(id: number, from: LonLat, to: LonLat, unitIds?: number[]): void {
+    act((s) => s.planOffensive(id, from, to, unitIds))
   },
   launchOffensive(id: number): void {
     act((s) => s.launchOffensive(id))

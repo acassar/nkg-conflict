@@ -4,10 +4,12 @@ import * as Comlink from 'comlink'
 import { formatGameDate, isSpeed, tickToDate } from '@/sim/core/clock'
 import { terrainRule } from '@/sim/theater/grid'
 import type {
+  BattleReport,
   BuildingKind,
   CountryId,
   GridSnapshot,
   LonLat,
+  Posture,
   SimSnapshot,
   UnitKind,
   UnitSnapshot,
@@ -29,7 +31,7 @@ export type MapMode =
   | { kind: 'select' }
   | { kind: 'order'; order: Exclude<PlayerOrder, 'hold'> }
   | { kind: 'front'; armyId: number; first: LonLat | null }
-  | { kind: 'offensive'; armyId: number; first: LonLat | null }
+  | { kind: 'offensive'; armyId: number; first: LonLat | null; unitIds?: number[] }
   /** Ordre qui vise une unité ennemie (poursuite, assaut, encerclement par la sélection ou une armée). */
   | { kind: 'target'; action: TargetAction; armyId?: number }
 
@@ -85,6 +87,8 @@ export const useGameStore = defineStore('game', () => {
   const drawer = ref<'collapsed' | 'half' | 'full'>('collapsed')
   /** Hauteur affichée du tiroir, en pixels (pour placer les boutons flottants au-dessus). */
   const drawerHeight = ref(0)
+  /** Bataille ouverte dans la fenêtre de détail (unités qui la composent). */
+  const battleIds = ref<number[] | null>(null)
   /** Sélection par zone : le prochain glisser sur la carte trace un rectangle. */
   const lasso = ref(false)
   const selectedCityName = ref<string | null>(null)
@@ -448,8 +452,13 @@ export const useGameStore = defineStore('game', () => {
     mode.value = { kind: 'front', armyId, first: null }
   }
 
-  function startOffensive(armyId: number): void {
-    mode.value = { kind: 'offensive', armyId, first: null }
+  /** Planification d'une offensive : avec `withSelection`, seules les unités choisies de l'armée y vont. */
+  function startOffensive(armyId: number, withSelection = false): void {
+    const army = armies.value.find((a) => a.id === armyId)
+    const unitIds = withSelection
+      ? selection.value.filter((id) => army?.unitIds.includes(id))
+      : undefined
+    mode.value = { kind: 'offensive', armyId, first: null, unitIds }
   }
 
   /** Ordre visant une unité : poursuite, assaut, encerclement (sélection ou armée). */
@@ -495,7 +504,13 @@ export const useGameStore = defineStore('game', () => {
         return true
       }
       if (m.kind === 'front') void sim.setArmyFront(m.armyId, [lonLat(m.first), point])
-      else void sim.planOffensive(m.armyId, lonLat(m.first), point)
+      else
+        void sim.planOffensive(
+          m.armyId,
+          lonLat(m.first),
+          point,
+          m.unitIds ? [...m.unitIds] : undefined,
+        )
       cancelMode()
       return true
     }
@@ -505,6 +520,34 @@ export const useGameStore = defineStore('game', () => {
   /** Clic droit : déplacement direct de la sélection. */
   function quickMove(point: LonLat): void {
     if (selection.value.length > 0) void sim.orderUnits(ids(), 'move', point)
+  }
+
+  function setPosture(posture: Posture): void {
+    if (selection.value.length > 0) void sim.setPosture(ids(), posture)
+  }
+
+  const setArmyPosture = (armyId: number, posture: Posture): Promise<void> =>
+    sim.setArmyPosture(armyId, posture)
+
+  function openBattle(ids: number[]): void {
+    battleIds.value = [...ids]
+  }
+
+  function closeBattle(): void {
+    battleIds.value = null
+  }
+
+  /** Rapport détaillé de la bataille ouverte (ses unités sont mises à jour d'un appel à l'autre). */
+  async function fetchBattle(): Promise<BattleReport | null> {
+    const ids = battleIds.value
+    if (!ids) return null
+    const report = await sim.battleReport([...ids])
+    if (report && battleIds.value) battleIds.value = [...report.a, ...report.b].map((u) => u.id)
+    return report
+  }
+
+  function cancelOrders(): void {
+    if (selection.value.length > 0) void sim.cancelOrders(ids())
   }
 
   function hold(): void {
@@ -733,6 +776,13 @@ export const useGameStore = defineStore('game', () => {
     mapClick,
     quickMove,
     hold,
+    cancelOrders,
+    battleIds,
+    openBattle,
+    closeBattle,
+    fetchBattle,
+    setPosture,
+    setArmyPosture,
     queueConstruction,
     queueRecruit,
     cancelConstruction,

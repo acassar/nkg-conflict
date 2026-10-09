@@ -58,6 +58,11 @@ const owned = computed(() => {
   const v = game.snapshot?.territoryHeld[code.value]
   return v === undefined ? null : Math.round(v * 100)
 })
+/** Pays hors carte (théâtre régional) : diplomatie et aide seulement. */
+const offMap = computed(() => country.value?.offMap === true)
+const offMapCountries = computed(
+  () => game.snapshot?.countries.filter((c) => c.offMap && c.id !== code.value) ?? [],
+)
 const unitCount = computed(
   () => game.snapshot?.units.filter((u) => u.owner === code.value).length ?? 0,
 )
@@ -153,9 +158,11 @@ function confirmWar(): void {
       <dt>Forces</dt>
       <dd>
         {{
-          pol.mobilized
-            ? `${unitCount} unités sur la carte`
-            : `${pol.forceSize} unités, non mobilisées`
+          offMap
+            ? 'Hors du théâtre : aide et diplomatie seulement'
+            : pol.mobilized
+              ? `${unitCount} unités sur la carte`
+              : `${pol.forceSize} unités, non mobilisées`
         }}
       </dd>
       <dt v-if="owned !== null && wars.length">Territoire tenu</dt>
@@ -180,7 +187,12 @@ function confirmWar(): void {
 
     <!-- Actions sur un autre pays -->
     <div v-if="!isMe" class="actions">
-      <button v-if="!atWarWithMe" class="danger" :disabled="sameAlliance" @click="confirmWar">
+      <button
+        v-if="!atWarWithMe && !offMap"
+        class="danger"
+        :disabled="sameAlliance"
+        @click="confirmWar"
+      >
         Déclarer la guerre
       </button>
       <button
@@ -281,7 +293,7 @@ function confirmWar(): void {
             <button class="danger" @click="game.revokeAid(myAidTo.id)">Arrêter</button>
           </div>
         </div>
-        <div v-else class="levels">
+        <div v-else-if="!offMap" class="levels">
           <span class="label">Accorder une aide :</span>
           <button
             v-for="l in LEVELS"
@@ -314,6 +326,21 @@ function confirmWar(): void {
       </ul>
     </div>
 
+    <template v-if="offMapCountries.length">
+      <h3>Pays hors carte</h3>
+      <div class="offmap" data-testid="offmap-list">
+        <button
+          v-for="c in offMapCountries"
+          :key="c.id"
+          class="small"
+          :data-offmap="c.id"
+          @click="game.selectCountry(c.id)"
+        >
+          {{ c.name }}
+        </button>
+      </div>
+    </template>
+
     <p v-if="isMe" class="tip">
       Cliquez sur un pays, une de ses villes ou un de ses pions pour ouvrir sa fiche.
     </p>
@@ -321,6 +348,12 @@ function confirmWar(): void {
 </template>
 
 <style scoped>
+.offmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
 .head {
   display: flex;
   align-items: center;

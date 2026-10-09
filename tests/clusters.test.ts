@@ -19,6 +19,8 @@ const unit = (id: number, owner: string, lon: number, lat: number): UnitSnapshot
   supplied: true,
   routed: false,
   commanded: false,
+  posture: 'balanced',
+  engagedWith: null,
 })
 
 describe('piles de pions', () => {

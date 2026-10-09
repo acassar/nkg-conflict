@@ -3,6 +3,7 @@ import { isOffensiveOrder, type LonLat, type UnitState } from '../core/types'
 import { distanceKm, moveToward, terrainRule } from '../theater/grid'
 import { CONTACT_KM, retreatFromEnemy } from './combat'
 import { WarIndex } from './spatial'
+import { postureOf } from '../units/postures'
 
 const ENTRENCH_PER_HOUR = 0.01
 
@@ -42,7 +43,7 @@ export function updateMovement(ctx: SimContext): void {
     if (!moving || blocked) {
       // À l'arrêt : on se retranche, sauf en pleine attaque ou en déroute.
       if (!isOffensiveOrder(u.order.kind) && !rt.routed) {
-        u.entrench = Math.min(1, u.entrench + ENTRENCH_PER_HOUR)
+        u.entrench = Math.min(1, u.entrench + ENTRENCH_PER_HOUR * postureOf(u.posture).entrench)
       }
       if (!moving) finishOrder(u)
       continue

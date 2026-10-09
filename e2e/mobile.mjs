@@ -105,6 +105,33 @@ try {
   check(order === 'move', `ordre de déplacement non donné (${order})`)
   check(after === 'half', `le tiroir devrait revenir à mi-hauteur (${after})`)
 
+  // Écran de bataille : pleine largeur en haut de l'écran, fermé par ✕.
+  let battle = false
+  for (let k = 0; k < 20 && !battle; k++) {
+    await page.evaluate(() => window.__nkg.step(24))
+    await page.waitForTimeout(300)
+    battle = await store(() => {
+      const g = window.__nkg
+      const u = g.snapshot.units.find((x) => x.owner === g.snapshot.playerCountry && x.engagedWith)
+      if (!u) return false
+      g.openBattle([u.id, u.engagedWith])
+      return true
+    })
+  }
+  if (battle) {
+    await page.getByTestId('battle-dialog').waitFor()
+    await page.waitForTimeout(800)
+    const box = await page.getByTestId('battle-dialog').boundingBox()
+    step('bataille (mobile)', { boite: box })
+    check(!!box && box.x >= 0 && box.x + box.width <= 390, "l'écran de bataille déborde")
+    await shot('m04b-bataille')
+    await page.getByTestId('battle-dialog').getByRole('button', { name: 'Fermer' }).tap()
+    await page.waitForTimeout(300)
+    check(!(await page.getByTestId('battle-dialog').isVisible()), 'bataille non fermée')
+  } else {
+    step('bataille (mobile)', { note: 'aucun combat en cours' })
+  }
+
   // Tiroir : onglet Diplomatie, puis glissé vers le haut (plein écran).
   await page.getByTestId('tab-country').tap()
   await page.waitForTimeout(300)

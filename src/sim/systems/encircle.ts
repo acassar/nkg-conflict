@@ -132,6 +132,25 @@ export function autoDetachment(
  * qui tient tout le front) et reprennent leur place sur le front ; le groupe disparaît.
  */
 export function endEncirclement(ctx: SimContext, group: ArmyState, reason: string): void {
+  const enc = group.encirclement
+  // Armée entière : elle reprend simplement son front d'avant.
+  if (enc?.previousFront) {
+    group.front = enc.previousFront.front
+    group.wholeFront = enc.previousFront.wholeFront
+    delete group.encirclement
+    for (const id of group.unitIds) {
+      const u = ctx.units.get(id)
+      if (!u) continue
+      u.order = { kind: 'hold' }
+      u.path = []
+    }
+    ctx.log(
+      `Encerclement de ${enc.targetName} terminé (${reason}) : ${group.name} reprend son front`,
+      group.owner,
+    )
+    if (group.front || group.wholeFront) assignFront(ctx, group)
+    return
+  }
   const parent =
     (group.encirclement?.parentArmyId !== null && group.encirclement?.parentArmyId !== undefined
       ? ctx.armies.get(group.encirclement.parentArmyId)

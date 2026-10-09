@@ -381,6 +381,7 @@ function deployRecruit(
     path: [],
     armyId: army && army.owner === eco.country ? army.id : null,
     hoursOutOfSupply: 0,
+    posture: army?.owner === eco.country ? army.posture : undefined,
   }
   ctx.units.set(u.id, u)
   if (u.armyId !== null) army?.unitIds.push(u.id)

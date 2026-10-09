@@ -4,6 +4,7 @@ import { Random } from './core/random'
 import { encodeRle, SAVE_VERSION, type SaveFile } from './core/save'
 import type {
   ArmyState,
+  BattleReport,
   BuildingKind,
   CityState,
   CountryDef,
@@ -12,6 +13,7 @@ import type {
   GameOutcome,
   LonLat,
   OrderKind,
+  Posture,
   ScenarioDef,
   SimSnapshot,
   UnitKind,
@@ -23,6 +25,8 @@ import { MODERN_CATALOG } from './units/catalog'
 import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
 import { updateMovement, updatePursuits, planPath } from './systems/movement'
+import { updatePostureReflexes } from './systems/postures'
+import { battleReport } from './systems/battle'
 import {
   autoDetachment,
   endEncirclement,
@@ -32,7 +36,7 @@ import {
 } from './systems/encircle'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
-import { assignFront, launchOffensive, updateArmies } from './systems/armies'
+import { assignFront, launchOffensive, snapToFront, updateArmies } from './systems/armies'
 import { updateAi, nearestCity, type AiState } from './systems/ai'
 import {
   cancelConstruction,
@@ -153,9 +157,13 @@ export class Simulation {
     playerCountry: CountryId,
   ) {
     const grid = new Grid(theater)
-    const sides = theater.sides
+    // Les pays hors carte reçoivent un index de camp au-delà de ceux du théâtre : aucune cellule ne
+    // leur appartient, mais la matrice des camps et les index restent valides.
+    const sides = theater.sides.slice()
     for (const c of scenario.countries) {
-      if (!sides.includes(c.id)) throw new Error(`Pays absent du théâtre : ${c.id}`)
+      if (sides.includes(c.id)) continue
+      if (!c.offMap) throw new Error(`Pays absent du théâtre : ${c.id}`)
+      sides.push(c.id)
     }
     if (!scenario.countries.some((c) => c.id === playerCountry)) {
       throw new Error(`Pays du joueur inconnu : ${playerCountry}`)
@@ -414,6 +422,7 @@ export class Simulation {
       if (ctx.tick % PURSUIT_EVERY === 0) {
         updatePursuits(ctx)
         updateEncirclements(ctx)
+        updatePostureReflexes(ctx)
       }
       updateMovement(ctx)
       updateCombat(ctx)
@@ -496,7 +505,10 @@ export class Simulation {
     if (code === this.playerCountry) {
       const winner = [...enemies][0] ?? ''
       this.endGame(winner, `${countryName(ctx, code)} capitule : ${reason}`)
-    } else if (enemies.has(this.playerCountry) && this.scenario.countries.length === 2) {
+    } else if (
+      enemies.has(this.playerCountry) &&
+      this.scenario.countries.filter((c) => !c.offMap).length === 2
+    ) {
       // Théâtre à deux pays : la capitulation de l'adversaire termine la partie.
       this.endGame(this.playerCountry, `${countryName(ctx, code)} capitule : ${reason}`)
     }
@@ -539,6 +551,35 @@ export class Simulation {
       u.order = { kind, target: t }
       planPath(this.ctx, u, t)
     })
+  }
+
+  /** Rapport détaillé d'une bataille (unités au contact, modificateurs). */
+  battleReport(ids: number[]): BattleReport | null {
+    return battleReport(this.ctx, ids, this.playerCountry)
+  }
+
+  /** Posture des unités choisies. */
+  setPosture(ids: number[], posture: Posture): void {
+    for (const u of this.playerUnits(ids)) u.posture = posture
+  }
+
+  /** Posture de toute une armée ; les recrues qui la rejoignent la reçoivent aussi. */
+  setArmyPosture(armyId: number, posture: Posture): void {
+    const army = this.playerArmy(armyId)
+    army.posture = posture
+    for (const id of army.unitIds) {
+      const u = this.ctx.units.get(id)
+      if (u) u.posture = posture
+    }
+  }
+
+  /** Annule les ordres des unités : elles s'arrêtent ; celles d'une armée reprennent leur poste. */
+  cancelOrders(ids: number[]): void {
+    for (const u of this.playerUnits(ids)) {
+      if (runtimeOf(this.ctx, u.id).routed) continue
+      u.order = { kind: 'hold' }
+      u.path = []
+    }
   }
 
   /** Unité ennemie visée par un ordre du joueur, ou un message d'erreur. */
@@ -607,23 +648,38 @@ export class Simulation {
       if (u.armyId !== null) counts.set(u.armyId, (counts.get(u.armyId) ?? 0) + 1)
     }
     const parentArmyId = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
-    const id = this.createArmy(
-      `Encerclement de ${target.name}`,
-      units.map((u) => u.id),
-    )
+    const parent = parentArmyId !== null ? this.ctx.armies.get(parentArmyId) : undefined
+    // Toute l'armée part : pas de nouveau groupe, l'armée elle-même encercle, puis reprend son front.
+    const wholeArmy =
+      !!parent &&
+      !parent.encirclement &&
+      parent.unitIds.length === units.length &&
+      units.every((u) => u.armyId === parent.id)
+    const group = wholeArmy
+      ? parent
+      : this.ctx.armies.get(
+          this.createArmy(
+            `Encerclement de ${target.name}`,
+            units.map((u) => u.id),
+          ),
+        )
     const staging = stageEncirclement(this.ctx, units, target)
-    const group = this.ctx.armies.get(id)
     if (group) {
+      const previousFront = wholeArmy
+        ? { front: group.front, wholeFront: group.wholeFront }
+        : undefined
       group.front = null
       group.wholeFront = false
+      group.offensive = null
       group.encirclement = {
         targetIds: targetGroup(this.ctx, target).map((u) => u.id),
         targetName: target.name,
-        parentArmyId,
+        parentArmyId: wholeArmy ? group.id : parentArmyId,
         phase: 'staging',
         startTick: this.ctx.tick,
         closeTick: null,
         staging,
+        previousFront,
       }
     }
     this.log(
@@ -671,12 +727,24 @@ export class Simulation {
   setArmyFront(id: number, front: [LonLat, LonLat] | 'whole' | null): void {
     const army = this.playerArmy(id)
     army.wholeFront = front === 'whole'
-    army.front = front === 'whole' ? null : front
+    // Une portion tracée s'accroche au front réel.
+    army.front =
+      front === 'whole' || front === null
+        ? null
+        : snapToFront(this.ctx, sideIndex(this.ctx, army.owner), front)
     assignFront(this.ctx, army)
   }
 
-  planOffensive(id: number, from: LonLat, to: LonLat): void {
-    this.playerArmy(id).offensive = { from, to, launched: false }
+  /** Planifie une offensive ; `unitIds` limite les unités engagées (le reste de l'armée tient le front). */
+  planOffensive(id: number, from: LonLat, to: LonLat, unitIds?: number[]): void {
+    const army = this.playerArmy(id)
+    const chosen = unitIds?.filter((u) => army.unitIds.includes(u))
+    army.offensive = {
+      from,
+      to,
+      launched: false,
+      unitIds: chosen && chosen.length > 0 ? chosen : undefined,
+    }
   }
 
   launchOffensive(id: number): void {
@@ -705,6 +773,7 @@ export class Simulation {
       const prev = u.armyId !== null ? this.ctx.armies.get(u.armyId) : undefined
       if (prev) prev.unitIds = prev.unitIds.filter((x) => x !== u.id)
       u.armyId = armyId
+      if (army.posture) u.posture = army.posture
       army.unitIds.push(u.id)
     }
     this.removeEmptyArmies()
@@ -910,6 +979,8 @@ export class Simulation {
           supplied: rt.supplied,
           routed: rt.routed,
           commanded: rt.commanded,
+          posture: u.posture ?? 'balanced',
+          engagedWith: rt.engagedWith,
         }
       }),
       armies: [...ctx.armies.values()]

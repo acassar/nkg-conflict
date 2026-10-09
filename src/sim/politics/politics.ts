@@ -1,4 +1,4 @@
-import { countryName, runtimeOf, sideIndex, type SimContext } from '../context'
+import { countryName, isOffMap, runtimeOf, sideIndex, type SimContext } from '../context'
 import { encodeRle } from '../core/save'
 import type { CountryId, LonLat } from '../core/types'
 import { decodeRle } from '../theater/grid'
@@ -149,7 +149,7 @@ function callAllies(
   for (const alliance of ctx.politics.alliances) {
     if (!alliance.members.includes(caller)) continue
     for (const m of alliance.members) {
-      if (side.includes(m) || enemies.includes(m)) continue
+      if (side.includes(m) || enemies.includes(m) || isOffMap(ctx, m)) continue
       if (enemies.some((e) => relation(ctx, m, e) >= 50)) continue
       if (!mustJoin && relation(ctx, m, caller) < 30) continue
       side.push(m)
@@ -172,6 +172,9 @@ export function declareWar(
 ): string | null {
   if (attacker === target) return 'Impossible de se déclarer la guerre'
   if (!ctx.countries.has(target)) return 'Pays inconnu'
+  if (isOffMap(ctx, target) || isOffMap(ctx, attacker)) {
+    return `${countryName(ctx, isOffMap(ctx, target) ? target : attacker)} est hors du théâtre : guerre impossible`
+  }
   if (isAtWarWith(ctx, attacker, target)) return 'Déjà en guerre'
   if (
     ctx.politics.alliances.some((a) => a.members.includes(attacker) && a.members.includes(target))

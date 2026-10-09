@@ -20,19 +20,23 @@ pnpm dev
 
 L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; guerre froide, 1939, 1914 et époque napoléonienne sont prévues) et votre pays. Un pays capitule quand sa capitale tombe ou quand il n'a plus d'unités pendant 7 jours. Votre capitulation met fin à la partie ; dans le théâtre ukrainien, celle de l'adversaire vous donne la victoire.
 
-| Action                                | Commande                                                  |
-| ------------------------------------- | --------------------------------------------------------- |
-| Pause / vitesse                       | `Espace` / `1` à `5`, ou la barre du haut                 |
-| Avancer d'un jour (tour par tour)     | bouton `+24 h`                                            |
-| Sélectionner / ajouter à la sélection | clic / `Maj` + clic sur une unité                         |
-| Déplacer                              | clic droit sur la carte, ou `M` puis clic                 |
-| Attaquer une zone / se replier        | `A` / `R` puis clic sur la carte                          |
-| Assaut, poursuite, encerclement       | bouton du panneau Unités, puis clic sur une unité ennemie |
-| Tenir la position                     | `H`                                                       |
-| Annuler un ordre en cours de saisie   | `Échap`                                                   |
-| Armées                                | onglet « Armées » du panneau de droite                    |
-| Fiche d'un pays, diplomatie           | clic sur un pays, une de ses villes ou un de ses pions    |
-| Sauvegarder, exporter, importer       | `Sauver` ou menu ☰                                       |
+| Action                                | Commande                                                             |
+| ------------------------------------- | -------------------------------------------------------------------- |
+| Pause / vitesse                       | `Espace` / `1` à `5`, ou la barre du haut                            |
+| Avancer d'un jour (tour par tour)     | bouton `+24 h`                                                       |
+| Sélectionner / ajouter à la sélection | clic / `Maj` + clic sur une unité                                    |
+| Déplacer                              | clic droit sur la carte, ou `M` puis clic                            |
+| Attaquer une zone / se replier        | `T` / `R` puis clic sur la carte                                     |
+| Annuler l'ordre des unités choisies   | bouton « Annuler l'ordre »                                           |
+| Déplacer la carte                     | `ZQSD` (`WASD` en QWERTY) ou les flèches, `Maj` pour aller plus vite |
+| Assaut, poursuite, encerclement       | bouton du panneau Unités, puis clic sur une unité ennemie            |
+| Tenir la position                     | `H`                                                                  |
+| Annuler un ordre en cours de saisie   | `Échap` (ferme aussi l'écran de bataille)                            |
+| Posture des unités choisies           | boutons « Posture » du panneau Unités (ou de l'armée, onglet Armées) |
+| Écran de bataille                     | clic sur l'icône d'épées croisées d'un combat                        |
+| Armées                                | onglet « Armées » du panneau de droite                               |
+| Fiche d'un pays, diplomatie           | clic sur un pays, une de ses villes ou un de ses pions               |
+| Sauvegarder, exporter, importer       | `Sauver` ou menu ☰                                                  |
 
 Sur téléphone, en portrait comme en paysage : la barre du haut garde la pause, la date et la vitesse (un toucher fait défiler les vitesses), le reste passe dans le menu ☰. En portrait, le panneau devient un tiroir en bas, à tirer par sa poignée (replié, mi-hauteur, plein écran) ; en paysage, il reste sur le côté. Pour donner un ordre : bouton « Déplacer », « Attaquer » ou « Se replier », puis toucher la destination (le tiroir se replie le temps de viser). Le bouton ▢ active la sélection par zone : glisser un rectangle sur la carte sélectionne vos unités qu'il contient ; il marche aussi à la souris.
 
@@ -42,7 +46,21 @@ Sauvegardes : `Sauver` enregistre la partie dans le navigateur (compressée). Un
 
 Onglet Production : jauges des chantiers en cours (5 au plus en parallèle), des casernes occupées et de la production engagée face à la production gagnée ; tant que l'onglet est ouvert, la carte montre les casernes (occupées/total, cercle vert s'il en reste une libre) et les fortifications de vos villes.
 
-Une armée peut tenir tout le front ou une portion (deux clics sur la carte) : ses unités s'y répartissent seules et suivent le front quand il bouge. Une offensive se trace en deux clics (départ, objectif), puis se lance.
+Une armée peut tenir tout le front ou une portion (deux clics sur la carte) : les extrémités tracées s'accrochent au front réel le plus proche (jusqu'à 150 km), la carte montre la ligne tenue, et chaque unité prend le poste libre le plus proche d'elle, sans traverser la carte. Les unités suivent le front quand il bouge. Une offensive se trace en deux clics (départ, objectif), puis se lance avec toute l'armée ou avec les seules unités sélectionnées (bouton « Avec la sélection ») : les autres continuent de tenir le front. Si toutes les unités d'une armée partent encercler, l'armée encercle elle-même, sans nouveau groupe, puis reprend son front.
+
+Postures (unité ou armée entière ; une recrue reçoit celle de son armée) : elles modifient le combat et le comportement automatique.
+
+| Posture     | Attaque | Défense | Décroche sous | Retranchement | Réflexe                                                       |
+| ----------- | ------- | ------- | ------------- | ------------- | ------------------------------------------------------------- |
+| Défense max | ×0,6    | ×1,3    | 30 % d'org.   | ×1,5          | jamais d'attaque d'elle-même                                  |
+| Défensive   | ×0,85   | ×1,15   | 20 %          | ×1,2          | jamais d'attaque d'elle-même                                  |
+| Équilibrée  | ×1      | ×1      | 15 %          | ×1            | achève un ennemi en déroute à moins de 12 km                  |
+| Offensive   | ×1,2    | ×0,9    | 12 %          | ×0,8          | attaque un ennemi en déroute ou affaibli à moins de 20 km     |
+| Dégâts max  | ×1,4    | ×0,8    | 5 %           | ×0,6          | poursuit les fuyards, attaque tout ennemi plus faible à 40 km |
+
+Les réflexes ne concernent que les unités dont la posture a été choisie, et seulement quand elles n'exécutent pas un ordre du joueur. « Annuler l'ordre » arrête les unités ; celles d'une armée reprennent leur poste.
+
+Écran de bataille : chaque combat qui vous concerne (vous, un allié ou un ennemi) a son icône sur la carte. Elle ouvre une fenêtre qui se met à jour en direct : lieu, terrain, franchissement de fleuve, rapport de force, puissance de feu, défense et pertes de chaque camp, et, pour chaque unité, le détail de ses modificateurs (effectifs, organisation, ravitaillement, commandement, posture, munitions, terrain, retranchement, fortifications).
 
 Lecture des pions : cadre aux couleurs du camp, symbole OTAN simplifié, jauge verte = effectifs, jauge bleue = organisation, point orange = au contact, bordure rouge pointillée = hors ravitaillement, pion pâle = en déroute.
 
@@ -56,7 +74,7 @@ Onglet « Diplomatie » : stabilité, soutien à la guerre, relations, alliances
 - **Paix** : paix blanche (retour aux frontières d'avant-guerre) ou paix sur les lignes (chacun garde ce qu'il tient). L'adversaire accepte selon le terrain gagné ou perdu et son soutien à la guerre. L'IA peut aussi vous proposer la paix ; l'offre expire au bout de 15 jours.
 - **Améliorer les relations** (+10, une fois par mois et par pays), **sanctionner** (sur la carte du monde, la production du pays visé baisse selon le poids économique des sanctionneurs, jusqu'à −40 % si le monde entier sanctionne ; sur le théâtre ukrainien, −10 % par pays), **proposer une alliance** (relations d'au moins +60), **appeler les alliés**, **quitter une alliance** (un pays peut en avoir plusieurs ; une alliance proposée devient un pacte bilatéral). Les organisations régionales rapprochent leurs membres, sans obligation militaire.
 - **Mobiliser** (théâtre ukrainien et pays sans armée) : lève les forces ; en paix, coûte un peu de stabilité.
-- **Aide étrangère** : un donneur verse chaque jour au receveur une part de ses revenus (6 %, 12 % ou 20 % selon le niveau : limitée, soutenue, massive) en munitions, production et points de construction ; la moitié de la production envoyée devient du matériel, livré sous forme d'unités équipées (le receveur fournit les hommes). Vous pouvez demander une aide (le pays décide selon vos relations, vos alliances et vos ennemis communs), en accorder une, changer son niveau ou y mettre fin ; les IA en guerre vous en demandent aussi. Aider un pays améliore vos relations avec lui et les dégrade avec ses ennemis. Au début de « Monde 2026 », l'Ukraine reçoit l'aide de 12 pays occidentaux, la Russie celle de la Corée du Nord et de l'Iran.
+- **Aide étrangère** : un donneur verse chaque jour au receveur une part de ses revenus (6 %, 12 % ou 20 % selon le niveau : limitée, soutenue, massive) en munitions, production et points de construction ; la moitié de la production envoyée devient du matériel, livré sous forme d'unités équipées (le receveur fournit les hommes). Vous pouvez demander une aide (le pays décide selon vos relations, vos alliances et vos ennemis communs), en accorder une, changer son niveau ou y mettre fin ; les IA en guerre vous en demandent aussi. Aider un pays améliore vos relations avec lui et les dégrade avec ses ennemis. Au début de « Monde 2026 », l'Ukraine reçoit l'aide de 12 pays occidentaux, la Russie celle de la Corée du Nord et de l'Iran. Dans le théâtre ukrainien, les donneurs sont des pays hors carte (États-Unis, Allemagne, Royaume-Uni, Pologne, France pour l'Ukraine ; Corée du Nord et Iran pour la Russie) : sans territoire ni armée, ils ont une économie et une diplomatie, aident, peuvent être sollicités et ne peuvent pas entrer en guerre. Leurs fiches s'ouvrent depuis la liste « Pays hors carte » de l'onglet Diplomatie.
 
 ## Règles en bref
 
@@ -64,7 +82,7 @@ Onglet « Diplomatie » : stabilité, soutien à la guerre, relations, alliances
 
 - **Front** : grille de 0,1° (~10 km) sur la carte du monde, 0,05° (~5 km) sur le théâtre ukrainien. Une cellule change de camp quand elle est dans la zone de contrôle d'une unité, hors de celle de toute unité ennemie, et touche déjà le territoire de ce camp.
 - **Terrain** : forêts, collines, montagnes, marais, fleuves et villes modifient vitesse, défense et itinéraires (table `TERRAIN_RULES` dans `src/sim/theater/grid.ts`).
-- **Combat** : au contact (10 km), chaque unité frappe l'ennemi le plus proche. L'artillerie frappe à 30 km. Défense renforcée par le terrain, le retranchement et les fortifications. Sous 15 % d'organisation, une unité décroche et continue de reculer jusqu'à se rallier. Chaque tir consomme des munitions : à court, la puissance de feu est divisée par deux.
+- **Combat** : au contact (10 km), chaque unité frappe l'ennemi le plus proche. L'artillerie frappe à 30 km. Défense renforcée par le terrain, le retranchement et les fortifications ; la posture module attaque et défense. Sous 15 % d'organisation (seuil selon la posture), une unité décroche et continue de reculer jusqu'à se rallier. Chaque tir consomme des munitions : à court, la puissance de feu est divisée par deux.
 - **Commandement** : une unité à moins de 120 km d'un QG de son camp gagne 15 % au combat et récupère plus vite.
 - **Ravitaillement** : relié aux sources de chaque camp (capitale et grandes villes nationales sur la carte du monde) et à ses dépôts, à travers son propre territoire. Les unités logistiques le prolongent de 60 km. Hors ravitaillement : combat à 60 %, attrition après 3 jours. Les poches sans défenseur s'effondrent.
 - **Économie** : sur la carte du monde, les revenus viennent du pays entier : industrie d'après le PIB (plus ou moins tournée vers l'armée selon le pays), main-d'œuvre d'après la population, au prorata du territoire national tenu ; un territoire occupé rapporte 30 % de son rendement à l'occupant. Les bâtiments construits en cours de partie s'y ajoutent. Sur le théâtre ukrainien, les usines de départ dépendent de la population des villes. Dans les deux cas, les villes portent les bâtiments (usines civiles et militaires, casernes, dépôts, fortifications). Chaque jour : points de construction, production militaire, munitions et main-d'œuvre. Une caserne forme une unité à la fois ; les unités ravitaillées hors combat reçoivent des renforts. Une ville prise perd la moitié de ses usines, ses fortifications et son dépôt. Option « Gestion automatique » dans l'onglet Production. En paix, l'IA entretient son armée à son effectif de départ, relevé d'un quart face à un pays hostile.

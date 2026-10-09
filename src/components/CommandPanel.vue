@@ -7,6 +7,7 @@ import CountryTab from './CountryTab.vue'
 import EventLog from './EventLog.vue'
 import { isMobile, isTouch, layout } from '@/composables/layout'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
+import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import type { Encirclement, OrderKind, UnitSnapshot } from '@/sim/core/types'
 
 const game = useGameStore()
@@ -129,9 +130,12 @@ const ORDER_NAMES: Record<OrderKind, string> = {
 }
 
 const pct = (v: number): string => `${Math.round(v * 100)} %`
+/** Largeur CSS (sans espace, contrairement à l'affichage). */
+const cssPct = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) * 100)}%`
 const status = (u: UnitSnapshot): string => {
   if (u.routed) return 'En déroute'
   const parts = [ORDER_NAMES[u.order]]
+  if (u.posture !== 'balanced') parts.push(POSTURES[u.posture].name.toLowerCase())
   if (u.engaged) parts.push('au contact')
   if (!u.supplied) parts.push('hors ravitaillement')
   if (!u.commanded && u.kind !== 'hq') parts.push('hors commandement')
@@ -157,6 +161,11 @@ function summary(list: UnitSnapshot[]): {
   }
 }
 const selectionSummary = computed(() => summary(selectedUnits.value))
+/** Posture commune de la sélection, ou null si elle est mêlée. */
+const selectionPosture = computed(() => {
+  const set = new Set(selectedUnits.value.map((u) => u.posture))
+  return set.size === 1 ? [...set][0] : null
+})
 const armySummary = (a: { unitIds: number[] }): ReturnType<typeof summary> => {
   const ids = new Set(a.unitIds)
   return summary(game.snapshot?.units.filter((u) => ids.has(u.id)) ?? [])
@@ -171,6 +180,14 @@ function encirclementStatus(enc: Encirclement): string {
   const left = Math.max(0, Math.ceil((7 * 24 - (tick - (enc.closeTick ?? tick))) / 24))
   return `Anneau fermé · ${enc.targetIds.length} ennemi(s) encerclé(s) · retour dans ${left} j`
 }
+
+/** Unités sélectionnées qui appartiennent à l'armée choisie (offensive partielle). */
+const chosenInArmy = computed(() => {
+  const a = selectedArmy.value
+  if (!a) return 0
+  const ids = new Set(a.unitIds)
+  return game.selection.filter((id) => ids.has(id)).length
+})
 
 const unitsOfArmy = computed(() => {
   const a = selectedArmy.value
@@ -268,10 +285,10 @@ async function createArmy(): Promise<void> {
               >{{ selectedUnits.length }} unité{{ selectedUnits.length > 1 ? 's' : '' }}</strong
             >
             <span class="gauge" title="Effectifs moyens">
-              <i :style="{ width: pct(selectionSummary.strength) }" class="strength" />
+              <i :style="{ width: cssPct(selectionSummary.strength) }" class="strength" />
             </span>
             <span class="gauge" title="Organisation moyenne">
-              <i :style="{ width: pct(selectionSummary.org) }" class="org" />
+              <i :style="{ width: cssPct(selectionSummary.org) }" class="org" />
             </span>
             <span v-if="selectionSummary.engaged" class="chip warn">
               {{ selectionSummary.engaged }} au contact
@@ -290,10 +307,17 @@ async function createArmy(): Promise<void> {
             </button>
             <button title="Tenir la position (H)" @click="game.hold()">Tenir</button>
             <button title="Se replier (R)" @click="game.startOrder('retreat')">Se replier</button>
+            <button
+              title="Annule l'ordre en cours : les unités s'arrêtent (celles d'une armée reprennent leur poste)"
+              data-testid="cancel-order"
+              @click="game.cancelOrders()"
+            >
+              Annuler l'ordre
+            </button>
           </div>
           <div class="group">
             <span class="label">Attaque</span>
-            <button title="Attaquer une zone (A)" @click="game.startOrder('attack')">Zone</button>
+            <button title="Attaquer une zone (T)" @click="game.startOrder('attack')">Zone</button>
             <button
               title="Attaquer la position actuelle d'une unité ennemie, puis tenir le terrain"
               data-testid="order-assault"
@@ -317,6 +341,18 @@ async function createArmy(): Promise<void> {
               Encercler
             </button>
           </div>
+          <div class="group" data-testid="posture">
+            <span class="label">Posture</span>
+            <button
+              v-for="p in POSTURE_ORDER"
+              :key="p"
+              :class="{ active: selectionPosture === p }"
+              :title="POSTURES[p].description"
+              @click="game.setPosture(p)"
+            >
+              {{ POSTURES[p].name }}
+            </button>
+          </div>
           <ul class="units">
             <li v-for="u in selectedUnits" :key="u.id">
               <div class="row">
@@ -325,10 +361,10 @@ async function createArmy(): Promise<void> {
               </div>
               <div class="row">
                 <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
-                  <i :style="{ width: pct(u.strength) }" class="strength" />
+                  <i :style="{ width: cssPct(u.strength) }" class="strength" />
                 </span>
                 <span class="gauge" :title="`Organisation ${pct(u.org)}`">
-                  <i :style="{ width: pct(u.org) }" class="org" />
+                  <i :style="{ width: cssPct(u.org) }" class="org" />
                 </span>
               </div>
               <div class="meta">
@@ -371,10 +407,10 @@ async function createArmy(): Promise<void> {
             </span>
             <span class="row">
               <span class="gauge" title="Effectifs moyens">
-                <i :style="{ width: pct(armySummary(a).strength) }" class="strength" />
+                <i :style="{ width: cssPct(armySummary(a).strength) }" class="strength" />
               </span>
               <span class="gauge" title="Organisation moyenne">
-                <i :style="{ width: pct(armySummary(a).org) }" class="org" />
+                <i :style="{ width: cssPct(armySummary(a).org) }" class="org" />
               </span>
             </span>
             <span v-if="a.encirclement" class="meta enc">
@@ -384,6 +420,7 @@ async function createArmy(): Promise<void> {
               {{ a.wholeFront ? 'Tout le front' : a.front ? 'Portion de front' : 'Sans front' }}
               <template v-if="a.offensive">
                 · offensive {{ a.offensive.launched ? 'en cours' : 'planifiée' }}
+                {{ a.offensive.unitIds ? `(${a.offensive.unitIds.length} unités)` : '' }}
               </template>
               <template v-if="armySummary(a).engaged">
                 · {{ armySummary(a).engaged }} au contact</template
@@ -406,7 +443,20 @@ async function createArmy(): Promise<void> {
           </div>
           <div v-if="!selectedArmy.encirclement" class="group">
             <span class="label">Offensive</span>
-            <button @click="game.startOffensive(selectedArmy.id)">Planifier</button>
+            <button
+              title="Toutes les unités de ligne de l'armée participent"
+              @click="game.startOffensive(selectedArmy.id)"
+            >
+              Planifier (toute l'armée)
+            </button>
+            <button
+              :disabled="chosenInArmy === 0 || chosenInArmy === selectedArmy.unitIds.length"
+              title="Seules les unités sélectionnées de cette armée attaquent ; les autres tiennent le front. Sélectionnez-les sur la carte (clic, Maj + clic ou sélection par zone)."
+              data-testid="offensive-selection"
+              @click="game.startOffensive(selectedArmy.id, true)"
+            >
+              Avec la sélection ({{ chosenInArmy }})
+            </button>
             <button
               :disabled="!selectedArmy.offensive || selectedArmy.offensive.launched"
               @click="game.launchOffensive(selectedArmy.id)"
@@ -418,6 +468,18 @@ async function createArmy(): Promise<void> {
               @click="game.cancelOffensive(selectedArmy.id)"
             >
               Annuler
+            </button>
+          </div>
+          <div class="group">
+            <span class="label">Posture de l'armée</span>
+            <button
+              v-for="p in POSTURE_ORDER"
+              :key="p"
+              :class="{ active: (selectedArmy.posture ?? 'balanced') === p }"
+              :title="POSTURES[p].description"
+              @click="game.setArmyPosture(selectedArmy.id, p)"
+            >
+              {{ POSTURES[p].name }}
             </button>
           </div>
           <div v-if="selectedArmy.encirclement" class="group">

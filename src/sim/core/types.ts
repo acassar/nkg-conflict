@@ -12,6 +12,11 @@ export interface CountryDef {
   color: [number, number, number]
   /** Point de repli (centre du pays) quand il n'a plus de ville. */
   label?: LonLat
+  /**
+   * Pays hors carte (théâtre régional) : sans territoire ni armée, il a une économie, une diplomatie et
+   * peut aider ou être sollicité ; il ne peut ni déclarer ni subir de guerre.
+   */
+  offMap?: boolean
   /** Famille de couleur de la carte politique (1 à 9, voisins différents). */
   mapColor?: number
   pop?: number
@@ -55,7 +60,12 @@ export interface UnitState {
   armyId: number | null
   /** Heures passées hors ravitaillement d'affilée. */
   hoursOutOfSupply: number
+  /** Posture de combat (équilibrée si absente) ; posée par le joueur, elle active aussi des réflexes. */
+  posture?: Posture
 }
+
+/** Postures de combat, de la plus prudente à la plus agressive. */
+export type Posture = 'maxDefense' | 'defensive' | 'balanced' | 'offensive' | 'maxDamage'
 
 export interface UnitSnapshot {
   id: number
@@ -74,6 +84,41 @@ export interface UnitSnapshot {
   supplied: boolean
   routed: boolean
   commanded: boolean
+  posture: Posture
+  /** Unité ennemie au contact (pour regrouper les combats en batailles). */
+  engagedWith: number | null
+}
+
+/** Unité dans le rapport de bataille. */
+export interface BattleUnit {
+  id: number
+  name: string
+  owner: CountryId
+  kind: UnitKind
+  strength: number
+  org: number
+  posture: Posture
+  firePower: number
+  defense: number
+  routed: boolean
+  attacking: boolean
+  engagedWith: number | null
+  /** Un fleuve sépare l'unité de son adversaire (défense de l'adversaire +40 % si elle attaque). */
+  riverCrossing: boolean
+  modifiers: {
+    attack: Array<{ label: string; value: number }>
+    defense: Array<{ label: string; value: number }>
+  }
+}
+
+/** Bataille en cours : deux camps (a : celui du joueur s'il est engagé), lieu et terrain. */
+export interface BattleReport {
+  place: string
+  terrain: string
+  lon: number
+  lat: number
+  a: BattleUnit[]
+  b: BattleUnit[]
 }
 
 export interface ArmyState {
@@ -86,9 +131,19 @@ export interface ArmyState {
   /** Tient tout le front du camp (prioritaire sur `front` s'il est vrai). */
   wholeFront: boolean
   /** Offensive planifiée : flèche d'un point à un autre. */
-  offensive: { from: LonLat; to: LonLat; launched: boolean } | null
+  offensive: {
+    from: LonLat
+    to: LonLat
+    launched: boolean
+    /** Unités engagées (toutes les unités de ligne de l'armée si absent) ; les autres tiennent le front. */
+    unitIds?: number[]
+  } | null
   /** Groupe d'encerclement (absent pour une armée ordinaire). */
   encirclement?: Encirclement
+  /** Posture donnée à toute l'armée (les nouvelles recrues la reçoivent aussi). */
+  posture?: Posture
+  /** Tracé du front tenu (lignes qui suivent les cellules de contact), pour l'affichage. */
+  frontLine?: LonLat[][]
 }
 
 /**
@@ -108,6 +163,10 @@ export interface Encirclement {
   closeTick: number | null
   /** Point d'attente de chaque unité (identifiant d'unité → position). */
   staging: Record<number, LonLat>
+  /**
+   * Armée entière engagée (pas de groupe créé) : son front d'avant l'encerclement, rétabli à la fin.
+   */
+  previousFront?: { front: [LonLat, LonLat] | null; wholeFront: boolean }
 }
 
 export interface GameEvent {

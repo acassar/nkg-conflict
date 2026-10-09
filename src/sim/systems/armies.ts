@@ -325,7 +325,7 @@ function farthestPath(grid: SimContext['grid'], group: Set<number>, from: number
 /** Retire les pointes : un point où le tracé repart presque sur ses pas (dent de scie d'une cellule). */
 function withoutSpikes(line: LonLat[]): LonLat[] {
   const out = [...line]
-  for (let i = 1; i + 1 < out.length; ) {
+  for (let i = 1; i + 1 < out.length;) {
     const [p0, p1, p2] = [out[i - 1] as LonLat, out[i] as LonLat, out[i + 1] as LonLat]
     const ax = p1[0] - p0[0]
     const ay = p1[1] - p0[1]

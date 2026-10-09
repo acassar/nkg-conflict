@@ -33,8 +33,9 @@ function meanPostValue(sim: Simulation, army: ArmyState): { mean: number; posts:
   const targets = new Set<number>()
   for (const id of army.unitIds) {
     const u = ctx.units.get(id)
-    if (!u || !isLineUnit(u.kind) || u.order.kind !== 'front') continue
-    const cell = ctx.grid.cellAt(u.order.target[0], u.order.target[1])
+    const target = u?.order.target
+    if (!u || !target || !isLineUnit(u.kind) || u.order.kind !== 'front') continue
+    const cell = ctx.grid.cellAt(target[0], target[1])
     targets.add(cell)
     sum += values.get(cell) ?? 1
     n++

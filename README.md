@@ -140,7 +140,7 @@ pnpm theater chemin/vers/natural-earth-vector/geojson
 
 ## Intégration et déploiement
 
-- **CI** (`.github/workflows/ci.yml`) : formatage, types, tests, build, partie simulée, rapport d'équilibrage (3 parties IA contre IA de 120 jours sur le théâtre ukrainien, graines 1 à 3 : territoire, unités, pertes et date de la paix, dans `ci-out/balance/report.md` et `report.json`, et dans le résumé de l'exécution), puis test de fumée dans Chromium (`e2e/smoke.mjs`) avec captures d'écran publiées sur la branche `ci-results` (`ci-results-auto` pour les branches `auto/**` des tâches planifiées, vérifiées avant leur fusion dans `main`). Quand le lockfile change, la CI publie aussi `node_modules` sur la branche `deps-cache` : `bash scripts/deps-from-cache.sh` installe les dépendances sans accès au registre npm.
+- **CI** (`.github/workflows/ci.yml`) : formatage, types, tests, build, partie simulée, rapport d'équilibrage (3 parties IA contre IA de 120 jours sur le théâtre ukrainien, graines 1 à 3 : territoire, unités, pertes et date de la paix, dans `ci-out/balance/report.md` et `report.json`, et dans le résumé de l'exécution), puis test de fumée dans Chromium (`e2e/smoke.mjs`) avec captures d'écran publiées sur la branche `ci-results` (`ci-results-auto` pour les branches `auto/**` des tâches planifiées, vérifiées avant leur fusion dans `main`, puis supprimées par la CI de `main` une fois intégrées). Quand le lockfile change, la CI publie aussi `node_modules` sur la branche `deps-cache` : `bash scripts/deps-from-cache.sh` installe les dépendances sans accès au registre npm.
 - **Déploiement** (`.github/workflows/pages.yml`) : chaque push sur `main` publie le jeu sur GitHub Pages (Settings → Pages → Source : GitHub Actions).
 
 ## Scripts

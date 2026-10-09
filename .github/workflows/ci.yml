@@ -93,6 +93,21 @@ jobs:
           git commit -q -m "Dépendances pour le lockfile $hash"
           git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" deps-cache
 
+      # Branches auto/** des tâches planifiées déjà intégrées à main : supprimées ici, la session de
+      # développement n'ayant pas le droit de supprimer des branches.
+      - name: Supprimer les branches auto déjà intégrées
+        if: always() && github.ref_name == 'main'
+        run: |
+          git fetch -q --unshallow origin main 2>/dev/null || true
+          git fetch -q origin '+refs/heads/auto/*:refs/remotes/origin/auto/*' 2>/dev/null || true
+          for ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/auto/); do
+            branch=${ref#origin/}
+            if git merge-base --is-ancestor "$ref" "$GITHUB_SHA"; then
+              echo "suppression de $branch (intégrée à main)"
+              git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" --delete "$branch" || true
+            fi
+          done
+
       - name: Échec si une vérification a échoué
         run: |
           cat ci-out/status.txt

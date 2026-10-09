@@ -50,6 +50,8 @@ Onglet Production : jauges des chantiers en cours (de 1 à 5 en parallèle, un p
 
 Carte logistique (`L` ou bouton camion) : territoire relié aux sources de ravitaillement en vert, territoire coupé sans contact avec l'ennemi (île, enclave) en hachures orange, poches en hachures rouges avec le nombre d'unités amies qu'elles contiennent ; cercles de portée des sources (capitale, grandes villes, dépôts : 30 km), des unités logistiques (60 km, grisé si elles sont elles-mêmes coupées) et des QG (commandement, 120 km). En paix, tout le territoire est ravitaillé.
 
+Nouvelle guerre (déclarée par vous ou contre vous) : l'onglet Armées s'ouvre sur votre armée principale avec un encart qui rappelle son état (par défaut elle tient le front sans attaquer) et propose d'avancer en territoire ennemi, d'avancer jusqu'à un trait, de planifier une offensive ou de changer de posture.
+
 Missions d'armée (onglet Armées) : la mission dit quoi faire, la posture dit comment. **Tenir** (par défaut) garde la ligne, comme décrit ci-dessous ; **Avancer** mène l'armée jusqu'à un but ; **Encercler** détache un groupe autour d'une cible ennemie (voir plus haut). La mission s'affiche dans la liste des armées et sur la carte (tracé visé en bleu clair). Buts de la mission « Avancer » :
 
 - **une frontière** (clic sur un pays) : l'armée reprend son propre territoire national perdu le long de ce pays ; à défaut, si ce pays est un ennemi, elle le traverse jusqu'à sa frontière avec un pays tiers ; sinon elle traverse un ennemi jusqu'à ce pays. Seules les portions à moins de 300 km au-delà de la plus proche de l'armée sont visées ;

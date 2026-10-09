@@ -247,6 +247,20 @@ function chooseMission(kind: MissionKind): void {
   if (kind === 'hold' && a.mission?.kind === 'advance') void game.holdArmy(a.id)
 }
 
+/** Armée visée par l'encart de guerre : celle choisie, sinon la plus grande. */
+const briefArmy = computed(
+  () =>
+    selectedArmy.value ??
+    [...armies.value].sort((a, b) => b.unitIds.length - a.unitIds.length)[0] ??
+    null,
+)
+
+/** Action de l'encart de guerre qui passe par la carte : l'encart se ferme. */
+function briefAction(fn: () => void): void {
+  fn()
+  game.warBrief = null
+}
+
 /** Unités sélectionnées qui appartiennent à l'armée choisie (offensive partielle). */
 const chosenInArmy = computed(() => {
   const a = selectedArmy.value
@@ -481,6 +495,60 @@ async function createArmy(): Promise<void> {
 
       <!-- Armées -->
       <template v-else>
+        <section v-if="game.warBrief" class="war-brief" data-testid="war-brief">
+          <h3>Guerre contre {{ game.warBrief.enemyName }}</h3>
+          <template v-if="briefArmy">
+            <p>
+              <strong>{{ briefArmy.name }}</strong> ·
+              <span data-testid="war-brief-status">{{ missionStatus(briefArmy) }}</span>
+            </p>
+            <p v-if="missionOf(briefArmy) === 'hold' && !briefArmy.offensive" class="meta">
+              Elle se déploie sur la frontière et la tient sans attaquer : elle se retranche et
+              répond aux percées. Pour prendre l'initiative :
+            </p>
+            <div class="group">
+              <button
+                class="primary"
+                :title="`Mission « Avancer » : l'armée traverse ${game.warBrief.enemyName} jusqu'à sa frontière avec un pays tiers, en ligne continue`"
+                data-testid="war-brief-border"
+                @click="game.advanceToBorder(briefArmy.id, game.warBrief.enemy)"
+              >
+                Avancer en {{ game.warBrief.enemyName }}
+              </button>
+              <button
+                title="Mission « Avancer » jusqu'à un trait : posez les points sur la carte (clics, puis Entrée ou « Valider »), ou dessinez-le d'un geste"
+                data-testid="war-brief-line"
+                @click="briefAction(() => game.startAdvance('line', briefArmy!.id))"
+              >
+                Jusqu'à un trait
+              </button>
+              <button
+                title="Offensive ponctuelle de toute l'armée : deux clics sur la carte (départ, objectif), puis « Lancer »"
+                data-testid="war-brief-offensive"
+                @click="briefAction(() => game.startOffensive(briefArmy!.id))"
+              >
+                Offensive
+              </button>
+            </div>
+            <div class="group">
+              <span class="label">Posture</span>
+              <button
+                v-for="p in POSTURE_ORDER"
+                :key="p"
+                :class="{ active: (briefArmy.posture ?? 'balanced') === p }"
+                :title="POSTURES[p].description"
+                :data-testid="`war-brief-posture-${p}`"
+                @click="game.setArmyPosture(briefArmy.id, p)"
+              >
+                {{ POSTURES[p].name }}
+              </button>
+            </div>
+          </template>
+          <p v-else class="meta">Aucune armée : formez-en une depuis l'onglet Unités.</p>
+          <button class="close" data-testid="war-brief-close" @click="game.warBrief = null">
+            Fermer
+          </button>
+        </section>
         <ul class="armies">
           <li
             v-for="a in armies"
@@ -684,6 +752,29 @@ button:disabled {
 button.active {
   background: #2563eb;
   border-color: #2563eb;
+}
+/* Encart affiché après une déclaration de guerre. */
+.war-brief {
+  border: 1px solid #b91c1c;
+  background: rgba(127, 29, 29, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.war-brief h3 {
+  margin: 0 0 4px;
+  color: #fca5a5;
+}
+.war-brief p {
+  margin: 2px 0 6px;
+}
+.war-brief .primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.war-brief .close {
+  margin-top: 4px;
 }
 /* Mission réellement en cours (l'onglet affiché peut être un autre, le temps de choisir un but). */
 button.current {

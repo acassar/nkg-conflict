@@ -21,6 +21,7 @@ import type {
 import type { PlayerOrder } from '@/sim/simulation'
 import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
+import { newPlayerWars } from './warBrief'
 import type { SimApi } from '@/sim/worker'
 import { deleteSave, listSaves, readSave, writeSave, type SaveSlot } from './saves'
 
@@ -139,6 +140,13 @@ export const useGameStore = defineStore('game', () => {
   let toastId = 0
   /** Tick du dernier événement déjà examiné pour les notifications. */
   let lastEventTick = -1
+  /** Guerres déjà connues de l'interface (null : à relever sur le prochain état publié). */
+  let knownWars: Set<number> | null = null
+  /**
+   * Nouvelle guerre du joueur : encart de l'onglet Armées qui rappelle que l'armée tient le front
+   * sans attaquer et propose d'avancer, de planifier une offensive ou de changer de posture.
+   */
+  const warBrief = ref<{ warId: number; enemy: CountryId; enemyName: string } | null>(null)
   /** Demande de recentrage de la carte (début de partie). */
   const focus = ref<{ at: LonLat; zoom: number; nonce: number } | null>(null)
   /** Recentrer la carte dès l'arrivée du prochain état (nouvelle partie ou chargement). */
@@ -185,9 +193,11 @@ export const useGameStore = defineStore('game', () => {
       }
       if (!previous || previous.scenarioId !== next.scenarioId || next.tick < previous.tick) {
         lastEventTick = next.events.at(-1)?.tick ?? -1
+        knownWars = null
       } else {
         notifyEvents(next)
       }
+      watchWars(next)
       // On retire de la sélection les unités disparues.
       const alive = new Set(next.units.map((u) => u.id))
       if (selection.value.some((id) => !alive.has(id))) {
@@ -244,6 +254,33 @@ export const useGameStore = defineStore('game', () => {
       if (e.owner !== s.playerCountry && !e.text.includes(me)) continue
       pushToast(e.text, /capitule|déclare la guerre/.test(e.text) ? 'danger' : 'info')
     }
+  }
+
+  /**
+   * Repère les guerres nouvelles du joueur (déclarée par lui ou contre lui) : ouvre l'onglet Armées
+   * sur son armée principale, avec l'encart de guerre. Les guerres présentes au chargement sont ignorées.
+   */
+  function watchWars(s: SimSnapshot): void {
+    const wars = s.politics.wars
+    if (warBrief.value && !wars.some((w) => w.id === warBrief.value?.warId)) warBrief.value = null
+    if (!knownWars) {
+      knownWars = new Set(wars.map((w) => w.id))
+      return
+    }
+    for (const { warId, enemy } of newPlayerWars(wars, knownWars, s.playerCountry)) {
+      const enemyName = s.countries.find((c) => c.id === enemy)?.name ?? enemy
+      warBrief.value = { warId, enemy, enemyName }
+      const main = [...s.armies].sort((a, b) => b.unitIds.length - a.unitIds.length)[0]
+      if (main && !s.armies.some((a) => a.id === selectedArmyId.value)) selectArmy(main.id)
+      panelTab.value = 'armies'
+    }
+  }
+
+  /** Mission « Avancer » d'une armée jusqu'à la frontière d'un pays (sans clic sur la carte). */
+  async function advanceToBorder(armyId: number, country: CountryId): Promise<void> {
+    const error = await sim.advanceArmy(armyId, { kind: 'border', country })
+    report(error)
+    if (!error) warBrief.value = null
   }
 
   function pushToast(text: string, tone: Toast['tone'] = 'info'): void {
@@ -422,6 +459,8 @@ export const useGameStore = defineStore('game', () => {
     toasts.value = []
     mapView.value = 'political'
     supply.value = null
+    warBrief.value = null
+    knownWars = null
     cancelMode()
   }
 
@@ -870,6 +909,8 @@ export const useGameStore = defineStore('game', () => {
     mode,
     modeHint,
     panelTab,
+    warBrief,
+    advanceToBorder,
     drawer,
     drawerHeight,
     lasso,

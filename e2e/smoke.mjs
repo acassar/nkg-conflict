@@ -495,6 +495,26 @@ try {
   if (ukrOptions !== 1)
     report.errors.push(`options du théâtre ukrainien : ${ukrOptions} au lieu de 1`)
 
+  // Déclaration de guerre (France contre Belgique) : encart de l'onglet Armées, puis « Avancer ».
+  await page.evaluate(() => window.__nkg.declareWar('BEL'))
+  await page.getByTestId('war-brief').waitFor({ timeout: 15_000 })
+  await page.waitForTimeout(800)
+  const brief = await page.getByTestId('war-brief-status').textContent()
+  await shot('07-encart-guerre')
+  await page.getByTestId('war-brief-border').click()
+  await page.waitForTimeout(800)
+  const advance = await page.evaluate(() => {
+    const g = window.__nkg
+    const a = g.snapshot.armies.find((x) => x.id === g.selectedArmyId)
+    return { mission: a?.mission?.kind ?? 'hold', encart: g.warBrief !== null }
+  })
+  step('encart de guerre', { statut: brief, ...advance })
+  if (!brief?.startsWith('Tenir'))
+    report.errors.push(`encart de guerre : statut inattendu (${brief})`)
+  if (advance.mission !== 'advance' || advance.encart) {
+    report.errors.push(`encart de guerre : « Avancer » non appliqué (${JSON.stringify(advance)})`)
+  }
+
   report.ok = !!after && after.tick > 0 && report.errors.length === 0
 } catch (e) {
   report.errors.push(`test: ${e instanceof Error ? e.message : String(e)}`)

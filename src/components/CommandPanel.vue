@@ -137,6 +137,7 @@ const status = (u: UnitSnapshot): string => {
   const parts = [ORDER_NAMES[u.order]]
   if (u.posture !== 'balanced') parts.push(POSTURES[u.posture].name.toLowerCase())
   if (u.engaged) parts.push('au contact')
+  if (u.stance) parts.push(u.stance)
   if (!u.supplied) parts.push('hors ravitaillement')
   if (!u.commanded && u.kind !== 'hq') parts.push('hors commandement')
   return parts.join(' · ')

@@ -90,6 +90,8 @@ export interface UnitSnapshot {
   posture: Posture
   /** Unité ennemie au contact (pour regrouper les combats en batailles). */
   engagedWith: number | null
+  /** Unité menacée : décision et motif (« tient : position forte », « décroche : … »). */
+  stance: string | null
 }
 
 /** Unité dans le rapport de bataille. */

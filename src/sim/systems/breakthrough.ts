@@ -155,6 +155,7 @@ function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): 
       .filter(
         (u) =>
           !reacting(u) &&
+          runtimeOf(ctx, u.id).stance?.decision !== 'withdraw' &&
           // Unités à leur poste ou à l'arrêt (l'armée les renverrait de toute façon au front).
           (u.order.kind === 'front' || u.order.kind === 'hold' || u.order.kind === 'idle') &&
           u.entrench < HOLD_ENTRENCH &&

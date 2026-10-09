@@ -16,6 +16,7 @@ import type { SideMatrix } from './politics/matrix'
 import type { PoliticsState } from './politics/types'
 import type { ObstacleField } from './systems/obstacles'
 import type { Reaction } from './systems/breakthrough'
+import type { Stance } from './systems/fallback'
 
 /** État calculé par les systèmes à chaque tour (contact, ravitaillement, déroute, commandement). */
 export interface UnitRuntime {
@@ -26,6 +27,8 @@ export interface UnitRuntime {
   commanded: boolean
   /** Riposte en cours à une percée (bloquer, couper la base ou contre-attaquer). */
   reaction?: Reaction
+  /** Unité menacée : tenir retranchée ou décrocher vers la ligne suivante, avec son motif. */
+  stance?: Stance
 }
 
 /** Ville de la partie : propriétaire courant (index de camp) et bâtiments. */

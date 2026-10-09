@@ -28,6 +28,7 @@ import { updateSupply } from './systems/supply'
 import { updateMovement, updatePursuits, planPath } from './systems/movement'
 import { updatePostureReflexes } from './systems/postures'
 import { reactToBreakthroughs } from './systems/breakthrough'
+import { holdOrFallBack, stanceText } from './systems/fallback'
 import { battleReport } from './systems/battle'
 import {
   autoDetachment,
@@ -347,13 +348,14 @@ export class Simulation {
       sim.ai.set(c, { lastOffensiveTick: tick })
     }
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
-    for (const [id, engagedWith, supplied, routed, commanded, reaction] of save.runtime) {
+    for (const [id, engagedWith, supplied, routed, commanded, reaction, stance] of save.runtime) {
       ctx.runtime.set(id, {
         engagedWith,
         supplied,
         routed,
         commanded: commanded ?? false,
         ...(reaction ? { reaction } : {}),
+        ...(stance ? { stance } : {}),
       })
     }
     initCities(ctx, scenario)
@@ -442,6 +444,7 @@ export class Simulation {
         updateEncirclements(ctx)
         updatePostureReflexes(ctx)
         reactToBreakthroughs(ctx)
+        holdOrFallBack(ctx)
       }
       updateMovement(ctx)
       updateCombat(ctx)
@@ -1007,6 +1010,7 @@ export class Simulation {
           commanded: rt.commanded,
           posture: u.posture ?? 'balanced',
           engagedWith: rt.engagedWith,
+          stance: rt.stance ? stanceText(rt.stance) : null,
         }
       }),
       armies: [...ctx.armies.values()]
@@ -1062,11 +1066,16 @@ export class Simulation {
       owner: encodeRle(ctx.grid.owner),
       // Tableau creux (seuls les camps en guerre ont une couverture) : on remplit les trous.
       supplyReach: Array.from(ctx.supplyReach, (r) => (r ? encodeRle(r) : [])),
-      runtime: [...ctx.runtime.entries()].map(([id, r]): SaveFile['runtime'][number] =>
-        r.reaction
-          ? [id, r.engagedWith, r.supplied, r.routed, r.commanded, { ...r.reaction }]
-          : [id, r.engagedWith, r.supplied, r.routed, r.commanded],
-      ),
+      runtime: [...ctx.runtime.entries()].map(([id, r]): SaveFile['runtime'][number] => {
+        const reaction = r.reaction ? { ...r.reaction } : null
+        // Seuls les décrochages sont gardés : la décision de tenir est recalculée au passage suivant.
+        if (r.stance?.decision === 'withdraw') {
+          return [id, r.engagedWith, r.supplied, r.routed, r.commanded, reaction, { ...r.stance }]
+        }
+        return reaction
+          ? [id, r.engagedWith, r.supplied, r.routed, r.commanded, reaction]
+          : [id, r.engagedWith, r.supplied, r.routed, r.commanded]
+      }),
       cities: [...ctx.cityStates.values()].map((c) => ({
         name: c.def.name,
         owner: c.owner,

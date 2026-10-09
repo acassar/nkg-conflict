@@ -239,6 +239,10 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         // Unités parties riposter à une percée : elles reprennent leur poste ensuite.
         !runtimeOf(ctx, u.id).reaction,
     )
+  // Unités qui décrochent vers la ligne suivante : elles gardent leur poste réservé (sans ordre),
+  // pour que leur départ ne décale pas les postes de toute l'armée.
+  const withdrawing = (u: UnitState): boolean =>
+    runtimeOf(ctx, u.id).stance?.decision === 'withdraw'
   const line = members.filter((u) => isLineUnit(u.kind))
   const rear = members.filter((u) => !isLineUnit(u.kind))
 
@@ -272,7 +276,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       postDone.add(pi)
       const u = units[ui]
       const target = posts[pi]
-      if (!u || !target) continue
+      if (!u || !target || withdrawing(u)) continue
       if (teleport) {
         ;[u.lon, u.lat] = target
         u.order = { kind: 'front', target }
@@ -330,7 +334,7 @@ function farthestPath(grid: SimContext['grid'], group: Set<number>, from: number
 /** Retire les pointes : un point où le tracé repart presque sur ses pas (dent de scie d'une cellule). */
 function withoutSpikes(line: LonLat[]): LonLat[] {
   const out = [...line]
-  for (let i = 1; i + 1 < out.length;) {
+  for (let i = 1; i + 1 < out.length; ) {
     const [p0, p1, p2] = [out[i - 1] as LonLat, out[i] as LonLat, out[i + 1] as LonLat]
     const ax = p1[0] - p0[0]
     const ay = p1[1] - p0[1]

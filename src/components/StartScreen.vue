@@ -17,6 +17,8 @@ const countries = ref<Choice[]>([])
 const country = ref<string | null>(null)
 const search = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const noAffiliations = ref(false)
+const noWars = ref(false)
 
 const EPOCHS = [
   { id: 'modern', name: 'Époque moderne (2026)', available: true },
@@ -27,6 +29,8 @@ const EPOCHS = [
 ]
 
 const scenario = computed(() => game.scenarios.find((s) => s.id === scenarioId.value) ?? null)
+const offers = (key: 'noAffiliations' | 'noWars'): boolean =>
+  scenario.value?.options?.includes(key) ?? false
 
 watch(
   scenarioId,
@@ -56,7 +60,11 @@ const fmtPop = (pop: number): string =>
     : `${Math.round(pop / 1e3).toLocaleString('fr-FR')} k hab.`
 
 function start(): void {
-  if (country.value && !game.loading) void game.newGame(scenarioId.value, country.value)
+  if (!country.value || game.loading) return
+  void game.newGame(scenarioId.value, country.value, {
+    noAffiliations: offers('noAffiliations') && noAffiliations.value,
+    noWars: offers('noWars') && noWars.value,
+  })
 }
 
 const savedAt = (iso: string): string =>
@@ -141,6 +149,26 @@ async function onFile(event: Event): Promise<void> {
             {{ e.name }}{{ e.available ? '' : ' · bientôt' }}
           </option>
         </select>
+      </section>
+
+      <section v-if="offers('noAffiliations') || offers('noWars')" data-testid="start-options">
+        <h2>Options</h2>
+        <label v-if="offers('noAffiliations')" class="option">
+          <input v-model="noAffiliations" type="checkbox" data-option="noAffiliations" />
+          <span>
+            <strong>Sans affiliations de départ</strong>
+            <span>
+              Ni alliances, ni organisations, ni sanctions, ni aides ; relations toutes neutres.
+            </span>
+          </span>
+        </label>
+        <label v-if="offers('noWars')" class="option">
+          <input v-model="noWars" type="checkbox" data-option="noWars" />
+          <span>
+            <strong>Sans guerres de départ</strong>
+            <span>Tous les pays démarrent en paix, sans mobilisation forcée.</span>
+          </span>
+        </label>
       </section>
 
       <section>
@@ -270,7 +298,7 @@ button:disabled {
   background: #1c2a45;
 }
 select,
-input {
+input:not([type='checkbox']) {
   width: 100%;
   box-sizing: border-box;
   background: #11151b;
@@ -279,6 +307,26 @@ input {
   color: inherit;
   padding: 7px 10px;
   font: inherit;
+}
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.option input {
+  margin: 3px 0 0;
+  flex: none;
+  accent-color: #2563eb;
+}
+.option > span {
+  display: flex;
+  flex-direction: column;
+}
+.option > span > span {
+  color: #9aa3af;
+  font-size: 12px;
 }
 .countries {
   list-style: none;

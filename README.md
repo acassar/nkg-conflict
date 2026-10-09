@@ -18,7 +18,7 @@ pnpm dev
 
 ## Jouer
 
-L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; guerre froide, 1939, 1914 et époque napoléonienne sont prévues) et votre pays. Un pays capitule quand sa capitale tombe ou quand il n'a plus d'unités pendant 7 jours. Votre capitulation met fin à la partie ; dans le théâtre ukrainien, celle de l'adversaire vous donne la victoire.
+L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; guerre froide, 1939, 1914 et époque napoléonienne sont prévues) et votre pays. Deux options, gardées dans la sauvegarde : **Sans affiliations de départ** (ni alliances, ni organisations régionales, ni relations ou affinités de départ, ni sanctions, ni aides étrangères ; les guerres restent) et **Sans guerres de départ** (tous les pays démarrent en paix, armées en garnison ; « Monde 2026 » seulement, le théâtre ukrainien étant bâti autour de sa guerre). Un pays capitule quand sa capitale tombe ou quand il n'a plus d'unités pendant 7 jours. Votre capitulation met fin à la partie ; dans le théâtre ukrainien, celle de l'adversaire vous donne la victoire.
 
 | Action                                 | Commande                                                             |
 | -------------------------------------- | -------------------------------------------------------------------- |

@@ -458,6 +458,43 @@ try {
   if (sheet !== 'USA') report.errors.push('fiche des États-Unis non ouverte')
   await shot('05-donneur-hors-carte')
 
+  // Options de départ : « Monde 2026 » sans affiliations ni guerres.
+  page.once('dialog', (d) => d.accept())
+  await page.getByTestId('menu-button').click()
+  await page.getByRole('button', { name: 'Menu principal' }).click()
+  await page.getByTestId('start-screen').waitFor({ timeout: 15_000 })
+  await page.locator('[data-scenario="ukraine-2026"]').click()
+  const ukrOptions = await page.locator('[data-option]').count()
+  await page.locator('[data-scenario="world-2026"]').click()
+  await page.locator('[data-option="noAffiliations"]').check()
+  await page.locator('[data-option="noWars"]').check()
+  await shot('06-options-depart')
+  await page.getByRole('searchbox', { name: 'Rechercher un pays' }).fill('france')
+  await page.locator('[data-country="FRA"]').click()
+  await page.getByRole('button', { name: /^Jouer / }).click()
+  await page.waitForFunction(
+    () => window.__nkg?.snapshot?.scenarioId === 'world-2026' && window.__nkg?.grid,
+    null,
+    { timeout: 60_000 },
+  )
+  await page.waitForTimeout(1500)
+  const options = await page.evaluate(() => {
+    const p = window.__nkg.snapshot.politics
+    return {
+      guerres: p.wars.length,
+      alliances: p.alliances.length,
+      organisations: p.organizations.length,
+      sanctions: p.sanctions.length,
+      aides: p.aids.length,
+    }
+  })
+  step('options de départ', { ...options, optionsUkraine: ukrOptions })
+  if (Object.values(options).some((n) => n !== 0)) {
+    report.errors.push(`options de départ non appliquées (${JSON.stringify(options)})`)
+  }
+  if (ukrOptions !== 1)
+    report.errors.push(`options du théâtre ukrainien : ${ukrOptions} au lieu de 1`)
+
   report.ok = !!after && after.tick > 0 && report.errors.length === 0
 } catch (e) {
   report.errors.push(`test: ${e instanceof Error ? e.message : String(e)}`)

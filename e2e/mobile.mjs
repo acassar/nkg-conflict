@@ -49,6 +49,16 @@ try {
   await page.getByTestId('start-screen').waitFor({ timeout: 30_000 })
   await page.locator('[data-country]').first().waitFor({ timeout: 30_000 })
   await shot('m00-ecran-depart')
+  // Options de départ : cochées puis décochées au doigt (la suite du test joue la guerre en cours).
+  const option = page.locator('[data-option="noWars"]')
+  await option.tap()
+  const checked = await option.isChecked()
+  await option.tap()
+  step('option de départ au doigt', { cochee: checked, decochee: !(await option.isChecked()) })
+  check(
+    checked && !(await option.isChecked()),
+    "l'option « Sans guerres de départ » ne se coche pas au doigt",
+  )
   await page.getByRole('searchbox', { name: 'Rechercher un pays' }).fill('ukr')
   await page.locator('[data-country="UKR"]').tap()
   await page.getByRole('button', { name: /^Jouer / }).tap()

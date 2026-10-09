@@ -1154,6 +1154,7 @@ export class Simulation {
       version: SAVE_VERSION,
       savedAt: now.toISOString(),
       scenarioId: this.scenario.id,
+      ...(this.scenario.options ? { options: { ...this.scenario.options } } : {}),
       playerCountry: this.playerCountry,
       tick: ctx.tick,
       speed: this.clock.speed,

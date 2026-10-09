@@ -12,6 +12,7 @@ import type {
   GridSnapshot,
   LonLat,
   Posture,
+  ScenarioOptions,
   SimSnapshot,
   UnitKind,
   WarEconomyLevel,
@@ -426,13 +427,17 @@ export const useGameStore = defineStore('game', () => {
 
   // ---------- Partie ----------
 
-  async function newGame(scenarioId: string, country: CountryId): Promise<void> {
+  async function newGame(
+    scenarioId: string,
+    country: CountryId,
+    options?: ScenarioOptions,
+  ): Promise<void> {
     loading.value = true
     try {
       resetUi()
       focusPending = true
       active = true
-      await sim.newGame(scenarioId, country)
+      await sim.newGame(scenarioId, country, options ? { ...options } : undefined)
     } catch (e) {
       focusPending = false
       showNotice(e instanceof Error ? e.message : String(e))

@@ -384,6 +384,19 @@ export interface ScenarioDef {
    * que les bâtiments construits en cours de partie (et casernes de départ).
    */
   economyModel?: 'cities' | 'national'
+  /** Options choisies à l'écran de départ (déjà appliquées à ce scénario). */
+  options?: ScenarioOptions
+}
+
+/** Options de l'écran de départ. */
+export interface ScenarioOptions {
+  /**
+   * Sans affiliations de départ : ni alliances, ni organisations régionales, ni relations ou
+   * affinités de départ (toutes neutres), ni sanctions, ni aides étrangères. Les guerres restent.
+   */
+  noAffiliations?: boolean
+  /** Sans guerres de départ : tous les pays démarrent en paix, sans mobilisation forcée. */
+  noWars?: boolean
 }
 
 export interface ScenarioPolitics {

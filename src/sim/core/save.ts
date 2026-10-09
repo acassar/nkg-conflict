@@ -1,6 +1,14 @@
 import type { Reaction } from '../systems/breakthrough'
 import type { Stance } from '../systems/fallback'
-import type { ArmyState, Buildings, EconomyState, GameEvent, GameOutcome, UnitState } from './types'
+import type {
+  ArmyState,
+  Buildings,
+  EconomyState,
+  GameEvent,
+  GameOutcome,
+  ScenarioOptions,
+  UnitState,
+} from './types'
 import type { Aid, AidRequest, Alliance, CountryPolitics, PeaceOffer, War } from '../politics/types'
 
 export const SAVE_VERSION = 5
@@ -11,6 +19,8 @@ export interface SaveFile {
   version: number
   savedAt: string
   scenarioId: string
+  /** Options de l'écran de départ (absentes des sauvegardes antérieures : aucune). */
+  options?: ScenarioOptions
   playerCountry: string
   tick: number
   speed: number

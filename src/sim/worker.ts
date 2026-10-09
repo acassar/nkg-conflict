@@ -9,6 +9,7 @@ import type {
   CountryId,
   LonLat,
   Posture,
+  ScenarioOptions,
   SimSnapshot,
   UnitKind,
   WarEconomyLevel,
@@ -107,12 +108,12 @@ const api = {
     listener = callback
     publish(true)
   },
-  async newGame(scenarioId: string, country: CountryId): Promise<void> {
+  async newGame(scenarioId: string, country: CountryId, options?: ScenarioOptions): Promise<void> {
     const info = SCENARIOS.find((s) => s.id === scenarioId)
     if (!info) throw new Error(`Scénario inconnu : ${scenarioId}`)
     const data = await theater(info.theater)
     sim = Simulation.fromScenario(
-      buildScenario(scenarioId, country),
+      buildScenario(scenarioId, country, options),
       data,
       Date.now() & 0x7fffffff,
       country,
@@ -271,7 +272,11 @@ const api = {
     const info = SCENARIOS.find((s) => s.id === save.scenarioId)
     if (!info) throw new Error(`Scénario inconnu : ${save.scenarioId}`)
     const data = await theater(info.theater)
-    sim = Simulation.fromSave(save, buildScenario(save.scenarioId, save.playerCountry), data)
+    sim = Simulation.fromSave(
+      save,
+      buildScenario(save.scenarioId, save.playerCountry, save.options),
+      data,
+    )
     last = performance.now()
     publish(true)
   },

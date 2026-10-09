@@ -131,16 +131,17 @@ pnpm theater chemin/vers/natural-earth-vector/geojson
 
 ## Intégration et déploiement
 
-- **CI** (`.github/workflows/ci.yml`) : formatage, types, tests, build, partie simulée, puis test de fumée dans Chromium (`e2e/smoke.mjs`) avec captures d'écran publiées sur la branche `ci-results`.
+- **CI** (`.github/workflows/ci.yml`) : formatage, types, tests, build, partie simulée, rapport d'équilibrage (3 parties IA contre IA de 120 jours sur le théâtre ukrainien, graines 1 à 3 : territoire, unités, pertes et date de la paix, dans `ci-out/balance/report.md` et `report.json`, et dans le résumé de l'exécution), puis test de fumée dans Chromium (`e2e/smoke.mjs`) avec captures d'écran publiées sur la branche `ci-results`.
 - **Déploiement** (`.github/workflows/pages.yml`) : chaque push sur `main` publie le jeu sur GitHub Pages (Settings → Pages → Source : GitHub Actions).
 
 ## Scripts
 
-| Script              | Rôle                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------ |
-| `pnpm dev`          | serveur de développement                                                             |
-| `pnpm build`        | vérification des types + build                                                       |
-| `pnpm test`         | tests unitaires                                                                      |
-| `pnpm simulate 60`  | partie sans affichage sur 60 jours (équilibrage) ; `--monde --pays=FRA --ia-partout` |
-| `pnpm theater …`    | régénère les données du théâtre                                                      |
-| `pnpm format:check` | vérification du formatage                                                            |
+| Script                   | Rôle                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| `pnpm dev`               | serveur de développement                                                               |
+| `pnpm build`             | vérification des types + build                                                         |
+| `pnpm test`              | tests unitaires                                                                        |
+| `pnpm simulate 60`       | partie sans affichage sur 60 jours (équilibrage) ; `--monde --pays=FRA --ia-partout`   |
+| `pnpm balance 120 1,2,3` | rapport d'équilibrage IA contre IA (jours, graines, dossier ; défaut `ci-out/balance`) |
+| `pnpm theater …`         | régénère les données du théâtre                                                        |
+| `pnpm format:check`      | vérification du formatage                                                              |

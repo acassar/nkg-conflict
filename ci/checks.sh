@@ -23,6 +23,8 @@ run typecheck pnpm typecheck
 run test pnpm test
 run build pnpm build
 run simulate pnpm simulate 30
+# Rapport d'équilibrage IA contre IA (ci-out/balance/report.md et report.json).
+run balance pnpm balance 120 1,2,3 ci-out/balance
 
 echo "failed $failed" >> ci-out/status.txt
 cat ci-out/status.txt

@@ -6,6 +6,7 @@ import { NO_MUNITIONS_FACTOR } from '../economy/rules'
 import { moraleFactor } from '../politics/politics'
 import { WarIndex } from './spatial'
 import { postureOf } from '../units/postures'
+import { assaultFireFactor, assaultLossFactor, obstaclesUnder } from './obstacles'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -90,11 +91,20 @@ export function combatModifiers(
   const eco = ctx.economies.get(u.owner)
   const ammo = eco && eco.munitions <= 0 ? NO_MUNITIONS_FACTOR : 1
   const cell = ctx.grid.cellAt(u.lon, u.lat)
+  // Obstacles : les siens freinent les assauts adverses, ceux de l'adversaire freinent ses assauts.
+  const own = obstaclesUnder(ctx, u)
+  const engaged = runtimeOf(ctx, u.id).engagedWith
+  const foe = engaged !== null ? ctx.units.get(engaged) : undefined
+  const theirs = foe && isOffensive(u) ? obstaclesUnder(ctx, foe) : 0
+  const pctOf = (v: number): string => `${Math.round(v * 100)} %`
   return {
     attack: [
       ...shared,
       { label: `Posture (${posture.name})`, value: posture.attack },
       { label: 'Munitions', value: ammo },
+      ...(theirs > 0
+        ? [{ label: `Obstacles adverses (${pctOf(theirs)})`, value: assaultFireFactor(theirs) }]
+        : []),
     ],
     defense: [
       ...shared,
@@ -105,6 +115,17 @@ export function combatModifiers(
       { label: 'Retranchement', value: 1 + 0.5 * u.entrench },
       { label: 'Fortifications', value: fortFactor(ctx, u) },
       { label: `Posture (${posture.name})`, value: posture.defense },
+      ...(own > 0
+        ? [
+            {
+              label: `Obstacles contre l'assaut (${pctOf(own)})`,
+              value: 1 / assaultFireFactor(own),
+            },
+          ]
+        : []),
+      ...(theirs > 0
+        ? [{ label: 'Pertes sous les obstacles', value: 1 / assaultLossFactor(theirs) }]
+        : []),
     ],
   }
 }
@@ -142,14 +163,27 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
   )
 }
 
-function hit(ctx: SimContext, from: UnitState, target: UnitState, factor: number): void {
+function hit(
+  ctx: SimContext,
+  from: UnitState,
+  target: UnitState,
+  factor: number,
+  direct: boolean,
+): void {
   let defense = defenseValue(ctx, target)
   if (isOffensive(from) && riverBetween(ctx, from, target)) defense *= 1.4
   // Chaque tir consomme des munitions ; l'artillerie en consomme deux fois plus.
   const ammo = useMunitions(ctx, from.owner, ctx.catalog[from.kind].supportRangeKm > 0 ? 2 : 1)
-  const ratio = Math.min(4, (firePower(ctx, from) * ammo) / Math.max(0.05, defense))
+  let fire = firePower(ctx, from) * ammo
+  // Obstacles (tir direct seulement) : l'assaut perd de sa force, l'attaquant saigne davantage.
+  let losses = 1
+  if (direct && isOffensive(from)) fire *= assaultFireFactor(obstaclesUnder(ctx, target))
+  if (direct && isOffensive(target) && !isOffensive(from)) {
+    losses = assaultLossFactor(obstaclesUnder(ctx, from))
+  }
+  const ratio = Math.min(4, fire / Math.max(0.05, defense))
   const roll = ctx.rng.range(0.8, 1.2)
-  const lost = Math.min(target.strength, STRENGTH_LOSS * ratio * roll * factor)
+  const lost = Math.min(target.strength, STRENGTH_LOSS * ratio * roll * factor * losses)
   target.strength -= lost
   ctx.losses.set(target.owner, (ctx.losses.get(target.owner) ?? 0) + lost)
   target.org = Math.max(0, target.org - ORG_LOSS * ratio * roll * factor)
@@ -172,7 +206,7 @@ export function updateCombat(ctx: SimContext): void {
     const rt = runtimeOf(ctx, u.id)
     if (rt.engagedWith === null || rt.routed) continue
     const target = ctx.units.get(rt.engagedWith)
-    if (target) hit(ctx, u, target, 1)
+    if (target) hit(ctx, u, target, 1, true)
   }
 
   // 3. Artillerie : frappe l'ennemi le plus proche à portée, même sans contact direct.
@@ -180,7 +214,7 @@ export function updateCombat(ctx: SimContext): void {
     const range = ctx.catalog[u.kind].supportRangeKm
     if (range <= 0 || runtimeOf(ctx, u.id).routed) continue
     const target = index.nearestEnemy(u, range)
-    if (target) hit(ctx, u, target, ARTILLERY_FACTOR)
+    if (target) hit(ctx, u, target, ARTILLERY_FACTOR, false)
   }
 
   // 4. Organisation, décrochage, ralliement, pertes.

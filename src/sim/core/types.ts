@@ -108,6 +108,8 @@ export interface BattleUnit {
   engagedWith: number | null
   /** Un fleuve sépare l'unité de son adversaire (défense de l'adversaire +40 % si elle attaque). */
   riverCrossing: boolean
+  /** Obstacles de son camp sous l'unité (0 à 1) : mines, barbelés, positions préparées. */
+  obstacles: number
   modifiers: {
     attack: Array<{ label: string; value: number }>
     defense: Array<{ label: string; value: number }>

@@ -55,6 +55,7 @@ import {
 import { updateAiEconomy } from './economy/ai'
 import { SideMatrix } from './politics/matrix'
 import { mobilize } from './politics/mobilization'
+import { clearObstacles } from './systems/obstacles'
 import {
   aiAcceptsPeace,
   callAlliesToWars,
@@ -194,6 +195,7 @@ export class Simulation {
       cityStates: new Map(),
       economies: new Map(),
       losses: new Map(),
+      obstacles: new Map(),
       allocId: () => this.nextId++,
       log: (text, owner, minor) => this.log(text, owner, minor),
     }
@@ -379,6 +381,7 @@ export class Simulation {
     }
     for (const [c, since] of save.armylessSince) sim.armylessSince.set(c, since)
     for (const [c, lost] of save.losses) ctx.losses.set(c, lost)
+    for (const [cell, level, side] of save.obstacles ?? []) ctx.obstacles.set(cell, { level, side })
     rebuildMatrix(ctx)
     updateSupplySources(ctx, scenario)
     save.supplyReach.forEach((rle, side) => {
@@ -457,6 +460,7 @@ export class Simulation {
     updateSupplySources(ctx, this.scenario)
     updatePoliticsDaily(ctx, ctx.losses)
     ctx.losses.clear()
+    clearObstacles(ctx)
   }
 
   private monthly(): void {
@@ -1076,6 +1080,11 @@ export class Simulation {
       },
       armylessSince: [...this.armylessSince.entries()],
       losses: [...ctx.losses.entries()],
+      obstacles: [...ctx.obstacles].map(([cell, f]): [number, number, number] => [
+        cell,
+        f.level,
+        f.side,
+      ]),
     }
   }
 

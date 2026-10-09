@@ -14,6 +14,7 @@ import type { UnitKind } from './core/types'
 import type { Pathfinder } from './systems/pathfinding'
 import type { SideMatrix } from './politics/matrix'
 import type { PoliticsState } from './politics/types'
+import type { ObstacleField } from './systems/obstacles'
 
 /** État calculé par les systèmes à chaque tour (contact, ravitaillement, déroute, commandement). */
 export interface UnitRuntime {
@@ -64,6 +65,8 @@ export interface SimContext {
   economies: Map<CountryId, EconomyState>
   /** Effectifs perdus par pays depuis le dernier bilan quotidien (en fractions d'unité). */
   losses: Map<CountryId, number>
+  /** Obstacles (mines, barbelés, positions préparées), par cellule. */
+  obstacles: Map<number, ObstacleField>
   /** Nouvel identifiant unique (unités, armées, files d'attente). */
   allocId(): number
   /** `minor` : gardé seulement pour le joueur et les pays en guerre. */

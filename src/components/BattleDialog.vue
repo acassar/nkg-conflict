@@ -142,6 +142,9 @@ function focus(): void {
                   {{ MODERN_CATALOG[u.kind].name }} · {{ POSTURES[u.posture].name }}
                   <template v-if="u.attacking"> · attaque</template>
                   <template v-if="u.routed"> · en déroute</template>
+                  <template v-if="u.obstacles >= 0.01">
+                    · obstacles {{ pct(u.obstacles) }}</template
+                  >
                 </span>
               </div>
               <div class="row">

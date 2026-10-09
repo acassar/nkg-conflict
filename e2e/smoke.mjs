@@ -325,7 +325,12 @@ try {
     await page.getByTestId('battle-dialog').waitFor()
     await page.waitForTimeout(1200)
     const sides = await page.getByTestId('battle-dialog').locator('section.side').count()
-    step('écran de bataille', { camps: sides })
+    // Obstacles (mines, barbelés) des unités retranchées : affichés dans la ligne de l'unité.
+    const obstacles = await page
+      .getByTestId('battle-dialog')
+      .locator('li .meta', { hasText: 'obstacles' })
+      .count()
+    step('écran de bataille', { camps: sides, obstacles })
     if (sides !== 2) report.errors.push(`écran de bataille incomplet (${sides} camps)`)
     await page.getByTestId('battle-dialog').locator('li').first().click()
     await page.waitForTimeout(300)

@@ -46,6 +46,8 @@ export interface SaveFile {
   armylessSince: Array<[string, number]>
   /** Pertes depuis le dernier bilan quotidien (usure politique). */
   losses: Array<[string, number]>
+  /** Obstacles : [cellule, niveau, camp]. Absents des sauvegardes antérieures. */
+  obstacles?: Array<[number, number, number]>
 }
 
 export function encodeRle(arr: ArrayLike<number>): number[] {

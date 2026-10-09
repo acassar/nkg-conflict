@@ -3,6 +3,7 @@ import type { BattleReport, BattleUnit, UnitState } from '../core/types'
 import { combatModifiers, defenseValue, firePower, riverBetween } from './combat'
 import { nearestCity } from './ai'
 import { terrainRule } from '../theater/grid'
+import { obstaclesUnder } from './obstacles'
 
 /**
  * Rapport d'une bataille : les unités demandées et toutes celles avec qui elles sont au contact
@@ -51,6 +52,7 @@ export function battleReport(ctx: SimContext, ids: number[], player: string): Ba
       attacking: u.order.kind === 'attack' || u.order.kind === 'pursue',
       engagedWith: rt.engagedWith,
       riverCrossing: !!foe && riverBetween(ctx, u, foe),
+      obstacles: obstaclesUnder(ctx, u),
       modifiers: combatModifiers(ctx, u),
     }
   }

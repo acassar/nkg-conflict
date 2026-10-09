@@ -4,6 +4,7 @@ import { distanceKm, moveToward, terrainRule } from '../theater/grid'
 import { CONTACT_KM, retreatFromEnemy } from './combat'
 import { WarIndex } from './spatial'
 import { postureOf } from '../units/postures'
+import { layObstacles } from './obstacles'
 
 const ENTRENCH_PER_HOUR = 0.01
 
@@ -44,6 +45,7 @@ export function updateMovement(ctx: SimContext): void {
       // À l'arrêt : on se retranche, sauf en pleine attaque ou en déroute.
       if (!isOffensiveOrder(u.order.kind) && !rt.routed) {
         u.entrench = Math.min(1, u.entrench + ENTRENCH_PER_HOUR * postureOf(u.posture).entrench)
+        layObstacles(ctx, u)
       }
       if (!moving) finishOrder(u)
       continue

@@ -20,24 +20,25 @@ pnpm dev
 
 L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; guerre froide, 1939, 1914 et époque napoléonienne sont prévues) et votre pays. Un pays capitule quand sa capitale tombe ou quand il n'a plus d'unités pendant 7 jours. Votre capitulation met fin à la partie ; dans le théâtre ukrainien, celle de l'adversaire vous donne la victoire.
 
-| Action                                | Commande                                                             |
-| ------------------------------------- | -------------------------------------------------------------------- |
-| Pause / vitesse                       | `Espace` / `1` à `5`, ou la barre du haut                            |
-| Avancer d'un jour (tour par tour)     | bouton `+24 h`                                                       |
-| Sélectionner / ajouter à la sélection | clic / `Maj` + clic sur une unité                                    |
-| Déplacer                              | clic droit sur la carte, ou `M` puis clic                            |
-| Attaquer une zone / se replier        | `T` / `R` puis clic sur la carte                                     |
-| Annuler l'ordre des unités choisies   | bouton « Annuler l'ordre »                                           |
-| Déplacer la carte                     | `ZQSD` (`WASD` en QWERTY) ou les flèches, `Maj` pour aller plus vite |
-| Assaut, poursuite, encerclement       | bouton du panneau Unités, puis clic sur une unité ennemie            |
-| Tenir la position                     | `H`                                                                  |
-| Annuler un ordre en cours de saisie   | `Échap` (ferme aussi l'écran de bataille)                            |
-| Posture des unités choisies           | boutons « Posture » du panneau Unités (ou de l'armée, onglet Armées) |
-| Écran de bataille                     | clic sur l'icône d'épées croisées d'un combat                        |
-| Armées                                | onglet « Armées » du panneau de droite                               |
-| Fiche d'un pays, diplomatie           | clic sur un pays, une de ses villes ou un de ses pions               |
-| Carte logistique                      | `L` ou le bouton camion, à côté de la sélection par zone             |
-| Sauvegarder, exporter, importer       | `Sauver` ou menu ☰                                                  |
+| Action                                 | Commande                                                             |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| Pause / vitesse                        | `Espace` / `1` à `5`, ou la barre du haut                            |
+| Avancer d'un jour (tour par tour)      | bouton `+24 h`                                                       |
+| Sélectionner / ajouter à la sélection  | clic / `Maj` + clic sur une unité                                    |
+| Déplacer                               | clic droit sur la carte, ou `M` puis clic                            |
+| Attaquer une zone / se replier         | `T` / `R` puis clic sur la carte                                     |
+| Annuler l'ordre des unités choisies    | bouton « Annuler l'ordre »                                           |
+| Déplacer la carte                      | `ZQSD` (`WASD` en QWERTY) ou les flèches, `Maj` pour aller plus vite |
+| Assaut, poursuite, encerclement        | bouton du panneau Unités, puis clic sur une unité ennemie            |
+| Tenir la position                      | `H`                                                                  |
+| Annuler un ordre en cours de saisie    | `Échap` (ferme aussi l'écran de bataille)                            |
+| Posture des unités choisies            | boutons « Posture » du panneau Unités (ou de l'armée, onglet Armées) |
+| Écran de bataille                      | clic sur l'icône d'épées croisées d'un combat                        |
+| Armées, missions                       | onglet « Armées » du panneau de droite                               |
+| Valider un trait (mission « Avancer ») | `Entrée` ou bouton « Valider »                                       |
+| Fiche d'un pays, diplomatie            | clic sur un pays, une de ses villes ou un de ses pions               |
+| Carte logistique                       | `L` ou le bouton camion, à côté de la sélection par zone             |
+| Sauvegarder, exporter, importer        | `Sauver` ou menu ☰                                                  |
 
 Sur téléphone, en portrait comme en paysage : la barre du haut garde la pause, la date et la vitesse (un toucher fait défiler les vitesses), le reste passe dans le menu ☰. En portrait, le panneau devient un tiroir en bas, à tirer par sa poignée (replié, mi-hauteur, plein écran) ; en paysage, il reste sur le côté. Pour donner un ordre : bouton « Déplacer », « Attaquer » ou « Se replier », puis toucher la destination (le tiroir se replie le temps de viser). Le bouton ▢ active la sélection par zone : glisser un rectangle sur la carte sélectionne vos unités qu'il contient ; il marche aussi à la souris.
 
@@ -48,6 +49,14 @@ Sauvegardes : `Sauver` enregistre la partie dans le navigateur (compressée). Un
 Onglet Production : jauges des chantiers en cours (de 1 à 5 en parallèle, un par tranche de 20 points de construction quotidiens), des casernes occupées et de la production engagée face à la production gagnée ; tant que l'onglet est ouvert, la carte montre les casernes (occupées/total, cercle vert s'il en reste une libre) et les fortifications de vos villes.
 
 Carte logistique (`L` ou bouton camion) : territoire relié aux sources de ravitaillement en vert, territoire coupé sans contact avec l'ennemi (île, enclave) en hachures orange, poches en hachures rouges avec le nombre d'unités amies qu'elles contiennent ; cercles de portée des sources (capitale, grandes villes, dépôts : 30 km), des unités logistiques (60 km, grisé si elles sont elles-mêmes coupées) et des QG (commandement, 120 km). En paix, tout le territoire est ravitaillé.
+
+Missions d'armée (onglet Armées) : la mission dit quoi faire, la posture dit comment. **Tenir** (par défaut) garde la ligne, comme décrit ci-dessous ; **Avancer** mène l'armée jusqu'à un but ; **Encercler** détache un groupe autour d'une cible ennemie (voir plus haut). La mission s'affiche dans la liste des armées et sur la carte (tracé visé en bleu clair). Buts de la mission « Avancer » :
+
+- **une frontière** (clic sur un pays) : l'armée reprend son propre territoire national perdu le long de ce pays ; à défaut, si ce pays est un ennemi, elle le traverse jusqu'à sa frontière avec un pays tiers ; sinon elle traverse un ennemi jusqu'à ce pays. Seules les portions à moins de 300 km au-delà de la plus proche de l'armée sont visées ;
+- **un trait** libre : points posés au clic puis `Entrée` ou « Valider », ou trait dessiné d'un seul geste (doigt ou souris) ;
+- **un objectif** : point cliqué, élargi en une courte ligne face à l'armée (4 km par unité de ligne, 10 km au moins de chaque côté).
+
+Chaque unité de ligne prend le poste le plus proche sur le tracé visé ; l'appui (artillerie, logistique, QG) suit à une douzaine de km. Au contact de l'ennemi, une unité qui a plus de 20 km d'avance sur une voisine du tracé l'attend : la ligne progresse sans pointe isolée. En posture équilibrée, offensive ou dégâts max, l'avance est continue ; en défensive ou défense max, elle se fait par bonds de 25 km au plus, avec un arrêt pour se retrancher à chaque bond (retranchement moyen de 35 % ou 2 jours). La mission s'achève quand tout le tracé est tenu et que les unités sont à leur poste (ou 2 jours après) : l'armée tient alors la ligne atteinte (portion de front accrochée aux extrémités du tracé si le front est à moins de 150 km, sinon sur place). « Tenir » arrête l'avance à tout moment ; changer de front ou planifier une offensive aussi. Depuis l'onglet Unités, les unités choisies peuvent recevoir la mission « Avancer » : elles forment un groupe détaché de leur armée, qui garde son front avec les autres, et la rejoignent à la fin.
 
 Une armée peut tenir tout le front ou une portion (deux clics sur la carte) : les extrémités tracées s'accrochent au front réel le plus proche (jusqu'à 150 km), la carte montre la ligne tenue, et chaque unité prend le poste libre le plus proche d'elle, sans traverser la carte. Les unités suivent le front quand il bouge. Une offensive se trace en deux clics (départ, objectif), puis se lance avec toute l'armée ou avec les seules unités sélectionnées (bouton « Avec la sélection ») : les autres continuent de tenir le front. Si toutes les unités d'une armée partent encercler, l'armée encercle elle-même, sans nouveau groupe, puis reprend son front.
 

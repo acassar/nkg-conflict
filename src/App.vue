@@ -47,6 +47,8 @@ function onKey(event: KeyboardEvent): void {
     game.hold()
   } else if (key === 'l') {
     game.setMapView(game.mapView === 'logistics' ? 'political' : 'logistics')
+  } else if (key === 'enter' && game.mode.kind === 'advance') {
+    game.finishAdvanceLine()
   } else if (key === 'escape') {
     if (game.battleIds) game.closeBattle()
     else if (game.mode.kind !== 'select' || game.lasso) game.cancelMode()
@@ -64,6 +66,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <TopBar />
     <p v-if="game.modeHint || game.lasso" class="hint" :class="{ mobile: isMobile }">
       {{ hint }}
+      <button
+        v-if="game.mode.kind === 'advance' && game.mode.goal === 'line'"
+        class="hint-cancel"
+        data-testid="advance-line-done"
+        @click="game.finishAdvanceLine()"
+      >
+        Valider
+      </button>
       <button v-if="isMobile" class="hint-cancel" @click="game.cancelMode()">Annuler</button>
     </p>
     <p v-else-if="game.notice" class="hint notice" :class="{ mobile: isMobile }" role="alert">
@@ -127,6 +137,10 @@ body,
   border-radius: 6px;
   padding: 6px 10px;
   font: inherit;
+}
+.hint:not(.mobile) .hint-cancel {
+  margin-left: 8px;
+  padding: 2px 8px;
 }
 .hint.notice {
   background: #fca5a5;

@@ -3,6 +3,7 @@ import * as Comlink from 'comlink'
 import { isSpeed } from './core/clock'
 import { parseSave, serializeSave } from './core/save'
 import type {
+  AdvanceGoal,
   BattleReport,
   BuildingKind,
   CountryId,
@@ -169,6 +170,15 @@ const api = {
   },
   endEncirclement(armyId: number): void {
     act((s) => s.endEncirclement(armyId))
+  },
+  holdArmy(armyId: number): void {
+    act((s) => s.holdArmy(armyId))
+  },
+  advanceArmy(armyId: number, goal: AdvanceGoal): string | null {
+    return act((s) => s.advanceArmy(armyId, goal)) ?? null
+  },
+  advanceUnits(ids: number[], goal: AdvanceGoal): string | null {
+    return act((s) => s.advanceUnits(ids, goal)) ?? null
   },
   createArmy(name: string, ids: number[]): number | undefined {
     return act((s) => s.createArmy(name, ids))

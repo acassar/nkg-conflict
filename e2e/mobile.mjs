@@ -115,6 +115,22 @@ try {
   check(order === 'move', `ordre de déplacement non donné (${order})`)
   check(after === 'half', `le tiroir devrait revenir à mi-hauteur (${after})`)
 
+  // Mission « Avancer » d'un groupe : trait dessiné d'un geste du doigt.
+  await page.getByTestId('group-mission').getByRole('button', { name: 'Trait' }).tap()
+  await page.getByTestId('draw-layer').waitFor()
+  await page.mouse.move(120, 330)
+  await page.mouse.down()
+  await page.mouse.move(200, 340, { steps: 6 })
+  await page.mouse.move(280, 360, { steps: 6 })
+  await page.mouse.up()
+  await page.waitForTimeout(600)
+  const advancing = await store(() =>
+    window.__nkg.armies.some((a) => a.mission?.kind === 'advance'),
+  )
+  step('mission au doigt', { avance: advancing })
+  check(advancing, 'mission « Avancer » non lancée par un trait au doigt')
+  await shot('m04a-mission-trait')
+
   // Écran de bataille : pleine largeur en haut de l'écran, fermé par ✕.
   let battle = false
   for (let k = 0; k < 20 && !battle; k++) {

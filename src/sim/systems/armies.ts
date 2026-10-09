@@ -580,6 +580,8 @@ export function launchOffensive(ctx: SimContext, army: ArmyState): void {
 export function updateArmies(ctx: SimContext): void {
   for (const army of ctx.armies.values()) {
     army.unitIds = army.unitIds.filter((id) => ctx.units.has(id))
+    // Mission « Avancer » : les unités suivent leur tracé (voir missions.ts), pas le front.
+    if (army.mission?.kind === 'advance') continue
     if (army.offensive?.launched) {
       const attacking = army.unitIds.some((id) => ctx.units.get(id)?.order.kind === 'attack')
       if (!attacking) {

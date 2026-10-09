@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { MapboxOverlay } from '@deck.gl/mapbox'
@@ -89,6 +89,58 @@ const boxStyle = (b: {
   height: `${Math.abs(b.y1 - b.y0)}px`,
 })
 
+// ---------- Trait libre (mission « Avancer ») ----------
+
+/** Mode « tracer un trait » : un calque capte les gestes (pas de déplacement de la carte pendant le tracé). */
+const drawing = computed(() => mode.value.kind === 'advance' && mode.value.goal === 'line')
+/** Geste en cours : point de départ, et points du trait à main levée une fois le doigt parti. */
+let stroke: { x: number; y: number; points: LonLat[]; last: { x: number; y: number } } | null = null
+/** Trait à main levée en cours, pour l'affichage. */
+const freehand = ref<LonLat[]>([])
+
+function unproject(p: { x: number; y: number }): LonLat | null {
+  if (!map) return null
+  const ll = map.unproject([p.x, p.y])
+  return [ll.lng, ll.lat]
+}
+
+function onDrawDown(e: PointerEvent): void {
+  const p = localPoint(e)
+  stroke = { x: p.x, y: p.y, points: [], last: p }
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+
+function onDrawMove(e: PointerEvent): void {
+  if (!stroke) return
+  const p = localPoint(e)
+  if (stroke.points.length === 0 && Math.hypot(p.x - stroke.x, p.y - stroke.y) < 10) return
+  if (stroke.points.length === 0) {
+    const first = unproject({ x: stroke.x, y: stroke.y })
+    if (first) stroke.points.push(first)
+  }
+  // Un point tous les 12 pixels environ.
+  if (Math.hypot(p.x - stroke.last.x, p.y - stroke.last.y) < 12) return
+  stroke.last = p
+  const ll = unproject(p)
+  if (ll) stroke.points.push(ll)
+  freehand.value = [...stroke.points]
+}
+
+/** Toucher bref : un point du trait ; glisser : le trait entier, qui lance la mission au relâcher. */
+function onDrawUp(e: PointerEvent): void {
+  const s = stroke
+  stroke = null
+  freehand.value = []
+  if (!s) return
+  if (s.points.length >= 2) {
+    const end = unproject(localPoint(e))
+    game.drawAdvanceLine(end ? [...s.points, end] : s.points)
+    return
+  }
+  const ll = unproject({ x: s.x, y: s.y })
+  if (ll) game.mapClick(ll)
+}
+
 const productionStats = useProductionStats()
 const battles = useBattles()
 let map: maplibregl.Map | null = null
@@ -170,6 +222,12 @@ function refresh(): void {
       selection: new Set(selection.value),
       selectedArmy: selectedArmy.value,
       pendingPoint: m.kind === 'front' || m.kind === 'offensive' ? m.first : null,
+      pendingLine:
+        freehand.value.length > 1
+          ? freehand.value
+          : m.kind === 'advance' && m.goal === 'line'
+            ? m.points
+            : [],
       zoom: zoom.value,
       selectedCity: selectedCity.value?.name ?? null,
       battles: battles.value,
@@ -292,6 +350,7 @@ watch(
     () => game.panelTab,
     mapView,
     supply,
+    freehand,
   ],
   refresh,
   {
@@ -386,6 +445,15 @@ onBeforeUnmount(() => {
   >
     <div v-if="box" class="lasso-box" :style="boxStyle(box)" />
   </div>
+  <div
+    v-if="drawing"
+    class="draw-layer"
+    data-testid="draw-layer"
+    @pointerdown="onDrawDown"
+    @pointermove="onDrawMove"
+    @pointerup="onDrawUp"
+    @pointercancel="onDrawUp"
+  />
 </template>
 
 <style scoped>
@@ -394,6 +462,13 @@ onBeforeUnmount(() => {
   inset: 0;
 }
 .lasso-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  touch-action: none;
+  cursor: crosshair;
+}
+.draw-layer {
   position: absolute;
   inset: 0;
   z-index: 5;

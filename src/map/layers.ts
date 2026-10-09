@@ -27,6 +27,8 @@ export interface LayerInput {
   selectedArmy: ArmyState | null
   /** Premier point posé d'un tracé en cours (front ou offensive). */
   pendingPoint: LonLat | null
+  /** Trait en cours de tracé (mission « Avancer »). */
+  pendingLine: LonLat[]
   /** Zoom de la carte : sert à regrouper les pions qui se chevauchent à l'écran. */
   zoom: number
   selectedCity: string | null
@@ -181,7 +183,7 @@ function pocketLabels(view: SupplyView | null): Layer[] {
 }
 
 export function buildLayers(input: LayerInput): Layer[] {
-  const { snapshot, selection, selectedArmy, pendingPoint } = input
+  const { snapshot, selection, selectedArmy, pendingPoint, pendingLine } = input
   if (!snapshot) return []
   const colors = new Map<string, Rgb>(
     snapshot.countries.map((c) => [
@@ -384,6 +386,63 @@ export function buildLayers(input: LayerInput): Layer[] {
         getPolygon: (p: LonLat[]) => p,
         getFillColor: color,
         stroked: false,
+      }),
+    )
+  }
+  // Missions « Avancer » de l'armée sélectionnée et des armées des unités choisies : tracé visé en bleu
+  // clair, objectif marqué.
+  const missions = snapshot.armies
+    .filter((a) => a.id === selectedArmy?.id || a.unitIds.some((id) => selection.has(id)))
+    .map((a) => (a.mission?.kind === 'advance' ? a.mission : null))
+    .filter((m) => m !== null)
+  if (missions.length > 0) {
+    layers.push(
+      new PathLayer({
+        id: 'mission-line',
+        data: missions.flatMap((m) => m.line),
+        getPath: (p: LonLat[]) => p,
+        getColor: [56, 189, 248, 230],
+        getWidth: 5,
+        widthUnits: 'pixels',
+        capRounded: true,
+        jointRounded: true,
+      }),
+      new ScatterplotLayer({
+        id: 'mission-objective',
+        data: missions.flatMap((m) => (m.goal.kind === 'objective' ? [m.goal.point] : [])),
+        getPosition: (p: LonLat) => p,
+        getFillColor: [56, 189, 248, 90],
+        getLineColor: [56, 189, 248, 255],
+        stroked: true,
+        lineWidthUnits: 'pixels',
+        getLineWidth: 3,
+        radiusUnits: 'pixels',
+        getRadius: 12,
+      }),
+    )
+  }
+  if (pendingLine.length > 0) {
+    layers.push(
+      new PathLayer({
+        id: 'pending-line',
+        data: [pendingLine],
+        getPath: (p: LonLat[]) => p,
+        getColor: [56, 189, 248, 200],
+        getWidth: 4,
+        widthUnits: 'pixels',
+        capRounded: true,
+        jointRounded: true,
+      }),
+      new ScatterplotLayer({
+        id: 'pending-line-points',
+        data:
+          pendingLine.length > 40
+            ? [pendingLine[0], pendingLine[pendingLine.length - 1]]
+            : pendingLine,
+        getPosition: (p: LonLat) => p,
+        getFillColor: [56, 189, 248, 255],
+        radiusUnits: 'pixels',
+        getRadius: 5,
       }),
     )
   }

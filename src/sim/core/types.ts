@@ -157,7 +157,49 @@ export interface ArmyState {
   posture?: Posture
   /** Tracé du front tenu (lignes qui suivent les cellules de contact), pour l'affichage. */
   frontLine?: LonLat[][]
+  /**
+   * Mission en cours (absente = « Tenir »). La mission dit quoi faire, la posture dit comment.
+   * L'encerclement (`encirclement`) est la troisième mission, gardée dans son propre champ.
+   */
+  mission?: ArmyMission
 }
+
+/** Missions d'armée : tenir la ligne (comportement par défaut), avancer, encercler. */
+export type MissionKind = 'hold' | 'advance' | 'encircle'
+
+/** But d'une mission « Avancer » : frontière avec un pays, trait libre ou objectif ponctuel. */
+export type AdvanceGoal =
+  | { kind: 'border'; country: CountryId }
+  | { kind: 'line'; points: LonLat[] }
+  | { kind: 'objective'; point: LonLat }
+
+/**
+ * Mission « Avancer » : les unités de ligne prennent chacune le poste le plus proche sur le tracé visé
+ * et progressent en ligne continue (aucune ne prend plus d'une vingtaine de km d'avance sur ses voisines).
+ * En posture défensive ou défense max, l'avance se fait par bonds, avec retranchement à chaque arrêt.
+ */
+export interface AdvanceMission {
+  kind: 'advance'
+  goal: AdvanceGoal
+  /** Libellé du but, pour l'interface (« frontière avec Russie », « trait », « objectif »). */
+  label: string
+  /** Cellules du tracé visé, dans l'ordre le long de la ligne. */
+  cells: number[]
+  /** Tracé visé, pour l'affichage. */
+  line: LonLat[][]
+  startTick: number
+  /** Part du tracé tenue par le camp, 0 à 1. */
+  progress: number
+  /** Avance par bonds : phase en cours et heure de son début. */
+  phase: 'moving' | 'digging'
+  phaseTick: number
+  /** Heure à laquelle tout le tracé a été tenu (la mission s'achève peu après). */
+  reachedTick?: number
+  /** Groupe détaché d'une armée : il la rejoint à la fin de la mission. */
+  parentArmyId?: number | null
+}
+
+export type ArmyMission = { kind: 'hold' } | AdvanceMission
 
 /**
  * Encerclement en deux temps : les unités gagnent d'abord leurs points d'attente sur les flancs,

@@ -45,7 +45,8 @@ const FRONT_GREED = 2.5
 const LONG_TRIP_KM = 150
 
 /**
- * Calcule quelques chemins en attente (postes de front attribués par les armées). Une unité dont le
+ * Calcule quelques chemins en attente (postes de front attribués par les armées, marche des missions
+ * « Avancer » sur la carte du monde). Une unité dont le
  * chemin partiel s'arrête avant son poste est remise en attente par la répartition suivante.
  */
 export function planQueuedPaths(ctx: SimContext): void {
@@ -56,12 +57,13 @@ export function planQueuedPaths(ctx: SimContext): void {
     if (!rt?.pathPending) continue
     rt.pathPending = false
     const target = u.order.target
-    if (u.order.kind !== 'front' || !target) continue
+    const kind = u.order.kind
+    if ((kind !== 'front' && kind !== 'attack' && kind !== 'move') || !target) continue
     const side = sideIndex(ctx, u.owner)
     u.path =
       ctx.pathfinder.find([u.lon, u.lat], target, {
         side,
-        enemyCost: 2,
+        enemyCost: kind === 'attack' ? 1.2 : 2,
         maxExpanded: FRONT_MAX_EXPANDED,
         greed: FRONT_GREED,
       }) ?? []

@@ -5,6 +5,7 @@ import { formatGameDate, isSpeed, tickToDate } from '@/sim/core/clock'
 import { decodeRle, terrainRule } from '@/sim/theater/grid'
 import type { SupplyView } from '@/sim/systems/supplyView'
 import type {
+  AdvanceGoal,
   BattleReport,
   BuildingKind,
   CountryId,
@@ -36,6 +37,25 @@ export type MapMode =
   | { kind: 'offensive'; armyId: number; first: LonLat | null; unitIds?: number[] }
   /** Ordre qui vise une unité ennemie (poursuite, assaut, encerclement par la sélection ou une armée). */
   | { kind: 'target'; action: TargetAction; armyId?: number }
+  /**
+   * Mission « Avancer » d'une armée (`armyId`) ou des unités choisies (`unitIds`) : clic sur un pays
+   * (frontière), points d'un trait libre, ou objectif.
+   */
+  | {
+      kind: 'advance'
+      goal: AdvanceGoalKind
+      armyId?: number
+      unitIds?: number[]
+      points: LonLat[]
+    }
+
+export type AdvanceGoalKind = AdvanceGoal['kind']
+
+const ADVANCE_HINTS: Record<AdvanceGoalKind, string> = {
+  border: 'Avancer : cliquez sur le pays dont la frontière est visée',
+  objective: "Avancer : cliquez sur l'objectif",
+  line: 'Avancer : cliquez les points du trait (ou glissez pour le dessiner), puis Entrée ou « Valider »',
+}
 
 export type TargetAction = 'pursue' | 'assault' | 'encircle'
 
@@ -337,6 +357,12 @@ export const useGameStore = defineStore('game', () => {
         : 'Portion de front : cliquez sur la première extrémité'
     }
     if (m.kind === 'target') return `${TARGET_LABELS[m.action]} : cliquez sur une unité ennemie`
+    if (m.kind === 'advance') {
+      if (m.goal === 'line' && m.points.length > 0) {
+        return `Avancer : ${m.points.length} point(s) posé(s), cliquez le suivant puis Entrée ou « Valider »`
+      }
+      return ADVANCE_HINTS[m.goal]
+    }
     if (m.kind === 'offensive') {
       return m.first
         ? "Offensive : cliquez sur l'objectif"
@@ -513,6 +539,51 @@ export const useGameStore = defineStore('game', () => {
     mode.value = { kind: 'target', action, armyId }
   }
 
+  /** Mission « Avancer » : d'une armée, ou (sans `armyId`) des unités sélectionnées, qui forment un groupe. */
+  function startAdvance(goal: AdvanceGoalKind, armyId?: number): void {
+    if (armyId === undefined && selection.value.length === 0) return
+    mode.value = {
+      kind: 'advance',
+      goal,
+      armyId,
+      unitIds: armyId === undefined ? ids() : undefined,
+      points: [],
+    }
+  }
+
+  /** Envoie le but de la mission « Avancer » au Worker. */
+  function sendAdvance(m: Extract<MapMode, { kind: 'advance' }>, goal: AdvanceGoal): void {
+    void (async () => {
+      const error =
+        m.armyId !== undefined
+          ? await sim.advanceArmy(m.armyId, goal)
+          : await sim.advanceUnits([...(m.unitIds ?? [])], goal)
+      report(error)
+    })()
+    cancelMode()
+  }
+
+  /** Termine le trait libre de la mission « Avancer » (au moins deux points). */
+  function finishAdvanceLine(): void {
+    const m = mode.value
+    if (m.kind !== 'advance' || m.goal !== 'line') return
+    if (m.points.length < 2) {
+      showNotice('Posez au moins deux points (Échap pour annuler)')
+      return
+    }
+    sendAdvance(m, { kind: 'line', points: m.points.map(lonLat) })
+  }
+
+  /** Trait dessiné d'un seul geste (doigt ou souris) : remplace les points posés et lance la mission. */
+  function drawAdvanceLine(points: LonLat[]): void {
+    const m = mode.value
+    if (m.kind !== 'advance' || m.goal !== 'line') return
+    mode.value = { ...m, points: points.map(lonLat) }
+    finishAdvanceLine()
+  }
+
+  const holdArmy = (id: number): Promise<void> => sim.holdArmy(id)
+
   /**
    * Clic sur la carte (et sur les unités touchées, s'il y en a).
    * Renvoie vrai si le clic a été consommé par un mode en cours.
@@ -537,6 +608,18 @@ export const useGameStore = defineStore('game', () => {
         report(error)
       })()
       cancelMode()
+      return true
+    }
+    if (m.kind === 'advance') {
+      if (m.goal === 'line') {
+        mode.value = { ...m, points: [...m.points, lonLat(point)] }
+      } else if (m.goal === 'objective') {
+        sendAdvance(m, { kind: 'objective', point: lonLat(point) })
+      } else {
+        const country = ownerAt(point[0], point[1])
+        if (!country) showNotice('Cliquez sur un pays (Échap pour annuler)')
+        else sendAdvance(m, { kind: 'border', country })
+      }
       return true
     }
     if (m.kind === 'order') {
@@ -819,6 +902,10 @@ export const useGameStore = defineStore('game', () => {
     selectCity,
     selectCountry,
     cancelMode,
+    startAdvance,
+    finishAdvanceLine,
+    drawAdvanceLine,
+    holdArmy,
     startOrder,
     startFront,
     startOffensive,

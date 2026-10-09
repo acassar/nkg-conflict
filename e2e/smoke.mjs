@@ -281,6 +281,41 @@ try {
   const left = await page.evaluate(() => window.__nkg.armies.filter((a) => a.encirclement).length)
   if (left !== 0) report.errors.push('le groupe d’encerclement ne rejoint pas son armée')
 
+  // Mission « Avancer » d'une armée : trait libre en deux clics près de ses unités, puis « Tenir ».
+  const missionArmy = await page.evaluate(() => {
+    const g = window.__nkg
+    const army = g.armies.find((a) => !a.encirclement && a.unitIds.length > 2)
+    if (!army) return null
+    g.selectArmy(army.id)
+    return army.id
+  })
+  await page.getByRole('button', { name: /Armées/ }).click()
+  await page.getByTestId('mission-advance').click()
+  await page.getByTestId('advance-line').click()
+  // Deux points à gauche du panneau, dans le territoire visible (la carte est zoomée sur l'armée).
+  const linePoints = [
+    [300, 300],
+    [500, 380],
+  ]
+  for (const [x, y] of linePoints) await page.mouse.click(x, y)
+  await page.getByTestId('advance-line-done').click()
+  await page.waitForTimeout(600)
+  const mission = await page.evaluate(
+    (id) => window.__nkg.armies.find((a) => a.id === id)?.mission?.kind ?? null,
+    missionArmy,
+  )
+  const missionText = await page.getByTestId('mission-status').textContent()
+  step('mission avancer', { mission, statut: missionText })
+  if (mission !== 'advance') report.errors.push(`mission « Avancer » non lancée (${mission})`)
+  await shot('02g3-mission-avancer')
+  await page.getByTestId('mission-hold').click()
+  await page.waitForTimeout(500)
+  const held = await page.evaluate(
+    (id) => window.__nkg.armies.find((a) => a.id === id)?.mission?.kind ?? 'hold',
+    missionArmy,
+  )
+  if (held !== 'hold') report.errors.push(`retour à « Tenir » non appliqué (${held})`)
+
   // Sauvegarde dans le navigateur, retour au menu, reprise.
   await page.evaluate(() => window.__nkg.step(24))
   await page.waitForTimeout(500)

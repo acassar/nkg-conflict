@@ -3,6 +3,7 @@ import { isSpeed, type Speed } from './core/clock'
 import { Random } from './core/random'
 import { encodeRle, SAVE_VERSION, type SaveFile } from './core/save'
 import type {
+  AdvanceGoal,
   ArmyState,
   BattleReport,
   BuildingKind,
@@ -38,6 +39,7 @@ import {
   targetGroup,
   updateEncirclements,
 } from './systems/encircle'
+import { holdMission, startAdvance, updateMissions } from './systems/missions'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, snapToFront, updateArmies } from './systems/armies'
@@ -98,6 +100,13 @@ import type { AidLevel, Organization, PeaceKind, PoliticsState, War } from './po
 const PURSUIT_EVERY = 6
 const MAX_EVENTS = 80
 const ARMIES_EVERY = 24
+
+/** Copie d'un but de mission venu de l'interface (tableaux simples, sans référence partagée). */
+function cloneGoal(goal: AdvanceGoal): AdvanceGoal {
+  if (goal.kind === 'border') return { kind: 'border', country: goal.country }
+  if (goal.kind === 'objective') return { kind: 'objective', point: [goal.point[0], goal.point[1]] }
+  return { kind: 'line', points: goal.points.map((p): LonLat => [p[0], p[1]]) }
+}
 const AI_EVERY = 12
 const CITIES_EVERY = 6
 const DAY = 24
@@ -460,6 +469,7 @@ export class Simulation {
       if (ctx.tick % PURSUIT_EVERY === 0) {
         updatePursuits(ctx)
         updateEncirclements(ctx)
+        updateMissions(ctx)
         updatePostureReflexes(ctx)
         reactToBreakthroughs(ctx)
         holdOrFallBack(ctx)
@@ -747,6 +757,63 @@ export class Simulation {
     if (group.encirclement) endEncirclement(this.ctx, group, 'sur ordre')
   }
 
+  /** Mission « Tenir » : l'armée reprend son front (une avance en cours s'arrête). */
+  holdArmy(armyId: number): void {
+    holdMission(this.ctx, this.playerArmy(armyId))
+  }
+
+  /** Mission « Avancer » d'une armée entière. */
+  advanceArmy(armyId: number, goal: AdvanceGoal): string | null {
+    const army = this.playerArmy(armyId)
+    if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
+    return startAdvance(this.ctx, army, cloneGoal(goal))
+  }
+
+  /**
+   * Mission « Avancer » pour des brigades choisies : elles forment un groupe détaché de leur armée (qui
+   * garde son front avec les autres) et la rejoignent à la fin de la mission.
+   */
+  advanceUnits(ids: number[], goal: AdvanceGoal): string | null {
+    const units = this.playerUnits(ids).filter((u) => !runtimeOf(this.ctx, u.id).routed)
+    if (units.length === 0) return 'Aucune unité disponible'
+    const counts = new Map<number, number>()
+    for (const u of units) {
+      if (u.armyId !== null) counts.set(u.armyId, (counts.get(u.armyId) ?? 0) + 1)
+    }
+    const parentId = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+    const parent = parentId !== null ? this.ctx.armies.get(parentId) : undefined
+    // Toute l'armée est choisie : c'est elle qui avance, sans nouveau groupe.
+    if (
+      parent &&
+      !parent.encirclement &&
+      parent.unitIds.length === units.length &&
+      units.every((u) => u.armyId === parent.id)
+    ) {
+      return startAdvance(this.ctx, parent, cloneGoal(goal))
+    }
+    const previous = new Map(units.map((u) => [u.id, u.armyId]))
+    const group = this.ctx.armies.get(
+      this.createArmy(
+        `Groupe d'avance (${units.length})`,
+        units.map((u) => u.id),
+      ),
+    )
+    if (!group) return 'Groupe impossible à former'
+    if (parent?.posture) group.posture = parent.posture
+    const error = startAdvance(this.ctx, group, cloneGoal(goal), parentId)
+    if (error) {
+      // But refusé : les unités retournent dans leur armée.
+      for (const u of units) {
+        const back = previous.get(u.id)
+        const army = back !== null && back !== undefined ? this.ctx.armies.get(back) : undefined
+        u.armyId = army ? army.id : null
+        if (army) army.unitIds.push(u.id)
+      }
+      this.ctx.armies.delete(group.id)
+    }
+    return error
+  }
+
   createArmy(name: string, unitIds: number[]): number {
     const units = this.playerUnits(unitIds)
     const id = this.nextId++
@@ -779,6 +846,8 @@ export class Simulation {
 
   setArmyFront(id: number, front: [LonLat, LonLat] | 'whole' | null): void {
     const army = this.playerArmy(id)
+    // Changer de front, c'est revenir à la mission « Tenir ».
+    holdMission(this.ctx, army)
     army.wholeFront = front === 'whole'
     // Une portion tracée s'accroche au front réel.
     army.front =
@@ -791,6 +860,7 @@ export class Simulation {
   /** Planifie une offensive ; `unitIds` limite les unités engagées (le reste de l'armée tient le front). */
   planOffensive(id: number, from: LonLat, to: LonLat, unitIds?: number[]): void {
     const army = this.playerArmy(id)
+    holdMission(this.ctx, army)
     const chosen = unitIds?.filter((u) => army.unitIds.includes(u))
     army.offensive = {
       from,
@@ -1043,7 +1113,12 @@ export class Simulation {
       }),
       armies: [...ctx.armies.values()]
         .filter((a) => a.owner === this.playerCountry)
-        .map((a) => structuredClone(a)),
+        .map((a) => {
+          const copy = structuredClone(a)
+          // Les cellules du tracé ne servent qu'à la simulation : seul le tracé d'affichage part.
+          if (copy.mission?.kind === 'advance') copy.mission.cells = []
+          return copy
+        }),
       cities,
       economy: economy ? structuredClone(economy) : null,
       autoEconomy: this.autoEconomy,

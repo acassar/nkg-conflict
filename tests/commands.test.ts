@@ -111,6 +111,40 @@ describe('front de l’armée', () => {
     expect(army.frontLine?.length).toBeGreaterThan(0)
   })
 
+  it('le tracé du front est continu, sans demi-tour, et colle à la ligne de contact', () => {
+    const sim = newGame()
+    sim.aiControlsPlayer = true
+    sim.step(24 * 20)
+    const g = sim.ctx.grid
+    const cellKm = g.cell * 111
+    for (const army of sim.ctx.armies.values()) {
+      const lines = army.frontLine ?? []
+      if (lines.length === 0) continue
+      // Quelques secteurs au plus, jamais une quinzaine de morceaux.
+      expect(lines.length).toBeLessThanOrEqual(4)
+      const cells = frontCells(sim.ctx, sideIndex(sim.ctx, army.owner), null)
+      for (const l of lines) {
+        for (let i = 1; i < l.length; i++) {
+          const [p0, p1, p2] = [l[i - 1] as LonLat, l[i] as LonLat, l[i + 1]]
+          // Points rapprochés : pas de grand saut d'un bout à l'autre du front.
+          expect(distanceKm(p0[0], p0[1], p1[0], p1[1])).toBeLessThan(25)
+          if (p2) {
+            // Pas d'éperon : le tracé ne repart jamais en arrière.
+            const dot = (p1[0] - p0[0]) * (p2[0] - p1[0]) + (p1[1] - p0[1]) * (p2[1] - p1[1])
+            expect(dot).toBeGreaterThanOrEqual(0)
+          }
+        }
+        // Chaque point est sur la ligne de contact (à moins de deux cellules d'une cellule de front).
+        for (const p of l) {
+          const near = cells.some(
+            (c) => distanceKm(p[0], p[1], g.lonOf(c.cell), g.latOf(c.cell)) < 2 * cellKm,
+          )
+          expect(near).toBe(true)
+        }
+      }
+    }
+  })
+
   it('chaque unité prend le poste le plus proche (pas de traversée de la carte)', () => {
     const sim = newGame()
     const army = playerArmy(sim)

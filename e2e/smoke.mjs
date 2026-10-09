@@ -342,6 +342,20 @@ try {
   await page.waitForTimeout(3500)
   await shot('04-zoom-front')
 
+  // Tracé du front de l'armée sélectionnée : quelques secteurs continus, pas une quinzaine de morceaux.
+  const frontPieces = await page.evaluate(() => {
+    const g = window.__nkg
+    const army = g.armies.find((a) => !a.encirclement && a.frontLine?.length)
+    if (!army) return null
+    g.selectArmy(army.id)
+    return army.frontLine.length
+  })
+  await page.waitForTimeout(800)
+  step('tracé du front', { morceaux: frontPieces })
+  if (frontPieces === null) report.errors.push('aucune armée avec un tracé de front')
+  else if (frontPieces > 4) report.errors.push(`tracé du front en ${frontPieces} morceaux`)
+  await shot('04b-front-armee')
+
   // Théâtre Ukraine – Russie : donneurs hors carte, avec leur fiche.
   page.once('dialog', (d) => d.accept())
   await page.getByTestId('menu-button').click()

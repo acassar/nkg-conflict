@@ -185,29 +185,144 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   place(rear, 7)
 }
 
-/**
- * Tracé du front (pour l'affichage) : cellules échantillonnées le long de la portion, coupé en
- * plusieurs lignes là où le front s'interrompt (plusieurs secteurs).
- */
-function traceFront(ctx: SimContext, cells: FrontCell[]): LonLat[][] {
-  if (cells.length === 0) return []
-  const step = Math.max(1, Math.floor(cells.length / 120))
-  const lines: LonLat[][] = []
-  let current: LonLat[] = []
-  let last: LonLat | null = null
-  for (let k = 0; k < cells.length; k += step) {
-    const c = cells[k]
-    if (!c) continue
-    const p: LonLat = [ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)]
-    if (last && distanceKm(last[0], last[1], p[0], p[1]) > 60) {
-      if (current.length > 1) lines.push(current)
-      current = []
+/** Deux tronçons du front dont les extrémités sont plus proches que ça sont raccordés (fleuve, lac). */
+const TRACE_JOIN_KM = 25
+/** Tronçon plus court que ça (poche isolée à l'arrière) : non tracé, sauf s'il est le seul. */
+const TRACE_MIN_CELLS = 6
+/** Nombre de points visé pour l'ensemble du tracé. */
+const TRACE_POINTS = 160
+
+/** Plus court chemin (8-voisinage) entre `from` et la cellule du groupe la plus éloignée. */
+function farthestPath(grid: SimContext['grid'], group: Set<number>, from: number): number[] {
+  const W = grid.width
+  const parent = new Map<number, number>([[from, -1]])
+  const queue = [from]
+  let last = from
+  for (let q = 0; q < queue.length; q++) {
+    const i = queue[q] as number
+    last = i
+    const x = i % W
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue
+        if (x + dx < 0 || x + dx >= W) continue
+        const n = i + dy * W + dx
+        if (!group.has(n) || parent.has(n)) continue
+        parent.set(n, i)
+        queue.push(n)
+      }
     }
-    current.push(p)
-    last = p
   }
-  if (current.length > 1) lines.push(current)
+  const path: number[] = []
+  for (let i = last; i !== -1; i = parent.get(i) ?? -1) path.push(i)
+  return path
+}
+
+/**
+ * Tracé du front (pour l'affichage) : les cellules de front sont regroupées par contiguïté ; chaque
+ * groupe donne la chaîne la plus longue qui le traverse (sans les éperons des zones épaisses), placée
+ * sur la ligne de contact (demi-cellule vers l'ennemi) puis lissée. Les tronçons proches sont raccordés,
+ * les petites poches isolées ignorées.
+ */
+export function traceFront(ctx: SimContext, cells: FrontCell[]): LonLat[][] {
+  if (cells.length === 0) return []
+  const { grid } = ctx
+  const W = grid.width
+  const byCell = new Map(cells.map((c) => [c.cell, c]))
+  const left = new Set(byCell.keys())
+
+  // Chaînes : une par groupe de cellules contiguës.
+  const chains: number[][] = []
+  while (left.size > 0) {
+    const seed = left.values().next().value as number
+    const group = new Set<number>([seed])
+    const queue = [seed]
+    left.delete(seed)
+    for (let q = 0; q < queue.length; q++) {
+      const i = queue[q] as number
+      const x = i % W
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (x + dx < 0 || x + dx >= W) continue
+          const n = i + dy * W + dx
+          if (!left.has(n)) continue
+          left.delete(n)
+          group.add(n)
+          queue.push(n)
+        }
+      }
+    }
+    const end = farthestPath(grid, group, seed)[0] as number
+    chains.push(farthestPath(grid, group, end))
+  }
+
+  // Points sur la ligne de contact, orientés comme la portion (t croissant).
+  const point = (i: number): LonLat => {
+    const back = byCell.get(i)?.back ?? [0, 0]
+    return [grid.lonOf(i) - (back[0] * grid.cell) / 2, grid.latOf(i) - (back[1] * grid.cell) / 2]
+  }
+  let lines = chains.map((chain) => {
+    const first = byCell.get(chain[0] as number)?.t ?? 0
+    const last = byCell.get(chain[chain.length - 1] as number)?.t ?? 0
+    return (first <= last ? chain : [...chain].reverse()).map(point)
+  })
+
+  // Raccord des tronçons dont les extrémités se touchent presque, le plus proche d'abord.
+  const ends = (l: LonLat[]): [LonLat, LonLat] => [l[0] as LonLat, l[l.length - 1] as LonLat]
+  for (;;) {
+    let best: { a: number; b: number; flipA: boolean; flipB: boolean; d: number } | null = null
+    for (let a = 0; a < lines.length; a++) {
+      for (let b = a + 1; b < lines.length; b++) {
+        const [a0, a1] = ends(lines[a] as LonLat[])
+        const [b0, b1] = ends(lines[b] as LonLat[])
+        const options: Array<[boolean, boolean, LonLat, LonLat]> = [
+          [false, false, a1, b0],
+          [false, true, a1, b1],
+          [true, false, a0, b0],
+          [true, true, a0, b1],
+        ]
+        for (const [flipA, flipB, p, q] of options) {
+          const d = distanceKm(p[0], p[1], q[0], q[1])
+          if (d < TRACE_JOIN_KM && (!best || d < best.d)) best = { a, b, flipA, flipB, d }
+        }
+      }
+    }
+    if (!best) break
+    const la = lines[best.a] as LonLat[]
+    const lb = lines[best.b] as LonLat[]
+    const joined = [
+      ...(best.flipA ? [...la].reverse() : la),
+      ...(best.flipB ? [...lb].reverse() : lb),
+    ]
+    lines = lines.filter((_, k) => k !== best.a && k !== best.b)
+    lines.push(joined)
+  }
+
+  // Poches isolées : ignorées face aux vrais secteurs.
+  const longest = Math.max(...lines.map((l) => l.length))
+  lines = lines.filter((l) => l.length > 1 && (l.length >= TRACE_MIN_CELLS || l.length === longest))
+
+  // Lissage (moyenne glissante sur 5 points, extrémités conservées) puis échantillonnage.
+  const total = lines.reduce((s, l) => s + l.length, 0)
+  const step = Math.max(1, Math.round(total / TRACE_POINTS))
   return lines
+    .map((l) => {
+      const smooth = l.map((p, k): LonLat => {
+        const r = Math.min(2, k, l.length - 1 - k)
+        let lon = 0
+        let lat = 0
+        for (let j = k - r; j <= k + r; j++) {
+          lon += (l[j] as LonLat)[0]
+          lat += (l[j] as LonLat)[1]
+        }
+        return [lon / (2 * r + 1), lat / (2 * r + 1)]
+      })
+      const out = smooth.filter((_, k) => k % step === 0)
+      const tail = smooth[smooth.length - 1] as LonLat
+      if (out[out.length - 1] !== tail) out.push(tail)
+      return out
+    })
+    .sort((x, y) => y.length - x.length)
 }
 
 /**

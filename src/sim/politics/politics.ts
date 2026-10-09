@@ -262,19 +262,80 @@ function restoreBetween(ctx: SimContext, war: War, sideA: CountryId[], sideB: Co
   }
 }
 
-/** Après une paix, les unités restées en territoire désormais fermé rentrent chez elles. */
+/** Cellules explorées au plus pour trouver le territoire le plus proche d'une unité à évacuer. */
+const EVACUATE_MAX_CELLS = 200_000
+
+/**
+ * Après une paix, chaque unité restée en territoire désormais fermé (chez l'ancien ennemi) se replie
+ * vers la cellule de son propre territoire la plus proche : repli ordonné à travers le territoire
+ * qu'elle quitte, ou déplacement direct si aucun chemin n'existe. Pendant ce repli, son armée la
+ * laisse (comme un ordre direct) ; elle la reprend ensuite à sa répartition suivante.
+ */
 function withdrawFromClosedTerritory(ctx: SimContext): void {
   const g = ctx.grid
   for (const u of ctx.units.values()) {
     const side = sideIndex(ctx, u.owner)
-    const owner = g.owner[g.cellAt(u.lon, u.lat)] ?? 0
-    if (ctx.matrix.canEnter(side, owner)) continue
-    const home = nearestOwnCity(ctx, u.owner, u.lon, u.lat)
-    if (home) [u.lon, u.lat] = home
-    u.order = { kind: 'hold' }
-    u.path = []
-    runtimeOf(ctx, u.id).engagedWith = null
+    const cell = g.cellAt(u.lon, u.lat)
+    const owner = g.owner[cell] ?? 0
+    const enterable = (p: LonLat): boolean =>
+      ctx.matrix.canEnter(side, g.owner[g.cellAt(p[0], p[1])] ?? 0)
+    if (ctx.matrix.canEnter(side, owner)) {
+      // Chemin tracé pendant la guerre à travers un territoire désormais fermé : recalculé.
+      if (u.path.some((p) => !enterable(p))) {
+        const t = u.order.target
+        u.path = t ? (ctx.pathfinder.find([u.lon, u.lat], t, { side, enemyCost: 2 }) ?? []) : []
+        if (u.path.some((p) => !enterable(p))) u.path = []
+      }
+      continue
+    }
+    const rt = runtimeOf(ctx, u.id)
+    rt.engagedWith = null
+    rt.reaction = undefined
+    rt.stance = undefined
+    const home = nearestOwnCell(ctx, side, cell)
+    const target: LonLat | null =
+      home >= 0 ? [g.lonOf(home), g.latOf(home)] : nearestOwnCity(ctx, u.owner, u.lon, u.lat)
+    if (!target) continue
+    const path =
+      home >= 0
+        ? ctx.pathfinder.find([u.lon, u.lat], target, { side, enemyCost: 1, alsoEnter: owner })
+        : null
+    const last = path?.[path.length - 1]
+    if (path && last && g.cellAt(last[0], last[1]) === home) {
+      u.order = { kind: 'retreat', target }
+      u.path = path
+      u.direct = {}
+    } else {
+      ;[u.lon, u.lat] = target
+      u.order = { kind: 'hold' }
+      u.path = []
+    }
   }
+}
+
+/** Cellule praticable du camp `side` la plus proche de `start` (parcours en largeur), ou -1. */
+function nearestOwnCell(ctx: SimContext, side: number, start: number): number {
+  const g = ctx.grid
+  const W = g.width
+  if (start < 0) return -1
+  const seen = new Set<number>([start])
+  const queue = [start]
+  for (let q = 0; q < queue.length && q < EVACUATE_MAX_CELLS; q++) {
+    const i = queue[q] as number
+    if ((g.owner[i] ?? 0) === side && g.passable(i)) return i
+    const x = i % W
+    const y = Math.floor(i / W)
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if ((dx === 0 && dy === 0) || !g.inBounds(x + dx, y + dy)) continue
+        const n = (y + dy) * W + x + dx
+        if (seen.has(n)) continue
+        seen.add(n)
+        queue.push(n)
+      }
+    }
+  }
+  return -1
 }
 
 function nearestOwnCity(ctx: SimContext, code: CountryId, lon: number, lat: number): LonLat | null {

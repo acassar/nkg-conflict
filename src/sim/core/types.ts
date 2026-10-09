@@ -66,8 +66,8 @@ export interface UnitState {
   /** Posture de combat (équilibrée si absente) ; posée par le joueur, elle active aussi des réflexes. */
   posture?: Posture
   /**
-   * Ordre direct du joueur (déplacement, repli, attaque, poursuite) : l'unité sort de la répartition
-   * automatique de son armée jusqu'à la fin de l'ordre. `doneAt` = heure de fin de l'ordre ; l'armée
+   * Ordre direct du joueur (déplacement, repli, attaque, poursuite), ou évacuation après une paix :
+   * l'unité sort de la répartition automatique de son armée jusqu'à la fin de l'ordre. `doneAt` = heure de fin de l'ordre ; l'armée
    * la reprend à sa répartition suivante, après au moins une heure de tenue sur place.
    */
   direct?: { doneAt?: number }

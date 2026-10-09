@@ -77,6 +77,8 @@ export interface PathOptions {
    * moins directs ; utile pour les longs trajets vers un poste du front.
    */
   greed?: number
+  /** Camp dont les cellules restent franchissables malgré les frontières fermées (évacuation après une paix). */
+  alsoEnter?: number
 }
 
 const DIRS: ReadonlyArray<[number, number, number]> = [
@@ -124,8 +126,11 @@ export class Pathfinder {
     let t = grid.cellAt(goal[0], goal[1])
     if (s < 0 || t < 0) return null
     // Objectif dans l'eau ou un pays neutre : on vise la terre praticable la plus proche.
-    const ok = (i: number): boolean =>
-      grid.passable(i) && this.matrix.canEnter(opts.side, grid.owner[i] ?? 0)
+    const ok = (i: number): boolean => {
+      if (!grid.passable(i)) return false
+      const o = grid.owner[i] ?? 0
+      return o === opts.alsoEnter || this.matrix.canEnter(opts.side, o)
+    }
     const goalPassable = ok(t)
     if (!goalPassable) t = this.nearestPassable(t, ok)
     if (t < 0) return null

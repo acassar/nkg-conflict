@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # auto/** : branches des tâches planifiées, vérifiées avant d'être fusionnées dans main.
+    branches: [main, 'auto/**']
   pull_request:
   workflow_dispatch:
 
@@ -46,30 +47,51 @@ jobs:
           fi
 
       # Les logs et artefacts d'Actions ne sont pas lisibles depuis la session de développement :
-      # on publie les résultats (logs, captures, build, lockfile, dépendances) sur une branche dédiée.
-      - name: Publier les résultats sur la branche ci-results
+      # on publie les résultats (logs, captures, build) sur une branche dédiée :
+      # ci-results pour main, ci-results-auto pour les branches des tâches planifiées.
+      - name: Publier les résultats
         if: always()
         run: |
           set -e
+          target=ci-results
+          [ "${GITHUB_REF_NAME}" != "main" ] && target=ci-results-auto
           mkdir -p /tmp/results
           cp -r ci-out /tmp/results/ || true
           [ -d dist ] && cp -r dist /tmp/results/dist || true
-          # Dépendances installées : seulement si package.json ou le lockfile ont changé (≈ 50 Mo).
-          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(package.json|pnpm-lock.yaml)$' \
-            || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tar -czf /tmp/node_modules.tgz node_modules
-            mkdir -p /tmp/results/cache
-            split -b 90m /tmp/node_modules.tgz /tmp/results/cache/node_modules.tgz.part-
-          fi
           echo "${GITHUB_SHA}" > /tmp/results/SHA
+          echo "${GITHUB_REF_NAME}" > /tmp/results/BRANCH
           du -sh /tmp/results/* | tee /tmp/results/sizes.txt
           cd /tmp/results
-          git init -q -b ci-results
+          git init -q -b "$target"
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
-          git commit -q -m "Résultats CI pour ${GITHUB_SHA}"
-          git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-results
+          git commit -q -m "Résultats CI pour ${GITHUB_SHA} (${GITHUB_REF_NAME})"
+          git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$target"
+
+      # Le registre npm n'est pas toujours joignable depuis les sessions de développement : les
+      # dépendances installées sont publiées sur la branche deps-cache, à chaque changement du
+      # lockfile (ou sur demande). Voir scripts/deps-from-cache.sh.
+      - name: Publier le cache des dépendances
+        if: always() && github.ref_name == 'main'
+        run: |
+          set -e
+          hash=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)
+          current=$(git fetch -q --depth=1 origin deps-cache 2>/dev/null && git show FETCH_HEAD:LOCKHASH 2>/dev/null || echo none)
+          if [ "$current" = "$hash" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "cache à jour ($hash)"; exit 0
+          fi
+          mkdir -p /tmp/deps
+          tar -czf /tmp/node_modules.tgz node_modules
+          split -b 90m /tmp/node_modules.tgz /tmp/deps/node_modules.tgz.part-
+          echo "$hash" > /tmp/deps/LOCKHASH
+          cd /tmp/deps
+          git init -q -b deps-cache
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Dépendances pour le lockfile $hash"
+          git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" deps-cache
 
       - name: Échec si une vérification a échoué
         run: |

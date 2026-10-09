@@ -229,6 +229,24 @@ try {
   check(!!panel && panel.x > 400, 'en paysage, le panneau devrait être sur le côté droit')
   await shot('m07-paysage')
 
+  // WebGL indisponible, en portrait : le message tient dans l'écran.
+  const noGl = await context.newPage()
+  await noGl.setViewportSize({ width: 390, height: 844 })
+  await noGl.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+      if (/webgl/.test(String(type))) return null
+      return original.call(this, type, ...rest)
+    }
+  })
+  await noGl.goto(url, { waitUntil: 'load' })
+  await noGl.getByTestId('webgl-error').waitFor({ timeout: 15_000 })
+  const msg = await noGl.getByTestId('webgl-error').boundingBox()
+  await noGl.screenshot({ path: path.join(out, 'm08-webgl-indisponible.png') })
+  step('WebGL indisponible (mobile)', { message: msg })
+  check(!!msg && msg.x >= 0 && msg.x + msg.width <= 390, 'message WebGL hors de l’écran')
+  await noGl.close()
+
   report.ok = report.errors.length === 0
 } catch (e) {
   report.errors.push(`test: ${e instanceof Error ? e.message : String(e)}`)

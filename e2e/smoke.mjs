@@ -420,6 +420,37 @@ try {
   step('caméra clavier', { avant: lonBefore, apres: lonAfter })
   if (!(lonAfter > lonBefore)) report.errors.push('la touche D ne déplace pas la carte')
 
+  // Perte du contexte WebGL en cours de partie : message, puis carte reconstruite à la restauration.
+  const canvasBefore = await page.evaluate(() => document.querySelectorAll('canvas').length)
+  const lost = await page.evaluate(() => {
+    const canvas = window.__nkgMap.getCanvas()
+    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
+    const ext = gl?.getExtension('WEBGL_lose_context')
+    if (!ext) return false
+    window.__nkgOldMap = window.__nkgMap
+    window.__nkgLose = ext
+    ext.loseContext()
+    return true
+  })
+  if (lost) {
+    await page.getByTestId('webgl-lost').waitFor({ timeout: 5000 })
+    await shot('03c-webgl-perdu')
+    await page.evaluate(() => window.__nkgLose.restoreContext())
+    await page.getByTestId('webgl-lost').waitFor({ state: 'detached', timeout: 10_000 })
+    await page.waitForTimeout(1500)
+    const rebuilt = await page.evaluate(() => ({
+      nouvelle: window.__nkgMap !== window.__nkgOldMap,
+      erreur: !!document.querySelector('[data-testid="webgl-error"]'),
+      canvas: document.querySelectorAll('canvas').length,
+    }))
+    step('perte du contexte WebGL', rebuilt)
+    // Autant de canvas qu'avant : aucun contexte WebGL en double après la reconstruction.
+    if (!rebuilt.nouvelle || rebuilt.erreur || rebuilt.canvas !== canvasBefore) {
+      report.errors.push(`récupération du contexte WebGL : ${JSON.stringify(rebuilt)}`)
+    }
+  } else {
+    step('perte du contexte WebGL', { note: 'extension WEBGL_lose_context absente' })
+  }
   // Zoom sur le front, autour de Kharkiv.
   await page.evaluate(() => {
     window.__nkg.focus = { at: [36.2, 49.2], zoom: 6.5, nonce: Date.now() }
@@ -546,6 +577,31 @@ try {
   if (advance.mission !== 'advance' || advance.encart) {
     report.errors.push(`encart de guerre : « Avancer » non appliqué (${JSON.stringify(advance)})`)
   }
+
+  // WebGL indisponible : la page affiche un message clair avec « Réessayer ».
+  const noGl = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+  await noGl.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+      if (/webgl/.test(String(type))) return null
+      return original.call(this, type, ...rest)
+    }
+  })
+  const noGlErrors = []
+  noGl.on('pageerror', (e) => noGlErrors.push(e.message))
+  await noGl.goto(url, { waitUntil: 'load' })
+  await noGl.getByTestId('webgl-error').waitFor({ timeout: 15_000 })
+  const retry = await noGl.getByTestId('webgl-retry').isVisible()
+  await noGl.getByTestId('start-screen').waitFor({ timeout: 15_000 })
+  await noGl.screenshot({ path: path.join(out, '08-webgl-indisponible.png') })
+  await noGl.getByTestId('webgl-retry').click()
+  await noGl.waitForTimeout(500)
+  const still = await noGl.getByTestId('webgl-error').isVisible()
+  step('WebGL indisponible', { bouton: retry, apresReessai: still, erreurs: noGlErrors })
+  if (!retry || !still || noGlErrors.length) {
+    report.errors.push(`WebGL indisponible : ${JSON.stringify({ retry, still, noGlErrors })}`)
+  }
+  await noGl.close()
 
   report.ok = !!after && after.tick > 0 && report.errors.length === 0
 } catch (e) {

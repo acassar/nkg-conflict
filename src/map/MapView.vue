@@ -17,6 +17,7 @@ import { SupplyTiles } from './supplyImage'
 import { isTouch } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
 import { useBattles } from '@/composables/battles'
+import { glErrorText } from './webgl'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
@@ -283,40 +284,68 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
   }
 }
 
-onMounted(() => {
-  if (!container.value) return
-  maplibregl.addProtocol('pmtiles', protocol.tile)
+// ---------- Contexte WebGL : création, perte, récupération ----------
 
-  map = new maplibregl.Map({
-    container: container.value,
-    style: baseStyle(),
-    center: [15, 45],
-    zoom: 4,
-    minZoom: 1.5,
-    maxZoom: 11,
-    attributionControl: { compact: true },
-  })
+/**
+ * État du rendu : « ok », « lost » (contexte perdu, récupération en cours) ou « error »
+ * (création impossible, ou perte sans récupération). Le message reste affiché par-dessus tout,
+ * écran de départ compris.
+ */
+const glState = ref<'ok' | 'lost' | 'error'>('ok')
+const glDetail = ref('')
+/** Délai laissé au navigateur pour rendre un contexte perdu avant d'afficher l'erreur. */
+const RESTORE_TIMEOUT_MS = 5000
+let restoreTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearRestoreTimer(): void {
+  if (restoreTimer) clearTimeout(restoreTimer)
+  restoreTimer = null
+}
+
+/**
+ * Crée la carte MapLibre et la couche deck.gl (chacune son canvas et son contexte WebGL ; le mode
+ * entrelacé de deck.gl, qui n'en ouvre qu'un, perd la sélection des pions au clic).
+ * Renvoie faux si WebGL est indisponible.
+ */
+function createMap(camera?: { center: LonLat; zoom: number }): boolean {
+  if (!container.value) return false
+  try {
+    map = new maplibregl.Map({
+      container: container.value,
+      style: baseStyle(),
+      center: camera?.center ?? [15, 45],
+      zoom: camera?.zoom ?? 4,
+      minZoom: 1.5,
+      maxZoom: 11,
+      attributionControl: { compact: true },
+    })
+  } catch (e) {
+    map = null
+    glDetail.value = glErrorText(e)
+    glState.value = 'error'
+    return false
+  }
+  const m = map
   // Sur écran tactile, le zoom se fait au pincement : pas de boutons.
   if (!isTouch.value) {
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+    m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
   }
-  map.touchZoomRotate.disableRotation()
-  map.on('style.load', () => map && neutralizeCountryFills(map))
+  m.touchZoomRotate.disableRotation()
+  m.on('style.load', () => neutralizeCountryFills(m))
   // Fond de carte injoignable (hors ligne, réseau filtré) : sans style chargé, la carte ne se redessine
   // plus et le jeu paraît figé. On bascule alors sur un fond uni.
   let offline = false
-  map.on('error', () => {
-    if (!map || offline || map.isStyleLoaded()) return
+  m.on('error', () => {
+    if (offline || m.isStyleLoaded()) return
     offline = true
-    map.setStyle(OFFLINE_STYLE)
+    m.setStyle(OFFLINE_STYLE)
   })
   // Les piles de pions dépendent du zoom : on les recalcule à la fin de chaque zoom.
-  map.on('zoomend', () => {
-    zoom.value = map?.getZoom() ?? zoom.value
+  m.on('zoomend', () => {
+    zoom.value = m.getZoom()
   })
   // Clic droit : déplacement direct des unités sélectionnées.
-  map.on('contextmenu', (e) => game.quickMove([e.lngLat.lng, e.lngLat.lat]))
-
+  m.on('contextmenu', (e) => game.quickMove([e.lngLat.lng, e.lngLat.lat]))
   overlay = new MapboxOverlay({
     interleaved: false,
     layers: [],
@@ -326,10 +355,71 @@ onMounted(() => {
     getCursor: ({ isHovering }) =>
       mode.value.kind !== 'select' ? 'crosshair' : isHovering ? 'pointer' : 'grab',
   })
-  map.addControl(overlay)
+  m.addControl(overlay)
   // Accès à la carte pour les tests de fumée (projection d'une position en pixels).
-  ;(window as unknown as { __nkgMap: unknown }).__nkgMap = map
-  if (focus.value)
+  ;(window as unknown as { __nkgMap: unknown }).__nkgMap = m
+  glState.value = 'ok'
+  glDetail.value = ''
+  return true
+}
+
+/**
+ * Perte d'un contexte (pilote réinitialisé, mémoire graphique saturée…), écoutée en capture sur le
+ * conteneur pour couvrir les deux canvas : on attend que le navigateur le rende, puis on reconstruit
+ * la carte (les ressources de l'ancien contexte sont perdues) ; sinon, message et bouton « Réessayer ».
+ * Les canvas retirés par une reconstruction ne sont plus dans le conteneur : leurs événements n'arrivent pas ici.
+ */
+function onContextLost(e: Event): void {
+  e.preventDefault()
+  glState.value = 'lost'
+  clearRestoreTimer()
+  restoreTimer = setTimeout(() => {
+    if (glState.value !== 'lost') return
+    glDetail.value = 'Le contexte graphique a été perdu et le navigateur ne l’a pas rendu.'
+    glState.value = 'error'
+  }, RESTORE_TIMEOUT_MS)
+}
+
+function onContextRestored(): void {
+  if (glState.value !== 'lost') return
+  clearRestoreTimer()
+  setTimeout(rebuildMap, 0)
+}
+
+function destroyMap(): void {
+  clearRestoreTimer()
+  try {
+    map?.remove()
+  } catch {
+    // Carte déjà inutilisable (contexte perdu) : rien d'autre à libérer.
+  }
+  map = null
+  overlay = null
+  // La reconstruction de deck.gl recrée aussi le territoire (textures liées au contexte).
+  tilesGrid = null
+  supplyGrid = null
+}
+
+/** Recrée la carte en gardant la caméra (récupération après perte, bouton « Réessayer »). */
+function rebuildMap(): void {
+  const camera = map
+    ? {
+        center: [map.getCenter().lng, map.getCenter().lat] as LonLat,
+        zoom: map.getZoom(),
+      }
+    : undefined
+  destroyMap()
+  if (container.value) container.value.innerHTML = ''
+  if (createMap(camera)) refresh()
+}
+
+onMounted(() => {
+  if (!container.value) return
+  maplibregl.addProtocol('pmtiles', protocol.tile)
+  container.value.addEventListener('webglcontextlost', onContextLost, true)
+  container.value.addEventListener('webglcontextrestored', onContextRestored, true)
+  if (!createMap()) return
+  if (focus.value && map)
     map.jumpTo({ center: [focus.value.at[0], focus.value.at[1]], zoom: focus.value.zoom })
   refresh()
 })
@@ -425,15 +515,41 @@ onBeforeUnmount(() => {
 })
 
 onBeforeUnmount(() => {
-  map?.remove()
-  map = null
-  overlay = null
+  container.value?.removeEventListener('webglcontextlost', onContextLost, true)
+  container.value?.removeEventListener('webglcontextrestored', onContextRestored, true)
+  destroyMap()
   maplibregl.removeProtocol('pmtiles')
 })
 </script>
 
 <template>
   <div ref="container" class="map" />
+  <div
+    v-if="glState !== 'ok'"
+    class="gl-message"
+    role="alert"
+    :data-testid="glState === 'lost' ? 'webgl-lost' : 'webgl-error'"
+  >
+    <template v-if="glState === 'lost'">
+      <strong>Affichage de la carte interrompu</strong>
+      <p>Le contexte graphique (WebGL) a été perdu ; récupération en cours…</p>
+    </template>
+    <template v-else>
+      <strong>La carte ne peut pas s'afficher : WebGL est indisponible</strong>
+      <p>Causes possibles :</p>
+      <ul>
+        <li>accélération matérielle désactivée dans les réglages du navigateur ;</li>
+        <li>
+          pilote graphique absent, trop ancien ou bloqué par le navigateur (Firefox : page
+          about:support, section « Graphiques ») ;
+        </li>
+        <li>navigateur ou carte graphique à bout de ressources : redémarrez le navigateur.</li>
+      </ul>
+      <p class="detail" v-if="glDetail">Détail : {{ glDetail }}</p>
+      <p>Le reste du jeu fonctionne : une partie en cours continue et reste sauvegardable.</p>
+      <button data-testid="webgl-retry" @click="rebuildMap">Réessayer</button>
+    </template>
+  </div>
   <div
     v-if="game.lasso"
     class="lasso-layer"
@@ -460,6 +576,44 @@ onBeforeUnmount(() => {
 .map {
   position: absolute;
   inset: 0;
+}
+.gl-message {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(460px, calc(100% - 32px));
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: rgba(20, 24, 31, 0.97);
+  color: #e8eaed;
+  border: 1px solid #b45309;
+  border-radius: 8px;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+}
+.gl-message p,
+.gl-message ul {
+  margin: 6px 0;
+}
+.gl-message ul {
+  padding-left: 18px;
+}
+.gl-message .detail {
+  color: #9aa3b2;
+  font-size: 12px;
+  word-break: break-word;
+}
+.gl-message button {
+  background: #2563eb;
+  color: inherit;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font: inherit;
 }
 .lasso-layer {
   position: absolute;

@@ -26,7 +26,7 @@ import { MODERN_CATALOG } from './units/catalog'
 import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
 import { supplyView, type SupplyView } from './systems/supplyView'
-import { updateMovement, updatePursuits, planPath } from './systems/movement'
+import { updateMovement, updatePursuits, planPath, planQueuedPaths } from './systems/movement'
 import { updatePostureReflexes } from './systems/postures'
 import { reactToBreakthroughs } from './systems/breakthrough'
 import { holdOrFallBack, stanceText } from './systems/fallback'
@@ -349,7 +349,16 @@ export class Simulation {
       sim.ai.set(c, { lastOffensiveTick: tick })
     }
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
-    for (const [id, engagedWith, supplied, routed, commanded, reaction, stance] of save.runtime) {
+    for (const [
+      id,
+      engagedWith,
+      supplied,
+      routed,
+      commanded,
+      reaction,
+      stance,
+      pending,
+    ] of save.runtime) {
       ctx.runtime.set(id, {
         engagedWith,
         supplied,
@@ -357,6 +366,7 @@ export class Simulation {
         commanded: commanded ?? false,
         ...(reaction ? { reaction } : {}),
         ...(stance ? { stance } : {}),
+        ...(pending ? { pathPending: true } : {}),
       })
     }
     initCities(ctx, scenario)
@@ -436,7 +446,14 @@ export class Simulation {
     const ctx = this.ctx
     for (let i = 0; i < count && !this.outcome; i++) {
       ctx.tick++
-      if (ctx.tick % this.supplyEvery === 0) {
+      if (this.supplyEvery > 6) {
+        // Grande carte : chaque camp a son tour de ravitaillement, réparti sur la période, pour
+        // éviter qu'un tick calcule tous les grands pays en guerre d'un coup.
+        const every = this.supplyEvery
+        const tick = ctx.tick
+        updateSupply(ctx, (side) => (tick + side) % every === 0)
+        if (tick % every === 0) updateCommand(ctx)
+      } else if (ctx.tick % this.supplyEvery === 0) {
         updateSupply(ctx)
         updateCommand(ctx)
       }
@@ -447,6 +464,7 @@ export class Simulation {
         reactToBreakthroughs(ctx)
         holdOrFallBack(ctx)
       }
+      planQueuedPaths(ctx)
       updateMovement(ctx)
       updateCombat(ctx)
       updateTerritory(ctx)
@@ -1078,6 +1096,11 @@ export class Simulation {
       supplyReach: Array.from(ctx.supplyReach, (r) => (r ? encodeRle(r) : [])),
       runtime: [...ctx.runtime.entries()].map(([id, r]): SaveFile['runtime'][number] => {
         const reaction = r.reaction ? { ...r.reaction } : null
+        const stance = r.stance?.decision === 'withdraw' ? { ...r.stance } : null
+        // Chemin en attente (poste de front attribué) : gardé pour rejouer la même suite.
+        if (r.pathPending) {
+          return [id, r.engagedWith, r.supplied, r.routed, r.commanded, reaction, stance, true]
+        }
         // Seuls les décrochages sont gardés : la décision de tenir est recalculée au passage suivant.
         if (r.stance?.decision === 'withdraw') {
           return [id, r.engagedWith, r.supplied, r.routed, r.commanded, reaction, { ...r.stance }]

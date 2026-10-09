@@ -10,6 +10,12 @@ import { assaultFireFactor } from './obstacles'
 const FRONT_CORRIDOR_KM = 60
 /** Un ordre de front n'est recalculé que si l'emplacement a bougé de plus que ça. */
 const SLOT_TOLERANCE_KM = 8
+/** Part de l'écart entre deux postes en deçà de laquelle une unité garde son poste actuel. */
+const SLOT_TOLERANCE_SHARE = 0.4
+/** Écart moyen entre postes au-delà duquel cette tolérance élargie s'applique. */
+const WIDE_SPACING_KM = 150
+/** Au-delà de cette taille de grille (carte du monde), les chemins vers les postes sont étalés. */
+export const LARGE_GRID_CELLS = 1_000_000
 
 export interface FrontCell {
   cell: number
@@ -281,6 +287,21 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       )
     })
     pairs.sort((x, y) => x.d - y.d)
+    // Tolérance proportionnelle à l'écart entre postes : quand le front bouge un peu, les postes
+    // glissent de quelques km ; les unités gardent alors le leur au lieu de tout recalculer.
+    let spacing = 0
+    for (let k = 1; k < posts.length; k++) {
+      const a = posts[k - 1] as LonLat
+      const b = posts[k] as LonLat
+      spacing += distanceKm(a[0], a[1], b[0], b[1])
+    }
+    spacing /= Math.max(1, posts.length - 1)
+    // Seulement sur les très grands fronts (carte du monde) ; les postes favorables, eux, sont choisis
+    // un par un et doivent être suivis tels quels.
+    const tolerance =
+      !favorable && ctx.grid.size > LARGE_GRID_CELLS && spacing > WIDE_SPACING_KM
+        ? Math.max(SLOT_TOLERANCE_KM, SLOT_TOLERANCE_SHARE * spacing)
+        : SLOT_TOLERANCE_KM
     const unitDone = new Set<number>()
     const postDone = new Set<number>()
     for (const { u: ui, p: pi } of pairs) {
@@ -297,14 +318,20 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         continue
       }
       const prev = u.order.kind === 'front' ? u.order.target : undefined
-      const sameSlot =
-        prev && distanceKm(prev[0], prev[1], target[0], target[1]) < SLOT_TOLERANCE_KM
+      const sameSlot = prev && distanceKm(prev[0], prev[1], target[0], target[1]) < tolerance
       // Même poste : on ne recalcule rien, sauf si l'unité est arrêtée loin de ce poste.
       const stuck =
-        u.path.length === 0 && distanceKm(u.lon, u.lat, target[0], target[1]) > SLOT_TOLERANCE_KM
-      if (sameSlot && !stuck) continue
+        u.path.length === 0 && distanceKm(u.lon, u.lat, target[0], target[1]) > tolerance
+      if (sameSlot && !stuck && !ctx.runtime.get(u.id)?.pathPending) continue
       u.order = { kind: 'front', target }
-      planPath(ctx, u, target)
+      if (ctx.grid.size > LARGE_GRID_CELLS) {
+        // Carte du monde : chemin calculé plus tard, quelques-uns par tick (planQueuedPaths),
+        // pour éviter un à-coup de plusieurs centaines de ms sur les grands fronts.
+        u.path = []
+        runtimeOf(ctx, u.id).pathPending = true
+      } else {
+        planPath(ctx, u, target)
+      }
     }
   }
   place(line, LINE_DEPTH, picksFavorablePosts(army))

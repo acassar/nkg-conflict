@@ -72,6 +72,11 @@ export interface PathOptions {
   enemyCost: number
   /** Nombre maximal de cellules explorées avant abandon. */
   maxExpanded?: number
+  /**
+   * Poids de l'heuristique (1,2 par défaut). Plus élevé : recherche bien plus rapide, chemins un peu
+   * moins directs ; utile pour les longs trajets vers un poste du front.
+   */
+  greed?: number
 }
 
 const DIRS: ReadonlyArray<[number, number, number]> = [
@@ -137,7 +142,8 @@ export class Pathfinder {
     this.g[s] = 0
     this.from[s] = -1
     this.stamp[s] = run
-    heap.push(s, 1.2 * h(s))
+    const w = opts.greed ?? 1.2
+    heap.push(s, w * h(s))
     const maxExpanded = opts.maxExpanded ?? 60_000
     let expanded = 0
     let best = s
@@ -175,8 +181,8 @@ export class Pathfinder {
           this.stamp[n] = run
           this.g[n] = ng
           this.from[n] = cur
-          // Heuristique pondérée (1,2) : chemins quasi optimaux, beaucoup moins de cellules explorées.
-          heap.push(n, ng + 1.2 * h(n))
+          // Heuristique pondérée (1,2 par défaut) : chemins quasi optimaux, bien moins de cellules explorées.
+          heap.push(n, ng + w * h(n))
         }
       }
     }

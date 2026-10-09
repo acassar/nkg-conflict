@@ -30,7 +30,18 @@ export interface SaveFile {
    * État de combat des unités : [id, engagée avec, ravitaillée, en déroute, commandée, riposte,
    * décrochage en cours].
    */
-  runtime: Array<[number, number | null, boolean, boolean, boolean?, (Reaction | null)?, Stance?]>
+  runtime: Array<
+    [
+      number,
+      number | null,
+      boolean,
+      boolean,
+      boolean?,
+      (Reaction | null)?,
+      (Stance | null)?,
+      boolean?,
+    ]
+  >
   /** Villes : propriétaire (index de camp) et bâtiments. */
   cities: Array<{ name: string; owner: number; buildings: Buildings }>
   economies: EconomyState[]

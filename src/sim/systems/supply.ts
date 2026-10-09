@@ -7,18 +7,26 @@ export const SOURCE_RADIUS_KM = 30
  * reliée de son camp est à cette distance. */
 const FRONT_TOLERANCE_KM = 12
 
+/** File du remplissage, réutilisée d'un appel à l'autre (plusieurs Mo sur la carte du monde). */
+const queues = new WeakMap<SimContext, Int32Array>()
+
 /**
- * Recalcule, pour chaque camp en guerre, les cellules reliées à ses sources de ravitaillement
+ * Recalcule, pour chaque camp en guerre (ou ceux que `only` retient), les cellules reliées à ses sources de ravitaillement
  * (remplissage à travers son territoire et celui de ses cobelligérants), puis l'état ravitaillé
  * de chaque unité. Un pays en paix est entièrement ravitaillé.
  * Une unité logistique elle-même ravitaillée prolonge le ravitaillement dans son rayon.
  */
-export function updateSupply(ctx: SimContext): void {
+export function updateSupply(ctx: SimContext, only?: (side: number) => boolean): void {
   const { grid, matrix } = ctx
   const { width: W, height: H, owner } = grid
-  const queue = new Int32Array(grid.size)
+  let queue = queues.get(ctx)
+  if (!queue || queue.length !== grid.size) {
+    queue = new Int32Array(grid.size)
+    queues.set(ctx, queue)
+  }
 
   for (let side = 1; side < ctx.sides.length; side++) {
+    if (only && !only(side)) continue
     if (matrix.atWar[side] !== 1) {
       // Hors guerre : pas de calcul (et on libère la mémoire d'une guerre terminée).
       if (ctx.supplyReach[side]) {
@@ -88,6 +96,7 @@ export function updateSupply(ctx: SimContext): void {
     return reach?.[grid.cellAt(u.lon, u.lat)] === 1
   })
   for (const u of ctx.units.values()) {
+    if (only && !only(sideIndex(ctx, u.owner))) continue
     const rt = runtimeOf(ctx, u.id)
     if (matrix.atWar[sideIndex(ctx, u.owner)] !== 1) {
       rt.supplied = true

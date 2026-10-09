@@ -19,6 +19,8 @@ import { loadTheater } from './theater/load'
 import type { TheaterData } from './theater/grid'
 import type { AidLevel, PeaceKind } from './politics/types'
 
+/** Temps de calcul maximal par image, en ms (le reste des ticks dus est abandonné). */
+const STEP_BUDGET_MS = 60
 const FRAME_MS = 50
 /** Les cellules modifiées ne sont publiées qu'au plus 4 fois par seconde. */
 const GRID_MIN_INTERVAL_MS = 250
@@ -66,7 +68,14 @@ setInterval(() => {
   const ticks = sim.clock.advance(now - last)
   last = now
   if (ticks > 0) {
-    sim.step(ticks)
+    // Budget de calcul par image : si la partie est trop lourde pour la vitesse demandée (grande
+    // guerre sur la carte du monde en vitesse 5), on joue moins de ticks au lieu de bloquer le Worker
+    // plusieurs secondes ; les ordres du joueur restent traités sans attente.
+    const started = performance.now()
+    for (let done = 0; done < ticks && !sim.outcome; done++) {
+      sim.step(1)
+      if (performance.now() - started > STEP_BUDGET_MS) break
+    }
     publish()
   }
 }, FRAME_MS)

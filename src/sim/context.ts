@@ -29,6 +29,8 @@ export interface UnitRuntime {
   reaction?: Reaction
   /** Unité menacée : tenir retranchée ou décrocher vers la ligne suivante, avec son motif. */
   stance?: Stance
+  /** Poste du front attribué, chemin à calculer (étalé sur plusieurs ticks, voir planQueuedPaths). */
+  pathPending?: boolean
 }
 
 /** Ville de la partie : propriétaire courant (index de camp) et bâtiments. */

@@ -24,7 +24,49 @@ function speedKmh(ctx: SimContext, u: UnitState): number {
 export function planPath(ctx: SimContext, u: UnitState, target: LonLat): void {
   const side = sideIndex(ctx, u.owner)
   const enemyCost = isOffensiveOrder(u.order.kind) ? 1.2 : u.order.kind === 'retreat' ? 8 : 2
-  u.path = ctx.pathfinder.find([u.lon, u.lat], target, { side, enemyCost }) ?? []
+  // Long trajet : recherche plus gourmande et bornée, pour ne pas figer la partie sur les grands fronts.
+  const far =
+    ctx.grid.size > 1_000_000 && distanceKm(u.lon, u.lat, target[0], target[1]) > LONG_TRIP_KM
+  u.path =
+    ctx.pathfinder.find(
+      [u.lon, u.lat],
+      target,
+      far ? { side, enemyCost, greed: FRONT_GREED, maxExpanded: 40_000 } : { side, enemyCost },
+    ) ?? []
+}
+
+/** Chemins calculés au plus par tick pour les postes de front : évite les à-coups sur les grands fronts. */
+const QUEUED_PATHS_PER_TICK = 3
+/** Exploration maximale pour rejoindre un poste : le chemin partiel est complété aux tours suivants. */
+const FRONT_MAX_EXPANDED = 20_000
+/** Heuristique plus gourmande pour ces trajets : le chemin exact compte moins que sa rapidité. */
+const FRONT_GREED = 2.5
+/** Sur la carte du monde, au-delà de cette distance, un trajet utilise la recherche gourmande. */
+const LONG_TRIP_KM = 150
+
+/**
+ * Calcule quelques chemins en attente (postes de front attribués par les armées). Une unité dont le
+ * chemin partiel s'arrête avant son poste est remise en attente par la répartition suivante.
+ */
+export function planQueuedPaths(ctx: SimContext): void {
+  let budget = QUEUED_PATHS_PER_TICK
+  for (const u of ctx.units.values()) {
+    if (budget <= 0) return
+    const rt = ctx.runtime.get(u.id)
+    if (!rt?.pathPending) continue
+    rt.pathPending = false
+    const target = u.order.target
+    if (u.order.kind !== 'front' || !target) continue
+    const side = sideIndex(ctx, u.owner)
+    u.path =
+      ctx.pathfinder.find([u.lon, u.lat], target, {
+        side,
+        enemyCost: 2,
+        maxExpanded: FRONT_MAX_EXPANDED,
+        greed: FRONT_GREED,
+      }) ?? []
+    budget--
+  }
 }
 
 /** Une heure de déplacement. Une unité au contact ne progresse pas, sauf si elle se replie. */

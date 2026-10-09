@@ -23,7 +23,13 @@ import { MODERN_CATALOG } from './units/catalog'
 import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
 import { updateMovement, updatePursuits, planPath } from './systems/movement'
-import { autoDetachment, encircle } from './systems/encircle'
+import {
+  autoDetachment,
+  endEncirclement,
+  stageEncirclement,
+  targetGroup,
+  updateEncirclements,
+} from './systems/encircle'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, updateArmies } from './systems/armies'
@@ -405,7 +411,10 @@ export class Simulation {
         updateSupply(ctx)
         updateCommand(ctx)
       }
-      if (ctx.tick % PURSUIT_EVERY === 0) updatePursuits(ctx)
+      if (ctx.tick % PURSUIT_EVERY === 0) {
+        updatePursuits(ctx)
+        updateEncirclements(ctx)
+      }
       updateMovement(ctx)
       updateCombat(ctx)
       updateTerritory(ctx)
@@ -592,20 +601,41 @@ export class Simulation {
   }
 
   private launchEncirclement(units: UnitState[], target: UnitState): void {
+    // Armée d'origine : celle de la majorité des unités envoyées.
+    const counts = new Map<number, number>()
+    for (const u of units) {
+      if (u.armyId !== null) counts.set(u.armyId, (counts.get(u.armyId) ?? 0) + 1)
+    }
+    const parentArmyId = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
     const id = this.createArmy(
       `Encerclement de ${target.name}`,
       units.map((u) => u.id),
     )
-    encircle(this.ctx, units, target)
+    const staging = stageEncirclement(this.ctx, units, target)
     const group = this.ctx.armies.get(id)
     if (group) {
       group.front = null
       group.wholeFront = false
+      group.encirclement = {
+        targetIds: targetGroup(this.ctx, target).map((u) => u.id),
+        targetName: target.name,
+        parentArmyId,
+        phase: 'staging',
+        startTick: this.ctx.tick,
+        closeTick: null,
+        staging,
+      }
     }
     this.log(
       `Encerclement lancé autour de ${target.name} (${units.length} unités)`,
       this.playerCountry,
     )
+  }
+
+  /** Le joueur met fin à un encerclement : le groupe rejoint son armée. */
+  endEncirclement(armyId: number): void {
+    const group = this.playerArmy(armyId)
+    if (group.encirclement) endEncirclement(this.ctx, group, 'sur ordre')
   }
 
   createArmy(name: string, unitIds: number[]): number {

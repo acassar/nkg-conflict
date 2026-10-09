@@ -587,6 +587,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const disbandArmy = (id: number): Promise<void> => sim.disbandArmy(id)
+  const endEncirclement = (id: number): Promise<void> => sim.endEncirclement(id)
   const setWholeFront = (id: number): Promise<void> => sim.setArmyFront(id, 'whole')
   const clearFront = (id: number): Promise<void> => sim.setArmyFront(id, null)
   const launchOffensive = (id: number): Promise<void> => sim.launchOffensive(id)
@@ -754,6 +755,7 @@ export const useGameStore = defineStore('game', () => {
     createArmyFromSelection,
     addSelectionToArmy,
     disbandArmy,
+    endEncirclement,
     setWholeFront,
     clearFront,
     launchOffensive,

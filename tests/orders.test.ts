@@ -82,37 +82,92 @@ describe('ordres visant une unité', () => {
 })
 
 describe('encerclement', () => {
-  it('les unités choisies forment un groupe et se répartissent autour de la cible', () => {
+  const launch = (): {
+    sim: Simulation
+    target: UnitState
+    mine: UnitState[]
+    parentId: number | null
+  } => {
     const sim = newGame()
     const { target, mine } = setup(sim)
-    const armyBefore = mine[0]?.armyId ?? null
+    const parentId = mine[0]?.armyId ?? null
     expect(
       sim.encircle(
         mine.map((u) => u.id),
         target.id,
       ),
     ).toBe(null)
-    const group = [...sim.ctx.armies.values()].find((a) => a.name.startsWith('Encerclement'))
+    return { sim, target, mine, parentId }
+  }
+  const groupOf = (sim: Simulation) =>
+    [...sim.ctx.armies.values()].find((a) => a.encirclement !== undefined)
+
+  it('phase 1 : les unités quittent leur armée et gagnent leurs points d’attente', () => {
+    const { sim, target, mine, parentId } = launch()
+    const group = groupOf(sim)
     expect(group?.unitIds.sort()).toEqual(mine.map((u) => u.id).sort())
-    expect(group?.wholeFront).toBe(false)
+    expect(group?.encirclement?.phase).toBe('staging')
+    expect(group?.encirclement?.parentArmyId).toBe(parentId)
+    expect(group?.encirclement?.targetIds).toContain(target.id)
+    for (const u of mine) {
+      expect(u.order.kind).toBe('move')
+      expect(group?.encirclement?.staging[u.id]).toEqual(u.order.target)
+    }
     // L'armée d'origine garde ses autres unités sur le front.
-    if (armyBefore !== null) {
-      const original = sim.ctx.armies.get(armyBefore)
-      expect(original?.unitIds.some((id) => mine.some((u) => u.id === id))).toBe(false)
-      expect(original?.wholeFront).toBe(true)
+    const original = parentId !== null ? sim.ctx.armies.get(parentId) : undefined
+    expect(original?.unitIds.some((id) => mine.some((u) => u.id === id))).toBe(false)
+  })
+
+  it('phase 2 : toutes prêtes, elles ferment l’anneau ensemble autour de la cible', () => {
+    const { sim, target, mine } = launch()
+    const enc = groupOf(sim)?.encirclement
+    // Toutes les unités arrivent à leur point d'attente.
+    for (const u of mine) {
+      const p = enc?.staging[u.id]
+      if (p) [u.lon, u.lat] = p
+      u.path = []
     }
-    const points = mine.map((u) => u.order.target)
-    for (const p of points) {
-      expect(p).toBeDefined()
-      const d = distanceKm(p?.[0] ?? 0, p?.[1] ?? 0, target.lon, target.lat)
-      expect(d).toBeGreaterThan(10)
-      expect(d).toBeLessThan(80)
-    }
-    // Points distincts, répartis autour de la cible.
+    sim.step(6)
+    expect(groupOf(sim)?.encirclement?.phase).toBe('closing')
+    const points = mine.filter((u) => u.order.kind === 'attack').map((u) => u.order.target)
+    expect(points.length).toBe(mine.length)
     const angles = points.map((p) =>
       Math.atan2((p?.[1] ?? 0) - target.lat, (p?.[0] ?? 0) - target.lon),
     )
     expect(Math.max(...angles) - Math.min(...angles)).toBeGreaterThan(Math.PI / 2)
+  })
+
+  it('le groupe rejoint son armée quand le groupe ennemi est détruit', () => {
+    const { sim, mine, parentId } = launch()
+    for (const id of groupOf(sim)?.encirclement?.targetIds ?? []) sim.ctx.units.delete(id)
+    sim.step(6)
+    expect(groupOf(sim)).toBeUndefined()
+    const parent = parentId !== null ? sim.ctx.armies.get(parentId) : undefined
+    for (const u of mine.filter((x) => sim.ctx.units.has(x.id))) {
+      expect(u.armyId).toBe(parentId)
+      expect(parent?.unitIds).toContain(u.id)
+    }
+  })
+
+  it('le groupe rejoint son armée après 7 jours de siège', () => {
+    const { sim, mine, parentId } = launch()
+    const enc = groupOf(sim)?.encirclement
+    if (!enc) throw new Error('encerclement manquant')
+    enc.phase = 'closing'
+    enc.closeTick = sim.ctx.tick - 7 * 24
+    sim.step(6)
+    expect(groupOf(sim)).toBeUndefined()
+    expect(mine.filter((u) => sim.ctx.units.has(u.id)).every((u) => u.armyId === parentId)).toBe(
+      true,
+    )
+  })
+
+  it('le joueur peut mettre fin à l’encerclement', () => {
+    const { sim, parentId, mine } = launch()
+    const group = groupOf(sim)
+    sim.endEncirclement(group?.id ?? -1)
+    expect(groupOf(sim)).toBeUndefined()
+    expect(mine.every((u) => u.armyId === parentId)).toBe(true)
   })
 
   it('détachement automatique : une partie de l’armée part, le reste tient le front', () => {
@@ -122,11 +177,11 @@ describe('encerclement', () => {
     if (!army) throw new Error('armée manquante')
     const before = army.unitIds.length
     expect(sim.encircleWithArmy(army.id, target.id)).toBe(null)
-    const group = [...sim.ctx.armies.values()].find((a) => a.name.startsWith('Encerclement'))
-    const detached = group?.unitIds.length ?? 0
+    const detached = groupOf(sim)?.unitIds.length ?? 0
     expect(detached).toBeGreaterThanOrEqual(2)
     expect(detached).toBeLessThan(before / 2)
     expect(army.unitIds.length).toBe(before - detached)
+    expect(groupOf(sim)?.encirclement?.parentArmyId).toBe(army.id)
   })
 
   it('une poursuite survit à une sauvegarde', () => {

@@ -223,6 +223,30 @@ try {
   if (pursuing === 0) report.errors.push('ordre de poursuite non appliqué')
   await shot('02g-poursuite')
 
+  // Encerclement par la même sélection, puis retour à l'armée sur ordre.
+  await page.getByTestId('order-encircle').click()
+  const at2 = await page.evaluate((id) => {
+    const u = window.__nkg.snapshot.units.find((x) => x.id === id)
+    const p = window.__nkgMap.project([u.lon, u.lat])
+    return [p.x, p.y]
+  }, target.id)
+  await page.mouse.click(at2[0], at2[1])
+  await page.waitForTimeout(600)
+  const group = await page.evaluate(
+    () => window.__nkg.armies.find((a) => a.encirclement)?.encirclement?.phase ?? null,
+  )
+  step('encerclement', { phase: group })
+  if (group !== 'staging') report.errors.push(`encerclement non lancé (${group})`)
+  await page.evaluate(() =>
+    window.__nkg.selectArmy(window.__nkg.armies.find((a) => a.encirclement).id),
+  )
+  await page.getByRole('button', { name: /Armées/ }).click()
+  await shot('02g2-encerclement')
+  await page.getByTestId('end-encirclement').click()
+  await page.waitForTimeout(500)
+  const left = await page.evaluate(() => window.__nkg.armies.filter((a) => a.encirclement).length)
+  if (left !== 0) report.errors.push('le groupe d’encerclement ne rejoint pas son armée')
+
   // Sauvegarde dans le navigateur, retour au menu, reprise.
   await page.evaluate(() => window.__nkg.step(24))
   await page.waitForTimeout(500)

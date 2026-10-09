@@ -7,7 +7,7 @@ import CountryTab from './CountryTab.vue'
 import EventLog from './EventLog.vue'
 import { isMobile, isTouch, layout } from '@/composables/layout'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
-import type { OrderKind, UnitSnapshot } from '@/sim/core/types'
+import type { Encirclement, OrderKind, UnitSnapshot } from '@/sim/core/types'
 
 const game = useGameStore()
 const { selectedUnits, armies, selectedArmy, selectedArmyId, panelTab: tab } = storeToRefs(game)
@@ -160,6 +160,16 @@ const selectionSummary = computed(() => summary(selectedUnits.value))
 const armySummary = (a: { unitIds: number[] }): ReturnType<typeof summary> => {
   const ids = new Set(a.unitIds)
   return summary(game.snapshot?.units.filter((u) => ids.has(u.id)) ?? [])
+}
+
+/** État lisible d'un encerclement : mise en place, puis siège avec le temps restant. */
+function encirclementStatus(enc: Encirclement): string {
+  const tick = game.snapshot?.tick ?? 0
+  if (enc.phase === 'staging') {
+    return `Mise en place sur les flancs · ${enc.targetIds.length} ennemi(s) visé(s)`
+  }
+  const left = Math.max(0, Math.ceil((7 * 24 - (tick - (enc.closeTick ?? tick))) / 24))
+  return `Anneau fermé · ${enc.targetIds.length} ennemi(s) encerclé(s) · retour dans ${left} j`
 }
 
 const unitsOfArmy = computed(() => {
@@ -367,7 +377,10 @@ async function createArmy(): Promise<void> {
                 <i :style="{ width: pct(armySummary(a).org) }" class="org" />
               </span>
             </span>
-            <span class="meta">
+            <span v-if="a.encirclement" class="meta enc">
+              {{ encirclementStatus(a.encirclement) }}
+            </span>
+            <span v-else class="meta">
               {{ a.wholeFront ? 'Tout le front' : a.front ? 'Portion de front' : 'Sans front' }}
               <template v-if="a.offensive">
                 · offensive {{ a.offensive.launched ? 'en cours' : 'planifiée' }}
@@ -385,13 +398,13 @@ async function createArmy(): Promise<void> {
             {{ unitsOfArmy.filter((u) => u.engaged).length }} au contact ·
             {{ unitsOfArmy.filter((u) => !u.supplied).length }} hors ravitaillement
           </p>
-          <div class="group">
+          <div v-if="!selectedArmy.encirclement" class="group">
             <span class="label">Front</span>
             <button @click="game.startFront(selectedArmy.id)">Assigner une portion</button>
             <button @click="game.setWholeFront(selectedArmy.id)">Tout le front</button>
             <button @click="game.clearFront(selectedArmy.id)">Aucun</button>
           </div>
-          <div class="group">
+          <div v-if="!selectedArmy.encirclement" class="group">
             <span class="label">Offensive</span>
             <button @click="game.startOffensive(selectedArmy.id)">Planifier</button>
             <button
@@ -407,7 +420,14 @@ async function createArmy(): Promise<void> {
               Annuler
             </button>
           </div>
-          <div class="group">
+          <div v-if="selectedArmy.encirclement" class="group">
+            <span class="label">Encerclement de {{ selectedArmy.encirclement.targetName }}</span>
+            <span class="meta">{{ encirclementStatus(selectedArmy.encirclement) }}</span>
+            <button data-testid="end-encirclement" @click="game.endEncirclement(selectedArmy.id)">
+              Rejoindre l'armée
+            </button>
+          </div>
+          <div v-else class="group">
             <span class="label">Encerclement</span>
             <button
               title="L'armée détache un tiers de ses unités de ligne autour d'une cible ennemie et garde son front avec le reste"
@@ -561,6 +581,9 @@ ul {
 }
 .gauge .org {
   background: #3b82f6;
+}
+.enc {
+  color: #fcd34d;
 }
 .chip {
   font-size: 12px;

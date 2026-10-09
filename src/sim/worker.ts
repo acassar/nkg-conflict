@@ -133,6 +133,9 @@ const api = {
   encircleWithArmy(armyId: number, targetId: number): string | null {
     return act((s) => s.encircleWithArmy(armyId, targetId)) ?? null
   },
+  endEncirclement(armyId: number): void {
+    act((s) => s.endEncirclement(armyId))
+  },
   createArmy(name: string, ids: number[]): number | undefined {
     return act((s) => s.createArmy(name, ids))
   },

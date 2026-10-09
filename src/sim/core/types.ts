@@ -87,6 +87,27 @@ export interface ArmyState {
   wholeFront: boolean
   /** Offensive planifiée : flèche d'un point à un autre. */
   offensive: { from: LonLat; to: LonLat; launched: boolean } | null
+  /** Groupe d'encerclement (absent pour une armée ordinaire). */
+  encirclement?: Encirclement
+}
+
+/**
+ * Encerclement en deux temps : les unités gagnent d'abord leurs points d'attente sur les flancs,
+ * puis, toutes prêtes, ferment l'anneau ensemble. Le groupe rejoint son armée d'origine quand le groupe
+ * ennemi est détruit, 7 jours après la fermeture, ou sur ordre du joueur.
+ */
+export interface Encirclement {
+  /** Unités ennemies visées (la cible et ses voisines). */
+  targetIds: number[]
+  targetName: string
+  /** Armée d'origine, que le groupe rejoint à la fin. */
+  parentArmyId: number | null
+  phase: 'staging' | 'closing'
+  startTick: number
+  /** Tick de fermeture de l'anneau (phase « closing »). */
+  closeTick: number | null
+  /** Point d'attente de chaque unité (identifiant d'unité → position). */
+  staging: Record<number, LonLat>
 }
 
 export interface GameEvent {

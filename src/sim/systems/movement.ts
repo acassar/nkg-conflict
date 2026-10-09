@@ -1,5 +1,5 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
-import { isOffensiveOrder, type LonLat, type UnitState } from '../core/types'
+import { isOffensiveOrder, type LonLat, type OrderKind, type UnitState } from '../core/types'
 import { distanceKm, moveToward, terrainRule } from '../theater/grid'
 import { CONTACT_KM, retreatFromEnemy } from './combat'
 import { WarIndex } from './spatial'
@@ -47,7 +47,13 @@ export function updateMovement(ctx: SimContext): void {
         u.entrench = Math.min(1, u.entrench + ENTRENCH_PER_HOUR * postureOf(u.posture).entrench)
         layObstacles(ctx, u)
       }
-      if (!moving) finishOrder(u)
+      if (!moving) {
+        finishOrder(u)
+        // Ordre direct du joueur terminé : on note l'heure, l'armée reprendra l'unité ensuite.
+        if (u.direct && u.direct.doneAt === undefined && !isRunningOrder(u.order.kind)) {
+          u.direct.doneAt = ctx.tick
+        }
+      }
       continue
     }
 
@@ -97,6 +103,11 @@ export function updatePursuits(ctx: SimContext): void {
       planPath(ctx, u, [target.lon, target.lat])
     }
   }
+}
+
+/** Ordre encore en cours d'exécution (déplacement, repli, attaque, poursuite). */
+function isRunningOrder(kind: OrderKind): boolean {
+  return kind === 'move' || kind === 'retreat' || isOffensiveOrder(kind)
 }
 
 /** Ordre terminé : déplacement et repli deviennent « tenir », l'attaque aussi une fois l'objectif atteint. */

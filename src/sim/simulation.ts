@@ -566,9 +566,11 @@ export class Simulation {
       if (kind === 'hold') {
         u.order = { kind: 'hold' }
         u.path = []
+        delete u.direct
         return
       }
       if (!target) return
+      u.direct = {}
       // Écartement de ~6 km entre unités pour éviter un empilement sur un seul point.
       const spread = (k - (units.length - 1) / 2) * 0.08
       const t: LonLat = [target[0] + spread, target[1]]
@@ -610,6 +612,7 @@ export class Simulation {
       if (runtimeOf(this.ctx, u.id).routed) continue
       u.order = { kind: 'hold' }
       u.path = []
+      delete u.direct
     }
   }
 
@@ -631,6 +634,7 @@ export class Simulation {
     if (units.length === 0) return 'Aucune unité disponible'
     for (const u of units) {
       u.order = { kind: 'pursue', unitId: target.id, target: [target.lon, target.lat] }
+      u.direct = {}
       planPath(this.ctx, u, [target.lon, target.lat])
     }
     this.log(`${units.length} unité(s) prennent en chasse ${target.name}`, this.playerCountry)

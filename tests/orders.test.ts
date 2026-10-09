@@ -3,8 +3,9 @@ import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { parseSave, serializeSave } from '@/sim/core/save'
+import { updateArmies } from '@/sim/systems/armies'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
-import type { UnitState } from '@/sim/core/types'
+import type { LonLat, UnitState } from '@/sim/core/types'
 
 const theater = theaterJson as unknown as TheaterData
 const newGame = (): Simulation => Simulation.fromScenario(ukraine2026, theater, 7)
@@ -193,5 +194,72 @@ describe('encerclement', () => {
       kind: 'pursue',
       unitId: target.id,
     })
+  })
+})
+
+describe('ordre direct à une unité d’armée', () => {
+  /** Unité de ligne ukrainienne d'une armée, la plus éloignée des Russes (pas de combat en route). */
+  function quietArmyUnit(sim: Simulation): UnitState {
+    const all = [...sim.ctx.units.values()]
+    const rus = all.filter((u) => u.owner === 'RUS')
+    const nearest = (u: UnitState): number =>
+      Math.min(...rus.map((r) => distanceKm(u.lon, u.lat, r.lon, r.lat)))
+    const mine = all
+      .filter((u) => u.owner === 'UKR' && u.armyId !== null && ['inf', 'mech'].includes(u.kind))
+      .sort((a, b) => nearest(b) - nearest(a))
+    const unit = mine[0]
+    if (!unit) throw new Error('pas d’unité d’armée')
+    return unit
+  }
+
+  it('le déplacement n’est pas écrasé par la répartition du front, puis l’armée reprend l’unité', () => {
+    const sim = newGame()
+    const u = quietArmyUnit(sim)
+    const target: LonLat = [u.lon - 1, u.lat]
+    sim.orderUnits([u.id], 'move', target)
+    expect(u.direct).toEqual({})
+    // Pendant le trajet, la répartition du front passe et laisse l'unité à son ordre.
+    sim.step(2)
+    updateArmies(sim.ctx)
+    expect(u.order).toMatchObject({ kind: 'move', target })
+    let hours = 2
+    while (u.order.kind === 'move' && hours < 24 * 6) {
+      sim.step(1)
+      hours++
+      expect(u.order.kind).not.toBe('front')
+    }
+    expect(u.order.kind).toBe('hold')
+    expect(distanceKm(u.lon, u.lat, target[0], target[1])).toBeLessThan(2)
+    expect(u.direct?.doneAt).toBe(sim.ctx.tick)
+    // À l'heure de l'arrivée, elle tient sa position.
+    updateArmies(sim.ctx)
+    expect(u.order.kind).toBe('hold')
+    // Ensuite, l'armée la reprend à sa répartition suivante.
+    sim.step(1)
+    updateArmies(sim.ctx)
+    expect(u.order.kind).toBe('front')
+    expect(u.direct).toBeUndefined()
+  })
+
+  it('un repli reste prioritaire et survit à une sauvegarde', () => {
+    const sim = newGame()
+    const u = quietArmyUnit(sim)
+    sim.orderUnits([u.id], 'retreat', [u.lon - 1, u.lat])
+    const loaded = Simulation.fromSave(parseSave(serializeSave(sim.toSave())), ukraine2026, theater)
+    const v = loaded.ctx.units.get(u.id)
+    expect(v?.direct).toEqual({})
+    loaded.step(1)
+    updateArmies(loaded.ctx)
+    expect(v?.order.kind).toBe('retreat')
+  })
+
+  it('annuler l’ordre rend l’unité à son armée', () => {
+    const sim = newGame()
+    const u = quietArmyUnit(sim)
+    sim.orderUnits([u.id], 'move', [u.lon - 0.25, u.lat])
+    sim.cancelOrders([u.id])
+    expect(u.direct).toBeUndefined()
+    updateArmies(sim.ctx)
+    expect(u.order.kind).toBe('front')
   })
 })

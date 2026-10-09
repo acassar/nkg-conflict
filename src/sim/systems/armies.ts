@@ -214,6 +214,17 @@ function picksFavorablePosts(army: ArmyState): boolean {
 }
 
 /**
+ * L'unité exécute un ordre direct du joueur, ou vient de le terminer à cette heure-ci : la répartition
+ * automatique la laisse. Au-delà, l'ordre est oublié et l'armée la reprend.
+ */
+function underDirectOrder(ctx: SimContext, u: UnitState): boolean {
+  if (!u.direct) return false
+  if (u.direct.doneAt === undefined || u.direct.doneAt >= ctx.tick) return true
+  delete u.direct
+  return false
+}
+
+/**
  * Répartit les unités d'une armée le long de sa portion de front : unités de ligne juste derrière
  * le contact, artillerie, logistique et QG plus en arrière. Les unités en attaque ou en déroute sont laissées.
  * En posture défensive ou défense max, les unités de ligne prennent les postes les plus favorables de
@@ -237,7 +248,9 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         !isOffensiveOrder(u.order.kind) &&
         !runtimeOf(ctx, u.id).routed &&
         // Unités parties riposter à une percée : elles reprennent leur poste ensuite.
-        !runtimeOf(ctx, u.id).reaction,
+        !runtimeOf(ctx, u.id).reaction &&
+        // Unités sous ordre direct du joueur : reprises seulement après la fin de l'ordre.
+        !underDirectOrder(ctx, u),
     )
   // Unités qui décrochent vers la ligne suivante : elles gardent leur poste réservé (sans ordre),
   // pour que leur départ ne décale pas les postes de toute l'armée.

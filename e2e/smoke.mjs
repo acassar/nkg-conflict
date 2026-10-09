@@ -374,6 +374,30 @@ try {
   else if (frontPieces > 4) report.errors.push(`tracé du front en ${frontPieces} morceaux`)
   await shot('04b-front-armee')
 
+  // Carte logistique : zones ravitaillées, portée des sources et des QG, poches.
+  await page.evaluate(() => window.__nkg.selectArmy(null))
+  await page.getByTestId('logistics-button').click()
+  await page.getByTestId('logistics-legend').waitFor()
+  await page.waitForFunction(() => window.__nkg.supply?.view, null, { timeout: 10_000 })
+  const logistics = await page.evaluate(() => {
+    const v = window.__nkg.supply.view
+    const state = window.__nkg.supply.state
+    let ok = 0
+    for (let i = 0; i < (state?.length ?? 0); i++) if (state[i] === 1) ok++
+    return { guerre: v.atWar, sources: v.sources.length, poches: v.pockets.length, relie: ok }
+  })
+  await page.waitForTimeout(800)
+  step('carte logistique', logistics)
+  if (!logistics.guerre || logistics.sources === 0 || logistics.relie === 0) {
+    report.errors.push('carte logistique incomplète')
+  }
+  await shot('04c-logistique')
+  await page.keyboard.press('l')
+  await page.waitForTimeout(300)
+  if (await page.getByTestId('logistics-legend').isVisible()) {
+    report.errors.push('la touche L ne referme pas la carte logistique')
+  }
+
   // Théâtre Ukraine – Russie : donneurs hors carte, avec leur fiche.
   page.once('dialog', (d) => d.accept())
   await page.getByTestId('menu-button').click()

@@ -14,6 +14,7 @@ import type {
 } from './core/types'
 import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
+import type { SupplyView } from './systems/supplyView'
 import { loadTheater } from './theater/load'
 import type { TheaterData } from './theater/grid'
 import type { AidLevel, PeaceKind } from './politics/types'
@@ -132,6 +133,9 @@ const api = {
   },
   battleReport(ids: number[]): BattleReport | null {
     return sim?.battleReport(ids) ?? null
+  },
+  supplyView(): SupplyView | null {
+    return sim?.supplyView() ?? null
   },
   setPosture(ids: number[], posture: Posture): void {
     act((s) => s.setPosture(ids, posture))

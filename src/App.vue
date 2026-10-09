@@ -8,6 +8,7 @@ import GameOver from '@/components/GameOver.vue'
 import StartScreen from '@/components/StartScreen.vue'
 import Notifications from '@/components/Notifications.vue'
 import LassoButton from '@/components/LassoButton.vue'
+import MapViewButton from '@/components/MapViewButton.vue'
 import BattleDialog from '@/components/BattleDialog.vue'
 import { computed } from 'vue'
 import { isMobile, isTouch, layout } from '@/composables/layout'
@@ -24,7 +25,7 @@ const hint = computed(() => {
     : text
 })
 
-// Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, Échap = annuler.
+// Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, L = carte logistique, Échap = annuler.
 // ZQSD (WASD en QWERTY) et les flèches déplacent la carte (voir MapView).
 function onKey(event: KeyboardEvent): void {
   const target = event.target
@@ -44,6 +45,8 @@ function onKey(event: KeyboardEvent): void {
     game.startOrder('retreat')
   } else if (key === 'h') {
     game.hold()
+  } else if (key === 'l') {
+    game.setMapView(game.mapView === 'logistics' ? 'political' : 'logistics')
   } else if (key === 'escape') {
     if (game.battleIds) game.closeBattle()
     else if (game.mode.kind !== 'select' || game.lasso) game.cancelMode()
@@ -70,6 +73,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <EventLog v-if="!isMobile" />
     <Notifications />
     <LassoButton />
+    <MapViewButton />
     <BattleDialog />
     <p v-if="!isMobile" class="disclaimer">Scénario hypothétique · sans prétention historique</p>
     <GameOver />

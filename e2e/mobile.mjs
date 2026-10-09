@@ -71,6 +71,16 @@ try {
   await shot('m02-menu')
   await page.getByTestId('menu-button').tap()
 
+  // Carte logistique : bouton à côté de la sélection par zone, légende au-dessus.
+  await page.getByTestId('logistics-button').tap()
+  await page.getByTestId('logistics-legend').waitFor()
+  await page.waitForFunction(() => window.__nkg.supply?.view, null, { timeout: 10_000 })
+  const legend = await page.getByTestId('logistics-legend').boundingBox()
+  step('carte logistique', { legende: legend })
+  check(legend && legend.x >= 0 && legend.x + legend.width <= 390, 'légende logistique hors écran')
+  await shot('m02b-logistique')
+  await page.getByTestId('logistics-button').tap()
+
   // Sélection par zone : un rectangle sur toute la carte visible.
   await page.getByTestId('lasso-button').tap()
   await page.getByTestId('lasso-layer').waitFor()

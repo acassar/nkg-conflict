@@ -36,6 +36,7 @@ L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; gu
 | Écran de bataille                     | clic sur l'icône d'épées croisées d'un combat                        |
 | Armées                                | onglet « Armées » du panneau de droite                               |
 | Fiche d'un pays, diplomatie           | clic sur un pays, une de ses villes ou un de ses pions               |
+| Carte logistique                      | `L` ou le bouton camion, à côté de la sélection par zone             |
 | Sauvegarder, exporter, importer       | `Sauver` ou menu ☰                                                  |
 
 Sur téléphone, en portrait comme en paysage : la barre du haut garde la pause, la date et la vitesse (un toucher fait défiler les vitesses), le reste passe dans le menu ☰. En portrait, le panneau devient un tiroir en bas, à tirer par sa poignée (replié, mi-hauteur, plein écran) ; en paysage, il reste sur le côté. Pour donner un ordre : bouton « Déplacer », « Attaquer » ou « Se replier », puis toucher la destination (le tiroir se replie le temps de viser). Le bouton ▢ active la sélection par zone : glisser un rectangle sur la carte sélectionne vos unités qu'il contient ; il marche aussi à la souris.
@@ -45,6 +46,8 @@ Ordres visant une unité ennemie : **assaut** (attaque de sa position du moment,
 Sauvegardes : `Sauver` enregistre la partie dans le navigateur (compressée). Une sauvegarde automatique est faite tous les 30 jours de jeu et au retour au menu. L'écran de départ propose de reprendre l'une ou l'autre. `Exporter` télécharge la partie dans un fichier, `Importer` la recharge (autre navigateur, autre appareil).
 
 Onglet Production : jauges des chantiers en cours (de 1 à 5 en parallèle, un par tranche de 20 points de construction quotidiens), des casernes occupées et de la production engagée face à la production gagnée ; tant que l'onglet est ouvert, la carte montre les casernes (occupées/total, cercle vert s'il en reste une libre) et les fortifications de vos villes.
+
+Carte logistique (`L` ou bouton camion) : territoire relié aux sources de ravitaillement en vert, territoire coupé sans contact avec l'ennemi (île, enclave) en hachures orange, poches en hachures rouges avec le nombre d'unités amies qu'elles contiennent ; cercles de portée des sources (capitale, grandes villes, dépôts : 30 km), des unités logistiques (60 km, grisé si elles sont elles-mêmes coupées) et des QG (commandement, 120 km). En paix, tout le territoire est ravitaillé.
 
 Une armée peut tenir tout le front ou une portion (deux clics sur la carte) : les extrémités tracées s'accrochent au front réel le plus proche (jusqu'à 150 km), la carte montre la ligne tenue, et chaque unité prend le poste libre le plus proche d'elle, sans traverser la carte. Les unités suivent le front quand il bouge. Une offensive se trace en deux clics (départ, objectif), puis se lance avec toute l'armée ou avec les seules unités sélectionnées (bouton « Avec la sélection ») : les autres continuent de tenir le front. Si toutes les unités d'une armée partent encercler, l'armée encercle elle-même, sans nouveau groupe, puis reprend son front.
 

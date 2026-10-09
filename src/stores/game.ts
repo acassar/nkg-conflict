@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import * as Comlink from 'comlink'
 import { formatGameDate, isSpeed, tickToDate } from '@/sim/core/clock'
-import { terrainRule } from '@/sim/theater/grid'
+import { decodeRle, terrainRule } from '@/sim/theater/grid'
+import type { SupplyView } from '@/sim/systems/supplyView'
 import type {
   BattleReport,
   BuildingKind,
@@ -43,6 +44,18 @@ const TARGET_LABELS: Record<TargetAction, string> = {
   assault: 'Assaut',
   encircle: 'Encerclement',
 }
+
+/** Mode d'affichage de la carte : politique (par défaut) ou logistique. */
+export type MapView = 'political' | 'logistics'
+
+/** Vue logistique reçue du Worker, avec l'état de chaque cellule décodé (null en paix). */
+export interface SupplyMap {
+  view: SupplyView
+  state: Uint8Array | null
+}
+
+/** Intervalle minimal entre deux demandes de la vue logistique, en millisecondes. */
+const SUPPLY_REFRESH_MS = 1000
 
 /** Relation d'un pays avec le joueur, pour les couleurs de la carte. */
 export type Stance = 'player' | 'enemy' | 'ally' | 'war' | 'neutral'
@@ -93,6 +106,11 @@ export const useGameStore = defineStore('game', () => {
   /** Sélection par zone : le prochain glisser sur la carte trace un rectangle. */
   const lasso = ref(false)
   const selectedCityName = ref<string | null>(null)
+  const mapView = ref<MapView>('political')
+  /** Vue logistique, tenue à jour tant que le mode Logistique est affiché. */
+  const supply = shallowRef<SupplyMap | null>(null)
+  let supplyAt = 0
+  let supplyBusy = false
   /** Message bref affiché en haut de l'écran (erreur de commande, par exemple). */
   const notice = ref<string | null>(null)
   let noticeTimer: ReturnType<typeof setTimeout> | undefined
@@ -138,6 +156,7 @@ export const useGameStore = defineStore('game', () => {
         lastAutosaveTick = next.tick
         void saveLocal('auto', true)
       }
+      if (mapView.value === 'logistics') void refreshSupply()
       // L'état publié peut arriver après la réponse de newGame : le recentrage se fait ici.
       if (focusPending) {
         focusPending = false
@@ -161,6 +180,30 @@ export const useGameStore = defineStore('game', () => {
       }
     }),
   )
+
+  /** Demande la vue logistique au Worker (au plus une fois par seconde, sauf si `force`). */
+  async function refreshSupply(force = false): Promise<void> {
+    const now = performance.now()
+    if (supplyBusy || (!force && now - supplyAt < SUPPLY_REFRESH_MS)) return
+    supplyBusy = true
+    supplyAt = now
+    try {
+      const view = await sim.supplyView()
+      const g = grid.value
+      if (!active || mapView.value !== 'logistics' || !view || !g) return
+      const state = view.atWar ? decodeRle(view.cells, g.width * g.height) : null
+      supply.value = { view, state }
+    } finally {
+      supplyBusy = false
+    }
+  }
+
+  /** Bascule la carte entre le mode politique et le mode logistique. */
+  function setMapView(next: MapView): void {
+    mapView.value = next
+    if (next === 'logistics') void refreshSupply(true)
+    else supply.value = null
+  }
 
   /** Cellules modifiées depuis le dernier appel (pour un dessin incrémental). */
   function takePendingCells(): number[] {
@@ -350,6 +393,8 @@ export const useGameStore = defineStore('game', () => {
     selectedCountryCode.value = null
     panelTab.value = 'units'
     toasts.value = []
+    mapView.value = 'political'
+    supply.value = null
     cancelMode()
   }
 
@@ -740,6 +785,9 @@ export const useGameStore = defineStore('game', () => {
     drawer,
     drawerHeight,
     lasso,
+    mapView,
+    supply,
+    setMapView,
     notice,
     toasts,
     dismissToast,

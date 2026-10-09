@@ -7,19 +7,32 @@ import type { PickingInfo } from '@deck.gl/core'
 import { Protocol } from 'pmtiles'
 import { storeToRefs } from 'pinia'
 import type { CityState, GridSnapshot, LonLat } from '@/sim/core/types'
+import type { SupplyView } from '@/sim/systems/supplyView'
 import { isStack, type MapUnit } from './clusters'
 import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers } from './layers'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
+import { SupplyTiles } from './supplyImage'
 import { isTouch } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
 import { useBattles } from '@/composables/battles'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
-const { snapshot, grid, gridTick, selection, selectedArmy, mode, selectedCity, stances, focus } =
-  storeToRefs(game)
+const {
+  snapshot,
+  grid,
+  gridTick,
+  selection,
+  selectedArmy,
+  mode,
+  selectedCity,
+  stances,
+  focus,
+  mapView,
+  supply,
+} = storeToRefs(game)
 
 // ---------- Sélection par zone ----------
 
@@ -120,6 +133,31 @@ function syncTerritory(): void {
   territory = tiles?.layers() ?? []
 }
 
+// Calque du mode Logistique : recréé avec la grille, redessiné seulement quand un nouvel état arrive.
+let supplyTiles: SupplyTiles | null = null
+let supplyGrid: GridSnapshot | null = null
+let supplyState: Uint8Array | null = null
+let supplyLayer: TerritoryTile[] = []
+
+function logistics(): { tiles: TerritoryTile[]; view: SupplyView | null } | null {
+  if (mapView.value !== 'logistics') return null
+  const g = grid.value
+  if (!g) return null
+  if (g !== supplyGrid) {
+    supplyTiles = new SupplyTiles(g)
+    supplyGrid = g
+    supplyState = null
+    supplyLayer = []
+  }
+  const state = supply.value?.state ?? null
+  if (state !== supplyState) {
+    supplyState = state
+    // En paix, aucun état de cellule : le calque est effacé.
+    supplyLayer = supplyTiles?.update(state ?? new Uint8Array(g.width * g.height)) ?? []
+  }
+  return { tiles: supplyLayer, view: supply.value?.view ?? null }
+}
+
 function refresh(): void {
   syncTerritory()
   const m = mode.value
@@ -135,6 +173,7 @@ function refresh(): void {
       zoom: zoom.value,
       selectedCity: selectedCity.value?.name ?? null,
       battles: battles.value,
+      logistics: logistics(),
       production:
         game.panelTab === 'production' ? (productionStats.value?.busyByCity ?? null) : null,
     }),
@@ -242,7 +281,18 @@ watch(focus, (f) => {
 })
 
 watch(
-  [snapshot, gridTick, selection, selectedArmy, mode, zoom, selectedCity, () => game.panelTab],
+  [
+    snapshot,
+    gridTick,
+    selection,
+    selectedArmy,
+    mode,
+    zoom,
+    selectedCity,
+    () => game.panelTab,
+    mapView,
+    supply,
+  ],
   refresh,
   {
     deep: false,

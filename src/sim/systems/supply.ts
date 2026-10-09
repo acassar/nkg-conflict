@@ -1,7 +1,8 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import { distanceKm } from '../theater/grid'
 
-const SOURCE_RADIUS_KM = 30
+/** Rayon de ravitaillement autour d'une source (capitale, grande ville, dépôt). */
+export const SOURCE_RADIUS_KM = 30
 /** Une unité au contact peut déborder sur une cellule adverse : elle reste ravitaillée si une cellule
  * reliée de son camp est à cette distance. */
 const FRONT_TOLERANCE_KM = 12

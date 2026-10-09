@@ -13,6 +13,7 @@ import { stackIcon, unitIcon } from './unitIcons'
 import { isStack, stackUnits, type MapUnit } from './clusters'
 import { stanceColor, type TerritoryTile } from './territoryImage'
 import type { Stance } from '@/stores/game'
+import type { SupplyPocket, SupplyView } from '@/sim/systems/supplyView'
 
 export interface LayerInput {
   snapshot: SimSnapshot | null
@@ -34,6 +35,11 @@ export interface LayerInput {
    * Les villes du joueur affichent alors leurs casernes (occupées/total) et leurs fortifications.
    */
   production: Map<string, number> | null
+  /**
+   * Mode « Logistique » : état du ravitaillement (calque en tuiles et vue du Worker).
+   * Affiche aussi la portée des sources, des unités logistiques et des QG du joueur.
+   */
+  logistics: { tiles: TerritoryTile[]; view: SupplyView | null } | null
   /** Batailles en cours (icône cliquable). */
   battles: Array<{ key: string; ids: number[]; at: LonLat; mine: boolean }>
 }
@@ -82,6 +88,98 @@ function visibleCities(snapshot: SimSnapshot, zoom: number): CityState[] {
   })
 }
 
+/**
+ * Mode « Logistique » (sous les pions) : zones ravitaillées, coupées et poches, portée des sources de ravitaillement
+ * (capitale, grandes villes, dépôts), des unités logistiques et des QG du joueur.
+ */
+function logisticsLayers(
+  logistics: NonNullable<LayerInput['logistics']>,
+  snapshot: SimSnapshot,
+): Layer[] {
+  const { tiles, view } = logistics
+  const layers: Layer[] = tiles.map(
+    (t) =>
+      new BitmapLayer({
+        id: `supply-${t.id}`,
+        image: t.canvas,
+        bounds: t.bounds,
+        _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
+        textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
+      }),
+  )
+  const mine = snapshot.units.filter((u) => u.owner === snapshot.playerCountry)
+  const range = (u: UnitSnapshot, key: 'supplyRadiusKm' | 'commandRadiusKm'): number =>
+    MODERN_CATALOG[u.kind][key]
+  if (view) {
+    layers.push(
+      new ScatterplotLayer<LonLat>({
+        id: 'supply-sources',
+        data: view.sources,
+        getPosition: (p) => p,
+        getRadius: view.sourceRadiusKm * 1000,
+        radiusUnits: 'meters',
+        filled: true,
+        getFillColor: [22, 163, 74, 45],
+        stroked: true,
+        getLineColor: [21, 128, 61, 230],
+        lineWidthMinPixels: 2,
+      }),
+    )
+  }
+  layers.push(
+    // Unités logistiques : rayon où elles prolongent le ravitaillement (grisé si elles sont coupées).
+    new ScatterplotLayer<UnitSnapshot>({
+      id: 'supply-units',
+      data: mine.filter((u) => range(u, 'supplyRadiusKm') > 0),
+      getPosition: (u) => [u.lon, u.lat],
+      getRadius: (u) => range(u, 'supplyRadiusKm') * 1000,
+      radiusUnits: 'meters',
+      filled: true,
+      getFillColor: (u) => (u.supplied ? [59, 130, 246, 40] : [120, 120, 120, 30]),
+      stroked: true,
+      getLineColor: (u) => (u.supplied ? [37, 99, 235, 220] : [100, 100, 100, 200]),
+      lineWidthMinPixels: 1.5,
+      updateTriggers: { getFillColor: snapshot.tick, getLineColor: snapshot.tick },
+    }),
+    // QG : rayon de commandement (+15 % au combat, récupération plus rapide).
+    new ScatterplotLayer<UnitSnapshot>({
+      id: 'supply-command',
+      data: mine.filter((u) => range(u, 'commandRadiusKm') > 0),
+      getPosition: (u) => [u.lon, u.lat],
+      getRadius: (u) => range(u, 'commandRadiusKm') * 1000,
+      radiusUnits: 'meters',
+      filled: false,
+      stroked: true,
+      getLineColor: [202, 138, 4, 200],
+      lineWidthMinPixels: 1.5,
+    }),
+  )
+  return layers
+}
+
+/** Étiquettes des poches du mode « Logistique », au-dessus des pions. */
+function pocketLabels(view: SupplyView | null): Layer[] {
+  if (!view?.pockets.length) return []
+  return [
+    new TextLayer<SupplyPocket>({
+      id: 'supply-pockets',
+      data: view.pockets,
+      getPosition: (p) => p.at,
+      getText: (p) =>
+        p.units > 0 ? `Poche · ${p.units} unité${p.units > 1 ? 's' : ''}` : 'Poche sans défenseur',
+      getSize: 12,
+      // Sous le pion qui occupe souvent le centre de la poche.
+      getPixelOffset: [0, 24],
+      getColor: [127, 29, 29, 255],
+      fontWeight: 700,
+      outlineWidth: 3,
+      outlineColor: [255, 255, 255, 230],
+      fontSettings: { sdf: true },
+      characterSet: 'auto',
+    }),
+  ]
+}
+
 export function buildLayers(input: LayerInput): Layer[] {
   const { snapshot, selection, selectedArmy, pendingPoint } = input
   if (!snapshot) return []
@@ -113,6 +211,8 @@ export function buildLayers(input: LayerInput): Layer[] {
       )
     }
   }
+
+  if (input.logistics) layers.push(...logisticsLayers(input.logistics, snapshot))
 
   layers.push(
     // Fortifications : anneau gris d'autant plus épais que le niveau est élevé.
@@ -362,5 +462,6 @@ export function buildLayers(input: LayerInput): Layer[] {
       characterSet: 'auto',
     }),
   )
+  if (input.logistics) layers.push(...pocketLabels(input.logistics.view))
   return layers
 }

@@ -25,6 +25,7 @@ import { decodeRle, Grid, type TheaterData } from './theater/grid'
 import { MODERN_CATALOG } from './units/catalog'
 import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
+import { supplyView, type SupplyView } from './systems/supplyView'
 import { updateMovement, updatePursuits, planPath } from './systems/movement'
 import { updatePostureReflexes } from './systems/postures'
 import { reactToBreakthroughs } from './systems/breakthrough'
@@ -579,6 +580,11 @@ export class Simulation {
   /** Rapport détaillé d'une bataille (unités au contact, modificateurs). */
   battleReport(ids: number[]): BattleReport | null {
     return battleReport(this.ctx, ids, this.playerCountry)
+  }
+
+  /** Vue « Logistique » de la carte pour le joueur : zones ravitaillées, coupées, poches. */
+  supplyView(): SupplyView {
+    return supplyView(this.ctx, this.playerCountry)
   }
 
   /** Posture des unités choisies. */

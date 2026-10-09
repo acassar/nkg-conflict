@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { STANCE_COLORS } from '@/map/territoryImage'
 import { isMobile } from '@/composables/layout'
+import { useProductionStats } from '@/composables/production'
 
 const game = useGameStore()
 const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
@@ -40,6 +41,42 @@ const resources = computed(() => {
     },
   ]
 })
+const stats = useProductionStats()
+/** Jauges de capacité : chantiers et casernes occupés, production employée sur la production du jour. */
+const capacity = computed(() => {
+  const st = stats.value
+  if (!st) return null
+  const ratio = (a: number, b: number): number => (b > 0 ? Math.min(1, a / b) : 0)
+  return [
+    {
+      label: 'Chantiers',
+      text: `${st.construction.active}/${st.construction.max}`,
+      ratio: ratio(st.construction.active, st.construction.max),
+      idle: st.construction.active < st.construction.max,
+      title: `Chantiers en cours sur ${st.construction.max} possibles (${st.construction.queued} en file) · ${fmt(st.construction.used)} points employés sur ${fmt(st.construction.gain)} par jour`,
+    },
+    {
+      label: 'Formations',
+      text: `${st.recruitment.active}/${st.recruitment.max}`,
+      ratio: ratio(st.recruitment.active, st.recruitment.max),
+      idle: st.recruitment.active < st.recruitment.max,
+      title: `Casernes occupées sur ${st.recruitment.max} (${st.recruitment.queued} formations en file)`,
+    },
+    {
+      label: 'Prod.',
+      text: `${fmt(st.production.used)}/${fmt(st.production.gain)} /j`,
+      ratio: ratio(st.production.used, st.production.gain),
+      idle: st.production.used < st.production.gain * 0.5,
+      title:
+        'Production dépensée hier (formations et renforts) sur la production gagnée par jour ; le reste s’accumule en stock',
+    },
+  ]
+})
+
+function openProduction(): void {
+  game.panelTab = 'production'
+}
+
 const held = computed(() => {
   const s = game.snapshot
   const v = s?.territoryHeld[s.playerCountry]
@@ -56,7 +93,9 @@ function openCountry(): void {
 }
 
 function quit(): void {
-  if (confirm('Revenir au menu ? Pensez à sauvegarder la partie en cours.')) game.quitToMenu()
+  if (confirm('Revenir au menu ? La partie est sauvegardée automatiquement.')) {
+    void game.quitToMenu()
+  }
 }
 const speeds = [1, 2, 3, 4, 5] as const
 const menuOpen = ref(false)
@@ -121,6 +160,20 @@ async function onFile(event: Event): Promise<void> {
         </span>
       </div>
 
+      <div v-if="capacity" class="capacity" data-testid="capacity">
+        <span
+          v-for="c in capacity"
+          :key="c.label"
+          :title="c.title"
+          class="cap"
+          :class="{ idle: c.idle }"
+          @click="openProduction"
+        >
+          <span class="rlabel">{{ c.label }}</span> {{ c.text }}
+          <span class="minibar"><i :style="{ width: `${c.ratio * 100}%` }" /></span>
+        </span>
+      </div>
+
       <div class="time">
         <button
           class="pause"
@@ -145,11 +198,26 @@ async function onFile(event: Event): Promise<void> {
       </div>
 
       <div class="files">
-        <button title="Revenir au menu (la partie en cours sera perdue)" @click="quit">Menu</button>
-        <button title="Sauvegarder la partie dans un fichier" @click="game.saveToFile()">
+        <button class="quick-save" title="Sauvegarder dans le navigateur" @click="game.saveLocal()">
           Sauver
         </button>
-        <button title="Charger une partie sauvegardée" @click="fileInput?.click()">Charger</button>
+        <button
+          class="menu-btn"
+          :aria-expanded="menuOpen"
+          aria-label="Menu"
+          data-testid="menu-button"
+          @click="menuOpen = !menuOpen"
+        >
+          ☰
+        </button>
+        <div v-if="menuOpen" class="menu" role="menu">
+          <div class="menu-actions">
+            <button @click="menuAction(() => game.saveLocal())">Sauver</button>
+            <button @click="menuAction(game.exportToFile)">Exporter</button>
+            <button @click="menuAction(() => fileInput?.click())">Importer</button>
+            <button @click="menuAction(quit)">Menu principal</button>
+          </div>
+        </div>
       </div>
     </template>
     <template v-else>
@@ -198,12 +266,17 @@ async function onFile(event: Event): Promise<void> {
             <dt>Soutien à la guerre</dt>
             <dd>{{ pctOf(game.playerPolitics.warSupport) }}</dd>
           </template>
+          <template v-for="c in capacity ?? []" :key="c.label">
+            <dt>{{ c.label }}</dt>
+            <dd :class="{ idle: c.idle }">{{ c.text }}</dd>
+          </template>
         </dl>
         <div class="menu-actions">
           <button @click="menuAction(() => game.step(24))">+24 h</button>
           <button @click="menuAction(openCountry)">Diplomatie</button>
-          <button @click="menuAction(game.saveToFile)">Sauver</button>
-          <button @click="menuAction(() => fileInput?.click())">Charger</button>
+          <button @click="menuAction(() => game.saveLocal())">Sauver</button>
+          <button @click="menuAction(game.exportToFile)">Exporter</button>
+          <button @click="menuAction(() => fileInput?.click())">Importer</button>
           <button @click="menuAction(quit)">Menu principal</button>
         </div>
       </div>
@@ -279,7 +352,8 @@ async function onFile(event: Event): Promise<void> {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 10;
+  /* Au-dessus du panneau : le menu déroulant doit rester accessible. */
+  z-index: 15;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -300,6 +374,53 @@ async function onFile(event: Event): Promise<void> {
 }
 .topbar * {
   white-space: nowrap;
+}
+.capacity {
+  display: flex;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.cap.idle .minibar i {
+  background: #f59e0b;
+}
+.minibar {
+  display: inline-block;
+  width: 34px;
+  height: 5px;
+  border-radius: 3px;
+  background: #2c323c;
+  overflow: hidden;
+}
+.minibar i {
+  display: block;
+  height: 100%;
+  background: #22c55e;
+}
+@media (max-width: 1750px) {
+  .cap .minibar {
+    display: none;
+  }
+}
+@media (max-width: 1600px) {
+  .gauge {
+    display: none;
+  }
+}
+@media (max-width: 1520px) {
+  .quick-save {
+    display: none;
+  }
+}
+@media (max-width: 1280px) {
+  .capacity {
+    display: none;
+  }
 }
 .resources {
   display: flex;

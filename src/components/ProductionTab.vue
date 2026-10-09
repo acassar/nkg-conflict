@@ -5,6 +5,7 @@ import { useGameStore } from '@/stores/game'
 import { BUILDING_KINDS, BUILDINGS, RECRUIT_COSTS } from '@/sim/economy/rules'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import type { UnitKind } from '@/sim/core/types'
+import { useProductionStats } from '@/composables/production'
 
 const game = useGameStore()
 const { economy, selectedCity, armies } = storeToRefs(game)
@@ -25,6 +26,12 @@ const queuedHere = (kind: string): number =>
   economy.value?.construction.filter((q) => q.city === selectedCity.value?.name && q.kind === kind)
     .length ?? 0
 
+const stats = useProductionStats()
+/** Jours restants au rythme maximal (borne basse). */
+const etaDays = (progress: number, cost: number, minDays: number): number =>
+  Math.max(1, Math.ceil(((cost - progress) / cost) * minDays))
+const ratio = (a: number, b: number): string => `${b > 0 ? Math.min(100, (100 * a) / b) : 0}%`
+
 const pct = (progress: number, cost: number): number => Math.min(100, (100 * progress) / cost)
 const round = (v: number): string => Math.round(v).toLocaleString('fr-FR')
 const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
@@ -32,6 +39,50 @@ const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
 
 <template>
   <div class="production">
+    <!-- Capacités : ce qui tourne face à ce qui pourrait tourner. -->
+    <div v-if="stats" class="capacity" data-testid="production-capacity">
+      <div class="cap">
+        <span class="cap-label">Chantiers</span>
+        <span class="cap-value">{{ stats.construction.active }}/{{ stats.construction.max }}</span>
+        <span class="gauge"
+          ><i :style="{ width: ratio(stats.construction.active, stats.construction.max) }"
+        /></span>
+        <span class="meta"
+          >{{ round(stats.construction.used) }}/{{ round(stats.construction.gain) }} pts/j</span
+        >
+      </div>
+      <div class="cap">
+        <span class="cap-label">Formations</span>
+        <span class="cap-value">{{ stats.recruitment.active }}/{{ stats.recruitment.max }}</span>
+        <span class="gauge"
+          ><i :style="{ width: ratio(stats.recruitment.active, stats.recruitment.max) }"
+        /></span>
+        <span class="meta">casernes occupées</span>
+      </div>
+      <div class="cap">
+        <span class="cap-label">Production</span>
+        <span class="cap-value"
+          >{{ round(stats.production.used) }}/{{ round(stats.production.gain) }}</span
+        >
+        <span class="gauge"
+          ><i :style="{ width: ratio(stats.production.used, stats.production.gain) }"
+        /></span>
+        <span class="meta"
+          >engagée/gagnée par jour · stock {{ round(stats.production.stock) }}</span
+        >
+      </div>
+      <p v-if="stats.recruitment.max === 0" class="warn">
+        Aucune caserne : construisez-en une pour former des unités.
+      </p>
+      <p
+        v-else-if="stats.recruitment.active < stats.recruitment.max && stats.production.stock > 300"
+        class="free-tip"
+      >
+        {{ stats.recruitment.max - stats.recruitment.active }} caserne(s) libre(s) : choisissez une
+        ville pour y former des unités.
+      </p>
+    </div>
+
     <label class="auto">
       <input
         type="checkbox"
@@ -102,9 +153,20 @@ const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
       <div class="label">Constructions ({{ economy.construction.length }})</div>
       <p v-if="economy.construction.length === 0" class="meta">Aucune</p>
       <ul>
-        <li v-for="q in economy.construction" :key="q.id">
+        <li
+          v-for="(q, k) in economy.construction"
+          :key="q.id"
+          :class="{ waiting: k >= (stats?.construction.max ?? 0) }"
+        >
           <div class="row">
             <span>{{ BUILDINGS[q.kind].name }} · {{ q.city }}</span>
+            <span class="meta">
+              {{
+                k >= (stats?.construction.max ?? 0)
+                  ? 'en attente'
+                  : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, BUILDINGS[q.kind].minDays)} j`
+              }}
+            </span>
             <button class="x" aria-label="Annuler" @click="game.cancelConstruction(q.id)">×</button>
           </div>
           <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
@@ -114,9 +176,20 @@ const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
       <div class="label">Formations ({{ economy.recruitment.length }})</div>
       <p v-if="economy.recruitment.length === 0" class="meta">Aucune</p>
       <ul>
-        <li v-for="q in economy.recruitment" :key="q.id">
+        <li
+          v-for="(q, k) in economy.recruitment"
+          :key="q.id"
+          :class="{ waiting: k >= (stats?.recruitment.max ?? 0) }"
+        >
           <div class="row">
             <span>{{ unitLabel(q.kind) }} · {{ q.city }}</span>
+            <span class="meta">
+              {{
+                k >= (stats?.recruitment.max ?? 0)
+                  ? 'en attente de caserne'
+                  : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, RECRUIT_COSTS[q.kind].days)} j`
+              }}
+            </span>
             <button class="x" aria-label="Annuler" @click="game.cancelRecruit(q.id)">×</button>
           </div>
           <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
@@ -135,6 +208,54 @@ const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
 </template>
 
 <style scoped>
+.capacity {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #1b2028;
+  border-radius: 6px;
+}
+.cap {
+  display: grid;
+  grid-template-columns: 78px 54px 1fr;
+  align-items: center;
+  gap: 2px 8px;
+}
+.cap .meta {
+  grid-column: 2 / 4;
+  font-size: 11px;
+}
+.cap-label {
+  color: #9aa3af;
+}
+.cap-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.gauge {
+  height: 6px;
+  background: #2c323c;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.gauge i {
+  display: block;
+  height: 100%;
+  background: #22c55e;
+}
+.capacity .warn {
+  margin: 2px 0 0;
+  color: #fca5a5;
+}
+.capacity .free-tip {
+  margin: 2px 0 0;
+  color: #fcd34d;
+  font-size: 12px;
+}
+li.waiting {
+  opacity: 0.6;
+}
 .auto {
   display: flex;
   gap: 6px;

@@ -22,7 +22,8 @@ import { decodeRle, Grid, type TheaterData } from './theater/grid'
 import { MODERN_CATALOG } from './units/catalog'
 import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
-import { updateMovement, planPath } from './systems/movement'
+import { updateMovement, updatePursuits, planPath } from './systems/movement'
+import { autoDetachment, encircle } from './systems/encircle'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, updateArmies } from './systems/armies'
@@ -77,6 +78,8 @@ import {
 } from './politics/aid'
 import type { AidLevel, Organization, PeaceKind, PoliticsState, War } from './politics/types'
 
+/** Les poursuites recalculent leur chemin toutes les 6 heures. */
+const PURSUIT_EVERY = 6
 const MAX_EVENTS = 80
 const ARMIES_EVERY = 24
 const AI_EVERY = 12
@@ -402,6 +405,7 @@ export class Simulation {
         updateSupply(ctx)
         updateCommand(ctx)
       }
+      if (ctx.tick % PURSUIT_EVERY === 0) updatePursuits(ctx)
       updateMovement(ctx)
       updateCombat(ctx)
       updateTerritory(ctx)
@@ -526,6 +530,82 @@ export class Simulation {
       u.order = { kind, target: t }
       planPath(this.ctx, u, t)
     })
+  }
+
+  /** Unité ennemie visée par un ordre du joueur, ou un message d'erreur. */
+  private enemyTarget(targetId: number): UnitState | string {
+    const target = this.ctx.units.get(targetId)
+    if (!target) return 'Cible introuvable'
+    if (!isAtWarWith(this.ctx, this.playerCountry, target.owner)) {
+      return `Vous n'êtes pas en guerre contre ${countryName(this.ctx, target.owner)}`
+    }
+    return target
+  }
+
+  /** Poursuite : les unités suivent la cible jusqu'à sa destruction ou sa fuite hors de portée. */
+  pursueUnit(ids: number[], targetId: number): string | null {
+    const target = this.enemyTarget(targetId)
+    if (typeof target === 'string') return target
+    const units = this.playerUnits(ids).filter((u) => !runtimeOf(this.ctx, u.id).routed)
+    if (units.length === 0) return 'Aucune unité disponible'
+    for (const u of units) {
+      u.order = { kind: 'pursue', unitId: target.id, target: [target.lon, target.lat] }
+      planPath(this.ctx, u, [target.lon, target.lat])
+    }
+    this.log(`${units.length} unité(s) prennent en chasse ${target.name}`, this.playerCountry)
+    return null
+  }
+
+  /** Assaut ponctuel : attaque de la position actuelle de la cible, puis tenue du terrain. */
+  assaultUnit(ids: number[], targetId: number): string | null {
+    const target = this.enemyTarget(targetId)
+    if (typeof target === 'string') return target
+    this.orderUnits(ids, 'attack', [target.lon, target.lat])
+    return null
+  }
+
+  /**
+   * Encerclement par les unités choisies par le joueur : elles quittent leur armée (qui garde son front
+   * avec les autres) et forment un groupe d'encerclement.
+   */
+  encircle(ids: number[], targetId: number): string | null {
+    const target = this.enemyTarget(targetId)
+    if (typeof target === 'string') return target
+    const units = this.playerUnits(ids).filter((u) => !runtimeOf(this.ctx, u.id).routed)
+    if (units.length < 2) return 'Il faut au moins deux unités pour encercler'
+    this.launchEncirclement(units, target)
+    return null
+  }
+
+  /** Encerclement avec détachement automatique d'une partie de l'armée ; le reste tient le front. */
+  encircleWithArmy(armyId: number, targetId: number): string | null {
+    const target = this.enemyTarget(targetId)
+    if (typeof target === 'string') return target
+    const army = this.playerArmy(armyId)
+    const members = army.unitIds
+      .map((id) => this.ctx.units.get(id))
+      .filter((u): u is UnitState => !!u)
+    const units = autoDetachment(this.ctx, members, target)
+    if (units.length < 2) return `${army.name} n'a pas assez d'unités de ligne à détacher`
+    this.launchEncirclement(units, target)
+    return null
+  }
+
+  private launchEncirclement(units: UnitState[], target: UnitState): void {
+    const id = this.createArmy(
+      `Encerclement de ${target.name}`,
+      units.map((u) => u.id),
+    )
+    encircle(this.ctx, units, target)
+    const group = this.ctx.armies.get(id)
+    if (group) {
+      group.front = null
+      group.wholeFront = false
+    }
+    this.log(
+      `Encerclement lancé autour de ${target.name} (${units.length} unités)`,
+      this.playerCountry,
+    )
   }
 
   createArmy(name: string, unitIds: number[]): number {

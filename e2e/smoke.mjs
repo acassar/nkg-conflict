@@ -166,6 +166,84 @@ try {
   if (!aid) report.errors.push("l'Espagne n'a pas accordé d'aide")
   await shot('02e-aide-espagne')
 
+  // Clic sur une ville étrangère (Varsovie) : la fiche de la Pologne s'ouvre.
+  await page.evaluate(() => window.__nkg.selectCountry(null))
+  const warsaw = await page.evaluate(() => {
+    const p = window.__nkgMap.project([21.0, 52.25])
+    return [p.x, p.y]
+  })
+  await page.mouse.click(warsaw[0], warsaw[1])
+  await page.waitForTimeout(400)
+  const clicked = await page.evaluate(() => window.__nkg.selectedCountryCode)
+  step('clic sur Varsovie', { pays: clicked })
+  if (clicked !== 'POL') report.errors.push(`clic sur Varsovie : fiche ${clicked} au lieu de POL`)
+
+  // Production : jauges de capacité et casernes sur la carte.
+  await page.getByRole('button', { name: 'Production' }).click()
+  await page.getByTestId('production-capacity').waitFor()
+  await shot('02f-production-capacites')
+
+  // Poursuite : trois unités proches du front, clic sur l'unité russe la plus proche.
+  const target = await page.evaluate(() => {
+    const g = window.__nkg
+    const s = g.snapshot
+    const d = (a, b) => Math.hypot(a.lon - b.lon, a.lat - b.lat)
+    const mine = s.units.filter(
+      (u) => u.owner === 'UKR' && ['inf', 'mech', 'tank'].includes(u.kind),
+    )
+    const rus = s.units.filter((u) => u.owner === 'RUS')
+    let best = null
+    for (const r of rus)
+      for (const u of mine) if (!best || d(u, r) < best.d) best = { r, d: d(u, r) }
+    const picked = mine.sort((a, b) => d(a, best.r) - d(b, best.r)).slice(0, 3)
+    g.selectUnits(
+      picked.map((u) => u.id),
+      false,
+    )
+    window.__nkgMap.jumpTo({ center: [best.r.lon, best.r.lat], zoom: 8 })
+    return { id: best.r.id, lon: best.r.lon, lat: best.r.lat }
+  })
+  await page.waitForTimeout(800)
+  await page.getByRole('button', { name: /Unités/ }).click()
+  await page.getByTestId('order-pursue').click()
+  const at = await page.evaluate(
+    ([lon, lat]) => {
+      const p = window.__nkgMap.project([lon, lat])
+      return [p.x, p.y]
+    },
+    [target.lon, target.lat],
+  )
+  await page.mouse.click(at[0], at[1])
+  await page.waitForTimeout(600)
+  const pursuing = await page.evaluate(
+    (id) => window.__nkg.selectedUnits.filter((u) => u.order === 'pursue').length,
+    target.id,
+  )
+  step('poursuite', { unites: pursuing })
+  if (pursuing === 0) report.errors.push('ordre de poursuite non appliqué')
+  await shot('02g-poursuite')
+
+  // Sauvegarde dans le navigateur, retour au menu, reprise.
+  await page.evaluate(() => window.__nkg.step(24))
+  await page.waitForTimeout(500)
+  await page.getByTestId('menu-button').click()
+  await page.getByRole('menu').getByRole('button', { name: 'Sauver' }).click()
+  await page.waitForTimeout(1500)
+  const savedTick = await page.evaluate(() => window.__nkg.snapshot.tick)
+  page.once('dialog', (d) => d.accept())
+  await page.getByTestId('menu-button').click()
+  await page.getByRole('button', { name: 'Menu principal' }).click()
+  await page.getByTestId('saves').waitFor({ timeout: 15_000 })
+  await shot('02h-menu-reprendre')
+  await page.locator('[data-slot="manual"]').click()
+  await page.waitForFunction(() => window.__nkg?.snapshot, null, { timeout: 60_000 })
+  await page.waitForTimeout(1500)
+  const resumedTick = await page.evaluate(() => window.__nkg.snapshot.tick)
+  step('sauvegarde et reprise', { sauvee: savedTick, reprise: resumedTick })
+  if (resumedTick !== savedTick) report.errors.push('reprise de la sauvegarde incorrecte')
+  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [32, 49], zoom: 5 }))
+  await page.waitForTimeout(800)
+
   // Lecture à vitesse 5 pendant 8 s.
   await page.keyboard.press('5')
   await page.keyboard.press('Space')

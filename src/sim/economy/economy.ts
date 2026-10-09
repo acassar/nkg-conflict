@@ -281,15 +281,18 @@ export function updateEconomy(
       manpower,
       reinforcements: 0,
     }
-    advanceConstruction(ctx, eco, construction)
+    const before = eco.production
+    eco.daily.constructionUsed = advanceConstruction(ctx, eco, construction)
     reinforce(ctx, eco)
     advanceRecruitment(ctx, eco)
+    eco.daily.productionUsed = Math.max(0, before - eco.production)
     // Les munitions consommées sont comptées sur la journée écoulée, puis remises à zéro.
     eco.daily.munitionsUsed = 0
   }
 }
 
-function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number): void {
+/** Fait avancer les chantiers ; renvoie les points employés. */
+function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number): number {
   const side = sideIndex(ctx, eco.country)
   let left = points
   for (const item of eco.construction.slice(0, MAX_PARALLEL_CONSTRUCTION)) {
@@ -307,6 +310,7 @@ function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number)
       ctx.log(`${type.name} achevée à ${item.city}`, eco.country, true)
     }
   }
+  return points - left
 }
 
 /** Renforts : les unités ravitaillées hors combat récupèrent des effectifs, payés en production et main-d'œuvre. */

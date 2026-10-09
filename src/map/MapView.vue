@@ -13,6 +13,7 @@ import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers } from './layers'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
 import { isTouch } from '@/composables/layout'
+import { useProductionStats } from '@/composables/production'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
@@ -74,6 +75,7 @@ const boxStyle = (b: {
   height: `${Math.abs(b.y1 - b.y0)}px`,
 })
 
+const productionStats = useProductionStats()
 let map: maplibregl.Map | null = null
 const zoom = ref(4)
 let overlay: MapboxOverlay | null = null
@@ -130,28 +132,43 @@ function refresh(): void {
       pendingPoint: m.kind === 'front' || m.kind === 'offensive' ? m.first : null,
       zoom: zoom.value,
       selectedCity: selectedCity.value?.name ?? null,
+      production:
+        game.panelTab === 'production' ? (productionStats.value?.busyByCity ?? null) : null,
     }),
   })
 }
 
 function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
   const point = info.coordinate ? ([info.coordinate[0], info.coordinate[1]] as LonLat) : null
-  if (point && game.mapClick(point)) return
-  if (info.layer?.id === 'cities' && info.object) {
-    game.selectCity((info.object as CityState).name)
+  const me = game.snapshot?.playerCountry
+  const additive = event.srcEvent?.shiftKey ?? false
+  const item = info.layer?.id.startsWith('units') ? (info.object as MapUnit | undefined) : undefined
+  if (item) {
+    const units = isStack(item) ? item.units : [item]
+    // Un ordre en cours de saisie peut viser une unité (attaque, encerclement).
+    if (point && game.mapClick(point, units)) return
+    const mine = units.filter((u) => u.owner === me)
+    if (mine.length > 0) {
+      game.selectUnits(
+        mine.map((u) => u.id),
+        additive,
+      )
+    } else if (units[0]) {
+      // Pion d'un autre pays : ouvre la fiche de ce pays.
+      if (!additive) game.clearSelection()
+      game.selectCountry(units[0].owner)
+    }
     return
   }
-  const item = info.layer?.id.startsWith('units') ? (info.object as MapUnit | undefined) : undefined
-  const additive = event.srcEvent?.shiftKey ?? false
-  if (item && isStack(item)) {
-    // Clic sur une pile : sélectionne toutes ses unités (celles du joueur seulement).
-    game.selectUnits(
-      item.units.map((u) => u.id),
-      additive,
-    )
-  } else if (item) {
-    game.selectUnit(item.id, additive)
-  } else if (!additive) {
+  if (point && game.mapClick(point)) return
+  if (info.layer?.id === 'cities' && info.object) {
+    const city = info.object as CityState
+    // Ville du joueur : production ; ville étrangère : fiche du pays.
+    if (city.owner === me) game.selectCity(city.name)
+    else if (city.owner) game.selectCountry(city.owner)
+    return
+  }
+  if (!additive) {
     // Clic sur un territoire : sans unités sélectionnées, ouvre la fiche du pays.
     const hadSelection = game.selection.length > 0
     game.clearSelection()
@@ -206,6 +223,8 @@ onMounted(() => {
       mode.value.kind !== 'select' ? 'crosshair' : isHovering ? 'pointer' : 'grab',
   })
   map.addControl(overlay)
+  // Accès à la carte pour les tests de fumée (projection d'une position en pixels).
+  ;(window as unknown as { __nkgMap: unknown }).__nkgMap = map
   if (focus.value)
     map.jumpTo({ center: [focus.value.at[0], focus.value.at[1]], zoom: focus.value.zoom })
   refresh()
@@ -215,9 +234,13 @@ watch(focus, (f) => {
   if (f && map) map.flyTo({ center: [f.at[0], f.at[1]], zoom: f.zoom, duration: 1200 })
 })
 
-watch([snapshot, gridTick, selection, selectedArmy, mode, zoom, selectedCity], refresh, {
-  deep: false,
-})
+watch(
+  [snapshot, gridTick, selection, selectedArmy, mode, zoom, selectedCity, () => game.panelTab],
+  refresh,
+  {
+    deep: false,
+  },
+)
 
 onBeforeUnmount(() => {
   map?.remove()

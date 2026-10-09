@@ -124,6 +124,17 @@ try {
   check(full === 'full', `le tiroir devrait être plein écran (${full})`)
   await shot('m06-tiroir-plein')
 
+  // Retour au menu par le menu ☰, puis écran de départ.
+  await page.getByTestId('menu-button').tap()
+  page.once('dialog', (d) => d.accept())
+  await page.getByRole('button', { name: 'Menu principal' }).tap()
+  await page.getByTestId('start-screen').waitFor({ timeout: 15_000 })
+  step('retour au menu', { ok: true })
+  await shot('m06b-menu')
+  await page.locator('[data-slot="auto"]').tap()
+  await page.waitForFunction(() => window.__nkg?.snapshot, null, { timeout: 60_000 })
+  await page.waitForTimeout(1500)
+
   // Paysage : panneau sur le côté.
   await page.setViewportSize({ width: 844, height: 390 })
   await page.waitForTimeout(1200)

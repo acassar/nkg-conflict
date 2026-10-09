@@ -16,6 +16,10 @@ import type { PlayerOrder } from '@/sim/simulation'
 import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
 import type { SimApi } from '@/sim/worker'
+import { deleteSave, listSaves, readSave, writeSave, type SaveSlot } from './saves'
+
+/** Sauvegarde automatique tous les 30 jours de jeu. */
+const AUTOSAVE_TICKS = 24 * 30
 
 /**
  * Mode d'interaction de la carte : un clic sur la carte sert soit à sélectionner,
@@ -26,6 +30,16 @@ export type MapMode =
   | { kind: 'order'; order: Exclude<PlayerOrder, 'hold'> }
   | { kind: 'front'; armyId: number; first: LonLat | null }
   | { kind: 'offensive'; armyId: number; first: LonLat | null }
+  /** Ordre qui vise une unité ennemie (poursuite, assaut, encerclement par la sélection ou une armée). */
+  | { kind: 'target'; action: TargetAction; armyId?: number }
+
+export type TargetAction = 'pursue' | 'assault' | 'encircle'
+
+const TARGET_LABELS: Record<TargetAction, string> = {
+  pursue: 'Poursuite',
+  assault: 'Assaut',
+  encircle: 'Encerclement',
+}
 
 /** Relation d'un pays avec le joueur, pour les couleurs de la carte. */
 export type Stance = 'player' | 'enemy' | 'ally' | 'war' | 'neutral'
@@ -88,8 +102,16 @@ export const useGameStore = defineStore('game', () => {
 
   void sim.scenarios().then((list) => (scenarios.value = list))
 
+  /** Faux après un retour au menu : un état encore en route depuis le Worker est ignoré. */
+  let active = false
+  /** Sauvegardes présentes dans le navigateur (écran de départ). */
+  const saves = ref(listSaves())
+  let lastAutosaveTick = 0
+  let saving = false
+
   void sim.subscribe(
     Comlink.proxy((next: SimSnapshot) => {
+      if (!active) return
       if (next.grid) {
         grid.value = next.grid
         pendingCells = []
@@ -106,6 +128,11 @@ export const useGameStore = defineStore('game', () => {
       }
       const previous = snapshot.value
       snapshot.value = next
+      if (!previous) lastAutosaveTick = next.tick
+      else if (next.tick - lastAutosaveTick >= AUTOSAVE_TICKS && !next.outcome) {
+        lastAutosaveTick = next.tick
+        void saveLocal('auto', true)
+      }
       // L'état publié peut arriver après la réponse de newGame : le recentrage se fait ici.
       if (focusPending) {
         focusPending = false
@@ -261,6 +288,7 @@ export const useGameStore = defineStore('game', () => {
         ? 'Portion de front : cliquez sur la seconde extrémité'
         : 'Portion de front : cliquez sur la première extrémité'
     }
+    if (m.kind === 'target') return `${TARGET_LABELS[m.action]} : cliquez sur une unité ennemie`
     if (m.kind === 'offensive') {
       return m.first
         ? "Offensive : cliquez sur l'objectif"
@@ -327,6 +355,7 @@ export const useGameStore = defineStore('game', () => {
     try {
       resetUi()
       focusPending = true
+      active = true
       await sim.newGame(scenarioId, country)
     } catch (e) {
       focusPending = false
@@ -354,11 +383,15 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /** Revient à l'écran de choix (la partie en cours est abandonnée). */
-  function quitToMenu(): void {
-    void sim.setPaused(true)
+  /** Revient à l'écran de départ ; la partie est d'abord sauvegardée automatiquement. */
+  async function quitToMenu(): Promise<void> {
+    if (snapshot.value && !snapshot.value.outcome) await saveLocal('auto', true)
+    active = false
+    void sim.quit()
     snapshot.value = null
     grid.value = null
     resetUi()
+    saves.value = listSaves()
   }
 
   // ---------- Sélection ----------
@@ -419,9 +452,38 @@ export const useGameStore = defineStore('game', () => {
     mode.value = { kind: 'offensive', armyId, first: null }
   }
 
-  /** Clic sur la carte hors unité. Renvoie vrai si le clic a été consommé par un mode en cours. */
-  function mapClick(point: LonLat): boolean {
+  /** Ordre visant une unité : poursuite, assaut, encerclement (sélection ou armée). */
+  function startTargetOrder(action: TargetAction, armyId?: number): void {
+    if (armyId === undefined && selection.value.length === 0) return
+    mode.value = { kind: 'target', action, armyId }
+  }
+
+  /**
+   * Clic sur la carte (et sur les unités touchées, s'il y en a).
+   * Renvoie vrai si le clic a été consommé par un mode en cours.
+   */
+  function mapClick(point: LonLat, units: UnitSnapshot[] = []): boolean {
     const m = mode.value
+    if (m.kind === 'target') {
+      const enemy = units.find((u) => stances.value.map.get(u.owner) === 'enemy')
+      if (!enemy) {
+        showNotice('Choisissez une unité ennemie (Échap pour annuler)')
+        return true
+      }
+      void (async () => {
+        const error =
+          m.action === 'pursue'
+            ? await sim.pursueUnit(ids(), enemy.id)
+            : m.action === 'assault'
+              ? await sim.assaultUnit(ids(), enemy.id)
+              : m.armyId !== undefined
+                ? await sim.encircleWithArmy(m.armyId, enemy.id)
+                : await sim.encircle(ids(), enemy.id)
+        report(error)
+      })()
+      cancelMode()
+      return true
+    }
     if (m.kind === 'order') {
       void sim.orderUnits(ids(), m.order, point)
       cancelMode()
@@ -545,7 +607,44 @@ export const useGameStore = defineStore('game', () => {
     return sim.step(ticks)
   }
 
-  async function saveToFile(): Promise<void> {
+  /** Sauvegarde dans le navigateur (`quiet` : sans message de réussite, pour l'automatique). */
+  async function saveLocal(slot: SaveSlot = 'manual', quiet = false): Promise<void> {
+    const s = snapshot.value
+    if (!s || saving) return
+    saving = true
+    try {
+      const text = await sim.save()
+      const error = await writeSave(slot, text, {
+        scenarioId: s.scenarioId,
+        playerCountry: s.playerCountry,
+        countryName: playerCountry.value?.name ?? s.playerCountry,
+        dateLabel: dateLabel.value,
+      })
+      if (error) showNotice(error)
+      else if (!quiet) pushToast('Partie sauvegardée dans le navigateur', 'success')
+      saves.value = listSaves()
+    } finally {
+      saving = false
+    }
+  }
+
+  async function loadLocal(slot: SaveSlot): Promise<void> {
+    const text = await readSave(slot)
+    if (!text) {
+      showNotice('Sauvegarde introuvable ou abîmée')
+      saves.value = listSaves()
+      return
+    }
+    await loadText(text)
+  }
+
+  function removeSave(slot: SaveSlot): void {
+    deleteSave(slot)
+    saves.value = listSaves()
+  }
+
+  /** Exporte la partie dans un fichier (à garder ou à transférer sur un autre appareil). */
+  async function exportToFile(): Promise<void> {
     const text = await sim.save()
     const blob = new Blob([text], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -556,12 +655,17 @@ export const useGameStore = defineStore('game', () => {
     URL.revokeObjectURL(url)
   }
 
-  async function loadFromFile(file: File): Promise<void> {
+  function loadFromFile(file: File): Promise<void> {
+    return file.text().then(loadText)
+  }
+
+  async function loadText(text: string): Promise<void> {
     loading.value = true
     try {
       resetUi()
       focusPending = true
-      await sim.load(await file.text())
+      active = true
+      await sim.load(text)
     } catch (e) {
       focusPending = false
       showNotice(e instanceof Error ? e.message : String(e))
@@ -624,6 +728,7 @@ export const useGameStore = defineStore('game', () => {
     startOrder,
     startFront,
     startOffensive,
+    startTargetOrder,
     mapClick,
     quickMove,
     hold,
@@ -656,7 +761,11 @@ export const useGameStore = defineStore('game', () => {
     togglePause,
     setSpeed,
     step,
-    saveToFile,
+    saveLocal,
+    loadLocal,
+    removeSave,
+    saves,
+    exportToFile,
     loadFromFile,
   }
 })

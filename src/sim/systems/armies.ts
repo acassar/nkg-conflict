@@ -1,5 +1,5 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
-import type { ArmyState, LonLat, UnitState } from '../core/types'
+import { isOffensiveOrder, type ArmyState, type LonLat, type UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
@@ -134,7 +134,9 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   if (cells.length === 0) return
   const members = army.unitIds
     .map((id) => ctx.units.get(id))
-    .filter((u): u is UnitState => !!u && u.order.kind !== 'attack' && !runtimeOf(ctx, u.id).routed)
+    .filter(
+      (u): u is UnitState => !!u && !isOffensiveOrder(u.order.kind) && !runtimeOf(ctx, u.id).routed,
+    )
   const line = members.filter((u) => isLineUnit(u.kind))
   const rear = members.filter((u) => !isLineUnit(u.kind))
 

@@ -100,6 +100,10 @@ const api = {
     last = performance.now()
     publish(true)
   },
+  /** Abandonne la partie en cours (retour au menu) : plus rien n'est publié. */
+  quit(): void {
+    sim = null
+  },
   setPaused(paused: boolean): void {
     if (!sim) return
     sim.setPaused(paused)
@@ -116,6 +120,18 @@ const api = {
   },
   orderUnits(ids: number[], kind: PlayerOrder, target?: LonLat): void {
     act((s) => s.orderUnits(ids, kind, target))
+  },
+  pursueUnit(ids: number[], targetId: number): string | null {
+    return act((s) => s.pursueUnit(ids, targetId)) ?? null
+  },
+  assaultUnit(ids: number[], targetId: number): string | null {
+    return act((s) => s.assaultUnit(ids, targetId)) ?? null
+  },
+  encircle(ids: number[], targetId: number): string | null {
+    return act((s) => s.encircle(ids, targetId)) ?? null
+  },
+  encircleWithArmy(armyId: number, targetId: number): string | null {
+    return act((s) => s.encircleWithArmy(armyId, targetId)) ?? null
   },
   createArmy(name: string, ids: number[]): number | undefined {
     return act((s) => s.createArmy(name, ids))

@@ -20,12 +20,19 @@ export interface CountryDef {
 
 export type UnitKind = 'inf' | 'mech' | 'tank' | 'art' | 'log' | 'hq'
 
-export type OrderKind = 'idle' | 'move' | 'attack' | 'hold' | 'retreat' | 'front'
+export type OrderKind = 'idle' | 'move' | 'attack' | 'hold' | 'retreat' | 'front' | 'pursue'
 
 export interface Order {
   kind: OrderKind
-  /** Destination (move, attack, retreat, front). */
+  /** Destination (move, attack, retreat, front) ; dernière position connue de la cible (pursue). */
   target?: LonLat
+  /** Unité ennemie poursuivie (pursue). */
+  unitId?: number
+}
+
+/** Ordres offensifs : valeur d'attaque au combat, pas de retranchement, passage en force. */
+export function isOffensiveOrder(kind: OrderKind): boolean {
+  return kind === 'attack' || kind === 'pursue'
 }
 
 /** État complet d'une unité. Sert aussi de format de sauvegarde. */
@@ -146,6 +153,10 @@ export interface EconomyState {
     munitionsUsed: number
     manpower: number
     reinforcements: number
+    /** Production dépensée la veille (formations et renforts). */
+    productionUsed?: number
+    /** Points de construction employés la veille. */
+    constructionUsed?: number
   }
 }
 

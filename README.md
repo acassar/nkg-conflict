@@ -20,19 +20,27 @@ pnpm dev
 
 L'écran de départ propose le scénario, l'époque (moderne pour l'instant ; guerre froide, 1939, 1914 et époque napoléonienne sont prévues) et votre pays. Un pays capitule quand sa capitale tombe ou quand il n'a plus d'unités pendant 7 jours. Votre capitulation met fin à la partie ; dans le théâtre ukrainien, celle de l'adversaire vous donne la victoire.
 
-| Action                                | Commande                                   |
-| ------------------------------------- | ------------------------------------------ |
-| Pause / vitesse                       | `Espace` / `1` à `5`, ou la barre du haut  |
-| Avancer d'un jour (tour par tour)     | bouton `+24 h`                             |
-| Sélectionner / ajouter à la sélection | clic / `Maj` + clic sur une unité          |
-| Déplacer                              | clic droit sur la carte, ou `M` puis clic  |
-| Attaquer / se replier                 | `A` / `R` puis clic sur la carte           |
-| Tenir la position                     | `H`                                        |
-| Annuler un ordre en cours de saisie   | `Échap`                                    |
-| Armées                                | onglet « Armées » du panneau de droite     |
-| Fiche d'un pays, diplomatie           | clic sur un pays (sans unité sélectionnée) |
+| Action                                | Commande                                                  |
+| ------------------------------------- | --------------------------------------------------------- |
+| Pause / vitesse                       | `Espace` / `1` à `5`, ou la barre du haut                 |
+| Avancer d'un jour (tour par tour)     | bouton `+24 h`                                            |
+| Sélectionner / ajouter à la sélection | clic / `Maj` + clic sur une unité                         |
+| Déplacer                              | clic droit sur la carte, ou `M` puis clic                 |
+| Attaquer une zone / se replier        | `A` / `R` puis clic sur la carte                          |
+| Assaut, poursuite, encerclement       | bouton du panneau Unités, puis clic sur une unité ennemie |
+| Tenir la position                     | `H`                                                       |
+| Annuler un ordre en cours de saisie   | `Échap`                                                   |
+| Armées                                | onglet « Armées » du panneau de droite                    |
+| Fiche d'un pays, diplomatie           | clic sur un pays, une de ses villes ou un de ses pions    |
+| Sauvegarder, exporter, importer       | `Sauver` ou menu ☰                                       |
 
 Sur téléphone, en portrait comme en paysage : la barre du haut garde la pause, la date et la vitesse (un toucher fait défiler les vitesses), le reste passe dans le menu ☰. En portrait, le panneau devient un tiroir en bas, à tirer par sa poignée (replié, mi-hauteur, plein écran) ; en paysage, il reste sur le côté. Pour donner un ordre : bouton « Déplacer », « Attaquer » ou « Se replier », puis toucher la destination (le tiroir se replie le temps de viser). Le bouton ▢ active la sélection par zone : glisser un rectangle sur la carte sélectionne vos unités qu'il contient ; il marche aussi à la souris.
+
+Ordres visant une unité ennemie : **assaut** (attaque de sa position du moment, puis tenue du terrain), **poursuite** (les unités la suivent jusqu'à sa destruction ou sa fuite à plus de 250 km), **encerclement** (au moins deux unités choisies, ou, depuis l'onglet Armées, un détachement automatique du tiers des unités de ligne de l'armée : elles forment un groupe « Encerclement de… » et se répartissent sur un arc qui passe derrière la cible, pendant que l'armée garde son front avec les autres).
+
+Sauvegardes : `Sauver` enregistre la partie dans le navigateur (compressée). Une sauvegarde automatique est faite tous les 30 jours de jeu et au retour au menu. L'écran de départ propose de reprendre l'une ou l'autre. `Exporter` télécharge la partie dans un fichier, `Importer` la recharge (autre navigateur, autre appareil).
+
+Onglet Production : jauges des chantiers en cours (5 au plus en parallèle), des casernes occupées et de la production engagée face à la production gagnée ; tant que l'onglet est ouvert, la carte montre les casernes (occupées/total, cercle vert s'il en reste une libre) et les fortifications de vos villes.
 
 Une armée peut tenir tout le front ou une portion (deux clics sur la carte) : ses unités s'y répartissent seules et suivent le front quand il bouge. Une offensive se trace en deux clics (départ, objectif), puis se lance.
 

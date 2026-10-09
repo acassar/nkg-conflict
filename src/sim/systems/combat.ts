@@ -1,5 +1,5 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
-import type { LonLat, UnitState } from '../core/types'
+import { isOffensiveOrder, type LonLat, type UnitState } from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactor, useMunitions } from '../economy/economy'
 import { moraleFactor } from '../politics/politics'
@@ -65,7 +65,7 @@ function riverBetween(ctx: SimContext, a: UnitState, b: UnitState): boolean {
 }
 
 function isOffensive(u: UnitState): boolean {
-  return u.order.kind === 'attack'
+  return isOffensiveOrder(u.order.kind)
 }
 
 /** Valeur de combat effective, sans unité. */

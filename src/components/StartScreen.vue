@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
+import { SLOT_LABELS, type SaveSlot } from '@/stores/saves'
 
 const game = useGameStore()
 
@@ -58,6 +59,18 @@ function start(): void {
   if (country.value && !game.loading) void game.newGame(scenarioId.value, country.value)
 }
 
+const savedAt = (iso: string): string =>
+  new Date(iso).toLocaleString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+const scenarioName = (id: string): string => game.scenarios.find((s) => s.id === id)?.name ?? id
+function confirmDelete(slot: SaveSlot): void {
+  if (confirm('Supprimer cette sauvegarde ?')) game.removeSave(slot)
+}
+
 async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -71,6 +84,38 @@ async function onFile(event: Event): Promise<void> {
     <div class="card">
       <h1>nkg-conflict</h1>
       <p class="tagline">Grande stratégie en temps réel, sur la carte du monde.</p>
+
+      <section v-if="game.saves.length" data-testid="saves">
+        <h2>Reprendre</h2>
+        <ul class="saves">
+          <li v-for="s in game.saves" :key="s.slot">
+            <div>
+              <strong>{{ s.countryName }}</strong> · {{ s.dateLabel }}
+              <div class="meta">
+                {{ SLOT_LABELS[s.slot] }} du {{ savedAt(s.savedAt) }} ·
+                {{ scenarioName(s.scenarioId) }}
+              </div>
+            </div>
+            <div class="save-actions">
+              <button
+                class="primary"
+                :disabled="game.loading"
+                :data-slot="s.slot"
+                @click="game.loadLocal(s.slot)"
+              >
+                Reprendre
+              </button>
+              <button
+                title="Supprimer cette sauvegarde"
+                aria-label="Supprimer"
+                @click="confirmDelete(s.slot)"
+              >
+                ✕
+              </button>
+            </div>
+          </li>
+        </ul>
+      </section>
 
       <section>
         <h2>Scénario</h2>
@@ -131,7 +176,7 @@ async function onFile(event: Event): Promise<void> {
             game.loading ? 'Chargement…' : chosen ? `Jouer ${chosen.name}` : 'Choisissez un pays'
           }}
         </button>
-        <button :disabled="game.loading" @click="fileInput?.click()">Charger une partie</button>
+        <button :disabled="game.loading" @click="fileInput?.click()">Importer un fichier</button>
         <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
       </div>
       <p v-if="game.notice" class="error" role="alert">{{ game.notice }}</p>
@@ -285,6 +330,32 @@ input {
 }
 .error {
   color: #fca5a5;
+}
+.saves {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.saves li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #1b2028;
+  border: 1px solid #2c323c;
+  border-radius: 8px;
+}
+.saves .meta {
+  color: #9aa3af;
+  font-size: 12px;
+}
+.save-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
 }
 .footnote {
   margin: 14px 0 0;

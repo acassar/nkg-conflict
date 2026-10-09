@@ -29,6 +29,11 @@ export interface LayerInput {
   /** Zoom de la carte : sert à regrouper les pions qui se chevauchent à l'écran. */
   zoom: number
   selectedCity: string | null
+  /**
+   * Vue « Production » (onglet ouvert) : casernes occupées par ville du joueur.
+   * Les villes du joueur affichent alors leurs casernes (occupées/total) et leurs fortifications.
+   */
+  production: Map<string, number> | null
 }
 
 type Rgb = [number, number, number]
@@ -144,6 +149,57 @@ export function buildLayers(input: LayerInput): Layer[] {
       },
     }),
   )
+
+  // Vue « Production » : casernes et fortifications des villes du joueur.
+  if (input.production) {
+    const busy = input.production
+    const mine = snapshot.cities.filter(
+      (c) =>
+        c.owner === snapshot.playerCountry && (c.buildings.barracks > 0 || c.buildings.fort > 0),
+    )
+    const free = (c: CityState): number => c.buildings.barracks - (busy.get(c.name) ?? 0)
+    layers.push(
+      new ScatterplotLayer<CityState>({
+        id: 'prod-free-barracks',
+        data: mine.filter((c) => free(c) > 0),
+        getPosition: (c) => [c.lon, c.lat],
+        filled: false,
+        stroked: true,
+        getLineColor: [34, 197, 94, 230],
+        getLineWidth: 2.5,
+        lineWidthUnits: 'pixels',
+        radiusUnits: 'pixels',
+        getRadius: 14,
+        updateTriggers: { data: [...busy.entries()].join() },
+      }),
+      new TextLayer<CityState>({
+        id: 'prod-labels',
+        data: mine,
+        getPosition: (c) => [c.lon, c.lat],
+        getText: (c) => {
+          const parts: string[] = []
+          if (c.buildings.barracks > 0) {
+            parts.push(`Caserne ${busy.get(c.name) ?? 0}/${c.buildings.barracks}`)
+          }
+          if (c.buildings.fort > 0) parts.push(`Fort ${c.buildings.fort}`)
+          return parts.join(' · ')
+        },
+        getColor: (c) =>
+          c.buildings.barracks > 0 && free(c) > 0 ? [21, 128, 61, 255] : [146, 64, 14, 255],
+        getSize: 11,
+        getPixelOffset: [0, 18],
+        fontWeight: 700,
+        outlineWidth: 3,
+        outlineColor: [255, 255, 255, 230],
+        fontSettings: { sdf: true },
+        characterSet: 'auto',
+        updateTriggers: {
+          getText: [...busy.entries()].join(),
+          getColor: [...busy.entries()].join(),
+        },
+      }),
+    )
+  }
 
   // Rayon de commandement des QG sélectionnés.
   const commandRange = (u: UnitSnapshot): number => MODERN_CATALOG[u.kind].commandRadiusKm

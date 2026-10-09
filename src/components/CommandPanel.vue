@@ -125,6 +125,7 @@ const ORDER_NAMES: Record<OrderKind, string> = {
   hold: 'Tient la position',
   retreat: 'Repli',
   front: 'Tient le front',
+  pursue: 'Poursuite',
 }
 
 const pct = (v: number): string => `${Math.round(v * 100)} %`
@@ -139,6 +140,27 @@ const status = (u: UnitSnapshot): string => {
 
 const armyOf = (id: number | null): string =>
   armies.value.find((a) => a.id === id)?.name ?? 'Sans armée'
+
+/** Synthèse d'un groupe d'unités : effectifs et organisation moyens, contacts, ravitaillement. */
+function summary(list: UnitSnapshot[]): {
+  strength: number
+  org: number
+  engaged: number
+  unsupplied: number
+} {
+  const n = Math.max(1, list.length)
+  return {
+    strength: list.reduce((s, u) => s + u.strength, 0) / n,
+    org: list.reduce((s, u) => s + u.org, 0) / n,
+    engaged: list.filter((u) => u.engaged).length,
+    unsupplied: list.filter((u) => !u.supplied).length,
+  }
+}
+const selectionSummary = computed(() => summary(selectedUnits.value))
+const armySummary = (a: { unitIds: number[] }): ReturnType<typeof summary> => {
+  const ids = new Set(a.unitIds)
+  return summary(game.snapshot?.units.filter((u) => ids.has(u.id)) ?? [])
+}
 
 const unitsOfArmy = computed(() => {
   const a = selectedArmy.value
@@ -231,27 +253,76 @@ async function createArmy(): Promise<void> {
           }}
         </p>
         <template v-else>
-          <div class="orders">
+          <div class="summary" data-testid="selection-summary">
+            <strong
+              >{{ selectedUnits.length }} unité{{ selectedUnits.length > 1 ? 's' : '' }}</strong
+            >
+            <span class="gauge" title="Effectifs moyens">
+              <i :style="{ width: pct(selectionSummary.strength) }" class="strength" />
+            </span>
+            <span class="gauge" title="Organisation moyenne">
+              <i :style="{ width: pct(selectionSummary.org) }" class="org" />
+            </span>
+            <span v-if="selectionSummary.engaged" class="chip warn">
+              {{ selectionSummary.engaged }} au contact
+            </span>
+            <span v-if="selectionSummary.unsupplied" class="chip warn">
+              {{ selectionSummary.unsupplied }} sans ravitaillement
+            </span>
+          </div>
+          <div class="group">
+            <span class="label">Mouvement</span>
             <button
               title="Déplacer (M) — ou clic droit sur la carte"
               @click="game.startOrder('move')"
             >
               Déplacer
             </button>
-            <button title="Attaquer (A)" @click="game.startOrder('attack')">Attaquer</button>
             <button title="Tenir la position (H)" @click="game.hold()">Tenir</button>
             <button title="Se replier (R)" @click="game.startOrder('retreat')">Se replier</button>
           </div>
+          <div class="group">
+            <span class="label">Attaque</span>
+            <button title="Attaquer une zone (A)" @click="game.startOrder('attack')">Zone</button>
+            <button
+              title="Attaquer la position actuelle d'une unité ennemie, puis tenir le terrain"
+              data-testid="order-assault"
+              @click="game.startTargetOrder('assault')"
+            >
+              Assaut
+            </button>
+            <button
+              title="Suivre une unité ennemie jusqu'à sa destruction ou sa fuite"
+              data-testid="order-pursue"
+              @click="game.startTargetOrder('pursue')"
+            >
+              Poursuite
+            </button>
+            <button
+              :disabled="selectedUnits.length < 2"
+              title="Les unités sélectionnées quittent leur armée et entourent la cible ; l'armée garde son front"
+              data-testid="order-encircle"
+              @click="game.startTargetOrder('encircle')"
+            >
+              Encercler
+            </button>
+          </div>
           <ul class="units">
             <li v-for="u in selectedUnits" :key="u.id">
-              <div class="name">{{ u.name }}</div>
-              <div class="meta">
-                {{ MODERN_CATALOG[u.kind].name }} · {{ armyOf(u.armyId) }} ·
-                {{ game.terrainNameAt(u.lon, u.lat) }}
+              <div class="row">
+                <span class="name">{{ u.name }}</span>
+                <span class="meta">{{ MODERN_CATALOG[u.kind].name }}</span>
               </div>
-              <div class="bars">
-                <span title="Effectifs">Eff. {{ pct(u.strength) }}</span>
-                <span title="Organisation">Org. {{ pct(u.org) }}</span>
+              <div class="row">
+                <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
+                  <i :style="{ width: pct(u.strength) }" class="strength" />
+                </span>
+                <span class="gauge" :title="`Organisation ${pct(u.org)}`">
+                  <i :style="{ width: pct(u.org) }" class="org" />
+                </span>
+              </div>
+              <div class="meta">
+                {{ armyOf(u.armyId) }} · {{ game.terrainNameAt(u.lon, u.lat) }}
               </div>
               <div class="status" :class="{ warn: u.routed || !u.supplied }">{{ status(u) }}</div>
             </li>
@@ -284,13 +355,26 @@ async function createArmy(): Promise<void> {
             :class="{ active: a.id === selectedArmyId }"
             @click="game.selectArmy(a.id)"
           >
-            <span class="name">{{ a.name }}</span>
+            <span class="row">
+              <span class="name">{{ a.name }}</span>
+              <span class="meta">{{ a.unitIds.length }} unités</span>
+            </span>
+            <span class="row">
+              <span class="gauge" title="Effectifs moyens">
+                <i :style="{ width: pct(armySummary(a).strength) }" class="strength" />
+              </span>
+              <span class="gauge" title="Organisation moyenne">
+                <i :style="{ width: pct(armySummary(a).org) }" class="org" />
+              </span>
+            </span>
             <span class="meta">
-              {{ a.unitIds.length }} unités ·
-              {{ a.wholeFront ? 'tout le front' : a.front ? 'portion de front' : 'sans front' }}
+              {{ a.wholeFront ? 'Tout le front' : a.front ? 'Portion de front' : 'Sans front' }}
               <template v-if="a.offensive">
                 · offensive {{ a.offensive.launched ? 'en cours' : 'planifiée' }}
               </template>
+              <template v-if="armySummary(a).engaged">
+                · {{ armySummary(a).engaged }} au contact</template
+              >
             </span>
           </li>
         </ul>
@@ -321,6 +405,16 @@ async function createArmy(): Promise<void> {
               @click="game.cancelOffensive(selectedArmy.id)"
             >
               Annuler
+            </button>
+          </div>
+          <div class="group">
+            <span class="label">Encerclement</span>
+            <button
+              title="L'armée détache un tiers de ses unités de ligne autour d'une cible ennemie et garde son front avec le reste"
+              data-testid="army-encircle"
+              @click="game.startTargetOrder('encircle', selectedArmy.id)"
+            >
+              Détachement automatique
             </button>
           </div>
           <button class="danger" @click="game.disbandArmy(selectedArmy.id)">
@@ -431,6 +525,52 @@ ul {
 }
 .name {
   font-weight: 600;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: #1b2028;
+  border-radius: 6px;
+}
+/* Jauge fine : effectifs (vert) et organisation (bleu). */
+.gauge {
+  flex: 1;
+  min-width: 50px;
+  max-width: 120px;
+  height: 5px;
+  background: #2c323c;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.gauge i {
+  display: block;
+  height: 100%;
+}
+.gauge .strength {
+  background: #22c55e;
+}
+.gauge .org {
+  background: #3b82f6;
+}
+.chip {
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #2c323c;
+}
+.chip.warn {
+  background: #4c1d1d;
+  color: #fecaca;
 }
 .bars {
   display: flex;

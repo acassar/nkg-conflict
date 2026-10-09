@@ -314,7 +314,9 @@ function confirmWar(): void {
       </ul>
     </div>
 
-    <p v-if="isMe" class="tip">Cliquez sur un pays de la carte pour ouvrir sa fiche.</p>
+    <p v-if="isMe" class="tip">
+      Cliquez sur un pays, une de ses villes ou un de ses pions pour ouvrir sa fiche.
+    </p>
   </div>
 </template>
 

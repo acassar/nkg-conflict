@@ -53,11 +53,14 @@ import {
   onCityCaptured,
   previewIncome,
   queueConstruction,
+  queueArmyRecruit,
   queueRecruit,
   updateEconomy,
   updateSupplySources,
 } from './economy/economy'
 import { updateAiEconomy } from './economy/ai'
+import type { RecruitOrder } from './economy/armyRecruit'
+import type { ArmyRecruitResult } from './economy/economy'
 import { SideMatrix } from './politics/matrix'
 import { mobilize } from './politics/mobilization'
 import { clearObstacles } from './systems/obstacles'
@@ -923,6 +926,12 @@ export class Simulation {
   queueRecruit(kind: UnitKind, city: string, armyId: number | null): string | null {
     if (armyId !== null) this.playerArmy(armyId)
     return queueRecruit(this.ctx, this.playerCountry, kind, city, armyId)
+  }
+
+  /** Recrutement par armée : formations réparties entre les casernes les mieux placées. */
+  queueArmyRecruit(armyId: number, order: RecruitOrder): ArmyRecruitResult {
+    this.playerArmy(armyId)
+    return queueArmyRecruit(this.ctx, this.playerCountry, armyId, order)
   }
 
   cancelRecruit(id: number): void {

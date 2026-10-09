@@ -316,6 +316,38 @@ try {
   )
   if (held !== 'hold') report.errors.push(`retour à « Tenir » non appliqué (${held})`)
 
+  // Recrutement par armée : sous-onglet « Recrutement », 3 infanteries au clic, 2 artilleries saisies.
+  await page.getByTestId('army-view-recruit').click()
+  for (let k = 0; k < 3; k++) await page.getByTestId('recruit-add-inf').click()
+  await page.getByTestId('recruit-count-art').fill('2')
+  await page.getByTestId('recruit-count-art').press('Enter')
+  await page.getByTestId('recruit-preview').waitFor()
+  const sites = await page.getByTestId('recruit-sites').locator('li').count()
+  await shot('02g4-recrutement-armee')
+  const queuedBefore = await page.evaluate(() => window.__nkg.economy?.recruitment.length ?? 0)
+  await page.getByTestId('recruit-submit').click()
+  await page.waitForTimeout(600)
+  const forArmy = await page.evaluate(
+    (id) => window.__nkg.economy?.recruitment.filter((q) => q.armyId === id).length ?? 0,
+    missionArmy,
+  )
+  const queuedAfter = await page.evaluate(() => window.__nkg.economy?.recruitment.length ?? 0)
+  const pendingRows = await page.getByTestId('recruit-pending').locator('li').count()
+  step('recrutement par armée', {
+    casernes: sites,
+    avant: queuedBefore,
+    apres: queuedAfter,
+    forArmy,
+  })
+  if (sites < 1) report.errors.push('aperçu du recrutement sans caserne')
+  if (queuedAfter - queuedBefore < 1 || forArmy < 1 || pendingRows !== forArmy) {
+    report.errors.push(
+      `recrutement par armée non lancé (${queuedBefore} → ${queuedAfter}, ${forArmy} pour l'armée, ${pendingRows} lignes)`,
+    )
+  }
+  await shot('02g5-recrutement-commandes')
+  await page.getByTestId('army-view-command').click()
+
   // Sauvegarde dans le navigateur, retour au menu, reprise.
   await page.evaluate(() => window.__nkg.step(24))
   await page.waitForTimeout(500)

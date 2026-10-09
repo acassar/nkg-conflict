@@ -20,6 +20,8 @@ import type { SupplyView } from './systems/supplyView'
 import { loadTheater } from './theater/load'
 import type { TheaterData } from './theater/grid'
 import type { AidLevel, PeaceKind } from './politics/types'
+import type { RecruitOrder } from './economy/armyRecruit'
+import type { ArmyRecruitResult } from './economy/economy'
 
 /** Temps de calcul maximal par image, en ms (le reste des ticks dus est abandonné). */
 const STEP_BUDGET_MS = 60
@@ -210,6 +212,9 @@ const api = {
   },
   queueRecruit(kind: UnitKind, city: string, armyId: number | null): string | null {
     return act((s) => s.queueRecruit(kind, city, armyId)) ?? null
+  },
+  queueArmyRecruit(armyId: number, order: RecruitOrder): ArmyRecruitResult {
+    return act((s) => s.queueArmyRecruit(armyId, order)) ?? { launched: 0, error: 'Aucune partie' }
   },
   cancelRecruit(id: number): void {
     act((s) => s.cancelRecruit(id))

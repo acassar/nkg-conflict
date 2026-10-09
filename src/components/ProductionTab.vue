@@ -198,15 +198,15 @@ const warTitle = (level: WarEconomyLevel): string => {
       <p v-if="economy.recruitment.length === 0" class="meta">Aucune</p>
       <ul>
         <li
-          v-for="(q, k) in economy.recruitment"
+          v-for="q in economy.recruitment"
           :key="q.id"
-          :class="{ waiting: k >= (stats?.recruitment.max ?? 0) }"
+          :class="{ waiting: !stats?.recruitment.activeIds.has(q.id) }"
         >
           <div class="row">
             <span>{{ unitLabel(q.kind) }} · {{ q.city }}</span>
             <span class="meta">
               {{
-                k >= (stats?.recruitment.max ?? 0)
+                !stats?.recruitment.activeIds.has(q.id)
                   ? 'en attente de caserne'
                   : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, RECRUIT_COSTS[q.kind].days)} j`
               }}

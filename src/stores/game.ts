@@ -23,6 +23,7 @@ import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
 import { newPlayerWars } from './warBrief'
 import type { SimApi } from '@/sim/worker'
+import type { RecruitOrder } from '@/sim/economy/armyRecruit'
 import { deleteSave, listSaves, readSave, writeSave, type SaveSlot } from './saves'
 
 /** Sauvegarde automatique tous les 30 jours de jeu. */
@@ -737,6 +738,13 @@ export const useGameStore = defineStore('game', () => {
     report(await sim.queueRecruit(kind, city, armyId))
   }
 
+  /** Recrutement par armée ; renvoie vrai si au moins une formation est lancée. */
+  async function queueArmyRecruit(armyId: number, order: RecruitOrder): Promise<boolean> {
+    const { launched, error } = await sim.queueArmyRecruit(armyId, order)
+    report(error, launched > 0 ? `${launched} formation(s) lancée(s)` : undefined)
+    return launched > 0
+  }
+
   const cancelConstruction = (id: number): Promise<void> => sim.cancelConstruction(id)
   const cancelRecruit = (id: number): Promise<void> => sim.cancelRecruit(id)
   const setAutoEconomy = (on: boolean): Promise<void> => sim.setAutoEconomy(on)
@@ -968,6 +976,7 @@ export const useGameStore = defineStore('game', () => {
     setArmyPosture,
     queueConstruction,
     queueRecruit,
+    queueArmyRecruit,
     cancelConstruction,
     cancelRecruit,
     setAutoEconomy,

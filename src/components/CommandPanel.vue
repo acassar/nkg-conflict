@@ -5,6 +5,7 @@ import { useGameStore } from '@/stores/game'
 import ProductionTab from './ProductionTab.vue'
 import CountryTab from './CountryTab.vue'
 import EventLog from './EventLog.vue'
+import ArmyRecruitment from './ArmyRecruitment.vue'
 import { isMobile, isTouch, layout } from '@/composables/layout'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
@@ -228,6 +229,9 @@ function missionStatus(a: ArmyState): string {
   }
   return text
 }
+
+/** Sous-onglet de la fiche d'armée : commandement (missions, posture) ou recrutement. */
+const armyView = ref<'command' | 'recruit'>('command')
 
 /** Onglet de mission affiché pour l'armée choisie (suit la mission réelle quand elle change). */
 const missionView = ref<MissionKind>('hold')
@@ -583,117 +587,140 @@ async function createArmy(): Promise<void> {
             {{ unitsOfArmy.filter((u) => u.engaged).length }} au contact ·
             {{ unitsOfArmy.filter((u) => !u.supplied).length }} hors ravitaillement
           </p>
-          <div class="group" data-testid="army-mission">
-            <span class="label">Mission</span>
+          <div class="subtabs" role="tablist">
             <button
-              v-for="k in MISSION_ORDER"
-              :key="k"
-              :class="{ active: missionView === k, current: missionOf(selectedArmy) === k }"
-              :disabled="!!selectedArmy.encirclement && k !== 'encircle'"
-              :title="MISSION_HELP[k]"
-              :data-testid="`mission-${k}`"
-              @click="chooseMission(k)"
+              role="tab"
+              :class="{ active: armyView === 'command' }"
+              data-testid="army-view-command"
+              @click="armyView = 'command'"
             >
-              {{ MISSION_NAMES[k] }}
+              Commandement
             </button>
-            <span class="meta" data-testid="mission-status">{{ missionStatus(selectedArmy) }}</span>
+            <button
+              role="tab"
+              :class="{ active: armyView === 'recruit' }"
+              data-testid="army-view-recruit"
+              @click="armyView = 'recruit'"
+            >
+              Recrutement
+            </button>
           </div>
-          <template v-if="missionView === 'hold' && !selectedArmy.encirclement">
-            <div class="group">
-              <span class="label">Front tenu</span>
-              <button @click="game.startFront(selectedArmy.id)">Assigner une portion</button>
-              <button @click="game.setWholeFront(selectedArmy.id)">Tout le front</button>
-              <button @click="game.clearFront(selectedArmy.id)">Aucun</button>
+          <ArmyRecruitment v-if="armyView === 'recruit'" :army="selectedArmy" />
+          <template v-else>
+            <div class="group" data-testid="army-mission">
+              <span class="label">Mission</span>
+              <button
+                v-for="k in MISSION_ORDER"
+                :key="k"
+                :class="{ active: missionView === k, current: missionOf(selectedArmy) === k }"
+                :disabled="!!selectedArmy.encirclement && k !== 'encircle'"
+                :title="MISSION_HELP[k]"
+                :data-testid="`mission-${k}`"
+                @click="chooseMission(k)"
+              >
+                {{ MISSION_NAMES[k] }}
+              </button>
+              <span class="meta" data-testid="mission-status">{{
+                missionStatus(selectedArmy)
+              }}</span>
+            </div>
+            <template v-if="missionView === 'hold' && !selectedArmy.encirclement">
+              <div class="group">
+                <span class="label">Front tenu</span>
+                <button @click="game.startFront(selectedArmy.id)">Assigner une portion</button>
+                <button @click="game.setWholeFront(selectedArmy.id)">Tout le front</button>
+                <button @click="game.clearFront(selectedArmy.id)">Aucun</button>
+              </div>
+              <div class="group">
+                <span class="label">Offensive ponctuelle</span>
+                <button
+                  title="Toutes les unités de ligne de l'armée participent"
+                  @click="game.startOffensive(selectedArmy.id)"
+                >
+                  Planifier (toute l'armée)
+                </button>
+                <button
+                  :disabled="chosenInArmy === 0 || chosenInArmy === selectedArmy.unitIds.length"
+                  title="Seules les unités sélectionnées de cette armée attaquent ; les autres tiennent le front. Sélectionnez-les sur la carte (clic, Maj + clic ou sélection par zone)."
+                  data-testid="offensive-selection"
+                  @click="game.startOffensive(selectedArmy.id, true)"
+                >
+                  Avec la sélection ({{ chosenInArmy }})
+                </button>
+                <button
+                  :disabled="!selectedArmy.offensive || selectedArmy.offensive.launched"
+                  @click="game.launchOffensive(selectedArmy.id)"
+                >
+                  Lancer
+                </button>
+                <button
+                  :disabled="!selectedArmy.offensive"
+                  @click="game.cancelOffensive(selectedArmy.id)"
+                >
+                  Annuler
+                </button>
+              </div>
+            </template>
+            <div v-else-if="missionView === 'advance'" class="group">
+              <span class="label">Avancer jusqu'à…</span>
+              <button
+                title="Cliquez ensuite sur un pays : l'armée reprend son territoire perdu le long de sa frontière, ou traverse l'ennemi jusqu'à elle"
+                data-testid="advance-border"
+                @click="game.startAdvance('border', selectedArmy.id)"
+              >
+                Une frontière
+              </button>
+              <button
+                title="Posez les points du trait (clics, puis Entrée ou « Valider »), ou dessinez-le d'un geste"
+                data-testid="advance-line"
+                @click="game.startAdvance('line', selectedArmy.id)"
+              >
+                Un trait
+              </button>
+              <button
+                title="Cliquez sur le point à atteindre"
+                data-testid="advance-objective"
+                @click="game.startAdvance('objective', selectedArmy.id)"
+              >
+                Un objectif
+              </button>
+              <span class="meta">
+                Rythme selon la posture : continu en équilibrée ou offensive ; par bonds de 25 km,
+                avec retranchement à chaque arrêt, en défensive.
+              </span>
+            </div>
+            <div v-else-if="selectedArmy.encirclement" class="group">
+              <span class="label">Encerclement de {{ selectedArmy.encirclement.targetName }}</span>
+              <button data-testid="end-encirclement" @click="game.endEncirclement(selectedArmy.id)">
+                Rejoindre l'armée
+              </button>
+            </div>
+            <div v-else class="group">
+              <span class="label">Encerclement</span>
+              <button
+                title="L'armée détache un tiers de ses unités de ligne autour d'une cible ennemie et garde son front avec le reste"
+                data-testid="army-encircle"
+                @click="game.startTargetOrder('encircle', selectedArmy.id)"
+              >
+                Détachement automatique
+              </button>
             </div>
             <div class="group">
-              <span class="label">Offensive ponctuelle</span>
+              <span class="label">Posture de l'armée</span>
               <button
-                title="Toutes les unités de ligne de l'armée participent"
-                @click="game.startOffensive(selectedArmy.id)"
+                v-for="p in POSTURE_ORDER"
+                :key="p"
+                :class="{ active: (selectedArmy.posture ?? 'balanced') === p }"
+                :title="POSTURES[p].description"
+                @click="game.setArmyPosture(selectedArmy.id, p)"
               >
-                Planifier (toute l'armée)
-              </button>
-              <button
-                :disabled="chosenInArmy === 0 || chosenInArmy === selectedArmy.unitIds.length"
-                title="Seules les unités sélectionnées de cette armée attaquent ; les autres tiennent le front. Sélectionnez-les sur la carte (clic, Maj + clic ou sélection par zone)."
-                data-testid="offensive-selection"
-                @click="game.startOffensive(selectedArmy.id, true)"
-              >
-                Avec la sélection ({{ chosenInArmy }})
-              </button>
-              <button
-                :disabled="!selectedArmy.offensive || selectedArmy.offensive.launched"
-                @click="game.launchOffensive(selectedArmy.id)"
-              >
-                Lancer
-              </button>
-              <button
-                :disabled="!selectedArmy.offensive"
-                @click="game.cancelOffensive(selectedArmy.id)"
-              >
-                Annuler
+                {{ POSTURES[p].name }}
               </button>
             </div>
+            <button class="danger" @click="game.disbandArmy(selectedArmy.id)">
+              Dissoudre l'armée
+            </button>
           </template>
-          <div v-else-if="missionView === 'advance'" class="group">
-            <span class="label">Avancer jusqu'à…</span>
-            <button
-              title="Cliquez ensuite sur un pays : l'armée reprend son territoire perdu le long de sa frontière, ou traverse l'ennemi jusqu'à elle"
-              data-testid="advance-border"
-              @click="game.startAdvance('border', selectedArmy.id)"
-            >
-              Une frontière
-            </button>
-            <button
-              title="Posez les points du trait (clics, puis Entrée ou « Valider »), ou dessinez-le d'un geste"
-              data-testid="advance-line"
-              @click="game.startAdvance('line', selectedArmy.id)"
-            >
-              Un trait
-            </button>
-            <button
-              title="Cliquez sur le point à atteindre"
-              data-testid="advance-objective"
-              @click="game.startAdvance('objective', selectedArmy.id)"
-            >
-              Un objectif
-            </button>
-            <span class="meta">
-              Rythme selon la posture : continu en équilibrée ou offensive ; par bonds de 25 km,
-              avec retranchement à chaque arrêt, en défensive.
-            </span>
-          </div>
-          <div v-else-if="selectedArmy.encirclement" class="group">
-            <span class="label">Encerclement de {{ selectedArmy.encirclement.targetName }}</span>
-            <button data-testid="end-encirclement" @click="game.endEncirclement(selectedArmy.id)">
-              Rejoindre l'armée
-            </button>
-          </div>
-          <div v-else class="group">
-            <span class="label">Encerclement</span>
-            <button
-              title="L'armée détache un tiers de ses unités de ligne autour d'une cible ennemie et garde son front avec le reste"
-              data-testid="army-encircle"
-              @click="game.startTargetOrder('encircle', selectedArmy.id)"
-            >
-              Détachement automatique
-            </button>
-          </div>
-          <div class="group">
-            <span class="label">Posture de l'armée</span>
-            <button
-              v-for="p in POSTURE_ORDER"
-              :key="p"
-              :class="{ active: (selectedArmy.posture ?? 'balanced') === p }"
-              :title="POSTURES[p].description"
-              @click="game.setArmyPosture(selectedArmy.id, p)"
-            >
-              {{ POSTURES[p].name }}
-            </button>
-          </div>
-          <button class="danger" @click="game.disbandArmy(selectedArmy.id)">
-            Dissoudre l'armée
-          </button>
         </section>
       </template>
     </div>
@@ -752,6 +779,12 @@ button:disabled {
 button.active {
   background: #2563eb;
   border-color: #2563eb;
+}
+/* Sous-onglets de la fiche d'armée. */
+.subtabs {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0 8px;
 }
 /* Encart affiché après une déclaration de guerre. */
 .war-brief {

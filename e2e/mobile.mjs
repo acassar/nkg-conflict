@@ -168,6 +168,29 @@ try {
     step('bataille (mobile)', { note: 'aucun combat en cours' })
   }
 
+  // Recrutement par armée au doigt : sous-onglet de l'armée, deux infanteries, validation.
+  await store(() => {
+    const g = window.__nkg
+    const army = g.armies.find((a) => !a.encirclement && a.unitIds.length > 2)
+    if (army) g.selectArmy(army.id)
+  })
+  await page.getByRole('button', { name: /Armées/ }).tap()
+  await page.getByTestId('army-view-recruit').tap()
+  await page.getByTestId('recruit-add-inf').tap()
+  await page.getByTestId('recruit-add-inf').tap()
+  await page.getByTestId('recruit-preview').waitFor()
+  await shot('m04c-recrutement-armee')
+  const queuedBefore = await store(() => window.__nkg.economy?.recruitment.length ?? 0)
+  await page.getByTestId('recruit-submit').tap()
+  await page.waitForTimeout(500)
+  const queuedAfter = await store(() => window.__nkg.economy?.recruitment.length ?? 0)
+  step('recrutement par armée (mobile)', { avant: queuedBefore, apres: queuedAfter })
+  check(
+    queuedAfter > queuedBefore,
+    `recrutement par armée non lancé (${queuedBefore} → ${queuedAfter})`,
+  )
+  await page.getByTestId('army-view-command').tap()
+
   // Tiroir : onglet Diplomatie, puis glissé vers le haut (plein écran).
   await page.getByTestId('tab-country').tap()
   await page.waitForTimeout(300)

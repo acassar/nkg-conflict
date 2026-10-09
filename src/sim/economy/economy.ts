@@ -33,6 +33,7 @@ import {
 import { unitName } from '../units/names'
 import { manpowerFactor, productionFactor } from '../politics/politics'
 import { OCCUPATION_MANPOWER, OCCUPATION_YIELD, territoryShares } from './national'
+import { armyAnchors, expandOrder, planArmyRecruit, type RecruitOrder } from './armyRecruit'
 
 const UNIT_KINDS: UnitKind[] = ['inf', 'mech', 'tank', 'art', 'log', 'hq', 'tdf']
 
@@ -464,6 +465,70 @@ export function queueRecruit(
     armyId,
   })
   return null
+}
+
+/** Casernes du pays, pour la répartition d'une commande. */
+export function barracksSites(ctx: SimContext, country: CountryId) {
+  return citiesOf(ctx, country)
+    .filter((c) => c.buildings.barracks > 0)
+    .map((c) => ({
+      name: c.def.name,
+      lon: c.def.lon,
+      lat: c.def.lat,
+      barracks: c.buildings.barracks,
+    }))
+}
+
+/**
+ * Recrutement par armée : les formations partent dans les casernes d'où elles rejoindront l'armée
+ * le plus tôt (voir `planArmyRecruit`), puis rejoignent cette armée à leur sortie.
+ * Si la main-d'œuvre manque, seules les premières formations de la commande sont lancées.
+ * Renvoie le nombre de formations lancées et, s'il y a lieu, un message pour l'interface.
+ */
+export function queueArmyRecruit(
+  ctx: SimContext,
+  country: CountryId,
+  armyId: number,
+  order: RecruitOrder,
+): ArmyRecruitResult {
+  const fail = (error: string): ArmyRecruitResult => ({ launched: 0, error })
+  const eco = ctx.economies.get(country)
+  const army = ctx.armies.get(armyId)
+  if (!eco || !army || army.owner !== country) return fail('Armée inconnue')
+  const kinds = expandOrder(order, UNIT_KINDS)
+  if (kinds.length === 0) return fail('Aucune unité commandée')
+  const sites = barracksSites(ctx, country)
+  if (sites.length === 0) return fail('Aucune caserne : construisez-en une pour former des unités')
+  const anchors = armyAnchors(army, (id) => {
+    const u = ctx.units.get(id)
+    return u ? [u.lon, u.lat] : undefined
+  })
+  const plan = planArmyRecruit({
+    sites,
+    queue: eco.recruitment,
+    anchors,
+    kinds,
+    stock: eco.production,
+    productionPerDay: eco.daily.production,
+  })
+  let launched = 0
+  for (const item of plan.items) {
+    if (queueRecruit(ctx, country, item.kind, item.city, armyId) !== null) break
+    launched++
+  }
+  if (launched === 0) return fail("Pas assez de main-d'œuvre")
+  if (launched < plan.items.length) {
+    return {
+      launched,
+      error: `${launched} formation(s) lancée(s) sur ${plan.items.length} : main-d'œuvre insuffisante`,
+    }
+  }
+  return { launched, error: null }
+}
+
+export interface ArmyRecruitResult {
+  launched: number
+  error: string | null
 }
 
 /** Annule une formation : la main-d'œuvre est rendue, la production investie est perdue. */

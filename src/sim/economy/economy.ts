@@ -144,11 +144,15 @@ export function updateSupplySources(ctx: SimContext, scenario: ScenarioDef): voi
 
 /** Bonus de défense des fortifications d'une ville tenue par le camp de l'unité, à moins de 15 km. */
 export function fortFactor(ctx: SimContext, u: UnitState): number {
-  const side = sideIndex(ctx, u.owner)
+  return fortFactorAt(ctx, sideIndex(ctx, u.owner), u.lon, u.lat)
+}
+
+/** Bonus des fortifications de son camp en un point (ville fortifiée à moins de FORT_RADIUS_KM). */
+export function fortFactorAt(ctx: SimContext, side: number, lon: number, lat: number): number {
   let level = 0
   for (const c of ctx.cityStates.values()) {
     if (c.owner !== side || c.buildings.fort <= level) continue
-    if (distanceKm(c.def.lon, c.def.lat, u.lon, u.lat) <= FORT_RADIUS_KM) level = c.buildings.fort
+    if (distanceKm(c.def.lon, c.def.lat, lon, lat) <= FORT_RADIUS_KM) level = c.buildings.fort
   }
   return 1 + FORT_BONUS_PER_LEVEL * level
 }

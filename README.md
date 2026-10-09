@@ -58,6 +58,8 @@ Postures (unité ou armée entière ; une recrue reçoit celle de son armée) : 
 | Offensive   | ×1,2    | ×0,9    | 12 %          | ×0,8          | attaque un ennemi en déroute ou affaibli à moins de 20 km     |
 | Dégâts max  | ×1,4    | ×0,8    | 5 %           | ×0,6          | poursuit les fuyards, attaque tout ennemi plus faible à 40 km |
 
+Une armée en posture défensive ou défense max ne répartit plus ses unités de ligne à intervalles réguliers : chacune prend, dans son secteur du front, le poste de plus grande valeur défensive (terrain, fleuve devant le poste, fortifications, obstacles déjà posés, retranchement de l'unité en place).
+
 Les réflexes ne concernent que les unités dont la posture a été choisie, et seulement quand elles n'exécutent pas un ordre du joueur. « Annuler l'ordre » arrête les unités ; celles d'une armée reprennent leur poste.
 
 Écran de bataille : chaque combat qui vous concerne (vous, un allié ou un ennemi) a son icône sur la carte. Elle ouvre une fenêtre qui se met à jour en direct : lieu, terrain, franchissement de fleuve, rapport de force, puissance de feu, défense et pertes de chaque camp, et, pour chaque unité, le détail de ses modificateurs (effectifs, organisation, ravitaillement, commandement, posture, munitions, terrain, retranchement, fortifications, obstacles) ; la ligne d'une unité indique le niveau des obstacles de son camp sous elle.

@@ -1,15 +1,17 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import { isOffensiveOrder, type ArmyState, type LonLat, type UnitState } from '../core/types'
-import { distanceKm } from '../theater/grid'
+import { distanceKm, Terrain, terrainRule } from '../theater/grid'
+import { fortFactorAt } from '../economy/economy'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
+import { assaultFireFactor } from './obstacles'
 
 /** Largeur du couloir autour d'une portion de front assignée. */
 const FRONT_CORRIDOR_KM = 60
 /** Un ordre de front n'est recalculé que si l'emplacement a bougé de plus que ça. */
 const SLOT_TOLERANCE_KM = 8
 
-interface FrontCell {
+export interface FrontCell {
   cell: number
   /** Position le long de la portion de front, 0 à 1. */
   t: number
@@ -94,6 +96,12 @@ export function frontCells(
 
 /** Recule de `depth` cellules depuis une cellule de front, tant qu'on reste chez soi. */
 function behind(ctx: SimContext, side: number, f: FrontCell, depth: number): LonLat {
+  const i = behindCell(ctx, side, f, depth)
+  return [ctx.grid.lonOf(i), ctx.grid.latOf(i)]
+}
+
+/** Cellule atteinte en reculant de `depth` cellules depuis une cellule de front. */
+function behindCell(ctx: SimContext, side: number, f: FrontCell, depth: number): number {
   const { grid } = ctx
   let x = f.cell % grid.width
   let y = Math.floor(f.cell / grid.width)
@@ -106,8 +114,7 @@ function behind(ctx: SimContext, side: number, f: FrontCell, depth: number): Lon
     x = nx
     y = ny
   }
-  const i = grid.index(x, y)
-  return [grid.lonOf(i), grid.latOf(i)]
+  return grid.index(x, y)
 }
 
 /** Emplacements répartis régulièrement le long des cellules de front. */
@@ -122,9 +129,95 @@ function slots(cells: FrontCell[], count: number): FrontCell[] {
   return out
 }
 
+/** Profondeur des postes des unités de ligne (en cellules derrière le contact). */
+const LINE_DEPTH = 2
+/** Écart au milieu de son secteur toléré par un poste favorable : −5 % de valeur au bord du secteur. */
+const OFF_CENTER_PENALTY = 0.05
+/** Fleuve devant le poste : même bonus que dans le combat (assaut à travers un fleuve). */
+const RIVER_AHEAD_FACTOR = 1.4
+
+/**
+ * Valeur défensive d'un poste pour le camp `side` (multiplicateur, 1 = plaine nue) : terrain, fleuve
+ * entre le poste et l'ennemi, fortifications, obstacles déjà posés et retranchement de l'unité qui
+ * l'occupe (`entrenched`, par cellule). Mêmes facteurs que le combat.
+ */
+export function postValue(
+  ctx: SimContext,
+  side: number,
+  f: FrontCell,
+  depth: number,
+  entrenched: Map<number, number>,
+): { cell: number; value: number } {
+  const { grid } = ctx
+  const cell = behindCell(ctx, side, f, depth)
+  let value = terrainRule(grid.terrain[cell]).defense
+  // Fleuve entre le poste et l'ennemi : quelques cellules vers l'avant.
+  let x = cell % grid.width
+  let y = Math.floor(cell / grid.width)
+  for (let k = 0; k <= depth + 1; k++) {
+    x -= f.back[0]
+    y -= f.back[1]
+    if (!grid.inBounds(x, y)) break
+    if (grid.terrain[grid.index(x, y)] === Terrain.RIVER) {
+      value *= RIVER_AHEAD_FACTOR
+      break
+    }
+  }
+  value *= fortFactorAt(ctx, side, grid.lonOf(cell), grid.latOf(cell))
+  const field = ctx.obstacles.get(cell)
+  if (field && field.side === side) value /= assaultFireFactor(field.level)
+  value *= 1 + 0.5 * (entrenched.get(cell) ?? 0)
+  return { cell, value }
+}
+
+/**
+ * Postes favorables : le front est découpé en autant de secteurs que d'unités, et chaque unité tient,
+ * dans son secteur, le poste de plus grande valeur défensive (léger avantage au milieu du secteur, pour
+ * garder des postes répartis).
+ */
+function favorableSlots(
+  ctx: SimContext,
+  side: number,
+  cells: FrontCell[],
+  count: number,
+  depth: number,
+  entrenched: Map<number, number>,
+): LonLat[] {
+  if (count <= 0 || cells.length === 0) return []
+  const { grid } = ctx
+  const out: LonLat[] = []
+  for (let k = 0; k < count; k++) {
+    const lo = Math.min(cells.length - 1, Math.floor((k / count) * cells.length))
+    const hi = Math.max(lo + 1, Math.floor(((k + 1) / count) * cells.length))
+    const center = Math.min(cells.length - 1, Math.floor(((k + 0.5) / count) * cells.length))
+    const half = Math.max(1, (hi - lo) / 2)
+    let best = -1
+    let bestScore = -Infinity
+    for (let q = lo; q < hi && q < cells.length; q++) {
+      const c = cells[q]
+      if (!c) continue
+      const { cell, value } = postValue(ctx, side, c, depth, entrenched)
+      const score = value * (1 - (OFF_CENTER_PENALTY * Math.abs(q - center)) / half)
+      if (score > bestScore) {
+        bestScore = score
+        best = cell
+      }
+    }
+    if (best >= 0) out.push([grid.lonOf(best), grid.latOf(best)])
+  }
+  return out
+}
+
+/** L'armée choisit ses postes selon le terrain quand sa posture est défensive. */
+function picksFavorablePosts(army: ArmyState): boolean {
+  return army.posture === 'defensive' || army.posture === 'maxDefense'
+}
+
 /**
  * Répartit les unités d'une armée le long de sa portion de front : unités de ligne juste derrière
  * le contact, artillerie, logistique et QG plus en arrière. Les unités en attaque ou en déroute sont laissées.
+ * En posture défensive ou défense max, les unités de ligne prennent les postes les plus favorables de
+ * leur secteur (voir `favorableSlots`) au lieu de postes régulièrement espacés.
  * `teleport` sert au déploiement initial.
  */
 export function assignFront(ctx: SimContext, army: ArmyState, teleport = false): void {
@@ -144,8 +237,19 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   const line = members.filter((u) => isLineUnit(u.kind))
   const rear = members.filter((u) => !isLineUnit(u.kind))
 
-  const place = (units: UnitState[], depth: number): void => {
-    const posts = slots(cells, units.length).map((slot) => behind(ctx, side, slot, depth))
+  const place = (units: UnitState[], depth: number, favorable = false): void => {
+    let posts: LonLat[]
+    if (favorable) {
+      // Retranchement acquis : une unité installée garde la valeur de sa position.
+      const entrenched = new Map<number, number>()
+      for (const u of units) {
+        const c = ctx.grid.cellAt(u.lon, u.lat)
+        entrenched.set(c, Math.max(entrenched.get(c) ?? 0, u.entrench))
+      }
+      posts = favorableSlots(ctx, side, cells, units.length, depth, entrenched)
+    } else {
+      posts = slots(cells, units.length).map((slot) => behind(ctx, side, slot, depth))
+    }
     // Chaque poste revient à l'unité la plus proche encore libre (paires triées par distance) :
     // une unité n'est jamais envoyée à l'autre bout du front quand un poste l'attend à côté.
     const pairs: Array<{ u: number; p: number; d: number }> = []
@@ -181,7 +285,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       planPath(ctx, u, target)
     }
   }
-  place(line, 2)
+  place(line, LINE_DEPTH, picksFavorablePosts(army))
   place(rear, 7)
 }
 
@@ -221,7 +325,7 @@ function farthestPath(grid: SimContext['grid'], group: Set<number>, from: number
 /** Retire les pointes : un point où le tracé repart presque sur ses pas (dent de scie d'une cellule). */
 function withoutSpikes(line: LonLat[]): LonLat[] {
   const out = [...line]
-  for (let i = 1; i + 1 < out.length;) {
+  for (let i = 1; i + 1 < out.length; ) {
     const [p0, p1, p2] = [out[i - 1] as LonLat, out[i] as LonLat, out[i + 1] as LonLat]
     const ax = p1[0] - p0[0]
     const ay = p1[1] - p0[1]

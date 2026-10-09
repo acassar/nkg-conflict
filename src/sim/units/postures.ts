@@ -18,7 +18,7 @@ export const POSTURES: Record<Posture, PostureRule> = {
   maxDefense: {
     name: 'Défense max',
     description:
-      'Défense +30 %, attaque −40 %, retranchement rapide ; décroche tôt pour se préserver ; jamais d’attaque automatique',
+      'Défense +30 %, attaque −40 %, retranchement rapide ; décroche tôt pour se préserver ; jamais d’attaque automatique ; en armée, postes choisis selon le terrain',
     attack: 0.6,
     defense: 1.3,
     routOrg: 0.3,
@@ -26,7 +26,8 @@ export const POSTURES: Record<Posture, PostureRule> = {
   },
   defensive: {
     name: 'Défensive',
-    description: 'Défense +15 %, attaque −15 % ; pas d’attaque automatique',
+    description:
+      'Défense +15 %, attaque −15 % ; pas d’attaque automatique ; en armée, postes choisis selon le terrain',
     attack: 0.85,
     defense: 1.15,
     routOrg: 0.2,

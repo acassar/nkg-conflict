@@ -583,6 +583,8 @@ export class Simulation {
       const u = this.ctx.units.get(id)
       if (u) u.posture = posture
     }
+    // En défensive ou défense max, l'armée choisit d'autres postes : répartition refaite tout de suite.
+    if (army.front || army.wholeFront) assignFront(this.ctx, army)
   }
 
   /** Annule les ordres des unités : elles s'arrêtent ; celles d'une armée reprennent leur poste. */

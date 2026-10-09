@@ -218,6 +218,24 @@ function farthestPath(grid: SimContext['grid'], group: Set<number>, from: number
   return path
 }
 
+/** Retire les pointes : un point où le tracé repart presque sur ses pas (dent de scie d'une cellule). */
+function withoutSpikes(line: LonLat[]): LonLat[] {
+  const out = [...line]
+  for (let i = 1; i + 1 < out.length;) {
+    const [p0, p1, p2] = [out[i - 1] as LonLat, out[i] as LonLat, out[i + 1] as LonLat]
+    const ax = p1[0] - p0[0]
+    const ay = p1[1] - p0[1]
+    const bx = p2[0] - p1[0]
+    const by = p2[1] - p1[1]
+    const cos = (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by) || 1)
+    if (cos < -0.5) {
+      out.splice(i, 1)
+      if (i > 1) i--
+    } else i++
+  }
+  return out
+}
+
 /**
  * Tracé du front (pour l'affichage) : les cellules de front sont regroupées par contiguïté ; chaque
  * groupe donne la chaîne la plus longue qui le traverse (sans les éperons des zones épaisses), placée
@@ -320,7 +338,7 @@ export function traceFront(ctx: SimContext, cells: FrontCell[]): LonLat[][] {
       const out = smooth.filter((_, k) => k % step === 0)
       const tail = smooth[smooth.length - 1] as LonLat
       if (out[out.length - 1] !== tail) out.push(tail)
-      return out
+      return withoutSpikes(out)
     })
     .sort((x, y) => y.length - x.length)
 }

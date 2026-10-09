@@ -75,6 +75,17 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     supplyRadiusKm: 60,
     commandRadiusKm: 0,
   },
+  tdf: {
+    kind: 'tdf',
+    name: 'Défense territoriale',
+    attack: 2,
+    defense: 5,
+    speedKmh: 3,
+    supportRangeKm: 0,
+    zocKm: 10,
+    supplyRadiusKm: 0,
+    commandRadiusKm: 0,
+  },
   hq: {
     kind: 'hq',
     name: 'Quartier général',
@@ -90,5 +101,5 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
 
 /** Les unités de mêlée tiennent la ligne ; les autres restent en retrait. */
 export function isLineUnit(kind: UnitKind): boolean {
-  return kind === 'inf' || kind === 'mech' || kind === 'tank'
+  return kind === 'inf' || kind === 'mech' || kind === 'tank' || kind === 'tdf'
 }

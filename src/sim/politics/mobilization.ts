@@ -24,7 +24,7 @@ const COMPOSITION: Array<[UnitKind, number]> = [
 
 /** Ordre de bataille d'un pays de `size` unités : au moins un QG, une logistique au-delà de 6 unités. */
 export function forceComposition(size: number): Record<UnitKind, number> {
-  const out: Record<UnitKind, number> = { inf: 0, mech: 0, tank: 0, art: 0, log: 0, hq: 0 }
+  const out: Record<UnitKind, number> = { inf: 0, mech: 0, tank: 0, art: 0, log: 0, hq: 0, tdf: 0 }
   let left = size
   for (const [kind, share] of COMPOSITION) {
     const n = Math.min(left, Math.floor(size * share))

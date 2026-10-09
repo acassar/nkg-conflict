@@ -12,6 +12,7 @@ import type {
   Posture,
   SimSnapshot,
   UnitKind,
+  WarEconomyLevel,
   UnitSnapshot,
 } from '@/sim/core/types'
 import type { PlayerOrder } from '@/sim/simulation'
@@ -567,6 +568,7 @@ export const useGameStore = defineStore('game', () => {
   const cancelConstruction = (id: number): Promise<void> => sim.cancelConstruction(id)
   const cancelRecruit = (id: number): Promise<void> => sim.cancelRecruit(id)
   const setAutoEconomy = (on: boolean): Promise<void> => sim.setAutoEconomy(on)
+  const setWarEconomy = (level: WarEconomyLevel): Promise<void> => sim.setWarEconomy(level)
 
   // ---------- Diplomatie ----------
 
@@ -788,6 +790,7 @@ export const useGameStore = defineStore('game', () => {
     cancelConstruction,
     cancelRecruit,
     setAutoEconomy,
+    setWarEconomy,
     declareWar,
     proposePeace,
     answerOffer,

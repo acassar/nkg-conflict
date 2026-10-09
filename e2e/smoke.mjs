@@ -181,6 +181,19 @@ try {
   // Production : jauges de capacité et casernes sur la carte.
   await page.getByRole('button', { name: 'Production' }).click()
   await page.getByTestId('production-capacity').waitFor()
+  // Économie de guerre : mobilisation partielle choisie depuis le panneau.
+  await page
+    .getByTestId('war-economy')
+    .getByRole('button', { name: 'Mobilisation partielle' })
+    .click()
+  await page.waitForTimeout(500)
+  const warEconomy = await page.evaluate(() => window.__nkg.snapshot.economy.warEconomy)
+  const tdfButton = await page
+    .getByRole('button', { name: 'Défense territoriale', exact: true })
+    .count()
+  step('économie de guerre', { niveau: warEconomy, boutonDefenseTerritoriale: tdfButton })
+  if (warEconomy !== 1) report.errors.push(`économie de guerre non appliquée (${warEconomy})`)
+  if (tdfButton !== 1) report.errors.push('bouton de défense territoriale absent')
   await shot('02f-production-capacites')
 
   // Poursuite : trois unités proches du front, clic sur l'unité russe la plus proche.

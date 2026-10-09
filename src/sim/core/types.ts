@@ -23,7 +23,10 @@ export interface CountryDef {
   gdpB?: number
 }
 
-export type UnitKind = 'inf' | 'mech' | 'tank' | 'art' | 'log' | 'hq'
+export type UnitKind = 'inf' | 'mech' | 'tank' | 'art' | 'log' | 'hq' | 'tdf'
+
+/** Économie de guerre : 0 paix, 1 mobilisation partielle, 2 guerre totale. */
+export type WarEconomyLevel = 0 | 1 | 2
 
 export type OrderKind = 'idle' | 'move' | 'attack' | 'hold' | 'retreat' | 'front' | 'pursue'
 
@@ -225,6 +228,8 @@ export interface EconomyState {
   recruitment: RecruitItem[]
   /** Numéro de la prochaine unité de chaque type (noms des nouvelles unités). */
   unitCounters: Record<UnitKind, number>
+  /** Part de l'industrie tournée vers l'armée (voir `WAR_ECONOMY`). */
+  warEconomy: WarEconomyLevel
   /** Flux du dernier jour, pour l'affichage. */
   daily: {
     construction: number
@@ -237,6 +242,8 @@ export interface EconomyState {
     productionUsed?: number
     /** Points de construction employés la veille. */
     constructionUsed?: number
+    /** Production venue des points de construction inutilisés la veille (déjà comptée dans `production`). */
+    productionFromConstruction?: number
   }
 }
 

@@ -2,15 +2,20 @@ import { sideIndex, type CityRuntime, type SimContext } from '../context'
 import { frontCells } from '../systems/armies'
 import type { BuildingKind, CountryId, UnitKind } from '../core/types'
 import { distanceKm } from '../theater/grid'
-import { citiesOf, queueConstruction, queueRecruit } from './economy'
+import { citiesOf, queueConstruction, queueRecruit, setWarEconomy } from './economy'
 import { BUILDINGS, RECRUIT_COSTS } from './rules'
 import { relation } from '../politics/politics'
+import { territoryShares } from './national'
 
 /** Composition visée des nouvelles unités de l'IA (cycle). */
 const RECRUIT_CYCLE: UnitKind[] = ['inf', 'mech', 'inf', 'tank', 'art', 'inf', 'mech', 'log']
 const FRONT_CITY_KM = 60
 /** Relations sous lesquelles un pays se sent menacé et renforce son armée en temps de paix. */
 const TENSION_RELATION = -50
+/** En guerre, l'IA passe en guerre totale sous cette part de son territoire. */
+const TOTAL_WAR_HOME_SHARE = 0.9
+/** Réserve d'hommes (milliers) au-delà de laquelle l'IA forme de la défense territoriale quand la production manque. */
+const TDF_MANPOWER = 30
 
 /** Distance d'une ville au front (échantillon de cellules de front), Infinity sans front. */
 function distanceToFront(city: CityRuntime, front: Array<[number, number]>): number {
@@ -56,6 +61,14 @@ export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
   const cities = citiesOf(ctx, country).map((c) => ({ c, front: distanceToFront(c, front) }))
   if (cities.length === 0) return
 
+  // Économie de guerre : partielle en guerre, totale quand le pays perd du terrain.
+  const side = sideIndex(ctx, country)
+  if (ctx.matrix.atWar[side] !== 1) setWarEconomy(ctx, country, 0)
+  else {
+    const home = territoryShares(ctx).home[side] ?? 1
+    setWarEconomy(ctx, country, home < TOTAL_WAR_HOME_SHARE ? 2 : 1)
+  }
+
   // Constructions.
   if (eco.construction.length < 2) {
     const frontCity = cities
@@ -83,7 +96,7 @@ export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
   const slots = barracks.reduce((n, x) => n + x.c.buildings.barracks, 0)
   const army = [...ctx.armies.values()].find((a) => a.owner === country && a.wholeFront)
   // En paix, on n'entretient que l'effectif de mobilisation.
-  const atWar = ctx.matrix.atWar[sideIndex(ctx, country)] === 1
+  const atWar = ctx.matrix.atWar[side] === 1
   const owned = [...ctx.units.values()].filter((u) => u.owner === country).length
   if (!atWar && owned + eco.recruitment.length >= peaceTarget(ctx, country)) return
   // Position dans le cycle : unités déjà commandées depuis le début de la partie.
@@ -91,7 +104,11 @@ export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
     Object.values(eco.unitCounters).reduce((n, v) => n + v, 0) + eco.recruitment.length
   let guard = 0
   while (eco.recruitment.length < slots && guard++ < 10) {
-    const kind = RECRUIT_CYCLE[ordered() % RECRUIT_CYCLE.length]
+    let kind = RECRUIT_CYCLE[ordered() % RECRUIT_CYCLE.length]
+    // Hommes en surplus et production à court : défense territoriale.
+    if (kind && eco.manpower > TDF_MANPOWER && eco.production < RECRUIT_COSTS[kind].production) {
+      kind = 'tdf'
+    }
     if (!kind || eco.manpower < RECRUIT_COSTS[kind].manpower) break
     // Les casernes les plus proches du front d'abord, à tour de rôle.
     const city = barracks[eco.recruitment.length % Math.max(1, barracks.length)]

@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest'
 import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
-import { onCityCaptured } from '@/sim/economy/economy'
+import { dailyIncome, onCityCaptured } from '@/sim/economy/economy'
 import {
   BUILDINGS,
   CONSTRUCTION_PER_CIV,
+  CONSTRUCTION_SPILLOVER,
   constructionSlots,
   MAX_PARALLEL_CONSTRUCTION,
   RECRUIT_COSTS,
+  WAR_ECONOMY,
 } from '@/sim/economy/rules'
 import type { TheaterData } from '@/sim/theater/grid'
 
@@ -106,5 +108,55 @@ describe('économie', () => {
     onCityCaptured(sim.ctx, kharkiv, kharkiv.owner)
     expect(kharkiv.buildings.fort).toBe(0)
     expect(kharkiv.buildings.civ).toBe(Math.floor(civ / 2))
+  })
+})
+
+describe('économie de guerre', () => {
+  it('les points de construction inutilisés deviennent de la production', () => {
+    const sim = newGame()
+    sim.step(24)
+    const eco = ecoOf(sim)
+    // Aucun chantier : tous les points du jour sont convertis.
+    expect(eco.construction.length).toBe(0)
+    expect(eco.daily.productionFromConstruction).toBeCloseTo(
+      eco.daily.construction * CONSTRUCTION_SPILLOVER,
+    )
+    // Avec des chantiers, la conversion baisse d'autant.
+    for (const name of ['Lviv', 'Kyiv', 'Odessa']) sim.queueConstruction(name, 'mil')
+    sim.step(24)
+    const used = eco.daily.constructionUsed ?? 0
+    expect(used).toBeGreaterThan(0)
+    expect(eco.daily.productionFromConstruction).toBeCloseTo(
+      (eco.daily.construction - used) * CONSTRUCTION_SPILLOVER,
+    )
+  })
+
+  it('la guerre totale déplace la construction vers la production et use la population', () => {
+    const peace = newGame()
+    const total = newGame()
+    total.setWarEconomy(2)
+    expect(ecoOf(total).warEconomy).toBe(2)
+    // Revenus propres du pays, hors aides étrangères.
+    const p = dailyIncome(peace.ctx, ukraine2026, 'UKR')
+    const t = dailyIncome(total.ctx, ukraine2026, 'UKR')
+    expect(t.production / p.production).toBeCloseTo(WAR_ECONOMY[2].production)
+    expect(t.munitions / p.munitions).toBeCloseTo(WAR_ECONOMY[2].production)
+    expect(t.construction / p.construction).toBeCloseTo(WAR_ECONOMY[2].construction)
+    peace.step(24 * 10)
+    total.step(24 * 10)
+    const support = (sim: Simulation): number =>
+      sim.ctx.politics.countries.get('UKR')?.warSupport ?? 0
+    expect(support(total)).toBeLessThan(support(peace))
+  })
+
+  it('forme une brigade de défense territoriale, peu coûteuse en matériel', () => {
+    expect(RECRUIT_COSTS.tdf.production).toBeLessThan(RECRUIT_COSTS.inf.production / 2)
+    expect(RECRUIT_COSTS.tdf.manpower).toBeGreaterThan(RECRUIT_COSTS.inf.manpower)
+    const sim = newGame()
+    expect(sim.queueRecruit('tdf', 'Kyiv', null)).toBe(null)
+    sim.step(24 * (RECRUIT_COSTS.tdf.days + 1))
+    const tdf = [...sim.ctx.units.values()].find((u) => u.kind === 'tdf')
+    expect(tdf?.name).toBe('1re brigade de défense territoriale')
+    expect(tdf?.owner).toBe('UKR')
   })
 })

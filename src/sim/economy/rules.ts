@@ -1,4 +1,4 @@
-import type { BuildingKind, Buildings, UnitKind } from '../core/types'
+import type { BuildingKind, Buildings, UnitKind, WarEconomyLevel } from '../core/types'
 
 export interface BuildingType {
   kind: BuildingKind
@@ -100,6 +100,40 @@ export const RECRUIT_COSTS: Record<UnitKind, RecruitCost> = {
   art: { production: 500, manpower: 3, days: 12 },
   log: { production: 300, manpower: 2, days: 8 },
   hq: { production: 400, manpower: 1, days: 8 },
+  // Défense territoriale : peu de matériel, beaucoup d'hommes ; tient les secteurs calmes.
+  tdf: { production: 100, manpower: 6, days: 7 },
+}
+
+/** Points de construction inutilisés du jour : cette part devient de la production militaire. */
+export const CONSTRUCTION_SPILLOVER = 0.3
+
+export interface WarEconomyRule {
+  name: string
+  /** Multiplicateurs de la production militaire (et des munitions) et des points de construction. */
+  production: number
+  construction: number
+  /** Usure quotidienne supplémentaire de la stabilité et du soutien à la guerre. */
+  stabilityPerDay: number
+  warSupportPerDay: number
+}
+
+/** Économie de guerre : une part de l'industrie civile passe à l'armée, au prix de l'usure politique. */
+export const WAR_ECONOMY: Record<WarEconomyLevel, WarEconomyRule> = {
+  0: { name: 'Paix', production: 1, construction: 1, stabilityPerDay: 0, warSupportPerDay: 0 },
+  1: {
+    name: 'Mobilisation partielle',
+    production: 1.3,
+    construction: 0.7,
+    stabilityPerDay: 0.0005,
+    warSupportPerDay: 0.0005,
+  },
+  2: {
+    name: 'Guerre totale',
+    production: 1.6,
+    construction: 0.4,
+    stabilityPerDay: 0.0015,
+    warSupportPerDay: 0.0015,
+  },
 }
 
 /** Renfort quotidien maximal d'une unité ravitaillée hors combat (part des effectifs). */

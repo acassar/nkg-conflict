@@ -17,6 +17,7 @@ import type {
   ScenarioDef,
   SimSnapshot,
   UnitKind,
+  WarEconomyLevel,
   UnitState,
 } from './core/types'
 import { countryName, runtimeOf, sideIndex, type SimContext } from './context'
@@ -40,6 +41,7 @@ import { assignFront, launchOffensive, snapToFront, updateArmies } from './syste
 import { updateAi, nearestCity, type AiState } from './systems/ai'
 import {
   cancelConstruction,
+  setWarEconomy,
   cancelRecruit,
   initCities,
   initEconomies,
@@ -354,7 +356,13 @@ export class Simulation {
       }
     }
     ctx.economies.clear()
-    for (const e of save.economies) ctx.economies.set(e.country, structuredClone(e))
+    for (const e of save.economies) {
+      // Sauvegardes antérieures : ni économie de guerre ni défense territoriale.
+      const eco = structuredClone(e)
+      eco.warEconomy ??= 0
+      eco.unitCounters.tdf ??= 1
+      ctx.economies.set(e.country, eco)
+    }
     const p = save.politics
     ctx.politics = {
       countries: new Map(p.countries.map((c) => [c.code, { ...c }])),
@@ -808,6 +816,10 @@ export class Simulation {
 
   setAutoEconomy(on: boolean): void {
     this.autoEconomy = on
+  }
+
+  setWarEconomy(level: WarEconomyLevel): void {
+    setWarEconomy(this.ctx, this.playerCountry, level)
   }
 
   /** Lève les forces du joueur sans attendre une guerre (unités, armée qui tient le front). */

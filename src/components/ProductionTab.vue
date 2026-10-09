@@ -2,9 +2,9 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
-import { BUILDING_KINDS, BUILDINGS, RECRUIT_COSTS } from '@/sim/economy/rules'
+import { BUILDING_KINDS, BUILDINGS, RECRUIT_COSTS, WAR_ECONOMY } from '@/sim/economy/rules'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
-import type { UnitKind } from '@/sim/core/types'
+import type { UnitKind, WarEconomyLevel } from '@/sim/core/types'
 import { useProductionStats } from '@/composables/production'
 
 const game = useGameStore()
@@ -35,6 +35,14 @@ const ratio = (a: number, b: number): string => `${b > 0 ? Math.min(100, (100 * 
 const pct = (progress: number, cost: number): number => Math.min(100, (100 * progress) / cost)
 const round = (v: number): string => Math.round(v).toLocaleString('fr-FR')
 const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
+
+const WAR_LEVELS: WarEconomyLevel[] = [0, 1, 2]
+const signed = (v: number): string => `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`
+const warTitle = (level: WarEconomyLevel): string => {
+  const r = WAR_ECONOMY[level]
+  if (level === 0) return 'Industrie civile et militaire à leur niveau ordinaire'
+  return `Production et munitions ${signed(r.production)}, construction ${signed(r.construction)} ; stabilité et soutien à la guerre s'usent plus vite`
+}
 </script>
 
 <template>
@@ -91,6 +99,19 @@ const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
       />
       Gestion automatique (constructions et formations)
     </label>
+
+    <div class="war-economy" data-testid="war-economy">
+      <span class="label">Économie</span>
+      <button
+        v-for="level in WAR_LEVELS"
+        :key="level"
+        :class="{ active: (economy?.warEconomy ?? 0) === level }"
+        :title="warTitle(level)"
+        @click="game.setWarEconomy(level)"
+      >
+        {{ WAR_ECONOMY[level].name }}
+      </button>
+    </div>
 
     <!-- Ville sélectionnée -->
     <section v-if="selectedCity" class="city">
@@ -200,8 +221,11 @@ const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
         Par jour : +{{ round(economy.daily.construction) }} construction, +{{
           round(economy.daily.production)
         }}
-        production. Renforts versés hier : {{ Math.round(economy.daily.reinforcements * 100) }} %
-        d'une unité.
+        production<template v-if="economy.daily.productionFromConstruction"
+          >, dont {{ round(economy.daily.productionFromConstruction) }} venue des points de
+          construction inutilisés</template
+        >. Renforts versés hier : {{ Math.round(economy.daily.reinforcements * 100) }} % d'une
+        unité.
       </p>
     </section>
   </div>
@@ -255,6 +279,16 @@ const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
 }
 li.waiting {
   opacity: 0.6;
+}
+.war-economy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 10px;
+}
+.war-economy .label {
+  margin-right: 4px;
 }
 .auto {
   display: flex;

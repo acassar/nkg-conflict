@@ -8,11 +8,13 @@ import type {
   ScenarioDef,
   UnitKind,
   UnitState,
+  WarEconomyLevel,
 } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import {
   BUILDINGS,
   CONSTRUCTION_PER_CIV,
+  CONSTRUCTION_SPILLOVER,
   FORT_BONUS_PER_LEVEL,
   FORT_RADIUS_KM,
   initialBuildings,
@@ -26,12 +28,13 @@ import {
   PRODUCTION_PER_MIL,
   RECRUIT_COSTS,
   REINFORCE_PER_DAY,
+  WAR_ECONOMY,
 } from './rules'
 import { unitName } from '../units/names'
 import { manpowerFactor, productionFactor } from '../politics/politics'
 import { OCCUPATION_MANPOWER, OCCUPATION_YIELD, territoryShares } from './national'
 
-const UNIT_KINDS: UnitKind[] = ['inf', 'mech', 'tank', 'art', 'log', 'hq']
+const UNIT_KINDS: UnitKind[] = ['inf', 'mech', 'tank', 'art', 'log', 'hq', 'tdf']
 
 // ---------- Initialisation ----------
 
@@ -64,6 +67,7 @@ export function initEconomies(ctx: SimContext, scenario: ScenarioDef): void {
       construction: [],
       recruitment: [],
       unitCounters: counters,
+      warEconomy: 0,
       daily: {
         construction: 0,
         production: 0,
@@ -235,10 +239,12 @@ export function dailyIncome(
   // Stabilité et sanctions pèsent sur l'industrie, le soutien à la guerre sur la conscription.
   const industry = productionFactor(ctx, country)
   const conscription = manpowerFactor(ctx, country)
+  // Économie de guerre : une part de l'industrie civile travaille pour l'armée.
+  const war = WAR_ECONOMY[ctx.economies.get(country)?.warEconomy ?? 0]
   return {
-    construction: (civ * CONSTRUCTION_PER_CIV + base.construction) * industry,
-    production: (mil * PRODUCTION_PER_MIL + base.production) * industry,
-    munitions: (mil * MUNITIONS_PER_MIL + base.munitions) * industry,
+    construction: (civ * CONSTRUCTION_PER_CIV + base.construction) * industry * war.construction,
+    production: (mil * PRODUCTION_PER_MIL + base.production) * industry * war.production,
+    munitions: (mil * MUNITIONS_PER_MIL + base.munitions) * industry * war.production,
     manpower: (cityManpower + base.manpower) * conscription,
   }
 }
@@ -281,11 +287,17 @@ export function updateEconomy(
       manpower,
       reinforcements: 0,
     }
-    const before = eco.production
     eco.daily.constructionUsed = advanceConstruction(ctx, eco, construction)
+    // Les points de construction inutilisés deviennent de la production : l'industrie civile
+    // travaille pour l'armée quand elle ne bâtit pas.
+    const spill = Math.max(0, construction - eco.daily.constructionUsed) * CONSTRUCTION_SPILLOVER
+    eco.production += spill
+    eco.daily.production += spill
+    eco.daily.productionFromConstruction = spill
+    const afterSpill = eco.production
     reinforce(ctx, eco)
     advanceRecruitment(ctx, eco)
-    eco.daily.productionUsed = Math.max(0, before - eco.production)
+    eco.daily.productionUsed = Math.max(0, afterSpill - eco.production)
     // Les munitions consommées sont comptées sur la journée écoulée, puis remises à zéro.
     eco.daily.munitionsUsed = 0
   }
@@ -408,6 +420,14 @@ export function queueConstruction(
   }
   eco.construction.push({ id: ctx.allocId(), city: cityName, kind, progress: 0, cost: type.cost })
   return null
+}
+
+/** Règle l'économie de guerre d'un pays (0 paix, 1 mobilisation partielle, 2 guerre totale). */
+export function setWarEconomy(ctx: SimContext, country: CountryId, level: WarEconomyLevel): void {
+  const eco = ctx.economies.get(country)
+  if (!eco || eco.warEconomy === level) return
+  eco.warEconomy = level
+  ctx.log(`Économie : ${WAR_ECONOMY[level].name.toLowerCase()}`, country, true)
 }
 
 export function cancelConstruction(ctx: SimContext, country: CountryId, id: number): void {

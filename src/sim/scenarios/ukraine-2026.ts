@@ -9,10 +9,11 @@ import type {
 import { unitName } from '../units/names'
 
 /** Génère un ordre de bataille numéroté, déployé automatiquement le long du front. */
-function forces(owner: CountryId, counts: Record<UnitKind, number>): ScenarioUnit[] {
+function forces(owner: CountryId, counts: Partial<Record<UnitKind, number>>): ScenarioUnit[] {
   const out: ScenarioUnit[] = []
   for (const kind of Object.keys(counts) as UnitKind[]) {
-    for (let n = 1; n <= counts[kind]; n++) out.push({ owner, kind, name: unitName(kind, n) })
+    for (let n = 1; n <= (counts[kind] ?? 0); n++)
+      out.push({ owner, kind, name: unitName(kind, n) })
   }
   return out
 }

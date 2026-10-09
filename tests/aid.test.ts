@@ -6,6 +6,7 @@ import { loadTheater } from '@/sim/theater/load'
 import type { TheaterData } from '@/sim/theater/grid'
 import { relation } from '@/sim/politics/politics'
 import { aidBetween, revokeAid } from '@/sim/politics/aid'
+import { CONSTRUCTION_SPILLOVER } from '@/sim/economy/rules'
 import { parseSave, serializeSave } from '@/sim/core/save'
 
 let theater: TheaterData
@@ -40,9 +41,11 @@ describe('aide étrangère', () => {
     const sent = aidBetween(withAid.ctx, 'USA', 'UKR')?.lastDay
     expect(sent?.munitions).toBeGreaterThan(0)
     expect(sent?.equipment).toBeGreaterThan(0)
-    // Ce que perd le donneur correspond à ce qu'il envoie (production et matériel).
+    // Ce que perd le donneur correspond à ce qu'il envoie (production et matériel), plus la
+    // production qu'auraient donnée ses points de construction envoyés (il n'a aucun chantier).
     const lost = usa(without) - usa(withAid)
-    expect(lost).toBeCloseTo((sent?.production ?? 0) + (sent?.equipment ?? 0), 0)
+    const fromConstruction = (sent?.construction ?? 0) * CONSTRUCTION_SPILLOVER
+    expect(lost).toBeCloseTo((sent?.production ?? 0) + (sent?.equipment ?? 0) + fromConstruction, 0)
   })
 
   it('le joueur accorde, ajuste puis révoque une aide', () => {

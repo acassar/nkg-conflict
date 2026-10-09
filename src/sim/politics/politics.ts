@@ -2,6 +2,7 @@ import { countryName, isOffMap, runtimeOf, sideIndex, type SimContext } from '..
 import { encodeRle } from '../core/save'
 import type { CountryId, LonLat } from '../core/types'
 import { decodeRle } from '../theater/grid'
+import { WAR_ECONOMY } from '../economy/rules'
 import { mobilize } from './mobilization'
 import type { CountryPolitics, PeaceKind, PoliticsSnapshot, War } from './types'
 
@@ -404,6 +405,10 @@ export function updatePoliticsDaily(ctx: SimContext, dailyLosses: Map<CountryId,
     for (const s of ctx.politics.sanctions) {
       if (s.endsWith(`>${p.code}`)) p.stability = Math.max(0, p.stability - 0.0005)
     }
+    // Économie de guerre : la population supporte mal l'effort imposé.
+    const war = WAR_ECONOMY[ctx.economies.get(p.code)?.warEconomy ?? 0]
+    p.stability = Math.max(0, p.stability - war.stabilityPerDay)
+    p.warSupport = Math.max(0, p.warSupport - war.warSupportPerDay)
   }
 }
 

@@ -47,6 +47,12 @@ function drawSymbol(ctx: CanvasRenderingContext2D, kind: UnitKind): void {
       cross()
       track()
       break
+    case 'tdf':
+      // Défense territoriale : croix d'infanterie en pointillés.
+      ctx.setLineDash([3, 2])
+      cross()
+      ctx.setLineDash([])
+      break
     case 'art':
       ctx.beginPath()
       ctx.arc(cx, cy, 4, 0, Math.PI * 2)

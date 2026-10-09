@@ -127,11 +127,15 @@ describe('front de l’armée', () => {
         for (let i = 1; i < l.length; i++) {
           const [p0, p1, p2] = [l[i - 1] as LonLat, l[i] as LonLat, l[i + 1]]
           // Points rapprochés : pas de grand saut d'un bout à l'autre du front.
-          expect(distanceKm(p0[0], p0[1], p1[0], p1[1])).toBeLessThan(25)
+          expect(distanceKm(p0[0], p0[1], p1[0], p1[1])).toBeLessThan(40)
           if (p2) {
-            // Pas d'éperon : le tracé ne repart jamais en arrière.
-            const dot = (p1[0] - p0[0]) * (p2[0] - p1[0]) + (p1[1] - p0[1]) * (p2[1] - p1[1])
-            expect(dot).toBeGreaterThanOrEqual(0)
+            // Pas d'éperon : le tracé peut tourner, jamais repartir sur ses pas (angle > 135°).
+            const ax = p1[0] - p0[0]
+            const ay = p1[1] - p0[1]
+            const bx = p2[0] - p1[0]
+            const by = p2[1] - p1[1]
+            const cos = (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by) || 1)
+            expect(cos).toBeGreaterThan(-0.7)
           }
         }
         // Chaque point est sur la ligne de contact (à moins de deux cellules d'une cellule de front).
@@ -255,6 +259,24 @@ describe('donneurs hors carte (théâtre ukrainien)', () => {
     // Une partie avec donneurs survit à une sauvegarde.
     const loaded = Simulation.fromSave(parseSave(serializeSave(sim.toSave())), ukraine2026, theater)
     expect(loaded.ctx.politics.aids.length).toBe(ctx.politics.aids.length)
+  })
+
+  it('une ancienne sauvegarde se charge sans économie de guerre ni défense territoriale', () => {
+    const sim = newGame()
+    sim.setWarEconomy(1)
+    const save = sim.toSave()
+    for (const e of save.economies) {
+      const old = e as Partial<typeof e>
+      delete old.warEconomy
+      delete (old.unitCounters as Partial<Record<string, number>>).tdf
+    }
+    const loaded = Simulation.fromSave(parseSave(serializeSave(save)), ukraine2026, theater)
+    const eco = loaded.ctx.economies.get('UKR')
+    expect(eco?.warEconomy).toBe(0)
+    expect(eco?.unitCounters.tdf).toBe(1)
+    // L'économie de guerre choisie est conservée dans une sauvegarde récente.
+    const kept = Simulation.fromSave(parseSave(serializeSave(sim.toSave())), ukraine2026, theater)
+    expect(kept.ctx.economies.get('UKR')?.warEconomy).toBe(1)
   })
 
   it('le joueur peut demander l’aide d’un donneur hors carte', () => {

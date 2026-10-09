@@ -10,6 +10,7 @@ import type {
   Posture,
   SimSnapshot,
   UnitKind,
+  WarEconomyLevel,
 } from './core/types'
 import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
@@ -191,6 +192,9 @@ const api = {
   },
   setAutoEconomy(on: boolean): void {
     act((s) => s.setAutoEconomy(on))
+  },
+  setWarEconomy(level: WarEconomyLevel): void {
+    act((s) => s.setWarEconomy(level))
   },
   // Diplomatie : chaque commande renvoie un message d'erreur, ou null.
   declareWar(target: CountryId): string | null {

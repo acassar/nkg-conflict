@@ -29,6 +29,7 @@ import { inspectorView, type Domain, type InspectKind } from './frame'
 import { pushSample, type GaugeId, type ResourceSample } from '@/composables/gauges'
 import type { SimApi } from '@/sim/worker'
 import type { RecruitOrder } from '@/sim/economy/armyRecruit'
+import type { BuildAdvice } from '@/sim/economy/buildAdvice'
 import { deleteSave, listSaves, readSave, writeSave, type SaveSlot } from './saves'
 
 /** Sauvegarde automatique tous les 30 jours de jeu. */
@@ -895,6 +896,29 @@ export const useGameStore = defineStore('game', () => {
 
   async function queueConstruction(city: string, kind: BuildingKind): Promise<void> {
     report(await sim.queueConstruction(city, kind))
+    if (buildChoice.value) await refreshBuildAdvice()
+  }
+
+  /**
+   * Construire « quoi, puis où » : bâtiment choisi dans le tiroir Production et villes conseillées
+   * (calculées par le Worker), cerclées sur la carte. Null : aucun choix en cours.
+   */
+  const buildChoice = ref<{ kind: BuildingKind; advice: BuildAdvice[] } | null>(null)
+
+  async function chooseBuilding(kind: BuildingKind | null): Promise<void> {
+    if (kind === null || buildChoice.value?.kind === kind) {
+      buildChoice.value = null
+      return
+    }
+    buildChoice.value = { kind, advice: [] }
+    await refreshBuildAdvice()
+  }
+
+  async function refreshBuildAdvice(): Promise<void> {
+    const kind = buildChoice.value?.kind
+    if (!kind) return
+    const advice = await sim.buildAdvice(kind)
+    if (buildChoice.value?.kind === kind) buildChoice.value = { kind, advice }
   }
 
   /** Recrutement par armée ; renvoie vrai si au moins une formation est lancée. */
@@ -1171,6 +1195,9 @@ export const useGameStore = defineStore('game', () => {
     setPosture,
     setArmyPosture,
     queueConstruction,
+    buildChoice,
+    chooseBuilding,
+    refreshBuildAdvice,
     queueArmyRecruit,
     cancelConstruction,
     cancelRecruit,

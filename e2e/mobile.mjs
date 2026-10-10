@@ -396,6 +396,19 @@ try {
   )
   check(headAfter !== headBefore, 'chantier non descendu dans la file')
   await shot('m06a-file-production')
+  // Construire « quoi, puis où » au doigt : usine civile, conseils dans l'écran.
+  await page.getByTestId('build-kind-civ').scrollIntoViewIfNeeded()
+  await page.getByTestId('build-kind-civ').tap()
+  await page.getByTestId('build-advice').first().waitFor()
+  const adviceCount = await page.getByTestId('build-advice').count()
+  const adviceBox = await page.getByTestId('build-advice').first().boundingBox()
+  step('construire quoi puis où (mobile)', { conseils: adviceCount, boite: adviceBox })
+  check(adviceCount === 3, `conseils de construction : ${adviceCount} au lieu de 3`)
+  check(
+    !!adviceBox && adviceBox.x >= 0 && adviceBox.x + adviceBox.width <= 390,
+    'conseil de construction hors de l’écran',
+  )
+  await shot('m06b0-construire-ou')
 
   // Retour au menu par le menu ☰, puis écran de départ.
   await page.getByTestId('menu-button').tap()

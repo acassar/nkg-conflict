@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import type { BuildAdvice } from './economy/buildAdvice'
 import * as Comlink from 'comlink'
 import { isSpeed } from './core/clock'
 import { parseSave, serializeSave } from './core/save'
@@ -184,6 +185,9 @@ const api = {
   },
   lineMissionArmy(armyId: number, kind: LineMissionKind): string | null {
     return act((s) => s.lineMissionArmy(armyId, kind)) ?? null
+  },
+  buildAdvice(kind: BuildingKind): BuildAdvice[] {
+    return sim?.buildAdvice(kind) ?? []
   },
   missionPreview(armyId: number, kind: LineMissionKind): MissionPreview | null {
     return sim?.missionPreview(armyId, kind) ?? null

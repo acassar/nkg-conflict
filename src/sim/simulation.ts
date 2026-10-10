@@ -62,6 +62,7 @@ import {
   updateArmies,
   type MissionPreview,
 } from './systems/armies'
+import { adviseBuild, type BuildAdvice } from './economy/buildAdvice'
 import { updateAi, nearestCity, newAiState, type AiState } from './systems/ai'
 import {
   cancelConstruction,
@@ -854,6 +855,11 @@ export class Simulation {
   }
 
   /** Aperçu d'une mission de ligne (postes, seconde ligne, réserve, points clés), sans l'appliquer. */
+  /** Villes conseillées pour construire un bâtiment (sans effet sur la partie). */
+  buildAdvice(kind: BuildingKind): BuildAdvice[] {
+    return adviseBuild(this.ctx, this.playerCountry, kind)
+  }
+
   missionPreview(armyId: number, kind: LineMissionKind): MissionPreview {
     return missionPreview(this.ctx, this.playerArmy(armyId), kind)
   }

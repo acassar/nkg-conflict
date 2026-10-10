@@ -324,6 +324,22 @@ try {
     report.errors.push(`gestion automatique des renforts non appliquée (${JSON.stringify(auto)})`)
   }
   await shot('02b2-file-production')
+  // Construire « quoi, puis où » : fortification, trois villes conseillées, chantier lancé sur la première.
+  await page.getByTestId('build-kind-fort').click()
+  await page.getByTestId('build-advice').first().waitFor()
+  const advice = await page.getByTestId('build-advice').allInnerTexts()
+  const builtBefore = (await queues()).construction
+  await page.getByTestId('build-advice').first().getByRole('button', { name: 'Construire' }).click()
+  await page.waitForTimeout(500)
+  const builtAfter = (await queues()).construction
+  const firstAdvice = advice[0]?.replace(/\s+/g, ' ') ?? ''
+  step('construire quoi puis où', { conseils: advice.length, premier: firstAdvice })
+  if (advice.length !== 3)
+    report.errors.push(`conseils de construction : ${advice.length} au lieu de 3`)
+  if (!/km du front/.test(firstAdvice)) report.errors.push('conseil de construction sans raison')
+  if (builtAfter !== builtBefore + 1) report.errors.push('chantier conseillé non lancé')
+  await shot('02b3-construire-ou')
+  await page.getByTestId('build-choice').getByRole('button', { name: 'Fermer' }).click()
   // Fiche de la ville : plus de recrutement par ville, un renvoi vers les renforts des armées.
   await page.evaluate(() => window.__nkg.selectCity('Kyiv'))
   await page.getByTestId('city-sheet').waitFor()

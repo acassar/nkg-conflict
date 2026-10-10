@@ -111,3 +111,29 @@ describe('gestion automatique en deux parties', () => {
     expect(again.autoEconomy).toEqual({ build: false, recruit: true })
   })
 })
+
+describe('construire « quoi, puis où »', () => {
+  it('conseille les fortifications près du front et les usines loin', () => {
+    const sim = newGame()
+    const forts = sim.buildAdvice('fort')
+    const civ = sim.buildAdvice('civ')
+    expect(forts).toHaveLength(3)
+    expect(civ).toHaveLength(3)
+    expect(forts[0]?.frontKm ?? Infinity).toBeLessThan(60)
+    for (const a of civ) expect(a.risk).toBe('faible')
+    expect(Math.min(...civ.map((a) => a.frontKm ?? 0))).toBeGreaterThan(
+      Math.max(...forts.map((a) => a.frontKm ?? 0)),
+    )
+    expect(forts[0]?.reasons[0]).toMatch(/^à \d+ km du front$/)
+    expect(forts[0]?.reasons.some((r) => /unités? à portée|aucune unité/.test(r))).toBe(true)
+  })
+
+  it('écarte une ville pleine, chantiers en cours compris', () => {
+    const sim = newGame()
+    const first = sim.buildAdvice('depot')[0]
+    if (!first) throw new Error('aucun conseil')
+    const c = sim.ctx.cityStates.get(first.city)
+    if (c && c.buildings.depot === 0) sim.queueConstruction(first.city, 'depot')
+    expect(sim.buildAdvice('depot').some((a) => a.city === first.city)).toBe(false)
+  })
+})

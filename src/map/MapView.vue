@@ -315,6 +315,7 @@ function refresh(): void {
       logistics: logistics(),
       production:
         game.panelTab === 'production' ? (productionStats.value?.busyByCity ?? null) : null,
+      buildAdvice: game.panelTab === 'production' ? (game.buildChoice?.advice ?? null) : null,
     }),
   })
 }
@@ -642,6 +643,7 @@ watch(
     freehand,
     () => game.aimPoint,
     () => game.missionPreview,
+    () => game.buildChoice,
   ],
   refresh,
   {

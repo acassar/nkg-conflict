@@ -65,6 +65,8 @@ export interface LayerInput {
    * Les villes du joueur affichent alors leurs casernes (occupées/total) et leurs fortifications.
    */
   production: Map<string, number> | null
+  /** Construire « quoi, puis où » : villes conseillées pour le bâtiment choisi, dans l'ordre. */
+  buildAdvice?: Array<{ city: string; lon: number; lat: number }> | null
   /**
    * Mode « Logistique » : état du ravitaillement (calque en tuiles et vue du Worker).
    * Affiche aussi la portée des sources, des unités logistiques et des QG du joueur.
@@ -353,6 +355,43 @@ export function buildLayers(input: LayerInput): Layer[] {
           getText: [...busy.entries()].join(),
           getColor: [...busy.entries()].join(),
         },
+      }),
+    )
+  }
+
+  // Villes conseillées pour le bâtiment choisi : anneau orange et rang.
+  if (input.buildAdvice?.length) {
+    const advice = input.buildAdvice.map((a, k) => ({ ...a, rank: k + 1 }))
+    const key = advice.map((a) => a.city).join()
+    layers.push(
+      new ScatterplotLayer<(typeof advice)[number]>({
+        id: 'build-advice',
+        data: advice,
+        getPosition: (a) => [a.lon, a.lat],
+        filled: true,
+        getFillColor: [249, 115, 22, 40],
+        stroked: true,
+        getLineColor: [249, 115, 22, 255],
+        getLineWidth: 3,
+        lineWidthUnits: 'pixels',
+        radiusUnits: 'pixels',
+        getRadius: 20,
+        updateTriggers: { getPosition: key },
+      }),
+      new TextLayer<(typeof advice)[number]>({
+        id: 'build-advice-rank',
+        data: advice,
+        getPosition: (a) => [a.lon, a.lat],
+        getText: (a) => String(a.rank),
+        getColor: [255, 255, 255, 255],
+        getSize: 13,
+        getPixelOffset: [16, -16],
+        fontWeight: 700,
+        outlineWidth: 3,
+        outlineColor: [194, 65, 12, 255],
+        fontSettings: { sdf: true },
+        characterSet: '123',
+        updateTriggers: { getPosition: key },
       }),
     )
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
 import { BUILDING_KINDS, BUILDINGS, WAR_ECONOMY } from '@/sim/economy/rules'
@@ -51,6 +51,29 @@ const queue = computed(() => {
     (id) => game.armies.find((a) => a.id === id)?.name ?? null,
   )
 })
+/** Choix de bâtiment en cours et ville cliquée sur la carte, hors villes conseillées. */
+const { buildChoice } = storeToRefs(game)
+const pickedCity = computed(() => {
+  const choice = buildChoice.value
+  const city = selectedCity.value
+  if (!choice || !city || city.owner !== game.snapshot?.playerCountry) return null
+  if (choice.advice.some((a) => a.city === city.name)) return null
+  const type = BUILDINGS[choice.kind]
+  const queued =
+    economy.value?.construction.filter((q) => q.city === city.name && q.kind === choice.kind)
+      .length ?? 0
+  const has = city.buildings[choice.kind] + queued
+  return {
+    name: city.name,
+    canBuild: has < type.maxPerCity,
+    note: has < type.maxPerCity ? `${has}/${type.maxPerCity}` : 'maximum atteint',
+  }
+})
+// Les conseils suivent la file (chantier lancé ou annulé) et chaque nouvelle journée.
+watch(
+  () => [economy.value?.construction.length, game.snapshot?.economy?.daily.construction],
+  () => void game.refreshBuildAdvice(),
+)
 const freeBarracks = computed(() =>
   stats.value ? Math.max(0, stats.value.recruitment.max - stats.value.recruitment.active) : 0,
 )
@@ -196,6 +219,58 @@ const warTitle = (level: WarEconomyLevel): string => {
           </button>
         </div>
       </div>
+
+      <!-- Construire « quoi, puis où » : bâtiment d'abord, puis villes conseillées. -->
+      <section class="build" data-testid="build-choice">
+        <p class="label">Construire</p>
+        <div class="kinds">
+          <button
+            v-for="kind in BUILDING_KINDS"
+            :key="kind"
+            :class="{ on: buildChoice?.kind === kind }"
+            :aria-pressed="buildChoice?.kind === kind"
+            :title="BUILDINGS[kind].description"
+            :data-testid="`build-kind-${kind}`"
+            @click="game.chooseBuilding(kind)"
+          >
+            {{ BUILDINGS[kind].name }}
+          </button>
+        </div>
+        <template v-if="buildChoice">
+          <p class="meta">
+            {{ BUILDINGS[buildChoice.kind].description }} ·
+            {{ round(BUILDINGS[buildChoice.kind].cost) }} points,
+            {{ BUILDINGS[buildChoice.kind].minDays }} j au moins. Villes conseillées cerclées sur la
+            carte ; cliquez sur une autre de vos villes pour la choisir.
+          </p>
+          <ol class="advice">
+            <li v-for="(a, k) in buildChoice.advice" :key="a.city" data-testid="build-advice">
+              <span class="rank">{{ k + 1 }}</span>
+              <span class="where"
+                ><b>{{ a.city }}</b
+                ><span class="meta">{{ a.reasons.join(' · ') }}</span></span
+              >
+              <button @click="game.queueConstruction(a.city, buildChoice.kind)">Construire</button>
+            </li>
+          </ol>
+          <p v-if="buildChoice.advice.length === 0" class="meta">
+            Aucune de vos villes n'a de place pour ce bâtiment.
+          </p>
+          <div v-if="pickedCity" class="picked" data-testid="build-picked">
+            <span
+              >Ville choisie : <b>{{ pickedCity.name }}</b>
+              <span class="meta">{{ pickedCity.note }}</span></span
+            >
+            <button
+              :disabled="!pickedCity.canBuild"
+              @click="game.queueConstruction(pickedCity.name, buildChoice.kind)"
+            >
+              Construire ici
+            </button>
+          </div>
+          <button class="close-choice" @click="game.chooseBuilding(null)">Fermer</button>
+        </template>
+      </section>
 
       <!-- Économie de guerre : sélecteur à trois crans et effets du cran choisi. -->
       <div class="war-economy" data-testid="war-economy">
@@ -446,6 +521,62 @@ li.waiting {
 }
 .war-economy {
   margin: 6px 0 10px;
+}
+.build {
+  margin-bottom: 10px;
+}
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.kinds button.on {
+  background: var(--frame-blue, #4c8dff);
+  border-color: var(--frame-blue, #4c8dff);
+  color: #fff;
+}
+.build > .meta {
+  margin: 6px 0 4px;
+  font-size: 11px;
+}
+.advice {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.advice li,
+.picked {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+}
+.rank {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #c2410c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.where,
+.picked > span {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.where .meta,
+.picked .meta {
+  font-size: 11px;
+}
+.close-choice {
+  margin-top: 4px;
+  font-size: 11px;
 }
 .segs {
   display: grid;

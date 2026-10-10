@@ -157,6 +157,8 @@ function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): 
   const reserve = army.mission?.kind === 'reserve'
   const reactKm = reserve ? RESERVE_REACT_KM : REACT_KM
   const perBreach = reserve ? RESERVE_RESPONDERS : RESPONDERS_PER_BREACH
+  // Une armée en retraite ordonnée ne riposte pas : elle se replie.
+  if (army.mission?.kind === 'retreat') return
   // Le groupe de choc d'une percée ne riposte pas : il garde son axe.
   const shock = new Set(army.mission?.kind === 'breach' ? army.mission.shockIds : [])
   const line = army.unitIds

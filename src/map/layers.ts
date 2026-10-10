@@ -417,6 +417,25 @@ export function buildLayers(input: LayerInput): Layer[] {
     .filter((a) => a.id === selectedArmy?.id || a.unitIds.some((id) => selection.has(id)))
     .map((a) => (a.mission?.kind === 'advance' ? a.mission : null))
     .filter((m) => m !== null)
+  // Retraite ordonnée de l'armée sélectionnée : ligne de repli en orange pâle.
+  const retreats = snapshot.armies
+    .filter((a) => a.id === selectedArmy?.id)
+    .map((a) => (a.mission?.kind === 'retreat' ? a.mission : null))
+    .filter((m) => m !== null)
+  if (retreats.length > 0) {
+    layers.push(
+      new PathLayer({
+        id: 'retreat-line',
+        data: retreats.flatMap((m) => m.line),
+        getPath: (p: LonLat[]) => p,
+        getColor: [253, 186, 116, 230],
+        getWidth: 5,
+        widthUnits: 'pixels',
+        capRounded: true,
+        jointRounded: true,
+      }),
+    )
+  }
   // Percées de l'armée sélectionnée : axe du départ au point visé, partie conquise plus épaisse.
   const breaches = snapshot.armies
     .filter((a) => a.id === selectedArmy?.id)

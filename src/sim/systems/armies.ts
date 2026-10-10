@@ -737,9 +737,9 @@ export function launchOffensive(ctx: SimContext, army: ArmyState): void {
 export function updateArmies(ctx: SimContext): void {
   for (const army of ctx.armies.values()) {
     army.unitIds = army.unitIds.filter((id) => ctx.units.has(id))
-    // Mission « Avancer » : les unités suivent leur tracé (voir missions.ts), pas le front.
-    // En percée, seul le groupe de choc attaque : le reste de l'armée garde son front.
-    if (army.mission?.kind === 'advance') continue
+    // Missions « Avancer » et « Retraite ordonnée » : les unités suivent leur ligne (voir missions.ts),
+    // pas le front. En percée, seul le groupe de choc attaque : le reste de l'armée garde son front.
+    if (army.mission?.kind === 'advance' || army.mission?.kind === 'retreat') continue
     if (army.offensive?.launched) {
       const attacking = army.unitIds.some((id) => ctx.units.get(id)?.order.kind === 'attack')
       if (!attacking) {

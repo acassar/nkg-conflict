@@ -198,6 +198,7 @@ const MISSION_NAMES: Record<MissionKind, string> = {
   reserve: 'Réserve',
   advance: 'Avancer',
   breach: 'Percée',
+  retreat: 'Retraite',
   encircle: 'Encercler',
 }
 const MISSION_ORDER: MissionKind[] = [
@@ -207,6 +208,7 @@ const MISSION_ORDER: MissionKind[] = [
   'reserve',
   'advance',
   'breach',
+  'retreat',
   'encircle',
 ]
 /** Missions qui gardent le front de l'armée, appliquées d'un clic. */
@@ -231,6 +233,8 @@ const MISSION_HELP: Record<MissionKind, string> = {
     "L'armée avance jusqu'à une frontière, un trait ou un objectif, en ligne continue ; la posture règle le rythme",
   breach:
     "La moitié des unités de ligne perce en colonne serrée vers un point choisi ; le reste de l'armée tient le front et couvre les flancs de la percée",
+  retreat:
+    "L'armée se replie jusqu'à un trait ou une frontière par bonds alternés, un échelon couvrant l'autre, puis tient la ligne atteinte",
   encircle: "L'armée détache un groupe autour d'une cible ennemie et garde son front avec le reste",
 }
 
@@ -251,6 +255,9 @@ function missionStatus(a: ArmyState): string {
         : ' · bond en cours'
       : ''
     return `Avancer : ${m.label} · ${Math.round(m.progress * 100)} % du tracé tenu${pace}`
+  }
+  if (m?.kind === 'retreat') {
+    return `Retraite : ${m.label} · ${Math.round(m.progress * 100)} % des unités sur la ligne`
   }
   if (m?.kind === 'breach') {
     return `Percée : ${m.shockIds.length} unité(s) de choc · ${Math.round(m.progress * 100)} % de l'axe tenu`
@@ -764,6 +771,28 @@ async function createArmy(): Promise<void> {
                   (assignez d'abord un front à l'armée, sinon les flancs restent
                   découverts)</template
                 >. Fin au point visé : l'armée reprend son front.
+              </span>
+            </div>
+            <div v-else-if="missionView === 'retreat'" class="group" data-testid="retreat-group">
+              <span class="label">Se replier jusqu'à…</span>
+              <button
+                title="Posez les points de la ligne de repli, dans votre territoire (clics, puis Entrée ou « Valider »), ou dessinez-la d'un geste"
+                data-testid="retreat-line"
+                @click="game.startRetreat('line', selectedArmy.id)"
+              >
+                Un trait
+              </button>
+              <button
+                title="Cliquez ensuite sur un pays : l'armée se replie sur sa frontière avec lui, dans le territoire qu'elle tient"
+                data-testid="retreat-border"
+                @click="game.startRetreat('border', selectedArmy.id)"
+              >
+                Une frontière
+              </button>
+              <span class="meta">
+                Au contact, les unités de ligne reculent par bonds de 20 km en deux échelons : l'un
+                se replie pendant que l'autre tient et couvre son départ. Loin de l'ennemi, repli
+                d'une traite ; l'appui part en premier. Arrivée : l'armée tient la ligne atteinte.
               </span>
             </div>
             <div v-else-if="selectedArmy.encirclement" class="group">

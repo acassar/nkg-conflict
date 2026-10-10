@@ -186,6 +186,9 @@ const api = {
   advanceArmy(armyId: number, goal: AdvanceGoal): string | null {
     return act((s) => s.advanceArmy(armyId, goal)) ?? null
   },
+  retreatArmy(armyId: number, goal: AdvanceGoal): string | null {
+    return act((s) => s.retreatArmy(armyId, goal)) ?? null
+  },
   breachArmy(armyId: number, target: LonLat): string | null {
     return act((s) => s.breachArmy(armyId, target)) ?? null
   },

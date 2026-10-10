@@ -386,6 +386,42 @@ try {
     report.errors.push(`mission « Percée sur un axe » non lancée (${breach.mission})`)
   }
   await shot('02g3e-percee')
+
+  // Mission « Retraite ordonnée » : ligne de repli tracée en deux clics derrière les unités de l'armée.
+  await page.getByTestId('mission-retreat').click()
+  await page.getByTestId('retreat-line').click()
+  const rearPoints = await page.evaluate((id) => {
+    const g = window.__nkg
+    const army = g.armies.find((a) => a.id === id)
+    const own = g.snapshot.units.filter((u) => army.unitIds.includes(u.id))
+    const enemies = g.snapshot.units.filter((u) => u.owner !== army.owner)
+    const lon = own.reduce((s, u) => s + u.lon, 0) / own.length
+    const lat = own.reduce((s, u) => s + u.lat, 0) / own.length
+    const e = enemies.sort(
+      (a, b) => Math.hypot(a.lon - lon, a.lat - lat) - Math.hypot(b.lon - lon, b.lat - lat),
+    )[0]
+    // À l'opposé de l'ennemi le plus proche, une trentaine de km en arrière.
+    const dx = lon - e.lon
+    const dy = lat - e.lat
+    const n = Math.hypot(dx, dy) || 1
+    const c = [lon + (dx / n) * 0.3, lat + (dy / n) * 0.3]
+    return [
+      [c[0] - (dy / n) * 0.3, c[1] + (dx / n) * 0.3],
+      [c[0] + (dy / n) * 0.3, c[1] - (dx / n) * 0.3],
+    ]
+  }, missionArmy)
+  for (const p of rearPoints) await page.evaluate((q) => window.__nkg.mapClick(q), p)
+  await page.getByTestId('advance-line-done').click()
+  await page.waitForTimeout(600)
+  const retreat = await page.evaluate(
+    (id) => window.__nkg.armies.find((x) => x.id === id)?.mission?.kind ?? 'hold',
+    missionArmy,
+  )
+  const retreatText = await page.getByTestId('mission-status').textContent()
+  step('mission retraite', { mission: retreat, statut: retreatText })
+  if (retreat !== 'retreat')
+    report.errors.push(`mission « Retraite ordonnée » non lancée (${retreat})`)
+  await shot('02g3f-retraite')
   await page.getByTestId('mission-hold').click()
   await page.waitForTimeout(500)
 

@@ -41,7 +41,13 @@ import {
   targetGroup,
   updateEncirclements,
 } from './systems/encircle'
-import { holdMission, startAdvance, startBreach, updateMissions } from './systems/missions'
+import {
+  holdMission,
+  startAdvance,
+  startBreach,
+  startRetreat,
+  updateMissions,
+} from './systems/missions'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, snapToFront, updateArmies } from './systems/armies'
@@ -786,6 +792,15 @@ export class Simulation {
     return startAdvance(this.ctx, army, cloneGoal(goal))
   }
 
+  /** Mission « Retraite ordonnée » d'une armée vers un trait ou une frontière. */
+  retreatArmy(armyId: number, goal: AdvanceGoal): string | null {
+    const army = this.playerArmy(armyId)
+    if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
+    const g = cloneGoal(goal)
+    if (g.kind === 'objective') return 'Choisissez un trait ou une frontière'
+    return startRetreat(this.ctx, army, g)
+  }
+
   /** Mission « Percée sur un axe » d'une armée vers le point visé. */
   breachArmy(armyId: number, target: LonLat): string | null {
     const army = this.playerArmy(armyId)
@@ -1150,7 +1165,9 @@ export class Simulation {
         .map((a) => {
           const copy = structuredClone(a)
           // Les cellules du tracé ne servent qu'à la simulation : seul le tracé d'affichage part.
-          if (copy.mission?.kind === 'advance') copy.mission.cells = []
+          if (copy.mission?.kind === 'advance' || copy.mission?.kind === 'retreat') {
+            copy.mission.cells = []
+          }
           return copy
         }),
       cities,

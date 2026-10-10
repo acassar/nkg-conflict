@@ -51,6 +51,8 @@ export type MapMode =
       armyId?: number
       unitIds?: number[]
       points: LonLat[]
+      /** Mission « Retraite ordonnée » (armée seulement) : même choix du but, repli au lieu d'avance. */
+      retreat?: boolean
     }
 
   /** Mission « Percée sur un axe » d'une armée : clic sur le point visé. */
@@ -404,7 +406,12 @@ export const useGameStore = defineStore('game', () => {
     if (m.kind === 'target') return `${TARGET_LABELS[m.action]} : cliquez sur une unité ennemie`
     if (m.kind === 'advance') {
       if (m.goal === 'line' && m.points.length > 0) {
-        return `Avancer : ${m.points.length} point(s) posé(s), cliquez le suivant puis Entrée ou « Valider »`
+        return `${m.retreat ? 'Retraite' : 'Avancer'} : ${m.points.length} point(s) posé(s), cliquez le suivant puis Entrée ou « Valider »`
+      }
+      if (m.retreat) {
+        return m.goal === 'border'
+          ? 'Retraite : cliquez sur le pays dont la frontière est visée'
+          : 'Retraite : cliquez les points de la ligne de repli (ou glissez pour la dessiner), puis Entrée ou « Valider »'
       }
       return ADVANCE_HINTS[m.goal]
     }
@@ -604,13 +611,20 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  /** Mission « Retraite ordonnée » d'une armée : ligne de repli tracée, ou frontière (clic sur un pays). */
+  function startRetreat(goal: 'line' | 'border', armyId: number): void {
+    mode.value = { kind: 'advance', goal, armyId, points: [], retreat: true }
+  }
+
   /** Envoie le but de la mission « Avancer » au Worker. */
   function sendAdvance(m: Extract<MapMode, { kind: 'advance' }>, goal: AdvanceGoal): void {
     void (async () => {
       const error =
-        m.armyId !== undefined
-          ? await sim.advanceArmy(m.armyId, goal)
-          : await sim.advanceUnits([...(m.unitIds ?? [])], goal)
+        m.armyId !== undefined && m.retreat
+          ? await sim.retreatArmy(m.armyId, goal)
+          : m.armyId !== undefined
+            ? await sim.advanceArmy(m.armyId, goal)
+            : await sim.advanceUnits([...(m.unitIds ?? [])], goal)
       report(error)
     })()
     cancelMode()
@@ -986,6 +1000,7 @@ export const useGameStore = defineStore('game', () => {
     holdArmy,
     lineMissionArmy,
     startBreach,
+    startRetreat,
     startOrder,
     startFront,
     startOffensive,

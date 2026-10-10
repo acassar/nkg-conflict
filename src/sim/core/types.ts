@@ -179,10 +179,10 @@ export interface ArmyState {
  * Missions d'armée : tenir la ligne (comportement par défaut), tenir les points clés (villes, passages
  * de fleuve, nœuds routiers ; simple écran ailleurs), défense en profondeur (deux lignes, terrain cédé
  * pour user l'attaquant), réserve (en retrait, intervient sur les percées), avancer, percée sur un axe,
- * encercler.
+ * retraite ordonnée, encercler.
  */
 export type MissionKind =
-  'hold' | 'keyPoints' | 'depth' | 'reserve' | 'advance' | 'breach' | 'encircle'
+  'hold' | 'keyPoints' | 'depth' | 'reserve' | 'advance' | 'breach' | 'retreat' | 'encircle'
 
 /** Missions qui tiennent un front, sans but à atteindre : elles changent la répartition des postes. */
 export type LineMissionKind = 'hold' | 'keyPoints' | 'depth' | 'reserve'
@@ -241,7 +241,34 @@ export interface BreachMission {
   reachedTick?: number
 }
 
-export type ArmyMission = { kind: LineMissionKind } | AdvanceMission | BreachMission
+/** But d'une retraite ordonnée : trait libre ou frontière avec un pays. */
+export type RetreatGoal = Extract<AdvanceGoal, { kind: 'line' } | { kind: 'border' }>
+
+/**
+ * Mission « Retraite ordonnée » : repli vers une ligne choisie par bonds alternés. Un échelon recule
+ * pendant que l'autre tient sur place et couvre son départ, puis les rôles s'inversent ; l'appui part
+ * en premier. Arrivée sur la ligne : l'armée la tient.
+ */
+export interface RetreatMission {
+  kind: 'retreat'
+  goal: RetreatGoal
+  label: string
+  /** Cellules de la ligne visée, dans l'ordre. */
+  cells: number[]
+  /** Ligne visée, pour l'affichage. */
+  line: LonLat[][]
+  startTick: number
+  /** Part des unités de ligne arrivées à leur poste, 0 à 1. */
+  progress: number
+  /** Échelon qui recule (0 ou 1) et heure du début de son bond. */
+  moving: 0 | 1
+  phaseTick: number
+  /** Heure à laquelle la plupart des unités ont atteint la ligne (la mission s'achève peu après). */
+  closingTick?: number
+}
+
+export type ArmyMission =
+  { kind: LineMissionKind } | AdvanceMission | BreachMission | RetreatMission
 
 /**
  * Encerclement en deux temps : les unités gagnent d'abord leurs points d'attente sur les flancs,

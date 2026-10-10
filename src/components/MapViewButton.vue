@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { layout } from '@/composables/layout'
+import { FORT_RADIUS_KM } from '@/sim/economy/rules'
+import { fortBonusPct } from '@/sim/economy/forts'
 
 const game = useGameStore()
 
@@ -65,6 +67,11 @@ function toggle(): void {
         <li><span class="ring source" />Source : capitale, grande ville, dépôt (30 km)</li>
         <li><span class="ring logi" />Unité logistique (60 km)</li>
         <li><span class="ring hq" />QG : commandement (120 km)</li>
+        <li>
+          <span class="ring fort" />Fortifications : +{{ fortBonusPct(1) }} % de défense par niveau
+          ({{ FORT_RADIUS_KM }}
+          km)
+        </li>
       </ul>
       <label class="roads-toggle">
         <!-- Focus rendu à la page : les raccourcis clavier (L, espace) restent actifs. -->
@@ -192,5 +199,9 @@ function toggle(): void {
 }
 .ring.hq {
   border-color: #ca8a04;
+}
+.ring.fort {
+  border-color: #475569;
+  background: rgba(71, 85, 105, 0.35);
 }
 </style>

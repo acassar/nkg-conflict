@@ -6,6 +6,7 @@ import { BUILDING_KINDS, BUILDINGS, RECRUIT_COSTS, WAR_ECONOMY } from '@/sim/eco
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import type { UnitKind, WarEconomyLevel } from '@/sim/core/types'
 import { useProductionStats } from '@/composables/production'
+import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
 
 const game = useGameStore()
 const { economy, selectedCity, armies } = storeToRefs(game)
@@ -25,6 +26,15 @@ const isMine = computed(
 const queuedHere = (kind: string): number =>
   economy.value?.construction.filter((q) => q.city === selectedCity.value?.name && q.kind === kind)
     .length ?? 0
+
+/** Fortifications de la ville sélectionnée : bonus, portée, unités du propriétaire couvertes. */
+const fort = computed(() => {
+  const city = selectedCity.value
+  const snap = game.snapshot
+  if (!city || !snap) return null
+  return fortSummary(city, snap.cities, snap.units)
+})
+const fortQueued = computed(() => queuedHere('fort'))
 
 const stats = useProductionStats()
 /** Jours restants au rythme maximal (borne basse). */
@@ -143,6 +153,35 @@ const warTitle = (level: WarEconomyLevel): string => {
           </button>
         </li>
       </ul>
+
+      <!-- Fortifications : effet en combat et portée (cercle sur la carte). -->
+      <div v-if="fort" class="fort" data-testid="city-fort">
+        <template v-if="fort.level > 0">
+          <div>
+            Fortifications niveau {{ fort.level }} : <b>+{{ fort.bonusPct }} % de défense</b> à
+            moins de {{ fort.radiusKm }} km
+            <template v-if="!isMine"> pour les unités adverses</template>
+          </div>
+          <div class="meta">
+            {{ fort.covered }} unité{{ fort.covered > 1 ? 's' : '' }}
+            {{ isMine ? 'à vous' : 'adverse' + (fort.covered > 1 ? 's' : '') }} à portée<template
+              v-if="fort.coveredBetter > 0"
+            >
+              (dont {{ fort.coveredBetter }} mieux protégée{{
+                fort.coveredBetter > 1 ? 's' : ''
+              }}
+              par une autre ville)</template
+            >. Le meilleur niveau à portée compte, sans cumul ; détruites si la ville est prise.
+          </div>
+        </template>
+        <div v-else class="meta">
+          Aucune fortification. Chaque niveau donne +{{ fortBonusPct(1) }} % de défense
+          {{ isMine ? 'à vos unités' : 'aux unités du propriétaire' }} à moins de
+          {{ fort.radiusKm }} km ({{ fort.max }} niveaux au plus)<template v-if="fortQueued > 0"
+            >, un niveau en chantier</template
+          >.
+        </div>
+      </div>
 
       <template v-if="isMine && selectedCity.buildings.barracks > 0">
         <div class="label">Former une unité ici</div>
@@ -330,6 +369,15 @@ ul {
 }
 .level {
   font-variant-numeric: tabular-nums;
+}
+.fort {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-left: 3px solid #6b7280;
+  background: #161b22;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 .recruit {
   display: flex;

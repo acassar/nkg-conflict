@@ -9,6 +9,8 @@ import {
 } from '@deck.gl/layers'
 import type { ArmyState, CityState, LonLat, SimSnapshot, UnitSnapshot } from '@/sim/core/types'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
+import { FORT_RADIUS_KM } from '@/sim/economy/rules'
+import { fortBonusLabel } from '@/sim/economy/forts'
 import { stackIcon, unitIcon } from './unitIcons'
 import { isStack, stackUnits, type MapUnit } from './clusters'
 import { stanceColor, type TerritoryTile } from './territoryImage'
@@ -218,6 +220,7 @@ export function buildLayers(input: LayerInput): Layer[] {
   }
 
   if (input.logistics) layers.push(...logisticsLayers(input.logistics, snapshot))
+  layers.push(...fortRangeLayers(input, snapshot))
 
   layers.push(
     // Fortifications : anneau gris d'autant plus épais que le niveau est élevé.
@@ -300,7 +303,9 @@ export function buildLayers(input: LayerInput): Layer[] {
           if (c.buildings.barracks > 0) {
             parts.push(`Caserne ${busy.get(c.name) ?? 0}/${c.buildings.barracks}`)
           }
-          if (c.buildings.fort > 0) parts.push(`Fort ${c.buildings.fort}`)
+          if (c.buildings.fort > 0) {
+            parts.push(`Fort ${c.buildings.fort} (${fortBonusLabel(c.buildings.fort)})`)
+          }
           return parts.join(' · ')
         },
         getColor: (c) =>
@@ -596,5 +601,68 @@ export function buildLayers(input: LayerInput): Layer[] {
     }),
   )
   if (input.logistics) layers.push(...pocketLabels(input.logistics.view))
+  return layers
+}
+
+/**
+ * Portée des fortifications : disque de FORT_RADIUS_KM autour des villes fortifiées, avec leur
+ * bonus de défense. Toujours pour la ville sélectionnée ; pour toutes les villes fortifiées en vue
+ * « Production » (celles du joueur) et en mode « Logistique » (toutes).
+ */
+function fortRangeCities(input: LayerInput, snapshot: SimSnapshot): CityState[] {
+  const all = input.logistics !== null
+  const mine = input.production !== null
+  return snapshot.cities.filter(
+    (c) =>
+      c.buildings.fort > 0 &&
+      (c.name === input.selectedCity || all || (mine && c.owner === snapshot.playerCountry)),
+  )
+}
+
+function fortRangeLayers(input: LayerInput, snapshot: SimSnapshot): Layer[] {
+  const data = fortRangeCities(input, snapshot)
+  if (data.length === 0) return []
+  const own = (c: CityState): boolean => c.owner === snapshot.playerCountry
+  const key = data.map((c) => `${c.name}:${c.buildings.fort}:${c.owner}`).join()
+  const layers: Layer[] = [
+    new ScatterplotLayer<CityState>({
+      id: 'fort-ranges',
+      data,
+      getPosition: (c) => [c.lon, c.lat],
+      radiusUnits: 'meters',
+      getRadius: FORT_RADIUS_KM * 1000,
+      filled: true,
+      stroked: true,
+      // Plus opaque avec le niveau ; bleu ardoise pour le joueur, brun pour les autres pays.
+      getFillColor: (c) =>
+        own(c)
+          ? [71, 85, 105, 25 + 15 * c.buildings.fort]
+          : [120, 72, 40, 25 + 15 * c.buildings.fort],
+      getLineColor: (c) => (own(c) ? [51, 65, 85, 220] : [120, 53, 15, 220]),
+      getLineWidth: 1.5,
+      lineWidthUnits: 'pixels',
+      updateTriggers: { getFillColor: key, getLineColor: key },
+    }),
+  ]
+  // Bonus écrit sous le disque, sauf en vue « Production » où l'étiquette de la ville le donne.
+  if (!input.production) {
+    layers.push(
+      new TextLayer<CityState>({
+        id: 'fort-range-labels',
+        data,
+        getPosition: (c) => [c.lon, c.lat - FORT_RADIUS_KM / 111],
+        getText: (c) => fortBonusLabel(c.buildings.fort),
+        getColor: (c) => (own(c) ? [30, 41, 59, 255] : [120, 53, 15, 255]),
+        getSize: 11,
+        getPixelOffset: [0, 8],
+        fontWeight: 700,
+        outlineWidth: 3,
+        outlineColor: [255, 255, 255, 230],
+        fontSettings: { sdf: true },
+        characterSet: 'auto',
+        updateTriggers: { getText: key, getColor: key },
+      }),
+    )
+  }
   return layers
 }

@@ -135,6 +135,12 @@ try {
   if (afterQueue.recruitment !== before.recruitment + 1) {
     report.errors.push('formation non lancée depuis le panneau')
   }
+  // Fiche de la ville : effet et portée des fortifications.
+  const fortText = (await page.getByTestId('city-fort').textContent())?.trim() ?? ''
+  step('fortifications de Kyiv', { texte: fortText.replace(/\s+/g, ' ').slice(0, 120) })
+  if (!/défense/.test(fortText) || !/15 km/.test(fortText)) {
+    report.errors.push('fiche de la ville : effet des fortifications absent')
+  }
   await shot('02b-production')
 
   // Diplomatie : fiche de son pays, puis d'un pays voisin via un clic sur la carte.

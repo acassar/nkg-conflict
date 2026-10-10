@@ -4,6 +4,7 @@ import { useGameStore } from '@/stores/game'
 import { STANCE_COLORS } from '@/map/territoryImage'
 import { isMobile } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
+import { openHelp } from '@/composables/help'
 
 const game = useGameStore()
 const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
@@ -215,6 +216,7 @@ async function onFile(event: Event): Promise<void> {
             <button @click="menuAction(() => game.saveLocal())">Sauver</button>
             <button @click="menuAction(game.exportToFile)">Exporter</button>
             <button @click="menuAction(() => fileInput?.click())">Importer</button>
+            <button data-testid="menu-help" @click="menuAction(() => openHelp())">Aide</button>
             <button @click="menuAction(quit)">Menu principal</button>
           </div>
         </div>
@@ -277,6 +279,7 @@ async function onFile(event: Event): Promise<void> {
           <button @click="menuAction(() => game.saveLocal())">Sauver</button>
           <button @click="menuAction(game.exportToFile)">Exporter</button>
           <button @click="menuAction(() => fileInput?.click())">Importer</button>
+          <button data-testid="menu-help" @click="menuAction(() => openHelp())">Aide</button>
           <button @click="menuAction(quit)">Menu principal</button>
         </div>
       </div>

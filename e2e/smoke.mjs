@@ -517,6 +517,23 @@ try {
     await page.getByTestId('battle-dialog').locator('li').first().click()
     await page.waitForTimeout(300)
     await shot('03b-bataille')
+    // Aide en jeu : explication d'un modificateur, puis section des règles correspondante.
+    await page.getByTestId('battle-modifier').first().click()
+    const modHelp = await page.getByTestId('battle-modifier-help').isVisible()
+    await page.getByTestId('battle-modifier-help').getByRole('button', { name: 'Règles' }).click()
+    await page.getByTestId('rules-help').waitFor()
+    await page.waitForTimeout(300)
+    step('aide des modificateurs', { explication: modHelp })
+    if (!modHelp) report.errors.push("explication d'un modificateur absente")
+    await shot('03b2-aide-regles')
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(200)
+    if (await page.getByTestId('rules-help').isVisible()) {
+      report.errors.push("Échap ne ferme pas l'aide")
+    }
+    if (!(await page.getByTestId('battle-dialog').isVisible())) {
+      report.errors.push("Échap sur l'aide ferme aussi l'écran de bataille")
+    }
     await page.keyboard.press('Escape')
     await page.waitForTimeout(300)
     if (await page.getByTestId('battle-dialog').isVisible()) {
@@ -525,6 +542,16 @@ try {
   } else {
     step('écran de bataille', { camps: 0, note: 'aucun combat en cours' })
   }
+
+  // Aide en jeu depuis le menu : toutes les sections des règles.
+  await page.getByTestId('menu-button').click()
+  await page.getByTestId('menu-help').click()
+  await page.getByTestId('rules-help').waitFor()
+  const helpSections = await page.getByTestId('rules-help').locator('section').count()
+  step('aide depuis le menu', { sections: helpSections })
+  if (helpSections < 8) report.errors.push(`aide incomplète (${helpSections} sections)`)
+  await page.getByRole('button', { name: "Fermer l'aide" }).click()
+  await page.waitForTimeout(200)
 
   // Caméra au clavier : D (ou flèche droite) déplace la carte vers l'est.
   const lonBefore = await page.evaluate(() => window.__nkgMap.getCenter().lng)

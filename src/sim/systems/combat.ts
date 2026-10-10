@@ -1,5 +1,5 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
-import { isOffensiveOrder, type LonLat, type UnitState } from '../core/types'
+import { isOffensiveOrder, type LonLat, type ModifierKey, type UnitState } from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactor, useMunitions } from '../economy/economy'
 import { NO_MUNITIONS_FACTOR } from '../economy/rules'
@@ -19,9 +19,9 @@ export const RALLY_ORG = 0.5
 const STRENGTH_LOSS = 0.0025
 const ORG_LOSS = 0.02
 const ARTILLERY_FACTOR = 0.6
-const OUT_OF_SUPPLY_FACTOR = 0.6
+export const OUT_OF_SUPPLY_FACTOR = 0.6
 /** Bonus de combat d'une unité commandée par un QG proche. */
-const COMMAND_FACTOR = 1.15
+export const COMMAND_FACTOR = 1.15
 /** Récupération d'organisation hors combat, par heure (ravitaillée / commandée en plus). */
 const ORG_RECOVERY = 0.01
 const ORG_RECOVERY_COMMAND = 0.005
@@ -68,8 +68,9 @@ export function riverBetween(ctx: SimContext, a: UnitState, b: UnitState): boole
   return false
 }
 
-/** Modificateur, pour l'écran de bataille : libellé et facteur multiplicatif. */
+/** Modificateur, pour l'écran de bataille : clé (aide en jeu), libellé et facteur multiplicatif. */
 export interface Modifier {
+  key: ModifierKey
   label: string
   value: number
 }
@@ -84,10 +85,10 @@ export function combatModifiers(
 ): { attack: Modifier[]; defense: Modifier[] } {
   const posture = postureOf(u.posture)
   const shared: Modifier[] = [
-    { label: 'Effectifs', value: u.strength },
-    { label: 'Organisation', value: 0.25 + 0.75 * u.org },
-    { label: 'Ravitaillement', value: supplyFactor(ctx, u) },
-    { label: 'Commandement', value: commandFactor(ctx, u) },
+    { key: 'strength', label: 'Effectifs', value: u.strength },
+    { key: 'org', label: 'Organisation', value: 0.25 + 0.75 * u.org },
+    { key: 'supply', label: 'Ravitaillement', value: supplyFactor(ctx, u) },
+    { key: 'command', label: 'Commandement', value: commandFactor(ctx, u) },
   ]
   const eco = ctx.economies.get(u.owner)
   const ammo = eco && eco.munitions <= 0 ? NO_MUNITIONS_FACTOR : 1
@@ -102,37 +103,55 @@ export function combatModifiers(
   return {
     attack: [
       ...shared,
-      { label: `Posture (${posture.name})`, value: posture.attack },
-      { label: 'Munitions', value: ammo },
+      { key: 'posture', label: `Posture (${posture.name})`, value: posture.attack },
+      { key: 'ammo', label: 'Munitions', value: ammo },
       ...(theirs > 0
-        ? [{ label: `Obstacles adverses (${pctOf(theirs)})`, value: assaultFireFactor(theirs) }]
+        ? ([
+            {
+              key: 'enemyObstacles',
+              label: `Obstacles adverses (${pctOf(theirs)})`,
+              value: assaultFireFactor(theirs),
+            },
+          ] as Modifier[])
         : []),
     ],
     defense: [
       ...shared,
       {
+        key: 'terrain',
         label: `Terrain (${terrainRule(ctx.grid.terrain[cell]).name})`,
         value: terrainDefense(ctx, u),
       },
-      { label: 'Retranchement', value: 1 + 0.5 * u.entrench },
-      { label: 'Fortifications', value: fortFactor(ctx, u) },
-      { label: `Posture (${posture.name})`, value: posture.defense },
+      { key: 'entrench', label: 'Retranchement', value: 1 + 0.5 * u.entrench },
+      { key: 'fort', label: 'Fortifications', value: fortFactor(ctx, u) },
+      { key: 'posture', label: `Posture (${posture.name})`, value: posture.defense },
       ...(own > 0
-        ? [
+        ? ([
             {
+              key: 'ownObstacles',
               label: `Obstacles contre l'assaut (${pctOf(own)})`,
               value: 1 / assaultFireFactor(own),
             },
-          ]
+          ] as Modifier[])
         : []),
       ...(theirs > 0
-        ? [{ label: 'Pertes sous les obstacles', value: 1 / assaultLossFactor(theirs) }]
+        ? ([
+            {
+              key: 'obstacleLosses',
+              label: 'Pertes sous les obstacles',
+              value: 1 / assaultLossFactor(theirs),
+            },
+          ] as Modifier[])
         : []),
       ...(flank
-        ? [
-            { label: `Flanc (${flankText(flank)})`, value: flankDefenseFactor(ctx, u) },
-            { label: 'Moral (flanc)', value: 1 / flankOrgLossFactor(ctx, u) },
-          ]
+        ? ([
+            {
+              key: 'flank',
+              label: `Flanc (${flankText(flank)})`,
+              value: flankDefenseFactor(ctx, u),
+            },
+            { key: 'flankMorale', label: 'Moral (flanc)', value: 1 / flankOrgLossFactor(ctx, u) },
+          ] as Modifier[])
         : []),
     ],
   }

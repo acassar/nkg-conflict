@@ -79,7 +79,16 @@ try {
   await page.getByTestId('menu-button').tap()
   await page.getByRole('menu').waitFor()
   await shot('m02-menu')
-  await page.getByTestId('menu-button').tap()
+  // Aide en jeu depuis le menu : plein écran sur téléphone.
+  await page.getByTestId('menu-help').tap()
+  await page.getByTestId('rules-help').waitFor()
+  const helpBox = await page.getByTestId('rules-help').boundingBox()
+  step('aide (mobile)', { boite: helpBox })
+  check(!!helpBox && helpBox.x >= 0 && helpBox.x + helpBox.width <= 390, "l'aide déborde")
+  await shot('m02a-aide')
+  await page.getByRole('button', { name: "Fermer l'aide" }).tap()
+  await page.waitForTimeout(200)
+  check(!(await page.getByTestId('rules-help').isVisible()), 'aide non fermée')
 
   // Carte logistique : bouton à côté de la sélection par zone, légende au-dessus.
   await page.getByTestId('logistics-button').tap()

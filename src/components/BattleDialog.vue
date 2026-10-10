@@ -5,12 +5,21 @@ import type { BattleReport, BattleUnit } from '@/sim/core/types'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { POSTURES } from '@/sim/units/postures'
 import { isMobile } from '@/composables/layout'
+import { openHelp } from '@/composables/help'
+import { MODIFIER_HELP } from '@/help/rules'
+import type { ModifierKey } from '@/sim/core/types'
 
 const game = useGameStore()
 const report = ref<BattleReport | null>(null)
 /** Effectifs à l'ouverture de la fenêtre, pour afficher les pertes depuis. */
 const initial = new Map<number, number>()
 const expanded = ref<number | null>(null)
+/** Modificateur dont l'explication est dépliée (unité et clé), au toucher comme au clic. */
+const explained = ref<string | null>(null)
+const explainKey = (id: number, side: string, key: ModifierKey): string => `${id}:${side}:${key}`
+function toggleExplain(k: string): void {
+  explained.value = explained.value === k ? null : k
+}
 let busy = false
 let lastFetch = 0
 
@@ -109,6 +118,14 @@ function focus(): void {
         </div>
       </div>
       <div class="actions">
+        <button
+          title="Règles du combat et des modificateurs"
+          aria-label="Aide"
+          data-testid="battle-help"
+          @click="openHelp('combat')"
+        >
+          ?
+        </button>
         <button title="Centrer la carte sur la bataille" @click="focus">Voir</button>
         <button aria-label="Fermer" @click="game.closeBattle()">✕</button>
       </div>
@@ -164,28 +181,65 @@ function focus(): void {
               <div v-if="expanded === u.id" class="mods">
                 <div>
                   <strong>Attaque</strong>
-                  <div v-for="m in u.modifiers.attack" :key="m.label" class="mod">
-                    <span>{{ m.label }}</span>
-                    <span :class="{ up: m.value > 1.001, down: m.value < 0.999 }">{{
-                      factor(m.value)
-                    }}</span>
-                  </div>
+                  <template v-for="m in u.modifiers.attack" :key="m.label">
+                    <div
+                      class="mod"
+                      :title="MODIFIER_HELP[m.key].text"
+                      data-testid="battle-modifier"
+                      @click.stop="toggleExplain(explainKey(u.id, 'attack', m.key))"
+                    >
+                      <span class="mlabel">{{ m.label }}</span>
+                      <span :class="{ up: m.value > 1.001, down: m.value < 0.999 }">{{
+                        factor(m.value)
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="explained === explainKey(u.id, 'attack', m.key)"
+                      class="explain"
+                      data-testid="battle-modifier-help"
+                    >
+                      {{ MODIFIER_HELP[m.key].text }}
+                      <button class="more" @click.stop="openHelp(MODIFIER_HELP[m.key].section)">
+                        Règles
+                      </button>
+                    </div>
+                  </template>
                 </div>
                 <div>
                   <strong>Défense</strong>
-                  <div v-for="m in u.modifiers.defense" :key="m.label" class="mod">
-                    <span>{{ m.label }}</span>
-                    <span :class="{ up: m.value > 1.001, down: m.value < 0.999 }">{{
-                      factor(m.value)
-                    }}</span>
-                  </div>
+                  <template v-for="m in u.modifiers.defense" :key="m.label">
+                    <div
+                      class="mod"
+                      :title="MODIFIER_HELP[m.key].text"
+                      data-testid="battle-modifier"
+                      @click.stop="toggleExplain(explainKey(u.id, 'defense', m.key))"
+                    >
+                      <span class="mlabel">{{ m.label }}</span>
+                      <span :class="{ up: m.value > 1.001, down: m.value < 0.999 }">{{
+                        factor(m.value)
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="explained === explainKey(u.id, 'defense', m.key)"
+                      class="explain"
+                      data-testid="battle-modifier-help"
+                    >
+                      {{ MODIFIER_HELP[m.key].text }}
+                      <button class="more" @click.stop="openHelp(MODIFIER_HELP[m.key].section)">
+                        Règles
+                      </button>
+                    </div>
+                  </template>
                 </div>
               </div>
             </li>
           </ul>
         </section>
       </div>
-      <p class="meta foot">Touchez ou cliquez une unité pour voir ses modificateurs.</p>
+      <p class="meta foot">
+        Touchez ou cliquez une unité pour voir ses modificateurs, puis un modificateur pour son
+        explication.
+      </p>
     </template>
   </div>
 </template>
@@ -344,6 +398,24 @@ li.routed {
   justify-content: space-between;
   gap: 6px;
   color: #cbd2dc;
+  cursor: help;
+}
+.mod:hover .mlabel {
+  text-decoration: underline dotted;
+}
+.explain {
+  margin: 2px 0 4px;
+  padding: 4px 6px;
+  background: #11151b;
+  border-radius: 4px;
+  color: #cbd2dc;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.explain .more {
+  margin-left: 4px;
+  padding: 0 6px;
+  font-size: 11px;
 }
 .up {
   color: #6ee7b7;

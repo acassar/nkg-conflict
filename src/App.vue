@@ -10,6 +10,7 @@ import Notifications from '@/components/Notifications.vue'
 import LassoButton from '@/components/LassoButton.vue'
 import MapViewButton from '@/components/MapViewButton.vue'
 import BattleDialog from '@/components/BattleDialog.vue'
+import RulesHelp from '@/components/RulesHelp.vue'
 import { computed } from 'vue'
 import { isMobile, isTouch, layout } from '@/composables/layout'
 import { useGameStore } from '@/stores/game'
@@ -85,6 +86,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <LassoButton />
     <MapViewButton />
     <BattleDialog />
+    <RulesHelp />
     <p v-if="!isMobile" class="disclaimer">Scénario hypothétique · sans prétention historique</p>
     <GameOver />
   </template>

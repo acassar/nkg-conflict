@@ -128,10 +128,27 @@ export interface BattleUnit {
   /** Situation de flanc (« attaquée de deux côtés », « en saillant », « presque encerclée ») ou null. */
   flank: string | null
   modifiers: {
-    attack: Array<{ label: string; value: number }>
-    defense: Array<{ label: string; value: number }>
+    attack: Array<{ key: ModifierKey; label: string; value: number }>
+    defense: Array<{ key: ModifierKey; label: string; value: number }>
   }
 }
+
+/** Nature d'un modificateur de combat : sert à retrouver son explication dans l'aide en jeu. */
+export type ModifierKey =
+  | 'strength'
+  | 'org'
+  | 'supply'
+  | 'command'
+  | 'posture'
+  | 'ammo'
+  | 'enemyObstacles'
+  | 'terrain'
+  | 'entrench'
+  | 'fort'
+  | 'ownObstacles'
+  | 'obstacleLosses'
+  | 'flank'
+  | 'flankMorale'
 
 /** Bataille en cours : deux camps (a : celui du joueur s'il est engagé), lieu et terrain. */
 export interface BattleReport {

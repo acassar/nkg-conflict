@@ -197,6 +197,7 @@ const MISSION_NAMES: Record<MissionKind, string> = {
   depth: 'Profondeur',
   reserve: 'Réserve',
   advance: 'Avancer',
+  breach: 'Percée',
   encircle: 'Encercler',
 }
 const MISSION_ORDER: MissionKind[] = [
@@ -205,6 +206,7 @@ const MISSION_ORDER: MissionKind[] = [
   'depth',
   'reserve',
   'advance',
+  'breach',
   'encircle',
 ]
 /** Missions qui gardent le front de l'armée, appliquées d'un clic. */
@@ -227,6 +229,8 @@ const MISSION_HELP: Record<MissionKind, string> = {
   reserve: "L'armée reste en retrait de son front et intervient sur les percées",
   advance:
     "L'armée avance jusqu'à une frontière, un trait ou un objectif, en ligne continue ; la posture règle le rythme",
+  breach:
+    "La moitié des unités de ligne perce en colonne serrée vers un point choisi ; le reste de l'armée tient le front et couvre les flancs de la percée",
   encircle: "L'armée détache un groupe autour d'une cible ennemie et garde son front avec le reste",
 }
 
@@ -247,6 +251,9 @@ function missionStatus(a: ArmyState): string {
         : ' · bond en cours'
       : ''
     return `Avancer : ${m.label} · ${Math.round(m.progress * 100)} % du tracé tenu${pace}`
+  }
+  if (m?.kind === 'breach') {
+    return `Percée : ${m.shockIds.length} unité(s) de choc · ${Math.round(m.progress * 100)} % de l'axe tenu`
   }
   const where = a.wholeFront ? 'tout le front' : a.front ? 'portion de front' : 'sans front'
   let text =
@@ -733,6 +740,30 @@ async function createArmy(): Promise<void> {
               <span class="meta">
                 Rythme selon la posture : continu en équilibrée ou offensive ; par bonds de 25 km,
                 avec retranchement à chaque arrêt, en défensive.
+              </span>
+            </div>
+            <div v-else-if="missionView === 'breach'" class="group" data-testid="breach-group">
+              <span class="label">Percée sur un axe</span>
+              <button
+                title="Cliquez ensuite sur le point visé, chez l'ennemi"
+                data-testid="breach-target"
+                @click="game.startBreach(selectedArmy.id)"
+              >
+                {{
+                  missionOf(selectedArmy) === 'breach'
+                    ? 'Changer le point visé'
+                    : 'Choisir le point visé'
+                }}
+              </button>
+              <span class="meta">
+                La moitié des unités de ligne, les plus proches du point de départ, attaque en
+                colonne serrée vers le point visé. Le reste de l'armée tient son front et se
+                concentre de part et d'autre de la percée pour couvrir ses flancs<template
+                  v-if="!selectedArmy.front && !selectedArmy.wholeFront"
+                >
+                  (assignez d'abord un front à l'armée, sinon les flancs restent
+                  découverts)</template
+                >. Fin au point visé : l'armée reprend son front.
               </span>
             </div>
             <div v-else-if="selectedArmy.encirclement" class="group">

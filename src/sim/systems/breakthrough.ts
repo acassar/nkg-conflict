@@ -157,9 +157,14 @@ function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): 
   const reserve = army.mission?.kind === 'reserve'
   const reactKm = reserve ? RESERVE_REACT_KM : REACT_KM
   const perBreach = reserve ? RESERVE_RESPONDERS : RESPONDERS_PER_BREACH
+  // Le groupe de choc d'une percée ne riposte pas : il garde son axe.
+  const shock = new Set(army.mission?.kind === 'breach' ? army.mission.shockIds : [])
   const line = army.unitIds
     .map((id) => ctx.units.get(id))
-    .filter((u): u is UnitState => !!u && isLineUnit(u.kind) && !runtimeOf(ctx, u.id).routed)
+    .filter(
+      (u): u is UnitState =>
+        !!u && isLineUnit(u.kind) && !runtimeOf(ctx, u.id).routed && !shock.has(u.id),
+    )
   let budget =
     Math.floor(line.length * (reserve ? 1 : MAX_REACTING_SHARE)) -
     line.filter((u) => reacting(u)).length

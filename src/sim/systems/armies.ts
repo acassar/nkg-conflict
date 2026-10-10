@@ -307,6 +307,23 @@ export function frontKeyPoints(ctx: SimContext, cells: FrontCell[]): LonLat[] {
   return out
 }
 
+/** Percée sur un axe : les flancs sont couverts à moins de tant de km de l'axe déjà conquis. */
+export const BREACH_CORRIDOR_KM = 30
+/** Poids des cellules de front qui bordent la percée (flancs), par rapport au reste du front. */
+export const BREACH_FLANK_FACTOR = 4
+
+/**
+ * Poids des cellules de front pour une armée en percée : celles qui bordent l'axe conquis (de `origin`
+ * à la pointe `tip`) pèsent `BREACH_FLANK_FACTOR` fois plus, les postes s'y concentrent.
+ */
+export function breachWeight(origin: LonLat, tip: LonLat, base: WeightFn): WeightFn {
+  return (ctx, cell) => {
+    const p: LonLat = [ctx.grid.lonOf(cell), ctx.grid.latOf(cell)]
+    const near = project(p, origin, tip).km <= BREACH_CORRIDOR_KM
+    return base(ctx, cell) * (near ? BREACH_FLANK_FACTOR : 1)
+  }
+}
+
 /** L'armée choisit ses postes selon le terrain quand sa posture est défensive. */
 function picksFavorablePosts(army: ArmyState): boolean {
   return army.posture === 'defensive' || army.posture === 'maxDefense'
@@ -342,7 +359,12 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   // Mission « Tenir les points clés » : postes concentrés sur les villes, passages de fleuve et nœuds
   // routiers, simple écran ailleurs.
   const keyPoints = army.mission?.kind === 'keyPoints'
-  const weight: WeightFn = keyPoints ? keyPointWeight : frontWeight
+  let weight: WeightFn = keyPoints ? keyPointWeight : frontWeight
+  // Mission « Percée sur un axe » : le groupe de choc attaque (missions.ts) ; le reste de l'armée tient
+  // le front, renforcé de part et d'autre de la percée pour couvrir ses flancs.
+  const breach = army.mission?.kind === 'breach' ? army.mission : null
+  const shock = new Set(breach?.shockIds ?? [])
+  if (breach) weight = breachWeight(breach.origin, breach.tip, frontWeight)
   if (keyPoints) army.keyPoints = frontKeyPoints(ctx, cells)
   else delete army.keyPoints
   if (cells.length === 0) return
@@ -351,6 +373,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     .filter(
       (u): u is UnitState =>
         !!u &&
+        !shock.has(u.id) &&
         !isOffensiveOrder(u.order.kind) &&
         !runtimeOf(ctx, u.id).routed &&
         // Unités parties riposter à une percée : elles reprennent leur poste ensuite.
@@ -715,6 +738,7 @@ export function updateArmies(ctx: SimContext): void {
   for (const army of ctx.armies.values()) {
     army.unitIds = army.unitIds.filter((id) => ctx.units.has(id))
     // Mission « Avancer » : les unités suivent leur tracé (voir missions.ts), pas le front.
+    // En percée, seul le groupe de choc attaque : le reste de l'armée garde son front.
     if (army.mission?.kind === 'advance') continue
     if (army.offensive?.launched) {
       const attacking = army.unitIds.some((id) => ctx.units.get(id)?.order.kind === 'attack')

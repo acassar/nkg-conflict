@@ -417,6 +417,39 @@ export function buildLayers(input: LayerInput): Layer[] {
     .filter((a) => a.id === selectedArmy?.id || a.unitIds.some((id) => selection.has(id)))
     .map((a) => (a.mission?.kind === 'advance' ? a.mission : null))
     .filter((m) => m !== null)
+  // Percées de l'armée sélectionnée : axe du départ au point visé, partie conquise plus épaisse.
+  const breaches = snapshot.armies
+    .filter((a) => a.id === selectedArmy?.id)
+    .map((a) => (a.mission?.kind === 'breach' ? a.mission : null))
+    .filter((m) => m !== null)
+  if (breaches.length > 0) {
+    layers.push(
+      new PathLayer({
+        id: 'breach-axis',
+        data: breaches.flatMap((m) => [
+          { path: [m.origin, m.target], width: 3 },
+          { path: [m.origin, m.tip], width: 7 },
+        ]),
+        getPath: (d: { path: LonLat[] }) => d.path,
+        getColor: [244, 63, 94, 220],
+        getWidth: (d: { width: number }) => d.width,
+        widthUnits: 'pixels',
+        capRounded: true,
+      }),
+      new ScatterplotLayer({
+        id: 'breach-target',
+        data: breaches.map((m) => m.target),
+        getPosition: (p: LonLat) => p,
+        getFillColor: [244, 63, 94, 90],
+        getLineColor: [244, 63, 94, 255],
+        stroked: true,
+        lineWidthUnits: 'pixels',
+        getLineWidth: 3,
+        radiusUnits: 'pixels',
+        getRadius: 12,
+      }),
+    )
+  }
   if (missions.length > 0) {
     layers.push(
       new PathLayer({

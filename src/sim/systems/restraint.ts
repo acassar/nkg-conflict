@@ -16,7 +16,7 @@ import { enemyShare } from './flanks'
  * (terrain, fortifications, territoire tenu, ravitaillement, proximité des voisines), puis tient au
  * moins une journée avant d'être relancée par un réflexe, l'IA ou une riposte.
  * Ne sont pas concernées : l'ordre d'attaque direct du joueur (il vise un point qu'il a choisi), les
- * missions « Avancer » et les encerclements, qui ont leur propre rythme.
+ * missions « Avancer », le groupe de choc des percées et les encerclements, qui ont leur propre rythme.
  */
 
 /** Distance de poursuite (km depuis le début de l'ordre) selon la posture. */
@@ -78,6 +78,8 @@ function controlled(ctx: SimContext, u: UnitState): boolean {
   if (k === 'attack' && u.direct) return false
   const army = u.armyId !== null ? ctx.armies.get(u.armyId) : undefined
   if (army?.encirclement || army?.mission?.kind === 'advance') return false
+  // Groupe de choc d'une percée : il pousse jusqu'au point visé, ses flancs couverts par l'armée.
+  if (army?.mission?.kind === 'breach' && army.mission.shockIds.includes(u.id)) return false
   return true
 }
 

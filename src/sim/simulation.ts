@@ -41,7 +41,7 @@ import {
   targetGroup,
   updateEncirclements,
 } from './systems/encircle'
-import { holdMission, startAdvance, updateMissions } from './systems/missions'
+import { holdMission, startAdvance, startBreach, updateMissions } from './systems/missions'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, snapToFront, updateArmies } from './systems/armies'
@@ -784,6 +784,13 @@ export class Simulation {
     const army = this.playerArmy(armyId)
     if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
     return startAdvance(this.ctx, army, cloneGoal(goal))
+  }
+
+  /** Mission « Percée sur un axe » d'une armée vers le point visé. */
+  breachArmy(armyId: number, target: LonLat): string | null {
+    const army = this.playerArmy(armyId)
+    if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
+    return startBreach(this.ctx, army, [target[0], target[1]])
   }
 
   /**

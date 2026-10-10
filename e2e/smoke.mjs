@@ -345,6 +345,47 @@ try {
     if (got !== kind) report.errors.push(`mission ${kind} non appliquée (${got})`)
     await shot(name)
   }
+
+  // Mission « Percée sur un axe » : point visé sur l'unité ennemie la plus proche de l'armée.
+  await page.getByTestId('mission-breach').click()
+  await page.getByTestId('breach-target').click()
+  const breachAt = await page.evaluate((id) => {
+    const g = window.__nkg
+    const army = g.armies.find((a) => a.id === id)
+    const own = g.snapshot.units.filter((u) => army.unitIds.includes(u.id))
+    const lon = own.reduce((s, u) => s + u.lon, 0) / own.length
+    const lat = own.reduce((s, u) => s + u.lat, 0) / own.length
+    const enemy = g.snapshot.units
+      .filter((u) => u.owner !== army.owner)
+      .sort(
+        (a, b) => Math.hypot(a.lon - lon, a.lat - lat) - Math.hypot(b.lon - lon, b.lat - lat),
+      )[0]
+    const p = window.__nkgMap.project([enemy.lon, enemy.lat])
+    return { x: p.x, y: p.y, lonLat: [enemy.lon, enemy.lat] }
+  }, missionArmy)
+  const view = page.viewportSize()
+  if (
+    breachAt.x > 0 &&
+    breachAt.y > 60 &&
+    breachAt.x < view.width - 380 &&
+    breachAt.y < view.height
+  ) {
+    await page.mouse.click(breachAt.x, breachAt.y)
+  } else {
+    // Unité hors de la partie visible de la carte : même clic, transmis directement.
+    await page.evaluate((p) => window.__nkg.mapClick(p), breachAt.lonLat)
+  }
+  await page.waitForTimeout(600)
+  const breach = await page.evaluate((id) => {
+    const m = window.__nkg.armies.find((x) => x.id === id)?.mission
+    return { mission: m?.kind ?? 'hold', choc: m?.shockIds?.length ?? 0 }
+  }, missionArmy)
+  const breachText = await page.getByTestId('mission-status').textContent()
+  step('mission percée', { ...breach, statut: breachText })
+  if (breach.mission !== 'breach' || breach.choc === 0) {
+    report.errors.push(`mission « Percée sur un axe » non lancée (${breach.mission})`)
+  }
+  await shot('02g3e-percee')
   await page.getByTestId('mission-hold').click()
   await page.waitForTimeout(500)
 

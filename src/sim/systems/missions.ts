@@ -3,6 +3,7 @@ import type {
   AdvanceGoal,
   AdvanceMission,
   ArmyState,
+  BreachMission,
   LonLat,
   LineMissionKind,
   MissionKind,
@@ -10,7 +11,14 @@ import type {
 } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { isLineUnit } from '../units/catalog'
-import { assignFront, LARGE_GRID_CELLS, snapToFront, traceFront, type FrontCell } from './armies'
+import {
+  assignFront,
+  frontCells,
+  LARGE_GRID_CELLS,
+  snapToFront,
+  traceFront,
+  type FrontCell,
+} from './armies'
 import { planPath } from './movement'
 
 /** Une unité est à son poste en deçà de cette distance. */
@@ -276,7 +284,8 @@ export function holdMission(
   army: ArmyState,
   kind: LineMissionKind = 'hold',
 ): void {
-  const wasAdvance = !!advanceOf(army)
+  // Avance ou percée en cours : les unités en marche s'arrêtent avant de reprendre le front.
+  const wasAdvance = !!advanceOf(army) || army.mission?.kind === 'breach'
   const changed = (army.mission?.kind ?? 'hold') !== kind
   army.mission = kind === 'hold' ? undefined : { kind }
   if (changed && kind !== 'hold') ctx.log(`${army.name} ${LINE_MISSION_LOG[kind]}`, army.owner)
@@ -524,12 +533,189 @@ export function updateAdvance(
   }
 }
 
-/** Suivi des missions « Avancer » (toutes les 6 heures). */
+/** Suivi des missions « Avancer » et « Percée sur un axe » (toutes les 6 heures). */
 export function updateMissions(ctx: SimContext): void {
   for (const army of [...ctx.armies.values()]) {
-    const m = advanceOf(army)
-    if (!m) continue
     if (army.unitIds.every((id) => !ctx.units.has(id))) continue
-    updateAdvance(ctx, army, m)
+    const m = advanceOf(army)
+    if (m) updateAdvance(ctx, army, m)
+    else if (army.mission?.kind === 'breach') updateBreach(ctx, army, army.mission)
   }
+}
+
+// ---------- Percée sur un axe ----------
+
+/** Part des unités de ligne de l'armée engagées dans le groupe de choc. */
+export const BREACH_SHOCK_SHARE = 0.5
+/** Écart latéral entre les unités du groupe de choc (colonne serrée). */
+export const BREACH_SPACING_KM = 4
+/** Une unité du groupe qui devance de plus de tant la médiane du groupe, au contact, l'attend. */
+const BREACH_LEAD_KM = 15
+/** Point visé au-delà de tant de km du front : refusé. */
+const BREACH_MAX_KM = 400
+
+/** Repère local (km) autour de l'axe : abscisse le long de l'axe, ordonnée à gauche. */
+function axisFrame(origin: LonLat, target: LonLat) {
+  const cos = Math.cos((origin[1] * Math.PI) / 180) || 1
+  const ex = (target[0] - origin[0]) * 111 * cos
+  const ey = (target[1] - origin[1]) * 111
+  const len = Math.hypot(ex, ey) || 1
+  const ux = ex / len
+  const uy = ey / len
+  return {
+    length: len,
+    /** Coordonnées (le long de l'axe, à gauche de l'axe) d'un point, en km. */
+    local(p: LonLat): [number, number] {
+      const x = (p[0] - origin[0]) * 111 * cos
+      const y = (p[1] - origin[1]) * 111
+      return [x * ux + y * uy, -x * uy + y * ux]
+    },
+    /** Point de coordonnées locales (`s` le long de l'axe, `n` à gauche). */
+    point(s: number, n: number): LonLat {
+      const x = s * ux - n * uy
+      const y = s * uy + n * ux
+      return [origin[0] + x / (111 * cos), origin[1] + y / 111]
+    },
+  }
+}
+
+/**
+ * Pointe de la percée : on suit l'axe depuis le départ tant que le terrain est tenu par le camp
+ * (cellules impraticables ignorées). Renvoie le point atteint et la part de l'axe tenue.
+ */
+function breachTip(
+  ctx: SimContext,
+  side: number,
+  m: BreachMission,
+): { tip: LonLat; share: number } {
+  const { grid } = ctx
+  const frame = axisFrame(m.origin, m.target)
+  const step = Math.max(1, (grid.cell * 111) / 2)
+  let reached = 0
+  for (let s = 0; s <= frame.length; s += step) {
+    const p = frame.point(s, 0)
+    const c = grid.cellAt(p[0], p[1])
+    if (c < 0) break
+    if (!grid.passable(c)) continue
+    if (grid.owner[c] !== side) break
+    reached = s
+  }
+  const c = grid.cellAt(m.target[0], m.target[1])
+  if (c >= 0 && grid.owner[c] === side && reached >= frame.length - step * 2) reached = frame.length
+  return { tip: frame.point(reached, 0), share: Math.min(1, reached / frame.length) }
+}
+
+/**
+ * Lance la mission « Percée sur un axe » vers `target` : la moitié des unités de ligne, les plus proches
+ * du point de départ sur le front, forment le groupe de choc ; le reste tient le front et couvre ses
+ * flancs. Renvoie un message d'erreur pour l'interface, ou null.
+ */
+export function startBreach(ctx: SimContext, army: ArmyState, target: LonLat): string | null {
+  const { grid } = ctx
+  const side = sideIndex(ctx, army.owner)
+  const c = grid.cellAt(target[0], target[1])
+  if (c < 0 || !grid.passable(c)) return 'Point visé hors du terrain praticable'
+  if (grid.owner[c] === side) return "Le point visé est déjà tenu : choisissez-le chez l'ennemi"
+  const line = army.unitIds
+    .map((id) => ctx.units.get(id))
+    .filter((u): u is UnitState => !!u && isLineUnit(u.kind) && !runtimeOf(ctx, u.id).routed)
+  if (line.length === 0) return `${army.name} n'a pas d'unité de ligne pour percer`
+  // Départ : la cellule du front de l'armée la plus proche du point visé (à défaut, son centre).
+  let origin = centroid(line) as LonLat
+  const cells =
+    army.front || army.wholeFront ? frontCells(ctx, side, army.wholeFront ? null : army.front) : []
+  let best = Infinity
+  for (const f of cells) {
+    const d = distanceKm(grid.lonOf(f.cell), grid.latOf(f.cell), target[0], target[1])
+    if (d < best) {
+      best = d
+      origin = [grid.lonOf(f.cell), grid.latOf(f.cell)]
+    }
+  }
+  if (distanceKm(origin[0], origin[1], target[0], target[1]) > BREACH_MAX_KM) {
+    return `Point visé trop loin du front (${BREACH_MAX_KM} km au plus)`
+  }
+  const count = line.length === 1 ? 1 : Math.ceil(line.length * BREACH_SHOCK_SHARE)
+  const shock = [...line]
+    .sort(
+      (a, b) =>
+        distanceKm(a.lon, a.lat, origin[0], origin[1]) -
+        distanceKm(b.lon, b.lat, origin[0], origin[1]),
+    )
+    .slice(0, count)
+  army.offensive = null
+  delete army.keyPoints
+  const m: BreachMission = {
+    kind: 'breach',
+    target: [target[0], target[1]],
+    origin,
+    shockIds: shock.map((u) => u.id),
+    startTick: ctx.tick,
+    tip: origin,
+    progress: 0,
+  }
+  army.mission = m
+  for (const u of shock) {
+    if (u.direct) delete u.direct
+    halt(u)
+    if (u.order.kind === 'front') u.order = { kind: 'hold' }
+  }
+  ctx.log(`${army.name} lance une percée (${shock.length} unités de choc)`, army.owner)
+  updateBreach(ctx, army, m)
+  if (army.front || army.wholeFront) assignFront(ctx, army)
+  return null
+}
+
+/** Fin d'une percée : le groupe de choc s'arrête et l'armée le reprend sur son front. */
+function finishBreach(ctx: SimContext, army: ArmyState, m: BreachMission, text: string): void {
+  ctx.log(`${army.name} ${text}`, army.owner)
+  army.mission = undefined
+  for (const id of m.shockIds) {
+    const u = ctx.units.get(id)
+    if (u && !u.direct) halt(u)
+  }
+  if (army.front || army.wholeFront) assignFront(ctx, army)
+}
+
+/** Une étape de la percée (toutes les 6 heures) : pointe, fin, ordres du groupe de choc. */
+export function updateBreach(ctx: SimContext, army: ArmyState, m: BreachMission): void {
+  const side = sideIndex(ctx, army.owner)
+  m.shockIds = m.shockIds.filter((id) => ctx.units.has(id))
+  const { tip, share } = breachTip(ctx, side, m)
+  m.tip = tip
+  m.progress = share
+  const units = missionUnits(ctx, army).filter((u) => m.shockIds.includes(u.id))
+  if (m.shockIds.length === 0) {
+    finishBreach(ctx, army, m, 'arrête sa percée : groupe de choc détruit')
+    return
+  }
+  const frame = axisFrame(m.origin, m.target)
+  if (share >= 1) {
+    m.reachedTick ??= ctx.tick
+    const near = units.filter(
+      (u) => distanceKm(u.lon, u.lat, m.target[0], m.target[1]) <= REACH_KM * 2,
+    )
+    if (near.length * 2 >= units.length || ctx.tick - m.reachedTick >= REACHED_GRACE_TICKS) {
+      finishBreach(ctx, army, m, "a percé jusqu'au point visé")
+      return
+    }
+  } else m.reachedTick = undefined
+  if (units.length === 0) return
+  // Colonne serrée sur l'axe : chaque unité garde son rang latéral (de gauche à droite).
+  const placed = units
+    .map((u) => ({ u, at: frame.local([u.lon, u.lat]) }))
+    .sort((a, b) => b.at[1] - a.at[1])
+  const along = placed.map((p) => p.at[0]).sort((a, b) => a - b)
+  const median = along[Math.floor(along.length / 2)] ?? 0
+  placed.forEach((p, k) => {
+    const offset = ((placed.length - 1) / 2 - k) * BREACH_SPACING_KM
+    // Une unité trop en avance du groupe, déjà chez l'ennemi, l'attend : le choc reste concentré.
+    const c = ctx.grid.cellAt(p.u.lon, p.u.lat)
+    const inside = c >= 0 && ctx.grid.owner[c] !== side
+    if (inside && p.at[0] > median + BREACH_LEAD_KM && nearEnemy(ctx, side, p.u)) {
+      halt(p.u)
+      return
+    }
+    orderTo(ctx, p.u, frame.point(frame.length, offset))
+  })
 }

@@ -53,6 +53,9 @@ export type MapMode =
       points: LonLat[]
     }
 
+  /** Mission « Percée sur un axe » d'une armée : clic sur le point visé. */
+  | { kind: 'breach'; armyId: number }
+
 export type AdvanceGoalKind = AdvanceGoal['kind']
 
 const ADVANCE_HINTS: Record<AdvanceGoalKind, string> = {
@@ -405,6 +408,8 @@ export const useGameStore = defineStore('game', () => {
       }
       return ADVANCE_HINTS[m.goal]
     }
+    if (m.kind === 'breach')
+      return "Percée : cliquez sur le point visé chez l'ennemi (Échap pour annuler)"
     if (m.kind === 'offensive') {
       return m.first
         ? "Offensive : cliquez sur l'objectif"
@@ -632,6 +637,11 @@ export const useGameStore = defineStore('game', () => {
 
   const holdArmy = (id: number): Promise<void> => sim.holdArmy(id)
 
+  /** Mission « Percée sur un axe » : le point visé se choisit d'un clic sur la carte. */
+  function startBreach(armyId: number): void {
+    mode.value = { kind: 'breach', armyId }
+  }
+
   /** Mission de ligne d'une armée (points clés, défense en profondeur, réserve). */
   async function lineMissionArmy(id: number, kind: LineMissionKind): Promise<void> {
     report(await sim.lineMissionArmy(id, kind))
@@ -660,6 +670,11 @@ export const useGameStore = defineStore('game', () => {
                 : await sim.encircle(ids(), enemy.id)
         report(error)
       })()
+      cancelMode()
+      return true
+    }
+    if (m.kind === 'breach') {
+      void (async () => report(await sim.breachArmy(m.armyId, lonLat(point))))()
       cancelMode()
       return true
     }
@@ -970,6 +985,7 @@ export const useGameStore = defineStore('game', () => {
     drawAdvanceLine,
     holdArmy,
     lineMissionArmy,
+    startBreach,
     startOrder,
     startFront,
     startOffensive,

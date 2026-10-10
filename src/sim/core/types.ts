@@ -178,9 +178,11 @@ export interface ArmyState {
 /**
  * Missions d'armée : tenir la ligne (comportement par défaut), tenir les points clés (villes, passages
  * de fleuve, nœuds routiers ; simple écran ailleurs), défense en profondeur (deux lignes, terrain cédé
- * pour user l'attaquant), réserve (en retrait, intervient sur les percées), avancer, encercler.
+ * pour user l'attaquant), réserve (en retrait, intervient sur les percées), avancer, percée sur un axe,
+ * encercler.
  */
-export type MissionKind = 'hold' | 'keyPoints' | 'depth' | 'reserve' | 'advance' | 'encircle'
+export type MissionKind =
+  'hold' | 'keyPoints' | 'depth' | 'reserve' | 'advance' | 'breach' | 'encircle'
 
 /** Missions qui tiennent un front, sans but à atteindre : elles changent la répartition des postes. */
 export type LineMissionKind = 'hold' | 'keyPoints' | 'depth' | 'reserve'
@@ -217,7 +219,29 @@ export interface AdvanceMission {
   parentArmyId?: number | null
 }
 
-export type ArmyMission = { kind: LineMissionKind } | AdvanceMission
+/**
+ * Mission « Percée sur un axe » : un groupe de choc (la moitié des unités de ligne, les plus proches du
+ * point de départ) attaque en colonne serrée vers le point visé ; le reste de l'armée tient son front,
+ * renforcé de part et d'autre de la percée pour couvrir ses flancs.
+ */
+export interface BreachMission {
+  kind: 'breach'
+  /** Point visé. */
+  target: LonLat
+  /** Point de départ sur le front (cellule de front la plus proche du point visé). */
+  origin: LonLat
+  /** Unités du groupe de choc. */
+  shockIds: number[]
+  startTick: number
+  /** Pointe de la percée : point de l'axe jusqu'où le terrain est tenu sans interruption. */
+  tip: LonLat
+  /** Part de l'axe tenue, 0 à 1. */
+  progress: number
+  /** Heure à laquelle le point visé a été pris (la mission s'achève peu après). */
+  reachedTick?: number
+}
+
+export type ArmyMission = { kind: LineMissionKind } | AdvanceMission | BreachMission
 
 /**
  * Encerclement en deux temps : les unités gagnent d'abord leurs points d'attente sur les flancs,

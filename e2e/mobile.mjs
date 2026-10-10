@@ -163,6 +163,38 @@ try {
   await shot('m02b-logistique')
   await page.getByTestId('logistics-button').tap()
 
+  // Appui prolongé sur la carte : bandeau de description, effacé au relâcher, sans ordre ni sélection.
+  const cdp = await context.newCDPSession(page)
+  const beforePress = await store(() => ({
+    selection: window.__nkg.selection.length,
+    mode: window.__nkg.mode.kind,
+    tab: window.__nkg.panelTab,
+  }))
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: 200, y: 330 }],
+  })
+  await page.waitForTimeout(900)
+  const pressVisible = await page.getByTestId('cell-info').isVisible()
+  const pressText = pressVisible ? await page.getByTestId('cell-info').innerText() : ''
+  const pressBox = pressVisible ? await page.getByTestId('cell-info').boundingBox() : null
+  await shot('m02c-appui-prolonge')
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await page.waitForTimeout(400)
+  const afterPress = await store(() => ({
+    selection: window.__nkg.selection.length,
+    mode: window.__nkg.mode.kind,
+    tab: window.__nkg.panelTab,
+  }))
+  step('appui prolongé', { texte: pressText.replace(/\s+/g, ' '), boite: pressBox, afterPress })
+  check(pressVisible && /vitesse/.test(pressText), "pas de bandeau après l'appui prolongé")
+  check(!!pressBox && pressBox.x >= 0 && pressBox.x + pressBox.width <= 390, 'bandeau hors écran')
+  check(!(await page.getByTestId('cell-info').isVisible()), 'bandeau resté affiché au relâcher')
+  check(
+    JSON.stringify(beforePress) === JSON.stringify(afterPress),
+    "l'appui prolongé a changé la sélection, le mode ou l'onglet",
+  )
+
   // Sélection par zone : un rectangle sur toute la carte visible.
   await page.getByTestId('lasso-button').tap()
   await page.getByTestId('lasso-layer').waitFor()

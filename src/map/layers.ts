@@ -21,8 +21,19 @@ export interface LayerInput {
   snapshot: SimSnapshot | null
   /** Territoire en tuiles (seules les tuiles modifiées changent de canvas). */
   territory: TerritoryTile[]
-  /** Relief, forêts et marais (fixe). */
+  /** Relief, forêts, marais, fleuves et villes (fixe). */
   terrain: TerritoryTile[]
+  /**
+   * Réseau de transport de la carte par défaut, sous le territoire : grands axes et voies ferrées
+   * d'une part, routes de l'autre, chacun avec son opacité selon le zoom. Null en mode Logistique
+   * (qui dessine le réseau au-dessus de ses zones) ou si le joueur l'a masqué.
+   */
+  roads: {
+    main: TerritoryTile[]
+    minor: TerritoryTile[]
+    mainOpacity: number
+    minorOpacity: number
+  } | null
   /** Position de chaque pays vis-à-vis du joueur (couleurs). */
   stances: Map<string, Stance>
   selection: Set<number>
@@ -201,17 +212,23 @@ export function buildLayers(input: LayerInput): Layer[] {
   const cities = visibleCities(snapshot, input.zoom)
   const layers: Layer[] = []
 
-  // Relief puis territoire, en tuiles reprojetées de lon/lat vers Web Mercator.
-  for (const [prefix, tiles] of [
-    ['terrain', input.terrain],
-    ['territory', input.territory],
+  // Relief, réseau de transport puis territoire, en tuiles reprojetées de lon/lat vers Web Mercator.
+  // Une couche invisible (réseau de loin) n'est pas créée.
+  const roads = input.roads
+  for (const [prefix, tiles, opacity] of [
+    ['terrain', input.terrain, 1],
+    ['roads-minor', roads?.minor ?? [], roads?.minorOpacity ?? 0],
+    ['roads-main', roads?.main ?? [], roads?.mainOpacity ?? 0],
+    ['territory', input.territory, 1],
   ] as const) {
+    if (opacity <= 0) continue
     for (const t of tiles) {
       layers.push(
         new BitmapLayer({
           id: `${prefix}-${t.id}`,
           image: t.canvas,
           bounds: t.bounds,
+          opacity,
           _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
           textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
         }),

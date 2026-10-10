@@ -98,6 +98,8 @@ Aide en jeu (menu ☰ > Aide, ou bouton « ? » de l'écran de bataille) : règl
 
 Lecture des pions : cadre aux couleurs du camp, symbole OTAN simplifié, jauge verte = effectifs, jauge bleue = organisation, point orange = au contact, bordure rouge pointillée = hors ravitaillement, pion pâle = en déroute.
 
+Carte par défaut : fleuves (bleu), villes (gris), forêts, collines, montagnes et marais teintent le fond ; grands axes (orange), voies ferrées (violet sombre) et routes (brun) sont dessinés sous le territoire et les pions. Les grands axes et voies ferrées apparaissent quand une cellule mesure environ un pixel à l'écran, les routes à partir de 3 pixels ; la case « Routes et voies ferrées » de la légende logistique les masque aussi ici. Un bandeau discret en bas de l'écran décrit ce qui se trouve sous la souris (sur téléphone : sous le doigt, après un appui prolongé d'une demi-seconde, au-dessus des boutons) : terrain et son effet en vitesse et en défense (comme dans l'aide), fleuve et bonus de franchissement, grand axe, route ou voie ferrée, ville proche. Il disparaît quand on quitte la carte ou relâche le doigt ; l'appui prolongé ne sélectionne rien et ne donne aucun ordre.
+
 Les couleurs de la carte se lisent depuis votre point de vue : bleu pour vous, vert pour vos alliés, rouge pour vos ennemis, orange pour les pays en guerre entre eux ; les autres pays gardent une teinte discrète.
 
 ## Diplomatie

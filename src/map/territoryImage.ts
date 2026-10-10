@@ -193,12 +193,17 @@ export class TerritoryTiles {
   }
 }
 
-/** Teintes discrètes du terrain (forêt, collines, montagnes, marais), sous la couche de territoire. */
-const TERRAIN_TINTS: Record<number, [number, number, number, number]> = {
-  5: [34, 110, 50, 55],
-  6: [150, 120, 70, 55],
-  7: [110, 75, 45, 110],
-  8: [40, 150, 150, 90],
+/**
+ * Teintes du terrain sous la couche de territoire (carte par défaut) : fleuves, villes, forêts,
+ * collines, montagnes et marais. Assez marquées pour rester lisibles sous la couleur des pays.
+ */
+export const TERRAIN_TINTS: Record<number, [number, number, number, number]> = {
+  3: [37, 99, 190, 200],
+  4: [90, 90, 100, 150],
+  5: [34, 110, 50, 75],
+  6: [150, 120, 70, 70],
+  7: [110, 75, 45, 120],
+  8: [40, 150, 150, 100],
 }
 
 /** Dessine le terrain une fois pour toutes, en tuiles comme le territoire. */

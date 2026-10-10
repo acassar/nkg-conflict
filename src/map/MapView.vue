@@ -14,8 +14,9 @@ import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers } from './layers'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
 import { SupplyTiles } from './supplyImage'
-import { roadTiles } from './roadsImage'
-import { isTouch } from '@/composables/layout'
+import { BASE_ROAD_COLORS, roadOpacity, roadTiles } from './roadsImage'
+import { describePoint } from './cellInfo'
+import { isTouch, layout } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
 import { useBattles } from '@/composables/battles'
 import { glErrorText } from './webgl'
@@ -225,6 +226,33 @@ function logistics(): {
   }
 }
 
+// Réseau de transport de la carte par défaut (vue politique), sous le territoire : dessiné une fois par grille.
+let baseRoadsGrid: GridSnapshot | null = null
+let baseRoads: { main: TerritoryTile[]; minor: TerritoryTile[] } = { main: [], minor: [] }
+
+function politicalRoads(): {
+  main: TerritoryTile[]
+  minor: TerritoryTile[]
+  mainOpacity: number
+  minorOpacity: number
+} | null {
+  const g = grid.value
+  if (!g || mapView.value === 'logistics' || !showRoads.value) return null
+  if (g !== baseRoadsGrid) {
+    baseRoads = {
+      main: roadTiles(g, BASE_ROAD_COLORS, 'main'),
+      minor: roadTiles(g, BASE_ROAD_COLORS, 'minor'),
+    }
+    baseRoadsGrid = g
+  }
+  const cellDeg = (g.bbox[2] - g.bbox[0]) / g.width
+  return {
+    ...baseRoads,
+    mainOpacity: roadOpacity(zoom.value, cellDeg, 'main'),
+    minorOpacity: roadOpacity(zoom.value, cellDeg, 'minor'),
+  }
+}
+
 function refresh(): void {
   syncTerritory()
   const m = mode.value
@@ -233,6 +261,7 @@ function refresh(): void {
       snapshot: snapshot.value,
       territory,
       terrain,
+      roads: politicalRoads(),
       stances: stances.value.map,
       selection: new Set(selection.value),
       selectedArmy: selectedArmy.value,
@@ -254,6 +283,8 @@ function refresh(): void {
 }
 
 function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
+  // Relâcher le doigt après un appui prolongé (bandeau de description) ne vaut pas un toucher.
+  if (performance.now() < suppressClickUntil) return
   const point = info.coordinate ? ([info.coordinate[0], info.coordinate[1]] as LonLat) : null
   const me = game.snapshot?.playerCountry
   const additive = event.srcEvent?.shiftKey ?? false
@@ -297,6 +328,109 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
     }
   }
 }
+
+// ---------- Bandeau de description (survol, appui prolongé) ----------
+
+/** Lignes du bandeau : ce qui se trouve sous la souris ou sous le doigt ; vide = masqué. */
+const cellInfo = ref<string[]>([])
+/** Dernier pointeur : doigt ou stylet (true) ou souris. */
+let lastPointerTouch = false
+let hoverFrame = 0
+let hoverPoint: { x: number; y: number } | null = null
+/** Appui prolongé en cours au doigt : minuterie, point de départ, bandeau affiché. */
+let press: { timer: ReturnType<typeof setTimeout>; x: number; y: number; shown: boolean } | null =
+  null
+const activeTouches = new Set<number>()
+/** Jusqu'à cet instant, le toucher qui suit la fin d'un appui prolongé est ignoré. */
+let suppressClickUntil = 0
+/** Durée d'un appui prolongé (le toucher bref de deck.gl s'arrête bien avant). */
+const LONG_PRESS_MS = 500
+/** Déplacement du doigt au-delà duquel l'appui devient un glissement de la carte. */
+const PRESS_SLOP_PX = 10
+/** Rayon de recherche d'une ville sous le pointeur, en pixels. */
+const CITY_PICK_PX = 14
+
+function describeAt(p: { x: number; y: number }): string[] {
+  const g = grid.value
+  const s = snapshot.value
+  if (!map || !g || !s) return []
+  const ll = map.unproject([p.x, p.y])
+  // Kilomètres par pixel au point visé (Web Mercator, monde de 512 × 2^zoom pixels).
+  const kmPerPx = (40075 * Math.cos((ll.lat * Math.PI) / 180)) / (512 * 2 ** map.getZoom())
+  return describePoint(g, s.cities, ll.lng, ll.lat, CITY_PICK_PX * kmPerPx)
+}
+
+function hoverLoop(): void {
+  hoverFrame = 0
+  if (hoverPoint) cellInfo.value = describeAt(hoverPoint)
+}
+
+function clearPress(): void {
+  if (press) clearTimeout(press.timer)
+  press = null
+}
+
+function onMapPointerDown(e: PointerEvent): void {
+  lastPointerTouch = e.pointerType !== 'mouse'
+  if (!lastPointerTouch) return
+  activeTouches.add(e.pointerId)
+  clearPress()
+  cellInfo.value = []
+  // Deux doigts : pincement, pas d'appui prolongé.
+  if (activeTouches.size > 1) return
+  const p = localPoint(e)
+  press = {
+    x: p.x,
+    y: p.y,
+    shown: false,
+    timer: setTimeout(() => {
+      if (!press) return
+      press.shown = true
+      cellInfo.value = describeAt(p)
+    }, LONG_PRESS_MS),
+  }
+}
+
+function onMapPointerMove(e: PointerEvent): void {
+  if (e.pointerType === 'mouse') {
+    lastPointerTouch = false
+    hoverPoint = localPoint(e)
+    if (!hoverFrame) hoverFrame = requestAnimationFrame(hoverLoop)
+    return
+  }
+  if (!press || press.shown) return
+  const p = localPoint(e)
+  if (Math.hypot(p.x - press.x, p.y - press.y) > PRESS_SLOP_PX) clearPress()
+}
+
+function onMapPointerEnd(e: PointerEvent): void {
+  if (e.pointerType === 'mouse') {
+    if (e.type === 'pointerleave' || e.type === 'pointercancel') {
+      hoverPoint = null
+      cellInfo.value = []
+    }
+    return
+  }
+  activeTouches.delete(e.pointerId)
+  if (press?.shown) suppressClickUntil = performance.now() + 400
+  clearPress()
+  cellInfo.value = []
+}
+
+const MAP_POINTER_EVENTS = {
+  pointerdown: onMapPointerDown,
+  pointermove: onMapPointerMove,
+  pointerup: onMapPointerEnd,
+  pointercancel: onMapPointerEnd,
+  pointerleave: onMapPointerEnd,
+} as const
+
+/** Position du bandeau : en bas au centre sur ordinateur, au-dessus des boutons sur téléphone. */
+const cellInfoStyle = computed(() => {
+  if (layout.value === 'portrait') return { bottom: `${game.drawerHeight + 62}px` }
+  if (layout.value === 'landscape') return { bottom: '62px' }
+  return {}
+})
 
 // ---------- Contexte WebGL : création, perte, récupération ----------
 
@@ -358,8 +492,12 @@ function createMap(camera?: { center: LonLat; zoom: number }): boolean {
   m.on('zoomend', () => {
     zoom.value = m.getZoom()
   })
-  // Clic droit : déplacement direct des unités sélectionnées.
-  m.on('contextmenu', (e) => game.quickMove([e.lngLat.lng, e.lngLat.lat]))
+  // Clic droit : déplacement direct des unités sélectionnées. Au doigt, l'appui prolongé déclenche
+  // aussi « contextmenu » : il sert au bandeau de description, sans donner d'ordre.
+  m.on('contextmenu', (e) => {
+    if (lastPointerTouch) return
+    game.quickMove([e.lngLat.lng, e.lngLat.lat])
+  })
   overlay = new MapboxOverlay({
     interleaved: false,
     layers: [],
@@ -412,6 +550,7 @@ function destroyMap(): void {
   // La reconstruction de deck.gl recrée aussi le territoire (textures liées au contexte).
   tilesGrid = null
   supplyGrid = null
+  baseRoadsGrid = null
 }
 
 /** Recrée la carte en gardant la caméra (récupération après perte, bouton « Réessayer »). */
@@ -432,6 +571,10 @@ onMounted(() => {
   maplibregl.addProtocol('pmtiles', protocol.tile)
   container.value.addEventListener('webglcontextlost', onContextLost, true)
   container.value.addEventListener('webglcontextrestored', onContextRestored, true)
+  // Écoute passive, en capture : le bandeau ne change rien à la sélection ni aux ordres.
+  for (const [type, fn] of Object.entries(MAP_POINTER_EVENTS)) {
+    container.value.addEventListener(type, fn as EventListener, { capture: true, passive: true })
+  }
   if (!createMap()) return
   if (focus.value && map)
     map.jumpTo({ center: [focus.value.at[0], focus.value.at[1]], zoom: focus.value.zoom })
@@ -532,6 +675,11 @@ onBeforeUnmount(() => {
 onBeforeUnmount(() => {
   container.value?.removeEventListener('webglcontextlost', onContextLost, true)
   container.value?.removeEventListener('webglcontextrestored', onContextRestored, true)
+  for (const [type, fn] of Object.entries(MAP_POINTER_EVENTS)) {
+    container.value?.removeEventListener(type, fn as EventListener, true)
+  }
+  clearPress()
+  if (hoverFrame) cancelAnimationFrame(hoverFrame)
   destroyMap()
   maplibregl.removeProtocol('pmtiles')
 })
@@ -564,6 +712,16 @@ onBeforeUnmount(() => {
       <p>Le reste du jeu fonctionne : une partie en cours continue et reste sauvegardable.</p>
       <button data-testid="webgl-retry" @click="rebuildMap">Réessayer</button>
     </template>
+  </div>
+  <div
+    v-if="cellInfo.length && game.started"
+    class="cell-info"
+    :class="{ mobile: layout !== 'desktop' }"
+    :style="cellInfoStyle"
+    data-testid="cell-info"
+    aria-live="polite"
+  >
+    <span v-for="line in cellInfo" :key="line">{{ line }}</span>
   </div>
   <div
     v-if="game.lasso"
@@ -629,6 +787,32 @@ onBeforeUnmount(() => {
   padding: 4px 10px;
   cursor: pointer;
   font: inherit;
+}
+.cell-info {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 11;
+  max-width: min(520px, calc(100% - 24px));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  padding: 4px 10px;
+  background: rgba(20, 24, 31, 0.82);
+  color: #e8eaed;
+  border-radius: 6px;
+  pointer-events: none;
+  font:
+    12px/1.35 system-ui,
+    sans-serif;
+}
+.cell-info.mobile {
+  left: 10px;
+  right: 10px;
+  max-width: none;
+  transform: none;
+  flex-direction: column;
 }
 .lasso-layer {
   position: absolute;

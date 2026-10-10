@@ -18,6 +18,9 @@ const step = (name, data = {}) => {
   report.steps.push({ name, ...data })
   console.log(`- ${name}`, JSON.stringify(data))
 }
+const check = (cond, message) => {
+  if (!cond) report.errors.push(message)
+}
 
 const browser = await chromium.launch({
   // CHROMIUM_PATH : navigateur déjà installé (sinon celui téléchargé par Playwright).
@@ -87,6 +90,27 @@ try {
   step('chargement', start)
   if (start?.player !== 'UKR') report.errors.push(`pays du joueur inattendu (${start?.player})`)
   await shot('01-depart')
+
+  // Bandeau de description : survol de Kyiv (terrain, effets, réseau, ville), puis sortie de la carte.
+  const kyiv = await page.evaluate(() => {
+    const c = window.__nkg.snapshot.cities.find((x) => x.name === 'Kyiv')
+    const p = window.__nkgMap.project([c.lon, c.lat])
+    return { x: p.x, y: p.y }
+  })
+  await page.mouse.move(kyiv.x + 40, kyiv.y + 40)
+  await page.mouse.move(kyiv.x, kyiv.y, { steps: 4 })
+  await page.getByTestId('cell-info').waitFor({ timeout: 5000 })
+  const hoverText = (await page.getByTestId('cell-info').innerText()).replace(/\s+/g, ' ')
+  step('survol de la carte', { texte: hoverText })
+  check(/vitesse .*défense/.test(hoverText), `bandeau sans effet du terrain (${hoverText})`)
+  check(/Kyiv, capitale/.test(hoverText), `bandeau sans la ville survolée (${hoverText})`)
+  await shot('01a-survol')
+  await page.mouse.move(kyiv.x, 2)
+  await page.waitForTimeout(300)
+  check(
+    !(await page.getByTestId('cell-info').isVisible()),
+    'bandeau resté affiché hors de la carte',
+  )
 
   // Alertes : deux alertes posées sur une unité du joueur (partie en pause, pour qu'aucun nouvel état
   // ne les efface), puis « Centrer » (carte et sélection), fermeture et liste repliée.

@@ -5,6 +5,7 @@ import { isLineUnit } from '../units/catalog'
 import { defenseValue } from './combat'
 import { frontCells } from './armies'
 import { planPath } from './movement'
+import { axisBonus } from './axes'
 
 const STRIKE_SIZE = 3
 const STRIKE_DEPTH_KM = 50
@@ -19,7 +20,8 @@ export interface AiState {
  * IA adverse, appelée toutes les 12 h de jeu :
  * - toutes ses armées tiennent le front entier (géré par updateArmies) ;
  * - elle contre-attaque les unités ennemies isolées sur son territoire ;
- * - quand ses troupes sont en état, elle frappe le point le plus faible du front avec ses meilleures unités.
+ * - quand ses troupes sont en état, elle frappe le point le plus faible du front avec ses meilleures unités,
+ *   de préférence sur un axe (route, voie ferrée, ville).
  */
 export function updateAi(ctx: SimContext, country: CountryId, state: AiState): void {
   const side = sideIndex(ctx, country)
@@ -60,8 +62,9 @@ export function updateAi(ctx: SimContext, country: CountryId, state: AiState): v
     for (const e of enemies) {
       if (distanceKm(lon, lat, e.lon, e.lat) < 30) power += defenseValue(ctx, e)
     }
-    // Petit bruit pour ne pas frapper toujours au même endroit.
-    power += ctx.rng.range(0, 0.5)
+    // Petit bruit pour ne pas frapper toujours au même endroit ; un axe vaut jusqu'à deux fois moins
+    // de défense (front discontinu : l'offensive suit les routes).
+    power = (power + ctx.rng.range(0, 0.5)) / (1 + axisBonus(ctx, c.cell) / 5)
     if (power < weakestPower) {
       weakestPower = power
       weakest = c

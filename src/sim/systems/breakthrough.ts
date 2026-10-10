@@ -4,6 +4,7 @@ import { distanceKm } from '../theater/grid'
 import { isLineUnit } from '../units/catalog'
 import { nearestCity } from './ai'
 import { planPath } from './movement'
+import { snapToAxis } from './axes'
 
 /** Rayon autour d'une unité ennemie pour juger si elle s'est enfoncée dans nos lignes. */
 const SALIENT_RADIUS_KM = 25
@@ -25,6 +26,9 @@ const CUT_RATIO = 1
 const CUT_BEHIND_KM = 15
 /** Distance devant la pointe où l'on se poste pour la bloquer. */
 const BLOCK_AHEAD_KM = 12
+/** Distance maximale entre le point de coupure et la route ou voie ferrée visée (axe de la percée). */
+const CUT_AXIS_KM = 10
+
 /** Durée maximale d'une réaction avant retour au poste. */
 const REACTION_TICKS = 72
 
@@ -151,6 +155,15 @@ function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): 
   for (const e of intruders) {
     if (budget <= 0) return
     const already = line.filter((u) => reacting(u)?.intruder === e.id)
+    // Base de la percée : sur l'axe (route, voie ferrée) qui l'alimente, derrière la pointe. Les brigades
+    // qui bordent la percée, proches de sa base, sont préférées : elles menacent ses flancs.
+    const dir = heading(e)
+    const base = dir ? snapToAxis(ctx, along(e, dir, -CUT_BEHIND_KM), CUT_AXIS_KM) : null
+    const reach = (u: UnitState): number =>
+      Math.min(
+        distanceKm(u.lon, u.lat, e.lon, e.lat),
+        base ? distanceKm(u.lon, u.lat, base[0], base[1]) : Infinity,
+      )
     const free = line
       .filter(
         (u) =>
@@ -161,22 +174,17 @@ function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): 
           u.entrench < HOLD_ENTRENCH &&
           distanceKm(u.lon, u.lat, e.lon, e.lat) <= REACT_KM,
       )
-      .sort(
-        (a, b) =>
-          a.entrench - b.entrench ||
-          distanceKm(a.lon, a.lat, e.lon, e.lat) - distanceKm(b.lon, b.lat, e.lon, e.lat),
-      )
+      .sort((a, b) => a.entrench - b.entrench || reach(a) - reach(b))
       .slice(0, Math.min(budget, RESPONDERS_PER_BREACH - already.length))
     if (free.length === 0) continue
     const team = [...already, ...free]
     const ratio = team.reduce((s, u) => s + punch(ctx, u), 0) / Math.max(0.01, guard(ctx, e))
-    const dir = heading(e)
     const kind: ReactionKind =
-      ratio >= COUNTER_RATIO ? 'counter' : ratio >= CUT_RATIO && dir ? 'cut' : 'block'
+      ratio >= COUNTER_RATIO ? 'counter' : ratio >= CUT_RATIO && base ? 'cut' : 'block'
     for (const u of free) {
       let target: LonLat
       if (kind === 'counter') target = [e.lon, e.lat]
-      else if (kind === 'cut' && dir) target = along(e, dir, -CUT_BEHIND_KM)
+      else if (kind === 'cut' && base) target = base
       else if (dir) target = along(e, dir, BLOCK_AHEAD_KM)
       else {
         // Sans direction connue : poste entre la pointe et l'unité, au contact de la pointe.

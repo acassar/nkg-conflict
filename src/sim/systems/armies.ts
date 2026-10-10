@@ -5,6 +5,7 @@ import { fortFactorAt } from '../economy/economy'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
 import { assaultFireFactor } from './obstacles'
+import { cumulativeWeights, indexAtShare } from './axes'
 
 /** Largeur du couloir autour d'une portion de front assignée. */
 const FRONT_CORRIDOR_KM = 60
@@ -123,13 +124,17 @@ function behindCell(ctx: SimContext, side: number, f: FrontCell, depth: number):
   return grid.index(x, y)
 }
 
-/** Emplacements répartis régulièrement le long des cellules de front. */
-function slots(cells: FrontCell[], count: number): FrontCell[] {
+/**
+ * Emplacements le long des cellules de front, répartis selon le poids des axes (front discontinu) :
+ * les unités se concentrent sur les routes, voies ferrées et villes, et ne laissent que quelques postes
+ * dans les secteurs calmes (terrain difficile sans route). Voir axes.ts.
+ */
+function slots(ctx: SimContext, cells: FrontCell[], count: number): FrontCell[] {
   if (count <= 0 || cells.length === 0) return []
+  const cum = cumulativeWeights(ctx, cells)
   const out: FrontCell[] = []
   for (let k = 0; k < count; k++) {
-    const q = Math.min(cells.length - 1, Math.floor(((k + 0.5) / count) * cells.length))
-    const c = cells[q]
+    const c = cells[indexAtShare(cum, (k + 0.5) / count)]
     if (c) out.push(c)
   }
   return out
@@ -177,7 +182,8 @@ export function postValue(
 }
 
 /**
- * Postes favorables : le front est découpé en autant de secteurs que d'unités, et chaque unité tient,
+ * Postes favorables : le front est découpé en autant de secteurs que d'unités (de même poids d'axes,
+ * donc plus courts sur les axes), et chaque unité tient,
  * dans son secteur, le poste de plus grande valeur défensive (léger avantage au milieu du secteur, pour
  * garder des postes répartis).
  */
@@ -191,11 +197,12 @@ function favorableSlots(
 ): LonLat[] {
   if (count <= 0 || cells.length === 0) return []
   const { grid } = ctx
+  const cum = cumulativeWeights(ctx, cells)
   const out: LonLat[] = []
   for (let k = 0; k < count; k++) {
-    const lo = Math.min(cells.length - 1, Math.floor((k / count) * cells.length))
-    const hi = Math.max(lo + 1, Math.floor(((k + 1) / count) * cells.length))
-    const center = Math.min(cells.length - 1, Math.floor(((k + 0.5) / count) * cells.length))
+    const lo = indexAtShare(cum, k / count)
+    const hi = k === count - 1 ? cells.length : Math.max(lo + 1, indexAtShare(cum, (k + 1) / count))
+    const center = indexAtShare(cum, (k + 0.5) / count)
     const half = Math.max(1, (hi - lo) / 2)
     let best = -1
     let bestScore = -Infinity
@@ -276,7 +283,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       }
       posts = favorableSlots(ctx, side, cells, units.length, depth, entrenched)
     } else {
-      posts = slots(cells, units.length).map((slot) => behind(ctx, side, slot, depth))
+      posts = slots(ctx, cells, units.length).map((slot) => behind(ctx, side, slot, depth))
     }
     // Chaque poste revient à l'unité la plus proche encore libre (paires triées par distance) :
     // une unité n'est jamais envoyée à l'autre bout du front quand un poste l'attend à côté.

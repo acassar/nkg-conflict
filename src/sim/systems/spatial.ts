@@ -40,16 +40,27 @@ export class WarIndex {
 
   /** Ennemi le plus proche à moins de `maxKm`, ou null. */
   nearestEnemy(u: UnitState, maxKm: number): UnitState | null {
+    let best: UnitState | null = null
+    let bestD = maxKm
+    this.forEachEnemy(u, maxKm, (e, d) => {
+      if (d <= bestD) {
+        bestD = d
+        best = e
+      }
+    })
+    return best
+  }
+
+  /** Appelle `fn` pour chaque ennemi à moins de `maxKm` (avec sa distance). */
+  forEachEnemy(u: UnitState, maxKm: number, fn: (e: UnitState, km: number) => void): void {
     const side = this.sideOf.get(u.id) ?? sideIndex(this.ctx, u.owner)
-    if (this.ctx.matrix.atWar[side] !== 1) return null
+    if (this.ctx.matrix.atWar[side] !== 1) return
     const dLat = maxKm / KM_PER_DEG
     const dLon = maxKm / (KM_PER_DEG * Math.max(0.2, Math.cos((u.lat * Math.PI) / 180)))
     const bx0 = Math.floor((u.lon - dLon) / BUCKET_DEG)
     const bx1 = Math.floor((u.lon + dLon) / BUCKET_DEG)
     const by0 = Math.floor((u.lat - dLat) / BUCKET_DEG)
     const by1 = Math.floor((u.lat + dLat) / BUCKET_DEG)
-    let best: UnitState | null = null
-    let bestD = maxKm
     for (let by = by0; by <= by1; by++) {
       for (let bx = bx0; bx <= bx1; bx++) {
         const list = this.buckets.get(WarIndex.key(bx, by))
@@ -57,13 +68,9 @@ export class WarIndex {
         for (const e of list) {
           if (!this.ctx.matrix.hostile(side, this.sideOf.get(e.id) ?? -1)) continue
           const d = distanceKm(u.lon, u.lat, e.lon, e.lat)
-          if (d <= bestD) {
-            bestD = d
-            best = e
-          }
+          if (d <= maxKm) fn(e, d)
         }
       }
     }
-    return best
   }
 }

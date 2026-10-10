@@ -118,6 +118,8 @@ export interface BattleUnit {
   riverCrossing: boolean
   /** Obstacles de son camp sous l'unité (0 à 1) : mines, barbelés, positions préparées. */
   obstacles: number
+  /** Situation de flanc (« attaquée de deux côtés », « en saillant », « presque encerclée ») ou null. */
+  flank: string | null
   modifiers: {
     attack: Array<{ label: string; value: number }>
     defense: Array<{ label: string; value: number }>

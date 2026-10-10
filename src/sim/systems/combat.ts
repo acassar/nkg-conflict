@@ -7,6 +7,7 @@ import { moraleFactor } from '../politics/politics'
 import { WarIndex } from './spatial'
 import { postureOf } from '../units/postures'
 import { assaultFireFactor, assaultLossFactor, obstaclesUnder } from './obstacles'
+import { flankDefenseFactor, flankOrgLossFactor, flankText, updateFlanks } from './flanks'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -97,6 +98,7 @@ export function combatModifiers(
   const foe = engaged !== null ? ctx.units.get(engaged) : undefined
   const theirs = foe && isOffensive(u) ? obstaclesUnder(ctx, foe) : 0
   const pctOf = (v: number): string => `${Math.round(v * 100)} %`
+  const flank = runtimeOf(ctx, u.id).flank
   return {
     attack: [
       ...shared,
@@ -125,6 +127,12 @@ export function combatModifiers(
         : []),
       ...(theirs > 0
         ? [{ label: 'Pertes sous les obstacles', value: 1 / assaultLossFactor(theirs) }]
+        : []),
+      ...(flank
+        ? [
+            { label: `Flanc (${flankText(flank)})`, value: flankDefenseFactor(ctx, u) },
+            { label: 'Moral (flanc)', value: 1 / flankOrgLossFactor(ctx, u) },
+          ]
         : []),
     ],
   }
@@ -159,7 +167,8 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     terrainDefense(ctx, u) *
     fortFactor(ctx, u) *
     (1 + 0.5 * u.entrench) *
-    postureOf(u.posture).defense
+    postureOf(u.posture).defense *
+    flankDefenseFactor(ctx, u)
   )
 }
 
@@ -186,7 +195,9 @@ function hit(
   const lost = Math.min(target.strength, STRENGTH_LOSS * ratio * roll * factor * losses)
   target.strength -= lost
   ctx.losses.set(target.owner, (ctx.losses.get(target.owner) ?? 0) + lost)
-  target.org = Math.max(0, target.org - ORG_LOSS * ratio * roll * factor)
+  // Prise de flanc : le moral cède plus vite.
+  const orgLoss = ORG_LOSS * ratio * roll * factor * flankOrgLossFactor(ctx, target)
+  target.org = Math.max(0, target.org - orgLoss)
 }
 
 /** Une heure de combat : contacts, tirs, appui d'artillerie, décrochages, unités détruites. */
@@ -200,6 +211,8 @@ export function updateCombat(ctx: SimContext): void {
     const e = index.has(u) ? index.nearestEnemy(u, CONTACT_KM) : null
     rt.engagedWith = e ? e.id : null
   }
+  // Flancs : directions d'où viennent les ennemis des unités au contact, saillants.
+  updateFlanks(ctx, index)
 
   // 2. Tirs directs (chaque unité au contact frappe son adversaire le plus proche).
   for (const u of index.units) {

@@ -4,6 +4,7 @@ import { combatModifiers, defenseValue, firePower, riverBetween } from './combat
 import { nearestCity } from './ai'
 import { terrainRule } from '../theater/grid'
 import { obstaclesUnder } from './obstacles'
+import { flankText } from './flanks'
 
 /**
  * Rapport d'une bataille : les unités demandées et toutes celles avec qui elles sont au contact
@@ -53,6 +54,7 @@ export function battleReport(ctx: SimContext, ids: number[], player: string): Ba
       engagedWith: rt.engagedWith,
       riverCrossing: !!foe && riverBetween(ctx, u, foe),
       obstacles: obstaclesUnder(ctx, u),
+      flank: flankText(rt.flank),
       modifiers: combatModifiers(ctx, u),
     }
   }

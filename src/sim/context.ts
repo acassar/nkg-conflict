@@ -1,3 +1,4 @@
+import type { Flank } from './systems/flanks'
 import type { Random } from './core/random'
 import type {
   ArmyState,
@@ -29,6 +30,8 @@ export interface UnitRuntime {
   reaction?: Reaction
   /** Unité menacée : tenir retranchée ou décrocher vers la ligne suivante, avec son motif. */
   stance?: Stance
+  /** Attaquée de plusieurs côtés ou en saillant : malus de défense et de moral (recalculé chaque heure). */
+  flank?: Flank
   /** Poste du front attribué, chemin à calculer (étalé sur plusieurs ticks, voir planQueuedPaths). */
   pathPending?: boolean
 }

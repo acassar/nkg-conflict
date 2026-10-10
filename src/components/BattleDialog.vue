@@ -145,6 +145,9 @@ function focus(): void {
                   <template v-if="u.obstacles >= 0.01">
                     · obstacles {{ pct(u.obstacles) }}</template
                   >
+                  <template v-if="u.flank">
+                    · <span class="flank">{{ u.flank }}</span></template
+                  >
                 </span>
               </div>
               <div class="row">
@@ -188,6 +191,9 @@ function focus(): void {
 </template>
 
 <style scoped>
+.flank {
+  color: #fca5a5;
+}
 .battle {
   position: absolute;
   left: 50%;

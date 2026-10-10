@@ -27,6 +27,20 @@ function distanceToFront(city: CityRuntime, front: Array<[number, number]>): num
   return best
 }
 
+/** Nombre d'unités par pays, compté une fois par tick (l'économie de l'IA passe sur chaque pays). */
+const countsCache = new WeakMap<
+  SimContext,
+  { tick: number; size: number; counts: Map<CountryId, number> }
+>()
+function unitCounts(ctx: SimContext): Map<CountryId, number> {
+  const hit = countsCache.get(ctx)
+  if (hit && hit.tick === ctx.tick && hit.size === ctx.units.size) return hit.counts
+  const counts = new Map<CountryId, number>()
+  for (const u of ctx.units.values()) counts.set(u.owner, (counts.get(u.owner) ?? 0) + 1)
+  countsCache.set(ctx, { tick: ctx.tick, size: ctx.units.size, counts })
+  return counts
+}
+
 /** Effectif visé en paix : celui de la mobilisation, relevé d'un quart face à un pays hostile. */
 function peaceTarget(ctx: SimContext, country: CountryId): number {
   const base = ctx.politics.countries.get(country)?.forceSize ?? 0
@@ -97,8 +111,13 @@ export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
   const army = [...ctx.armies.values()].find((a) => a.owner === country && a.wholeFront)
   // En paix, on n'entretient que l'effectif de mobilisation.
   const atWar = ctx.matrix.atWar[side] === 1
-  const owned = [...ctx.units.values()].filter((u) => u.owner === country).length
-  if (!atWar && owned + eco.recruitment.length >= peaceTarget(ctx, country)) return
+  if (!atWar) {
+    // La tension (parcours de tous les pays) n'est évaluée que si l'effectif est entre les deux cibles.
+    const have = (unitCounts(ctx).get(country) ?? 0) + eco.recruitment.length
+    const base = ctx.politics.countries.get(country)?.forceSize ?? 0
+    if (have >= Math.ceil(base * 1.25)) return
+    if (have >= base && have >= peaceTarget(ctx, country)) return
+  }
   // Position dans le cycle : unités déjà commandées depuis le début de la partie.
   const ordered = (): number =>
     Object.values(eco.unitCounters).reduce((n, v) => n + v, 0) + eco.recruitment.length

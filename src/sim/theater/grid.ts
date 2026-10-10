@@ -85,7 +85,8 @@ export function distanceKm(lon1: number, lat1: number, lon2: number, lat2: numbe
   const latMid = ((lat1 + lat2) / 2) * (Math.PI / 180)
   const dx = (lon2 - lon1) * KM_PER_DEG_LON_EQ * Math.cos(latMid)
   const dy = (lat2 - lat1) * KM_PER_DEG_LAT
-  return Math.hypot(dx, dy)
+  // Math.sqrt plutôt que Math.hypot : bien plus rapide, et cette fonction est la plus appelée.
+  return Math.sqrt(dx * dx + dy * dy)
 }
 
 /** Déplace un point de `km` kilomètres vers un autre point (sans le dépasser). */
@@ -150,6 +151,9 @@ export class Grid {
   readonly boxes: CellBox[] = []
   /** Cellules dont le propriétaire a changé depuis la dernière publication. */
   private dirty: number[] = []
+  /** Propriétaires d'origine suivis (voir `trackHome`), et comptes détenteur × origine. */
+  private home: Uint8Array | null = null
+  private occupation: Uint32Array | null = null
 
   constructor(data: TheaterData) {
     this.width = data.width
@@ -182,6 +186,7 @@ export class Grid {
       this.owned[o] = (this.owned[o] ?? 0) + 1
       this.grow(o, i % W, (i - (i % W)) / W)
     }
+    if (this.home) this.countOccupation()
     this.version++
   }
 
@@ -234,6 +239,37 @@ export class Grid {
     return ((this.roads[i] ?? 0) & RAIL_BIT) !== 0
   }
 
+  /**
+   * Suit l'occupation par rapport à des propriétaires d'origine (frontières d'avant-guerre) :
+   * comptes tenus à jour par `setOwner`, sans reparcourir la grille (après une écriture directe dans
+   * `owner`, appeler `recount`).
+   */
+  trackHome(home: Uint8Array): void {
+    this.home = home
+    this.countOccupation()
+  }
+
+  /**
+   * Nombre de cellules par (détenteur × 256 + propriétaire d'origine), cellules d'origine sans pays
+   * exclues ; null si `home` n'est pas le tableau suivi.
+   */
+  occupationFor(home: Uint8Array): Uint32Array | null {
+    return this.home === home ? this.occupation : null
+  }
+
+  private countOccupation(): void {
+    const home = this.home
+    if (!home) return
+    const counts = (this.occupation ??= new Uint32Array(MAX_SIDES * MAX_SIDES))
+    counts.fill(0)
+    for (let i = 0; i < this.size; i++) {
+      const h = home[i] ?? 0
+      if (!h) continue
+      const k = (this.owner[i] ?? 0) * MAX_SIDES + h
+      counts[k] = (counts[k] ?? 0) + 1
+    }
+  }
+
   passable(i: number): boolean {
     const t = this.terrain[i]
     return i >= 0 && t !== Terrain.WATER && t !== Terrain.NEUTRAL
@@ -245,6 +281,14 @@ export class Grid {
     this.owner[i] = side
     this.version++
     this.dirty.push(i)
+    const h = this.home?.[i] ?? 0
+    const occ = this.occupation
+    if (h && occ) {
+      const a = prev * MAX_SIDES + h
+      const b = side * MAX_SIDES + h
+      occ[a] = (occ[a] ?? 1) - 1
+      occ[b] = (occ[b] ?? 0) + 1
+    }
     if (this.passable(i)) {
       if (prev) this.owned[prev] = (this.owned[prev] ?? 0) - 1
       if (side) {

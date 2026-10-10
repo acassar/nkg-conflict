@@ -417,13 +417,18 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     const posts: LonLat[] = layers.flatMap((l) => linePosts(units, l.count, l.depth, favorable))
     // Chaque poste revient à l'unité la plus proche encore libre (paires triées par distance) :
     // une unité n'est jamais envoyée à l'autre bout du front quand un poste l'attend à côté.
-    const pairs: Array<{ u: number; p: number; d: number }> = []
+    // Paires en tableaux typés (une grande armée en compte des dizaines de milliers) : paire k =
+    // unité ⌊k / postes⌋ et poste k mod postes ; à distance égale, l'ordre de création est gardé.
+    const P = posts.length
+    const dist = new Float64Array(units.length * P)
     units.forEach((u, ui) => {
-      posts.forEach((p, pi) =>
-        pairs.push({ u: ui, p: pi, d: distanceKm(u.lon, u.lat, p[0], p[1]) }),
-      )
+      posts.forEach((p, pi) => {
+        dist[ui * P + pi] = distanceKm(u.lon, u.lat, p[0], p[1])
+      })
     })
-    pairs.sort((x, y) => x.d - y.d)
+    const order = new Uint32Array(dist.length)
+    for (let k = 0; k < order.length; k++) order[k] = k
+    order.sort((a, b) => (dist[a] ?? 0) - (dist[b] ?? 0) || a - b)
     // Tolérance proportionnelle à l'écart entre postes : quand le front bouge un peu, les postes
     // glissent de quelques km ; les unités gardent alors le leur au lieu de tout recalculer.
     let spacing = 0
@@ -439,12 +444,17 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       !favorable && ctx.grid.size > LARGE_GRID_CELLS && spacing > WIDE_SPACING_KM
         ? Math.max(SLOT_TOLERANCE_KM, SLOT_TOLERANCE_SHARE * spacing)
         : SLOT_TOLERANCE_KM
-    const unitDone = new Set<number>()
-    const postDone = new Set<number>()
-    for (const { u: ui, p: pi } of pairs) {
-      if (unitDone.has(ui) || postDone.has(pi)) continue
-      unitDone.add(ui)
-      postDone.add(pi)
+    const unitDone = new Uint8Array(units.length)
+    const postDone = new Uint8Array(P)
+    let left = Math.min(units.length, P)
+    for (const k of order) {
+      if (left === 0) break
+      const ui = Math.floor(k / P)
+      const pi = k - ui * P
+      if (unitDone[ui] || postDone[pi]) continue
+      unitDone[ui] = 1
+      postDone[pi] = 1
+      left--
       const u = units[ui]
       const target = posts[pi]
       if (!u || !target || withdrawing(u)) continue

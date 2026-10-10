@@ -79,7 +79,9 @@ export function assessFlank(ctx: SimContext, u: UnitState, index: WarIndex): Fla
 
 /** Met à jour la situation de flanc des unités au contact (les autres n'en ont pas). */
 export function updateFlanks(ctx: SimContext, index: WarIndex): void {
-  for (const rt of ctx.runtime.values()) delete rt.flank
+  // Affectation plutôt que `delete` : un `delete` fait passer chaque objet en mode dictionnaire
+  // (accès bien plus lents dans tous les systèmes).
+  for (const rt of ctx.runtime.values()) if (rt.flank) rt.flank = undefined
   for (const u of index.units) {
     const rt = runtimeOf(ctx, u.id)
     if (rt.engagedWith === null) continue

@@ -231,6 +231,7 @@ export class Simulation {
       armyName: (code) =>
         code === this.playerCountry ? '1re Armée' : `Armée (${countryName(this.ctx, code)})`,
     }
+    grid.trackHome(this.ctx.homeOwner)
     this.supplyEvery = grid.size > 1_000_000 ? 24 : 6
     for (let s = 1; s < sides.length; s++) this.initialTerritory[s] = grid.countOwned(s)
   }
@@ -482,9 +483,25 @@ export class Simulation {
     return this.aiCountries.filter((c) => this.ctx.politics.countries.get(c)?.mobilized)
   }
 
+  /**
+   * Profilage (mesure des performances) : temps cumulé par système, en millisecondes. Nul hors
+   * mesure : `step` appelle alors les systèmes sans aucun surcoût.
+   */
+  profile: Map<string, number> | null = null
+
+  /** Exécute un système, en mesurant sa durée quand le profilage est actif. */
+  private run(name: string, fn: () => void): void {
+    const profile = this.profile
+    if (!profile) return fn()
+    const t0 = performance.now()
+    fn()
+    profile.set(name, (profile.get(name) ?? 0) + performance.now() - t0)
+  }
+
   /** Joue `count` heures de jeu. */
   step(count: number): void {
     const ctx = this.ctx
+    const run = this.run.bind(this)
     for (let i = 0; i < count && !this.outcome; i++) {
       ctx.tick++
       if (this.supplyEvery > 6) {
@@ -492,35 +509,38 @@ export class Simulation {
         // éviter qu'un tick calcule tous les grands pays en guerre d'un coup.
         const every = this.supplyEvery
         const tick = ctx.tick
-        updateSupply(ctx, (side) => (tick + side) % every === 0)
-        if (tick % every === 0) updateCommand(ctx)
+        run('ravitaillement', () => updateSupply(ctx, (side) => (tick + side) % every === 0))
+        if (tick % every === 0) run('commandement', () => updateCommand(ctx))
       } else if (ctx.tick % this.supplyEvery === 0) {
-        updateSupply(ctx)
-        updateCommand(ctx)
+        run('ravitaillement', () => updateSupply(ctx))
+        run('commandement', () => updateCommand(ctx))
       }
       if (ctx.tick % PURSUIT_EVERY === 0) {
-        updatePursuits(ctx)
-        updateEncirclements(ctx)
-        updateMissions(ctx)
-        updatePostureReflexes(ctx)
-        reactToBreakthroughs(ctx)
-        restrainAttacks(ctx)
-        holdOrFallBack(ctx)
-        this.updateAlerts()
+        run('poursuites', () => updatePursuits(ctx))
+        run('encerclements', () => updateEncirclements(ctx))
+        run('missions', () => updateMissions(ctx))
+        run('réflexes de posture', () => updatePostureReflexes(ctx))
+        run('réaction aux percées', () => reactToBreakthroughs(ctx))
+        run('attaque mesurée', () => restrainAttacks(ctx))
+        run('tenir ou décrocher', () => holdOrFallBack(ctx))
+        run('alertes', () => this.updateAlerts())
       }
-      planQueuedPaths(ctx)
-      updateMovement(ctx)
-      updateCombat(ctx)
-      updateTerritory(ctx)
-      if (ctx.tick % AI_EVERY === 0) {
-        for (const c of this.mobilizedAi()) {
-          if (ctx.matrix.atWar[sideIndex(ctx, c)] === 1) updateAi(ctx, c, this.aiState(c))
-        }
-      }
-      if (ctx.tick % DAY === 0) this.daily()
-      if (ctx.tick % MONTH === 0) this.monthly()
-      if (ctx.tick % ARMIES_EVERY === 0) updateArmies(ctx)
-      if (ctx.tick % CITIES_EVERY === 0) this.updateCitiesAndVictory()
+      run('chemins', () => planQueuedPaths(ctx))
+      run('mouvement', () => updateMovement(ctx))
+      run('combat', () => updateCombat(ctx))
+      run('territoire', () => updateTerritory(ctx))
+      if (ctx.tick % AI_EVERY === 0) run('IA militaire', () => this.militaryAi())
+      if (ctx.tick % DAY === 0) run('journalier', () => this.daily())
+      if (ctx.tick % MONTH === 0) run('mensuel', () => this.monthly())
+      if (ctx.tick % ARMIES_EVERY === 0) run('armées', () => updateArmies(ctx))
+      if (ctx.tick % CITIES_EVERY === 0) run('villes', () => this.updateCitiesAndVictory())
+    }
+  }
+
+  private militaryAi(): void {
+    const ctx = this.ctx
+    for (const c of this.mobilizedAi()) {
+      if (ctx.matrix.atWar[sideIndex(ctx, c)] === 1) updateAi(ctx, c, this.aiState(c))
     }
   }
 

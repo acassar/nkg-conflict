@@ -182,12 +182,13 @@ pnpm theater chemin/vers/natural-earth-vector/geojson
 
 ## Scripts
 
-| Script                   | Rôle                                                                                   |
-| ------------------------ | -------------------------------------------------------------------------------------- |
-| `pnpm dev`               | serveur de développement                                                               |
-| `pnpm build`             | vérification des types + build                                                         |
-| `pnpm test`              | tests unitaires                                                                        |
-| `pnpm simulate 60`       | partie sans affichage sur 60 jours (équilibrage) ; `--monde --pays=FRA --ia-partout`   |
-| `pnpm balance 120 1,2,3` | rapport d'équilibrage IA contre IA (jours, graines, dossier ; défaut `ci-out/balance`) |
-| `pnpm theater …`         | régénère les données du théâtre                                                        |
-| `pnpm format:check`      | vérification du formatage                                                              |
+| Script                                                                              | Rôle                                                                                                                                 |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm dev`                                                                          | serveur de développement                                                                                                             |
+| `pnpm build`                                                                        | vérification des types + build                                                                                                       |
+| `pnpm test`                                                                         | tests unitaires                                                                                                                      |
+| `pnpm simulate 60`                                                                  | partie sans affichage sur 60 jours (équilibrage) ; `--monde --pays=FRA --ia-partout`                                                 |
+| `pnpm simulate 30 --monde --pays=CHN --guerre=IND --ia-partout --unites=3 --profil` | mesure des performances : unités multipliées (échelle brigade), guerre déclarée au départ, temps par système en ms par heure simulée |
+| `pnpm balance 120 1,2,3`                                                            | rapport d'équilibrage IA contre IA (jours, graines, dossier ; défaut `ci-out/balance`)                                               |
+| `pnpm theater …`                                                                    | régénère les données du théâtre                                                                                                      |
+| `pnpm format:check`                                                                 | vérification du formatage                                                                                                            |

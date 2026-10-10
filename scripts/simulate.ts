@@ -4,12 +4,16 @@
  *   --monde       scénario « Monde 2026 » (défaut : théâtre ukrainien)
  *   --pays=XXX    pays du joueur
  *   --ia-partout  l'IA joue aussi le pays du joueur (mesure de l'équilibre des règles)
+ *   --unites=3    multiplie les unités de départ (mesure des performances à l'échelle brigade)
+ *   --guerre=IND  le pays du joueur déclare la guerre à ce pays au départ
+ *   --profil      temps par système, en ms par heure simulée
  * Graine aléatoire : variable d'environnement SEED.
  */
 import fs from 'node:fs'
 import { Simulation } from '../src/sim/simulation'
 import { buildScenario } from '../src/sim/scenarios'
 import { loadTheater } from '../src/sim/theater/load'
+import { multiplyForces, profileReport } from '../src/sim/bench'
 
 const args = process.argv.slice(2)
 const world = args.includes('--monde')
@@ -17,6 +21,9 @@ const bothAi = args.includes('--ia-partout')
 const country = args.find((a) => a.startsWith('--pays='))?.slice(7)
 const days = Number(args.find((a) => !a.startsWith('--')) ?? 30)
 const seed = Number(process.env.SEED ?? 42)
+const factor = Number(args.find((a) => a.startsWith('--unites='))?.slice(9) ?? 1)
+const target = args.find((a) => a.startsWith('--guerre='))?.slice(9)
+const profiled = args.includes('--profil')
 
 const readPublic = async (p: string): Promise<ArrayBuffer> => {
   const buf = fs.readFileSync(new URL(`../public/${p}`, import.meta.url))
@@ -28,12 +35,26 @@ const scenario = buildScenario(world ? 'world-2026' : 'ukraine-2026', country)
 const theater = await loadTheater(world ? 'world' : 'ukraine', readPublic)
 const sim = Simulation.fromScenario(scenario, theater, seed, scenario.playerCountry)
 sim.aiControlsPlayer = bothAi
+multiplyForces(sim.ctx, factor)
+if (target) {
+  const refused = sim.declareWar(target)
+  if (refused) throw new Error(`Déclaration de guerre refusée : ${refused}`)
+}
+if (profiled) sim.profile = new Map()
 console.log(`Chargement : ${(performance.now() - loadStart).toFixed(0)} ms`)
 
 const started = performance.now()
+let worstDay = 0
+let worstDayIndex = 0
 const watch = ['UKR', 'RUS', scenario.playerCountry].filter((c, i, a) => a.indexOf(c) === i)
 for (let d = 1; d <= days && !sim.outcome; d++) {
+  const dayStart = performance.now()
   sim.step(24)
+  const dayMs = performance.now() - dayStart
+  if (dayMs > worstDay) {
+    worstDay = dayMs
+    worstDayIndex = d
+  }
   if (d % Math.max(1, Math.floor(days / 10)) !== 0 && d !== days) continue
   const snap = sim.snapshot()
   const count = (c: string): number => snap.units.filter((u) => u.owner === c).length
@@ -45,8 +66,17 @@ for (let d = 1; d <= days && !sim.outcome; d++) {
 }
 const ms = performance.now() - started
 console.log(
-  `${sim.tick} ticks en ${ms.toFixed(0)} ms (${((ms / sim.tick) * 1000).toFixed(0)} µs/tick)`,
+  `${sim.tick} ticks en ${ms.toFixed(0)} ms (${((ms / sim.tick) * 1000).toFixed(0)} µs/tick, ` +
+    `pire journée J${worstDayIndex} ${(worstDay / 24).toFixed(1)} ms/h)`,
 )
+if (sim.profile) {
+  console.log('Profil (ms par heure simulée) :')
+  for (const p of profileReport(sim.profile, sim.tick)) {
+    console.log(
+      `  ${p.name.padEnd(22)} ${p.msPerHour.toFixed(2).padStart(7)}  ${(p.share * 100).toFixed(0)} %`,
+    )
+  }
+}
 const snap = sim.snapshot(true)
 console.log('Derniers événements :')
 for (const e of snap.events.slice(-15)) console.log(`  [h${e.tick}] ${e.text}`)

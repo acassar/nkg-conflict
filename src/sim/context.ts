@@ -105,7 +105,17 @@ export function countryName(ctx: SimContext, code: CountryId | null): string {
 export function runtimeOf(ctx: SimContext, id: number): UnitRuntime {
   let r = ctx.runtime.get(id)
   if (!r) {
-    r = { engagedWith: null, supplied: true, routed: false, commanded: false }
+    // Tous les champs dès la création : forme d'objet stable, accès rapides dans les systèmes.
+    r = {
+      engagedWith: null,
+      supplied: true,
+      routed: false,
+      commanded: false,
+      reaction: undefined,
+      stance: undefined,
+      flank: undefined,
+      pathPending: false,
+    }
     ctx.runtime.set(id, r)
   }
   return r

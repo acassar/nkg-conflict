@@ -12,7 +12,8 @@ const KM_PER_DEG = 111.32
  * la recherche de contacts indépendante des milliers d'unités en garnison dans le monde.
  */
 export class WarIndex {
-  private buckets = new Map<number, UnitState[]>()
+  /** Par case : unités et leur camp (tableaux parallèles, sans recherche dans une Map à chaque test). */
+  private buckets = new Map<number, { units: UnitState[]; sides: number[] }>()
   readonly sideOf = new Map<number, number>()
   readonly units: UnitState[] = []
 
@@ -23,9 +24,11 @@ export class WarIndex {
       this.units.push(u)
       this.sideOf.set(u.id, side)
       const key = WarIndex.key(Math.floor(u.lon / BUCKET_DEG), Math.floor(u.lat / BUCKET_DEG))
-      const list = this.buckets.get(key)
-      if (list) list.push(u)
-      else this.buckets.set(key, [u])
+      const bucket = this.buckets.get(key)
+      if (bucket) {
+        bucket.units.push(u)
+        bucket.sides.push(side)
+      } else this.buckets.set(key, { units: [u], sides: [side] })
     }
   }
 
@@ -54,23 +57,45 @@ export class WarIndex {
   /** Appelle `fn` pour chaque ennemi à moins de `maxKm` (avec sa distance). */
   forEachEnemy(u: UnitState, maxKm: number, fn: (e: UnitState, km: number) => void): void {
     const side = this.sideOf.get(u.id) ?? sideIndex(this.ctx, u.owner)
-    if (this.ctx.matrix.atWar[side] !== 1) return
+    this.forEachEnemyAt(side, u.lon, u.lat, maxKm, (e, d) => {
+      fn(e, d)
+      return false
+    })
+  }
+
+  /**
+   * Ennemis du camp `side` à moins de `maxKm` d'un point, dans l'ordre de l'index. `fn` renvoie vrai
+   * pour arrêter la recherche ; la méthode renvoie alors vrai.
+   */
+  forEachEnemyAt(
+    side: number,
+    lon: number,
+    lat: number,
+    maxKm: number,
+    fn: (e: UnitState, km: number) => boolean,
+  ): boolean {
+    const matrix = this.ctx.matrix
+    if (matrix.atWar[side] !== 1) return false
     const dLat = maxKm / KM_PER_DEG
-    const dLon = maxKm / (KM_PER_DEG * Math.max(0.2, Math.cos((u.lat * Math.PI) / 180)))
-    const bx0 = Math.floor((u.lon - dLon) / BUCKET_DEG)
-    const bx1 = Math.floor((u.lon + dLon) / BUCKET_DEG)
-    const by0 = Math.floor((u.lat - dLat) / BUCKET_DEG)
-    const by1 = Math.floor((u.lat + dLat) / BUCKET_DEG)
+    const dLon = maxKm / (KM_PER_DEG * Math.max(0.2, Math.cos((lat * Math.PI) / 180)))
+    const bx0 = Math.floor((lon - dLon) / BUCKET_DEG)
+    const bx1 = Math.floor((lon + dLon) / BUCKET_DEG)
+    const by0 = Math.floor((lat - dLat) / BUCKET_DEG)
+    const by1 = Math.floor((lat + dLat) / BUCKET_DEG)
     for (let by = by0; by <= by1; by++) {
       for (let bx = bx0; bx <= bx1; bx++) {
-        const list = this.buckets.get(WarIndex.key(bx, by))
-        if (!list) continue
-        for (const e of list) {
-          if (!this.ctx.matrix.hostile(side, this.sideOf.get(e.id) ?? -1)) continue
-          const d = distanceKm(u.lon, u.lat, e.lon, e.lat)
-          if (d <= maxKm) fn(e, d)
+        const bucket = this.buckets.get(WarIndex.key(bx, by))
+        if (!bucket) continue
+        const { units, sides } = bucket
+        for (let k = 0; k < units.length; k++) {
+          if (!matrix.hostile(side, sides[k] ?? -1)) continue
+          const e = units[k]
+          if (!e) continue
+          const d = distanceKm(lon, lat, e.lon, e.lat)
+          if (d <= maxKm && fn(e, d)) return true
         }
       }
     }
+    return false
   }
 }

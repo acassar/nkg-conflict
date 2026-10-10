@@ -38,14 +38,18 @@ export function territoryShares(ctx: SimContext): TerritoryShares {
   const hit = cache.get(ctx)
   if (hit && hit.tick === ctx.tick) return hit.shares
   const total = totals(ctx)
-  const counts = new Uint32Array(256 * 256)
-  const owner = ctx.grid.owner
-  const home = ctx.homeOwner
-  for (let i = 0; i < owner.length; i++) {
-    const h = home[i] ?? 0
-    if (!h) continue
-    const k = (owner[i] ?? 0) * 256 + h
-    counts[k] = (counts[k] ?? 0) + 1
+  // Comptes tenus à jour par la grille ; sinon (contexte de test), un parcours complet.
+  let counts = ctx.grid.occupationFor(ctx.homeOwner)
+  if (!counts) {
+    counts = new Uint32Array(256 * 256)
+    const owner = ctx.grid.owner
+    const home = ctx.homeOwner
+    for (let i = 0; i < owner.length; i++) {
+      const h = home[i] ?? 0
+      if (!h) continue
+      const k = (owner[i] ?? 0) * 256 + h
+      counts[k] = (counts[k] ?? 0) + 1
+    }
   }
   const shares: TerritoryShares = { home: new Float64Array(256), occupied: new Map() }
   for (let s = 1; s < 256; s++) {

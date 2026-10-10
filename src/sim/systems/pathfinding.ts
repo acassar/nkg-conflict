@@ -81,16 +81,13 @@ export interface PathOptions {
   alsoEnter?: number
 }
 
-const DIRS: ReadonlyArray<[number, number, number]> = [
-  [1, 0, 1],
-  [-1, 0, 1],
-  [0, 1, 1],
-  [0, -1, 1],
-  [1, 1, Math.SQRT2],
-  [1, -1, Math.SQRT2],
-  [-1, 1, Math.SQRT2],
-  [-1, -1, Math.SQRT2],
-]
+/** Les 8 directions (dx, dy, longueur), en tableaux plats pour la boucle chaude de l'A*. */
+const DX = Int8Array.of(1, -1, 0, 0, 1, 1, -1, -1)
+const DY = Int8Array.of(0, 0, 1, -1, 1, -1, 1, -1)
+const LEN = Float64Array.of(1, 1, 1, 1, Math.SQRT2, Math.SQRT2, Math.SQRT2, Math.SQRT2)
+
+/** Coût de passage par code de terrain, précalculé (évite la recherche de règle à chaque voisin). */
+const TERRAIN_COST = Float64Array.from({ length: 256 }, (_, t) => terrainRule(t).pathCost)
 
 /** A* sur la grille, en 8 directions. Réutilise ses tableaux entre deux appels. */
 export class Pathfinder {
@@ -111,26 +108,24 @@ export class Pathfinder {
     this.closed = new Uint32Array(grid.size)
   }
 
-  private cellCost(i: number, opts: PathOptions): number {
-    const t = this.grid.terrain[i]
-    let c = terrainRule(t).pathCost
-    const o = this.grid.owner[i] ?? 0
-    if (this.matrix.hostile(opts.side, o)) c *= opts.enemyCost
-    return c
-  }
-
   /** Chemin praticable le plus proche de la destination, ou null si aucun. Retourne des points lon/lat. */
   find(start: LonLat, goal: LonLat, opts: PathOptions): LonLat[] | null {
     const grid = this.grid
     const s = grid.cellAt(start[0], start[1])
     let t = grid.cellAt(goal[0], goal[1])
     if (s < 0 || t < 0) return null
-    // Objectif dans l'eau ou un pays neutre : on vise la terre praticable la plus proche.
-    const ok = (i: number): boolean => {
-      if (!grid.passable(i)) return false
-      const o = grid.owner[i] ?? 0
-      return o === opts.alsoEnter || this.matrix.canEnter(opts.side, o)
+    // Par propriétaire de cellule, calculés une fois par recherche : entrée permise, multiplicateur de
+    // coût (territoire ennemi). La boucle chaude ne fait plus que des lectures de tableaux.
+    const enter = new Uint8Array(256)
+    const ownerCost = new Float64Array(256)
+    for (let o = 0; o < 256; o++) {
+      enter[o] = o === opts.alsoEnter || this.matrix.canEnter(opts.side, o) ? 1 : 0
+      ownerCost[o] = this.matrix.hostile(opts.side, o) ? opts.enemyCost : 1
     }
+    const owner = grid.owner
+    const terrain = grid.terrain
+    // Objectif dans l'eau ou un pays neutre : on vise la terre praticable la plus proche.
+    const ok = (i: number): boolean => grid.passable(i) && enter[owner[i] ?? 0] === 1
     const goalPassable = ok(t)
     if (!goalPassable) t = this.nearestPassable(t, ok)
     if (t < 0) return null
@@ -139,14 +134,24 @@ export class Pathfinder {
     this.run++
     const run = this.run
     const W = grid.width
+    const H = grid.height
     const tx = t % W
-    const ty = Math.floor(t / W)
-    const h = (i: number): number => Math.hypot((i % W) - tx, Math.floor(i / W) - ty)
+    const ty = (t - tx) / W
+    const h = (i: number): number => {
+      const x = i % W
+      const dx = x - tx
+      const dy = (i - x) / W - ty
+      return Math.sqrt(dx * dx + dy * dy)
+    }
     const heap = this.heap
+    const g = this.g
+    const from = this.from
+    const stamp = this.stamp
+    const closed = this.closed
     heap.clear()
-    this.g[s] = 0
-    this.from[s] = -1
-    this.stamp[s] = run
+    g[s] = 0
+    from[s] = -1
+    stamp[s] = run
     const w = opts.greed ?? 1.2
     heap.push(s, w * h(s))
     const maxExpanded = opts.maxExpanded ?? 60_000
@@ -156,8 +161,8 @@ export class Pathfinder {
 
     while (heap.size > 0) {
       const cur = heap.pop()
-      if (this.closed[cur] === run) continue
-      this.closed[cur] = run
+      if (closed[cur] === run) continue
+      closed[cur] = run
       if (cur === t) {
         best = t
         break
@@ -169,23 +174,26 @@ export class Pathfinder {
       }
       if (++expanded > maxExpanded) break
       const cx = cur % W
-      const cy = Math.floor(cur / W)
-      const gc = this.g[cur] ?? 0
-      for (const [dx, dy, len] of DIRS) {
+      const cy = (cur - cx) / W
+      const gc = g[cur] ?? 0
+      for (let d = 0; d < 8; d++) {
+        const dx = DX[d] ?? 0
+        const dy = DY[d] ?? 0
         const nx = cx + dx
         const ny = cy + dy
-        if (!grid.inBounds(nx, ny)) continue
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue
         const n = ny * W + nx
-        if (!ok(n) || this.closed[n] === run) continue
+        if (closed[n] === run || !ok(n)) continue
         // Pas de passage en diagonale entre deux cellules infranchissables.
         if (dx !== 0 && dy !== 0) {
           if (!ok(cy * W + nx) || !ok(ny * W + cx)) continue
         }
-        const ng = gc + len * this.cellCost(n, opts)
-        if (this.stamp[n] !== run || ng < (this.g[n] ?? Infinity)) {
-          this.stamp[n] = run
-          this.g[n] = ng
-          this.from[n] = cur
+        const cost = (TERRAIN_COST[terrain[n] ?? 0] ?? 1) * (ownerCost[owner[n] ?? 0] ?? 1)
+        const ng = gc + (LEN[d] ?? 1) * cost
+        if (stamp[n] !== run || ng < (g[n] ?? Infinity)) {
+          stamp[n] = run
+          g[n] = ng
+          from[n] = cur
           // Heuristique pondérée (1,2 par défaut) : chemins quasi optimaux, bien moins de cellules explorées.
           heap.push(n, ng + w * h(n))
         }

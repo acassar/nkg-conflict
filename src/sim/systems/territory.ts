@@ -1,6 +1,7 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
+import { WarIndex } from './spatial'
 
 const POCKET_GUARD_KM = 15
 
@@ -16,25 +17,25 @@ function zocKm(ctx: SimContext, u: UnitState): number {
  */
 export function updateTerritory(ctx: SimContext): void {
   const { grid } = ctx
-  const units = [...ctx.units.values()].filter((u) => !runtimeOf(ctx, u.id).routed)
+  // Unités hors déroute de tous les camps, listées seulement si une poche est à examiner.
+  let all: UnitState[] | null = null
+  const units = (): UnitState[] =>
+    (all ??= [...ctx.units.values()].filter((u) => !runtimeOf(ctx, u.id).routed))
   const scratch: number[] = []
   const flips: Array<[number, number]> = []
 
-  // Ennemis de chaque camp, calculés une fois par tour.
-  const enemiesBySide = new Map<number, UnitState[]>()
-  const enemiesOf = (side: number): UnitState[] => {
-    let list = enemiesBySide.get(side)
-    if (!list) {
-      list = units.filter((e) => ctx.matrix.hostile(side, sideIndex(ctx, e.owner)))
-      enemiesBySide.set(side, list)
-    }
-    return list
-  }
+  // Ennemis proches, par index spatial (une cellule n'est comparée qu'aux unités voisines) ; les
+  // unités en déroute n'ont pas de zone de contrôle.
+  const index = new WarIndex(ctx)
+  let maxZoc = 0
+  for (const u of index.units) maxZoc = Math.max(maxZoc, zocKm(ctx, u))
+  const covers = (e: UnitState, km: number): boolean =>
+    km <= zocKm(ctx, e) && !runtimeOf(ctx, e.id).routed
 
-  for (const u of units) {
-    const side = sideIndex(ctx, u.owner)
-    if (ctx.matrix.atWar[side] !== 1) continue
-    const enemies = enemiesOf(side)
+  // Seules les unités des camps en guerre (celles de l'index) prennent du terrain.
+  for (const u of index.units) {
+    if (runtimeOf(ctx, u.id).routed) continue
+    const side = index.sideOf.get(u.id) ?? sideIndex(ctx, u.owner)
     grid.cellsWithin(u.lon, u.lat, zocKm(ctx, u), (i) => {
       const owner = grid.owner[i] ?? 0
       // Seules les cellules d'un pays en guerre contre nous peuvent être prises.
@@ -44,11 +45,7 @@ export function updateTerritory(ctx: SimContext): void {
       for (const n of grid.neighbors4(i, scratch)) if (grid.owner[n] === side) touches = true
       if (!touches) return
       // Contestée : couverte par une unité ennemie.
-      const lon = grid.lonOf(i)
-      const lat = grid.latOf(i)
-      for (const e of enemies) {
-        if (distanceKm(lon, lat, e.lon, e.lat) <= zocKm(ctx, e)) return
-      }
+      if (index.forEachEnemyAt(side, grid.lonOf(i), grid.latOf(i), maxZoc, covers)) return
       flips.push([i, side])
     })
   }
@@ -58,7 +55,7 @@ export function updateTerritory(ctx: SimContext): void {
     const reach = ctx.supplyReach[side]
     const candidates = ctx.unsuppliedCells[side]
     if (!reach || !candidates || candidates.length === 0) continue
-    const defenders = units.filter((u) => sideIndex(ctx, u.owner) === side)
+    const defenders = units().filter((u) => sideIndex(ctx, u.owner) === side)
     // Candidates du tour suivant : celles qui tiennent encore, plus l'intérieur mis à nu.
     const next: number[] = []
     for (const i of candidates) {

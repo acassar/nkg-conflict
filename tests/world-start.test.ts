@@ -38,7 +38,7 @@ describe('économie nationale', () => {
     const fr = sim.sideOf('FRA')
     for (let i = 0; i < g.size; i++) {
       if (g.owner[i] === fr && g.latOf(i) < 46 && g.lonOf(i) > -5 && g.lonOf(i) < 8) {
-        g.owner[i] = sim.sideOf('ESP')
+        g.setOwner(i, sim.sideOf('ESP'))
       }
     }
     ctx.tick++

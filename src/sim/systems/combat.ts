@@ -1,5 +1,11 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
-import { isOffensiveOrder, type LonLat, type ModifierKey, type UnitState } from '../core/types'
+import {
+  isOffensiveOrder,
+  type CountryId,
+  type LonLat,
+  type ModifierKey,
+  type UnitState,
+} from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactor, useMunitions } from '../economy/economy'
 import { NO_MUNITIONS_FACTOR } from '../economy/rules'
@@ -225,10 +231,24 @@ export function updateCombat(ctx: SimContext): void {
   const index = new WarIndex(ctx)
 
   // 1. Contacts (seules les unités des camps en guerre peuvent en avoir).
+  // Les unités au repos (en paix, intactes, ravitaillées) n'ont rien à mettre à jour à l'étape 4 :
+  // sur la carte du monde, cela écarte les milliers de garnisons des pays en paix.
+  const active: UnitState[] = []
   for (const u of units) {
     const rt = runtimeOf(ctx, u.id)
-    const e = index.has(u) ? index.nearestEnemy(u, CONTACT_KM) : null
+    const atWar = index.has(u)
+    const e = atWar ? index.nearestEnemy(u, CONTACT_KM) : null
     rt.engagedWith = e ? e.id : null
+    if (
+      atWar ||
+      u.org < 1 ||
+      !rt.supplied ||
+      rt.routed ||
+      u.hoursOutOfSupply > 0 ||
+      u.strength < 0.05
+    ) {
+      active.push(u)
+    }
   }
   // Flancs : directions d'où viennent les ennemis des unités au contact, saillants.
   updateFlanks(ctx, index)
@@ -250,14 +270,19 @@ export function updateCombat(ctx: SimContext): void {
   }
 
   // 4. Organisation, décrochage, ralliement, pertes.
-  for (const u of units) {
+  const morale = new Map<CountryId, number>()
+  for (const u of active) {
     const rt = runtimeOf(ctx, u.id)
     if (rt.engagedWith === null) {
       const recovery = rt.supplied
         ? ORG_RECOVERY + (rt.commanded ? ORG_RECOVERY_COMMAND : 0)
         : 0.002
-      const morale = moraleFactor(ctx, u.owner)
-      u.org = Math.min(1, u.org + recovery * morale)
+      let m = morale.get(u.owner)
+      if (m === undefined) {
+        m = moraleFactor(ctx, u.owner)
+        morale.set(u.owner, m)
+      }
+      u.org = Math.min(1, u.org + recovery * m)
     }
     if (!rt.supplied) {
       u.hoursOutOfSupply++

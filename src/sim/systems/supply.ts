@@ -1,4 +1,5 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
+import type { UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
 
 /** Rayon de ravitaillement autour d'une source (capitale, grande ville, dépôt). */
@@ -90,19 +91,28 @@ export function updateSupply(ctx: SimContext, only?: (side: number) => boolean):
   }
 
   // Unités : ravitaillées si leur cellule est reliée, ou proches d'une unité logistique reliée.
-  const depots = [...ctx.units.values()].filter((u) => {
-    if (ctx.catalog[u.kind].supplyRadiusKm <= 0) return false
-    const reach = ctx.supplyReach[sideIndex(ctx, u.owner)]
-    return reach?.[grid.cellAt(u.lon, u.lat)] === 1
-  })
+  // Les dépôts ne sont listés qu'au premier besoin (rare : une unité hors des cellules reliées).
+  let depots: UnitState[] | null = null
+  const depotsList = (): UnitState[] =>
+    (depots ??= [...ctx.units.values()].filter((u) => {
+      if (ctx.catalog[u.kind].supplyRadiusKm <= 0) return false
+      const reach = ctx.supplyReach[sideIndex(ctx, u.owner)]
+      return reach?.[grid.cellAt(u.lon, u.lat)] === 1
+    }))
+  // Camps retenus par `only`, évalués une fois par camp plutôt qu'une fois par unité.
+  const retained = new Int8Array(ctx.sides.length).fill(-1)
   for (const u of ctx.units.values()) {
-    if (only && !only(sideIndex(ctx, u.owner))) continue
+    const side = sideIndex(ctx, u.owner)
+    if (only) {
+      if (retained[side] === -1) retained[side] = only(side) ? 1 : 0
+      if (retained[side] !== 1) continue
+    }
     const rt = runtimeOf(ctx, u.id)
-    if (matrix.atWar[sideIndex(ctx, u.owner)] !== 1) {
+    if (matrix.atWar[side] !== 1) {
       rt.supplied = true
       continue
     }
-    const reach = ctx.supplyReach[sideIndex(ctx, u.owner)]
+    const reach = ctx.supplyReach[side]
     const cell = grid.cellAt(u.lon, u.lat)
     let supplied = cell >= 0 && reach?.[cell] === 1
     if (!supplied && reach) {
@@ -111,7 +121,7 @@ export function updateSupply(ctx: SimContext, only?: (side: number) => boolean):
       })
     }
     if (!supplied) {
-      supplied = depots.some(
+      supplied = depotsList().some(
         (d) =>
           d.owner === u.owner &&
           distanceKm(d.lon, d.lat, u.lon, u.lat) <= ctx.catalog[d.kind].supplyRadiusKm,

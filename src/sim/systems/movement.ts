@@ -84,6 +84,18 @@ export function updateMovement(ctx: SimContext): void {
       index ??= new WarIndex(ctx)
       if (index.nearestEnemy(u, CONTACT_KM * 3)) retreatFromEnemy(ctx, u, index)
     }
+    // Unité au repos, déjà retranchée et sans ordre en cours (garnisons de la carte du monde) :
+    // seuls ses obstacles progressent.
+    if (
+      u.path.length === 0 &&
+      !rt.routed &&
+      u.entrench >= 1 &&
+      u.order.kind === 'hold' &&
+      (!u.direct || u.direct.doneAt !== undefined)
+    ) {
+      layObstacles(ctx, u)
+      continue
+    }
     const moving = u.path.length > 0
     const blocked = rt.engagedWith !== null && u.order.kind !== 'retreat'
 

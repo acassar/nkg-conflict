@@ -150,6 +150,18 @@ try {
   check(!!helpBox && helpBox.x >= 0 && helpBox.x + helpBox.width <= 390, "l'aide déborde")
   await shot('m02a-aide')
   await page.getByRole('button', { name: "Fermer l'aide" }).tap()
+  // Jauge du menu : fenêtre de détail dans l'écran, fermée par « × ».
+  await page.getByTestId('menu-button').tap()
+  await page.getByTestId('gauge-industry-mobile').tap()
+  await page.getByTestId('resource-dialog').waitFor()
+  const gaugeBox = await page.getByTestId('resource-dialog').boundingBox()
+  step('jauge (mobile)', { boite: gaugeBox })
+  check(
+    !!gaugeBox && gaugeBox.x >= 0 && gaugeBox.x + gaugeBox.width <= 390,
+    'fenêtre de jauge hors écran',
+  )
+  await shot('m02a-jauge')
+  await page.getByTestId('resource-dialog').getByRole('button', { name: 'Fermer' }).tap()
   await page.waitForTimeout(200)
   check(!(await page.getByTestId('rules-help').isVisible()), 'aide non fermée')
 

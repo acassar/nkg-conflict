@@ -25,6 +25,7 @@ import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
 import { newPlayerWars } from './warBrief'
 import { inspectorView, type Domain, type InspectKind } from './frame'
+import { pushSample, type GaugeId, type ResourceSample } from '@/composables/gauges'
 import type { SimApi } from '@/sim/worker'
 import type { RecruitOrder } from '@/sim/economy/armyRecruit'
 import { deleteSave, listSaves, readSave, writeSave, type SaveSlot } from './saves'
@@ -128,6 +129,10 @@ export const useGameStore = defineStore('game', () => {
   const mode = ref<MapMode>({ kind: 'select' })
   /** Tiroir ouvert depuis le rail de gauche (null : fermé). */
   const panelTab = ref<Domain | null>(null)
+  /** Stocks du joueur relevés chaque jour de jeu (tendance des jauges de la barre du haut). */
+  const resourceHistory = shallowRef<ResourceSample[]>([])
+  /** Fenêtre de détail ouverte depuis une jauge de la barre du haut. */
+  const gaugeOpen = ref<GaugeId | null>(null)
   /** Dernière sélection montrée par l'inspecteur de droite (voir `inspector`). */
   const inspect = ref<InspectKind | null>(null)
   /** Téléphone : le panneau unique montre l'inspecteur ou le tiroir du domaine. */
@@ -199,6 +204,16 @@ export const useGameStore = defineStore('game', () => {
       }
       const previous = snapshot.value
       snapshot.value = next
+      if (!previous || previous.scenarioId !== next.scenarioId) resourceHistory.value = []
+      const eco = next.economy
+      if (eco) {
+        resourceHistory.value = pushSample(resourceHistory.value, {
+          day: Math.floor(next.tick / 24),
+          production: eco.production,
+          munitions: eco.munitions,
+          manpower: eco.manpower,
+        })
+      }
       if (!previous) lastAutosaveTick = next.tick
       else if (next.tick - lastAutosaveTick >= AUTOSAVE_TICKS && !next.outcome) {
         lastAutosaveTick = next.tick
@@ -510,6 +525,8 @@ export const useGameStore = defineStore('game', () => {
     selectedCityName.value = null
     selectedCountryCode.value = null
     panelTab.value = null
+    gaugeOpen.value = null
+    resourceHistory.value = []
     inspect.value = null
     sheet.value = 'domain'
     toasts.value = []
@@ -1047,6 +1064,8 @@ export const useGameStore = defineStore('game', () => {
     mode,
     modeHint,
     panelTab,
+    resourceHistory,
+    gaugeOpen,
     inspect,
     inspector,
     sheet,

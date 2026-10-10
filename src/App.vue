@@ -11,6 +11,7 @@ import LassoButton from '@/components/LassoButton.vue'
 import MapViewButton from '@/components/MapViewButton.vue'
 import BattleDialog from '@/components/BattleDialog.vue'
 import RulesHelp from '@/components/RulesHelp.vue'
+import ResourceDialog from '@/components/ResourceDialog.vue'
 import { computed } from 'vue'
 import { isMobile, isTouch, layout } from '@/composables/layout'
 import { useGameStore } from '@/stores/game'
@@ -51,7 +52,8 @@ function onKey(event: KeyboardEvent): void {
   } else if (key === 'enter' && game.mode.kind === 'advance') {
     game.finishAdvanceLine()
   } else if (key === 'escape') {
-    if (game.battleIds) game.closeBattle()
+    if (game.gaugeOpen) game.gaugeOpen = null
+    else if (game.battleIds) game.closeBattle()
     else if (game.mode.kind !== 'select' || game.lasso) game.cancelMode()
     else game.clearSelection()
   }
@@ -87,6 +89,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <MapViewButton />
     <BattleDialog />
     <RulesHelp />
+    <ResourceDialog />
     <p v-if="!isMobile" class="disclaimer">Scénario hypothétique · sans prétention historique</p>
     <GameOver />
   </template>

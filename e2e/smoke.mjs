@@ -320,6 +320,24 @@ try {
   if (!sustain.panneau.includes('Soutenabilité')) report.errors.push('bloc de soutenabilité absent')
   if (!sustain.titre?.includes('Munitions')) report.errors.push('détail de soutenabilité absent')
   await shot('02f-production-capacites')
+  // Barre du haut : quatre jauges, fenêtre de détail au clic, Échap pour la fermer.
+  const gaugeCount = await page.getByTestId('gauges').locator('button').count()
+  const capacityLeft = await page.getByTestId('capacity').count()
+  await page.getByTestId('gauge-munitions').click()
+  await page.getByTestId('resource-dialog').waitFor()
+  const gaugeText = await page.getByTestId('resource-dialog').innerText()
+  step('jauges', { jauges: gaugeCount, capacites: capacityLeft, fenetre: gaugeText.slice(0, 80) })
+  if (gaugeCount !== 4) report.errors.push(`barre du haut : ${gaugeCount} jauges au lieu de 4`)
+  if (capacityLeft !== 0) report.errors.push('barre du haut : chantiers et formations encore là')
+  if (!/Origine/i.test(gaugeText) || !/Usage/i.test(gaugeText) || !/Conseil/i.test(gaugeText)) {
+    report.errors.push('fenêtre de jauge incomplète')
+  }
+  await shot('02f2-jauge-munitions')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(200)
+  if (await page.getByTestId('resource-dialog').isVisible()) {
+    report.errors.push('fenêtre de jauge non fermée par Échap')
+  }
   // Tiroir refermé : la carte est libre pour les ordres qui suivent.
   await page.getByTestId('rail-production').click()
 

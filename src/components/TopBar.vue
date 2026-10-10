@@ -3,81 +3,16 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { STANCE_COLORS } from '@/map/territoryImage'
 import { isMobile } from '@/composables/layout'
-import { useProductionStats } from '@/composables/production'
 import { openHelp } from '@/composables/help'
-import { useSustainability } from '@/composables/sustainability'
+import { useGauges } from '@/composables/useGauges'
+import type { GaugeId } from '@/composables/gauges'
 
 const game = useGameStore()
-const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
-const resources = computed(() => {
-  const e = game.snapshot?.economy
-  if (!e) return null
-  return [
-    {
-      label: 'Production',
-      value: fmt(e.production),
-      delta: `+${fmt(e.daily.production)}/j`,
-      title: 'Production militaire : formations et renforts',
-      low: false,
-    },
-    {
-      label: 'Munitions',
-      value: fmt(e.munitions),
-      delta: `+${fmt(e.daily.munitions)}/j`,
-      title: 'Munitions : à zéro, la puissance de feu est divisée par deux',
-      low: e.munitions < 200,
-    },
-    {
-      label: "Main-d'œuvre",
-      value: `${fmt(e.manpower)} k`,
-      delta: `+${e.daily.manpower.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} k/j`,
-      title: "Main-d'œuvre disponible, en milliers d'hommes",
-      low: e.manpower < 5,
-    },
-    {
-      label: 'Construction',
-      value: `${fmt(e.daily.construction)}/j`,
-      delta: '',
-      title: 'Points de construction par jour (usines civiles)',
-      low: false,
-    },
-  ]
-})
-const sustain = useSustainability()
-const stats = useProductionStats()
-/** Jauges de capacité : chantiers et casernes occupés, production employée sur la production du jour. */
-const capacity = computed(() => {
-  const st = stats.value
-  if (!st) return null
-  const ratio = (a: number, b: number): number => (b > 0 ? Math.min(1, a / b) : 0)
-  return [
-    {
-      label: 'Chantiers',
-      text: `${st.construction.active}/${st.construction.max}`,
-      ratio: ratio(st.construction.active, st.construction.max),
-      idle: st.construction.active < st.construction.max,
-      title: `Chantiers en cours sur ${st.construction.max} possibles (${st.construction.queued} en file) · ${fmt(st.construction.used)} points employés sur ${fmt(st.construction.gain)} par jour`,
-    },
-    {
-      label: 'Formations',
-      text: `${st.recruitment.active}/${st.recruitment.max}`,
-      ratio: ratio(st.recruitment.active, st.recruitment.max),
-      idle: st.recruitment.active < st.recruitment.max,
-      title: `Casernes occupées sur ${st.recruitment.max} (${st.recruitment.queued} formations en file)`,
-    },
-    {
-      label: 'Prod.',
-      text: `${fmt(st.production.used)}/${fmt(st.production.gain)} /j`,
-      ratio: ratio(st.production.used, st.production.gain),
-      idle: st.production.used < st.production.gain * 0.5,
-      title:
-        'Production dépensée hier (formations et renforts) sur la production gagnée par jour ; le reste s’accumule en stock',
-    },
-  ]
-})
+const gauges = useGauges()
 
-function openProduction(): void {
-  game.openDomain('production')
+/** Ouvre la fenêtre de détail d'une jauge ; un second clic la ferme. */
+function toggleGauge(id: GaugeId): void {
+  game.gaugeOpen = game.gaugeOpen === id ? null : id
 }
 
 const held = computed(() => {
@@ -150,41 +85,21 @@ async function onFile(event: Event): Promise<void> {
         </span>
       </div>
 
-      <div v-if="resources" class="resources">
-        <span
-          v-for="r in resources"
-          :key="r.label"
-          :title="r.title"
-          :class="{ low: r.low, secondary: r.label === 'Construction' }"
+      <div v-if="gauges" class="resources" data-testid="gauges">
+        <button
+          v-for="g in gauges"
+          :key="g.id"
+          class="res"
+          :class="[g.level, { open: game.gaugeOpen === g.id }]"
+          :title="g.title"
+          :aria-expanded="game.gaugeOpen === g.id"
+          :data-testid="g.id === 'army' ? 'sustain' : `gauge-${g.id}`"
+          @click="toggleGauge(g.id)"
         >
-          <span class="rlabel">{{ r.label }}</span> {{ r.value }}
-          <span class="delta">{{ r.delta }}</span>
-        </span>
-        <span
-          v-if="sustain"
-          class="sustain"
-          :class="sustain.level"
-          :title="sustain.title"
-          data-testid="sustain"
-          @click="openProduction"
-        >
-          <span class="rlabel">Armée</span> {{ sustain.value }}
-          <span class="delta">{{ sustain.delta }}</span>
-        </span>
-      </div>
-
-      <div v-if="capacity" class="capacity" data-testid="capacity">
-        <span
-          v-for="c in capacity"
-          :key="c.label"
-          :title="c.title"
-          class="cap"
-          :class="{ idle: c.idle }"
-          @click="openProduction"
-        >
-          <span class="rlabel">{{ c.label }}</span> {{ c.text }}
-          <span class="minibar"><i :style="{ width: `${c.ratio * 100}%` }" /></span>
-        </span>
+          <span class="rlabel">{{ g.label }}</span>
+          <span class="rvalue">{{ g.value }}</span>
+          <span v-if="g.trend" class="delta">{{ g.trend }}</span>
+        </button>
       </div>
 
       <div class="time">
@@ -267,29 +182,26 @@ async function onFile(event: Event): Promise<void> {
       </button>
       <div v-if="menuOpen" class="menu" role="menu">
         <div class="menu-country">{{ game.playerCountry?.name }}</div>
-        <dl v-if="resources" class="menu-resources">
-          <template v-for="r in resources" :key="r.label">
-            <dt>{{ r.label }}</dt>
-            <dd :class="{ low: r.low }">
-              {{ r.value }} <span class="delta">{{ r.delta }}</span>
-            </dd>
-          </template>
-          <template v-if="sustain">
-            <dt>Armée</dt>
-            <dd :class="sustain.level" data-testid="sustain-mobile">
-              {{ sustain.value }} <span class="delta">{{ sustain.delta }}</span>
-            </dd>
-          </template>
-          <template v-if="game.playerPolitics">
-            <dt>Stabilité</dt>
-            <dd>{{ pctOf(game.playerPolitics.stability) }}</dd>
-            <dt>Soutien à la guerre</dt>
-            <dd>{{ pctOf(game.playerPolitics.warSupport) }}</dd>
-          </template>
-          <template v-for="c in capacity ?? []" :key="c.label">
-            <dt>{{ c.label }}</dt>
-            <dd :class="{ idle: c.idle }">{{ c.text }}</dd>
-          </template>
+        <div v-if="gauges" class="menu-gauges">
+          <button
+            v-for="g in gauges"
+            :key="g.id"
+            class="menu-gauge"
+            :class="g.level"
+            :data-testid="g.id === 'army' ? 'sustain-mobile' : `gauge-${g.id}-mobile`"
+            @click="menuAction(() => (game.gaugeOpen = g.id))"
+          >
+            <span class="rlabel">{{ g.label }}</span>
+            <span class="rvalue">
+              {{ g.value }} <span v-if="g.trend" class="delta">{{ g.trend }}</span>
+            </span>
+          </button>
+        </div>
+        <dl v-if="game.playerPolitics" class="menu-resources">
+          <dt>Stabilité</dt>
+          <dd>{{ pctOf(game.playerPolitics.stability) }}</dd>
+          <dt>Soutien à la guerre</dt>
+          <dd>{{ pctOf(game.playerPolitics.warSupport) }}</dd>
         </dl>
         <div class="menu-actions">
           <button @click="menuAction(() => game.step(24))">+24 h</button>
@@ -396,38 +308,6 @@ async function onFile(event: Event): Promise<void> {
 .topbar * {
   white-space: nowrap;
 }
-.capacity {
-  display: flex;
-  gap: 10px;
-  font-variant-numeric: tabular-nums;
-}
-.cap {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-}
-.cap.idle .minibar i {
-  background: #f59e0b;
-}
-.minibar {
-  display: inline-block;
-  width: 34px;
-  height: 5px;
-  border-radius: 3px;
-  background: #2c323c;
-  overflow: hidden;
-}
-.minibar i {
-  display: block;
-  height: 100%;
-  background: #22c55e;
-}
-@media (max-width: 1750px) {
-  .cap .minibar {
-    display: none;
-  }
-}
 @media (max-width: 1600px) {
   .gauge {
     display: none;
@@ -435,11 +315,6 @@ async function onFile(event: Event): Promise<void> {
 }
 @media (max-width: 1520px) {
   .quick-save {
-    display: none;
-  }
-}
-@media (max-width: 1280px) {
-  .capacity {
     display: none;
   }
 }
@@ -455,27 +330,64 @@ async function onFile(event: Event): Promise<void> {
 .delta {
   font-size: 12px;
 }
-.resources .low {
+/* Jauges : valeur, tendance et liseré de couleur d'état (vert, ambre, rouge). */
+.res {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 8px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 2px solid #4b5563;
+  border-radius: 6px 6px 2px 2px;
+}
+.res.ok,
+.menu-gauge.ok {
+  border-bottom-color: #22c55e;
+}
+.res.warning,
+.menu-gauge.warning {
+  border-bottom-color: #f2a33a;
+}
+.res.critical,
+.menu-gauge.critical {
+  border-bottom-color: #ef4444;
+}
+.res.warning .rvalue,
+.menu-gauge.warning .rvalue {
+  color: #f2a33a;
+}
+.res.critical .rvalue,
+.menu-gauge.critical .rvalue {
   color: #fca5a5;
 }
-.sustain {
-  cursor: pointer;
+.res:hover,
+.res.open {
+  background: #222c38;
+  border-color: #334155;
 }
-.sustain.warning,
-.menu-resources .warning {
-  color: #fcd34d;
+.rvalue {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 13px;
 }
-.sustain.critical,
-.menu-resources .critical {
-  color: #fca5a5;
+.menu-gauges {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
 }
-@media (max-width: 1500px) {
-  .delta,
-  .resources .secondary {
+.menu-gauge {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom-width: 2px;
+  text-align: left;
+}
+@media (max-width: 1360px) {
+  .delta {
     display: none;
   }
 }
-@media (max-width: 1180px) {
+@media (max-width: 1080px) {
   .resources {
     display: none;
   }

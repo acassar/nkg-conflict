@@ -236,7 +236,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'sustain',
     title: "Soutenabilité de l'armée",
     paragraphs: [
-      "L'indicateur « Armée » (barre du haut, tiroir Production) dit si l'économie peut maintenir l'armée actuelle au rythme actuel des pertes. Chaque jour, il compare en moyenne glissante sur une semaine les besoins (renforts pour combler les pertes des unités en vie, au prix des renforts ; unités détruites, au prix d'une unité neuve ; munitions tirées) aux revenus (production, munitions, main-d'œuvre, aide étrangère comprise). Le ravitaillement ne coûte rien dans les règles actuelles.",
+      "La jauge « Armée » (barre du haut, tiroir Production) dit si l'économie peut maintenir l'armée actuelle au rythme actuel des pertes. Chaque jour, elle compare en moyenne glissante sur une semaine les besoins (renforts pour combler les pertes des unités en vie, au prix des renforts ; unités détruites, au prix d'une unité neuve ; munitions tirées) aux revenus (production, munitions, main-d'œuvre, aide étrangère comprise). Le ravitaillement ne coûte rien dans les règles actuelles.",
       `Quand une ressource est en déficit, ses stocks donnent le nombre de jours tenables ; la plus courte est le facteur limitant. Au-delà de ${SUSTAIN_MAX_DAYS} jours, ou sans déficit, l'armée est durable (le multiplicateur indique la couverture de la ressource la plus tendue). En orange sous ${SUSTAIN_WARNING_DAYS} jours, en rouge sous ${SUSTAIN_CRITICAL_DAYS}. Les nouvelles formations n'entrent pas dans les besoins : elles agrandissent l'armée.`,
     ],
   },

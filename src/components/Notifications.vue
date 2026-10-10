@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
+import { isMobile } from '@/composables/layout'
 import type { AlertKind, PlayerAlert } from '@/sim/core/types'
 
 const game = useGameStore()
+/** Grand écran : à droite, à côté de l'inspecteur, pour laisser libres le rail et son tiroir. */
+const placement = computed(() =>
+  isMobile.value ? undefined : { left: 'auto', right: game.inspector ? '344px' : '12px' },
+)
 const name = (c: string): string => game.countryByCode.get(c)?.name ?? c
 const offers = computed(() => game.offers.filter((o) => o.to === game.snapshot?.playerCountry))
 const requests = computed(() =>
@@ -34,7 +39,7 @@ const daysLeft = (expires: number): number =>
 </script>
 
 <template>
-  <div class="notifications">
+  <div class="notifications" :style="placement">
     <div
       v-for="o in offers"
       :key="`o${o.id}`"

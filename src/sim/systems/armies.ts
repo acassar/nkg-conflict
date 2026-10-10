@@ -1,5 +1,11 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
-import { isOffensiveOrder, type ArmyState, type LonLat, type UnitState } from '../core/types'
+import {
+  isOffensiveOrder,
+  type ArmyState,
+  type LineMissionKind,
+  type LonLat,
+  type UnitState,
+} from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactorAt } from '../economy/economy'
 import { isLineUnit } from '../units/catalog'
@@ -512,6 +518,73 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   }
   place(line, LINE_DEPTH, picksFavorablePosts(army))
   place(rear, 7)
+}
+
+/**
+ * Aperçu d'une mission de ligne avant validation (fiche de l'armée) : postes que prendraient ses unités de
+ * ligne, lignes en retrait (seconde ligne, position de réserve) et points clés. Calcul sans effet sur la
+ * partie, mêmes règles que `assignFront` (hors relève, ripostes et retranchement acquis).
+ */
+export interface MissionPreview {
+  posts: LonLat[]
+  lines: LonLat[][]
+  points: LonLat[]
+}
+
+export function missionPreview(
+  ctx: SimContext,
+  army: ArmyState,
+  kind: LineMissionKind,
+): MissionPreview {
+  const empty: MissionPreview = { posts: [], lines: [], points: [] }
+  if (!army.front && !army.wholeFront) return empty
+  const side = sideIndex(ctx, army.owner)
+  const cells = frontCells(ctx, side, army.wholeFront ? null : army.front)
+  if (cells.length === 0) return empty
+  const count = army.unitIds.filter((id) => {
+    const u = ctx.units.get(id)
+    return !!u && isLineUnit(u.kind) && !runtimeOf(ctx, u.id).routed
+  }).length
+  const cellsFor = (km: number): number => Math.max(1, Math.round(km / (ctx.grid.cell * 111)))
+  const at = (list: FrontCell[], depth: number, deep: boolean): LonLat[] =>
+    list.map((f) => (deep ? deepBehind : behind)(ctx, side, f, depth))
+  /** Ligne tracée à `depth` cellules derrière tout le front de l'armée. */
+  const rearLine = (depth: number): LonLat[][] => {
+    const seen = new Set<number>()
+    const rear: FrontCell[] = []
+    for (const f of cells) {
+      const p = deepBehind(ctx, side, f, depth)
+      const c = ctx.grid.cellAt(p[0], p[1])
+      if (c < 0 || seen.has(c)) continue
+      seen.add(c)
+      rear.push({ cell: c, t: f.t, back: f.back })
+    }
+    return traceFront(ctx, rear)
+  }
+  if (kind === 'reserve') {
+    const depth = Math.max(LINE_DEPTH + 1, cellsFor(RESERVE_KM))
+    return { posts: at(slots(ctx, cells, count), depth, true), lines: rearLine(depth), points: [] }
+  }
+  if (kind === 'depth') {
+    const forward = count >= 2 ? Math.ceil(count * DEPTH_FORWARD_SHARE) : count
+    const depth = Math.max(LINE_DEPTH + 1, cellsFor(SECOND_LINE_KM))
+    return {
+      posts: [
+        ...at(slots(ctx, cells, forward), LINE_DEPTH, false),
+        ...at(slots(ctx, cells, count - forward), depth, true),
+      ],
+      lines: rearLine(depth),
+      points: [],
+    }
+  }
+  if (kind === 'keyPoints') {
+    return {
+      posts: at(slots(ctx, cells, count, keyPointWeight), LINE_DEPTH, false),
+      lines: [],
+      points: frontKeyPoints(ctx, cells),
+    }
+  }
+  return { posts: at(slots(ctx, cells, count), LINE_DEPTH, false), lines: [], points: [] }
 }
 
 /** Deux tronçons du front dont les extrémités sont plus proches que ça sont raccordés (fleuve, lac). */

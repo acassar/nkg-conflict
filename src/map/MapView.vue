@@ -11,7 +11,8 @@ import type { SupplyView } from '@/sim/systems/supplyView'
 import { isStack, type MapUnit } from './clusters'
 import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
-import { buildLayers } from './layers'
+import { buildLayers, type MissionPreviewShapes } from './layers'
+import { breachAxis, encircleRing } from './missionPreview'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
 import { SupplyTiles } from './supplyImage'
 import { BASE_ROAD_COLORS, roadOpacity, roadTiles } from './roadsImage'
@@ -253,6 +254,40 @@ function politicalRoads(): {
   }
 }
 
+/** Visée d'une mission d'armée qui suit le pointeur : percée, ou encerclement. */
+function aimsWithPointer(): boolean {
+  const m = mode.value
+  return m.kind === 'breach' || (m.kind === 'target' && m.action === 'encircle')
+}
+
+/** Aperçu de mission à dessiner : visée en cours, sinon mission choisie dans la fiche de l'armée. */
+function previewShapes(): MissionPreviewShapes | null {
+  const m = mode.value
+  const s = snapshot.value
+  const aim = game.aimPoint
+  if (s && aim && m.kind === 'breach') {
+    const army = s.armies.find((a) => a.id === m.armyId)
+    const own = s.units.filter((u) => army?.unitIds.includes(u.id))
+    const center: LonLat | null = own.length
+      ? [
+          own.reduce((t, u) => t + u.lon, 0) / own.length,
+          own.reduce((t, u) => t + u.lat, 0) / own.length,
+        ]
+      : null
+    const axis = breachAxis(army?.frontLine, center, aim)
+    return axis ? { posts: [], lines: [], points: [], axis, ring: null } : null
+  }
+  if (s && aim && m.kind === 'target' && m.action === 'encircle') {
+    const ring = encircleRing(s.units, (o) => stances.value.map.get(o) === 'enemy', aim)
+    return ring ? { posts: [], lines: [], points: [], axis: null, ring } : null
+  }
+  const p = game.missionPreview
+  if (m.kind === 'select' && p && selectedArmy.value?.id === p.armyId) {
+    return { posts: p.posts, lines: p.lines, points: p.points, axis: null, ring: null }
+  }
+  return null
+}
+
 function refresh(): void {
   syncTerritory()
   const m = mode.value
@@ -272,6 +307,8 @@ function refresh(): void {
           : m.kind === 'advance' && m.goal === 'line'
             ? m.points
             : [],
+      pendingRetreat: m.kind === 'advance' && !!m.retreat,
+      preview: previewShapes(),
       zoom: zoom.value,
       selectedCity: selectedCity.value?.name ?? null,
       battles: battles.value,
@@ -363,6 +400,10 @@ function describeAt(p: { x: number; y: number }): string[] {
 function hoverLoop(): void {
   hoverFrame = 0
   if (hoverPoint) cellInfo.value = describeAt(hoverPoint)
+  if (hoverPoint && map && aimsWithPointer()) {
+    const ll = map.unproject([hoverPoint.x, hoverPoint.y])
+    game.aimPoint = [ll.lng, ll.lat]
+  }
 }
 
 function clearPress(): void {
@@ -599,6 +640,8 @@ watch(
     supply,
     showRoads,
     freehand,
+    () => game.aimPoint,
+    () => game.missionPreview,
   ],
   refresh,
   {

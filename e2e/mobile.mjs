@@ -310,13 +310,21 @@ try {
   )
   await page.getByTestId('army-view-command').tap()
 
-  // Mission « Tenir les points clés » au doigt : bouton visible dans le tiroir, mission appliquée.
+  // Mission « Tenir les points clés » au doigt : carte visible dans le tiroir, aperçu, puis « Appliquer ».
   const keyButton = await page.getByTestId('mission-keyPoints').boundingBox()
   check(
     !!keyButton && keyButton.x >= 0 && keyButton.x + keyButton.width <= 390,
     'bouton « Points clés » hors de l’écran',
   )
   await page.getByTestId('mission-keyPoints').tap()
+  await page.getByTestId('mission-apply').scrollIntoViewIfNeeded()
+  const apply = await page.getByTestId('mission-apply').boundingBox()
+  check(
+    !!apply && apply.x >= 0 && apply.x + apply.width <= 390,
+    'bouton « Appliquer » hors de l’écran',
+  )
+  await shot('m04d0-apercu-points-cles')
+  await page.getByTestId('mission-apply').tap()
   await page.waitForTimeout(500)
   const keyMission = await store(
     () => window.__nkg.armies.find((a) => a.mission?.kind === 'keyPoints')?.mission?.kind ?? null,

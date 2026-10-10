@@ -454,6 +454,7 @@ try {
   if (mission !== 'advance') report.errors.push(`mission « Avancer » non lancée (${mission})`)
   await shot('02g3-mission-avancer')
   await page.getByTestId('mission-hold').click()
+  await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
   const held = await page.evaluate(
     (id) => window.__nkg.armies.find((a) => a.id === id)?.mission?.kind ?? 'hold',
@@ -461,8 +462,26 @@ try {
   )
   if (held !== 'hold') report.errors.push(`retour à « Tenir » non appliqué (${held})`)
 
-  // Mission « Tenir les points clés » : appliquée d'un clic, repères sur la carte, puis retour à « Tenir ».
+  // Mission « Tenir les points clés » : carte choisie, aperçu sur la carte (postes et points clés) sans
+  // effet sur l'armée, puis « Appliquer ».
   await page.getByTestId('mission-keyPoints').click()
+  await page.getByTestId('mission-preview').waitFor()
+  const keyPreview = await page.evaluate((id) => {
+    const g = window.__nkg
+    const p = g.missionPreview
+    return {
+      mission: g.armies.find((x) => x.id === id)?.mission?.kind ?? 'hold',
+      posts: p?.posts.length ?? 0,
+      points: p?.points.length ?? 0,
+    }
+  }, missionArmy)
+  step('aperçu points clés', keyPreview)
+  if (keyPreview.mission !== 'hold') report.errors.push('la carte choisie applique déjà la mission')
+  if (keyPreview.posts === 0 || keyPreview.points === 0) {
+    report.errors.push('aperçu de la mission « Points clés » vide')
+  }
+  await shot('02g3a-apercu-points-cles')
+  await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(600)
   const keyPoints = await page.evaluate((id) => {
     const a = window.__nkg.armies.find((x) => x.id === id)
@@ -475,12 +494,18 @@ try {
   }
   await shot('02g3b-points-cles')
 
-  // Missions « Défense en profondeur » puis « Réserve » : appliquées d'un clic chacune.
+  // Missions « Défense en profondeur » puis « Réserve » : aperçu (ligne en retrait), puis « Appliquer ».
   for (const [kind, name] of [
     ['depth', '02g3c-profondeur'],
     ['reserve', '02g3d-reserve'],
   ]) {
     await page.getByTestId(`mission-${kind}`).click()
+    await page.getByTestId('mission-preview').waitFor()
+    const lines = await page.evaluate(() => window.__nkg.missionPreview?.lines.length ?? 0)
+    step(`aperçu ${kind}`, { lignes: lines })
+    if (lines === 0) report.errors.push(`aperçu de la mission ${kind} sans ligne en retrait`)
+    if (kind === 'depth') await shot('02g3c0-apercu-profondeur')
+    await page.getByTestId('mission-apply').click()
     await page.waitForTimeout(600)
     const got = await page.evaluate(
       (id) => window.__nkg.armies.find((x) => x.id === id)?.mission?.kind ?? 'hold',
@@ -509,6 +534,19 @@ try {
     return { x: p.x, y: p.y, lonLat: [enemy.lon, enemy.lat] }
   }, missionArmy)
   const view = page.viewportSize()
+  // Visée : bandeau en bas de l'écran ; l'axe de la percée suit le pointeur.
+  await page.getByTestId('aim-banner').waitFor()
+  const banner = await page.getByTestId('aim-banner').boundingBox()
+  if (!banner || banner.y < view.height / 2) report.errors.push('bandeau de visée absent du bas')
+  const aimX = Math.max(160, Math.min(breachAt.x, view.width - 440))
+  const aimY = Math.max(140, Math.min(breachAt.y, view.height - 140))
+  await page.mouse.move(aimX + 30, aimY + 30)
+  await page.mouse.move(aimX, aimY, { steps: 4 })
+  await page.waitForTimeout(300)
+  const aim = await page.evaluate(() => window.__nkg.aimPoint)
+  step('visée percée', { bandeau: banner, pointeur: aim })
+  if (!aim) report.errors.push("l'aperçu de la percée ne suit pas le pointeur")
+  await shot('02g3e0-visee-percee')
   if (
     breachAt.x > 110 &&
     breachAt.y > 60 &&
@@ -568,6 +606,7 @@ try {
     report.errors.push(`mission « Retraite ordonnée » non lancée (${retreat})`)
   await shot('02g3f-retraite')
   await page.getByTestId('mission-hold').click()
+  await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
 
   // Recrutement par armée : sous-onglet « Recrutement », 3 infanteries au clic, 2 artilleries saisies.

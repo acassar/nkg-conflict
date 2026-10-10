@@ -11,6 +11,8 @@ export interface PostureRule {
   routOrg: number
   /** Multiplicateur de la vitesse de retranchement. */
   entrench: number
+  /** Réflexe de l'unité, en une ligne (sélecteur de posture de la fiche d'armée). */
+  reflex: string
 }
 
 /** Postures d'unité, de la plus prudente à la plus agressive. Valeurs de jeu, à équilibrer. */
@@ -23,6 +25,7 @@ export const POSTURES: Record<Posture, PostureRule> = {
     defense: 1.3,
     routOrg: 0.3,
     entrench: 1.5,
+    reflex: 'N’attaque jamais d’elle-même · retranchement ×1,5',
   },
   defensive: {
     name: 'Défensive',
@@ -32,6 +35,7 @@ export const POSTURES: Record<Posture, PostureRule> = {
     defense: 1.15,
     routOrg: 0.2,
     entrench: 1.2,
+    reflex: 'N’attaque jamais d’elle-même · retranchement ×1,2',
   },
   balanced: {
     name: 'Équilibrée',
@@ -40,6 +44,7 @@ export const POSTURES: Record<Posture, PostureRule> = {
     defense: 1,
     routOrg: 0.15,
     entrench: 1,
+    reflex: 'Achève un ennemi en déroute à moins de 12 km',
   },
   offensive: {
     name: 'Offensive',
@@ -49,6 +54,7 @@ export const POSTURES: Record<Posture, PostureRule> = {
     defense: 0.9,
     routOrg: 0.12,
     entrench: 0.8,
+    reflex: 'Attaque un ennemi affaibli à moins de 20 km · retranchement ×0,8',
   },
   maxDamage: {
     name: 'Dégâts max',
@@ -58,6 +64,8 @@ export const POSTURES: Record<Posture, PostureRule> = {
     defense: 0.8,
     routOrg: 0.05,
     entrench: 0.6,
+    reflex:
+      'Poursuit les fuyards à 40 km, attaque tout ennemi plus faible à 15 km · retranchement ×0,6',
   },
 }
 

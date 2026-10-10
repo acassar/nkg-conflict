@@ -53,7 +53,14 @@ import {
 } from './systems/missions'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
-import { assignFront, launchOffensive, snapToFront, updateArmies } from './systems/armies'
+import {
+  assignFront,
+  launchOffensive,
+  missionPreview,
+  snapToFront,
+  updateArmies,
+  type MissionPreview,
+} from './systems/armies'
 import { updateAi, nearestCity, newAiState, type AiState } from './systems/ai'
 import {
   cancelConstruction,
@@ -837,6 +844,11 @@ export class Simulation {
     if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
     holdMission(this.ctx, army, kind)
     return null
+  }
+
+  /** Aperçu d'une mission de ligne (postes, seconde ligne, réserve, points clés), sans l'appliquer. */
+  missionPreview(armyId: number, kind: LineMissionKind): MissionPreview {
+    return missionPreview(this.ctx, this.playerArmy(armyId), kind)
   }
 
   /** Mission « Avancer » d'une armée entière. */

@@ -27,6 +27,16 @@ const hint = computed(() => {
     : text
 })
 
+/** Visée d'une mission d'armée (point, trait, frontière ou cible) : bandeau en bas de l'écran. */
+const aiming = computed(() => {
+  const m = game.mode
+  return (
+    m.kind === 'breach' ||
+    (m.kind === 'advance' && m.armyId !== undefined) ||
+    (m.kind === 'target' && m.armyId !== undefined)
+  )
+})
+
 // Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, L = carte logistique, Échap = annuler.
 // ZQSD (WASD en QWERTY) et les flèches déplacent la carte (voir MapView).
 function onKey(event: KeyboardEvent): void {
@@ -67,7 +77,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <MapView />
   <template v-if="game.started">
     <TopBar />
-    <p v-if="game.modeHint || game.lasso" class="hint" :class="{ mobile: isMobile }">
+    <p
+      v-if="game.modeHint || game.lasso"
+      class="hint"
+      :class="{ mobile: isMobile, aim: aiming && !isMobile }"
+      :data-testid="aiming ? 'aim-banner' : undefined"
+    >
       {{ hint }}
       <button
         v-if="game.mode.kind === 'advance' && game.mode.goal === 'line'"
@@ -124,6 +139,27 @@ body,
   font:
     600 13px/1.3 system-ui,
     sans-serif;
+}
+/* Bandeau de visée d'une mission d'armée : en bas, au-dessus du bandeau de description. */
+.hint.aim {
+  top: auto;
+  bottom: 52px;
+  background: #151c24;
+  color: #e8eaed;
+  border: 1px solid #f2a33a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.hint.aim::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #f2a33a;
+}
+.hint.aim .hint-cancel {
+  background: #4c8dff;
 }
 .hint.mobile {
   top: calc(52px + env(safe-area-inset-top));

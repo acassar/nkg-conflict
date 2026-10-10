@@ -17,6 +17,14 @@ import { stanceColor, type TerritoryTile } from './territoryImage'
 import type { Stance } from '@/stores/game'
 import type { SupplyPocket, SupplyView } from '@/sim/systems/supplyView'
 
+export interface MissionPreviewShapes {
+  posts: LonLat[]
+  lines: LonLat[][]
+  points: LonLat[]
+  axis: [LonLat, LonLat] | null
+  ring: LonLat[] | null
+}
+
 export interface LayerInput {
   snapshot: SimSnapshot | null
   /** Territoire en tuiles (seules les tuiles modifiées changent de canvas). */
@@ -40,8 +48,15 @@ export interface LayerInput {
   selectedArmy: ArmyState | null
   /** Premier point posé d'un tracé en cours (front ou offensive). */
   pendingPoint: LonLat | null
-  /** Trait en cours de tracé (mission « Avancer »). */
+  /** Trait en cours de tracé (mission « Avancer », ou ligne de repli si `pendingRetreat`). */
   pendingLine: LonLat[]
+  pendingRetreat?: boolean
+  /**
+   * Aperçu de la mission choisie dans la fiche de l'armée, avant validation : postes des unités de ligne,
+   * lignes en retrait (seconde ligne, réserve), points clés ; pendant la visée, axe de percée ou anneau
+   * d'encerclement.
+   */
+  preview?: MissionPreviewShapes | null
   /** Zoom de la carte : sert à regrouper les pions qui se chevauchent à l'écran. */
   zoom: number
   selectedCity: string | null
@@ -517,13 +532,100 @@ export function buildLayers(input: LayerInput): Layer[] {
       }),
     )
   }
+  const preview = input.preview
+  if (preview) {
+    const blue: [number, number, number, number] = [76, 141, 255, 220]
+    if (preview.lines.length > 0) {
+      layers.push(
+        new PathLayer({
+          id: 'preview-lines',
+          data: preview.lines,
+          getPath: (p: LonLat[]) => p,
+          getColor: blue,
+          getWidth: 3,
+          widthUnits: 'pixels',
+          capRounded: true,
+          jointRounded: true,
+        }),
+      )
+    }
+    if (preview.ring) {
+      layers.push(
+        new PathLayer({
+          id: 'preview-ring',
+          data: [preview.ring],
+          getPath: (p: LonLat[]) => p,
+          getColor: [242, 163, 58, 230],
+          getWidth: 4,
+          widthUnits: 'pixels',
+          jointRounded: true,
+        }),
+      )
+    }
+    if (preview.axis) {
+      const [from, to] = preview.axis
+      layers.push(
+        new PathLayer({
+          id: 'preview-axis',
+          data: [preview.axis],
+          getPath: (p: LonLat[]) => p,
+          getColor: [244, 63, 94, 200],
+          getWidth: 4,
+          widthUnits: 'pixels',
+          capRounded: true,
+        }),
+        new PolygonLayer({
+          id: 'preview-axis-head',
+          data: [arrowHead(from, to, 0.08)],
+          getPolygon: (p: LonLat[]) => p,
+          getFillColor: [244, 63, 94, 220],
+          stroked: false,
+        }),
+      )
+    }
+    if (preview.points.length > 0) {
+      layers.push(
+        new ScatterplotLayer({
+          id: 'preview-points',
+          data: preview.points,
+          getPosition: (p: LonLat) => p,
+          getFillColor: [251, 146, 60, 90],
+          getLineColor: [251, 146, 60, 255],
+          stroked: true,
+          lineWidthUnits: 'pixels',
+          getLineWidth: 2,
+          radiusUnits: 'pixels',
+          getRadius: 7,
+        }),
+      )
+    }
+    if (preview.posts.length > 0) {
+      layers.push(
+        new ScatterplotLayer({
+          id: 'preview-posts',
+          data: preview.posts,
+          getPosition: (p: LonLat) => p,
+          getFillColor: [76, 141, 255, 70],
+          getLineColor: blue,
+          stroked: true,
+          lineWidthUnits: 'pixels',
+          getLineWidth: 2,
+          radiusUnits: 'pixels',
+          getRadius: 5,
+        }),
+      )
+    }
+  }
   if (pendingLine.length > 0) {
+    const lineColor: [number, number, number, number] = input.pendingRetreat
+      ? [253, 186, 116, 220]
+      : [56, 189, 248, 200]
     layers.push(
       new PathLayer({
         id: 'pending-line',
         data: [pendingLine],
         getPath: (p: LonLat[]) => p,
-        getColor: [56, 189, 248, 200],
+        getColor: lineColor,
         getWidth: 4,
         widthUnits: 'pixels',
         capRounded: true,
@@ -536,7 +638,7 @@ export function buildLayers(input: LayerInput): Layer[] {
             ? [pendingLine[0], pendingLine[pendingLine.length - 1]]
             : pendingLine,
         getPosition: (p: LonLat) => p,
-        getFillColor: [56, 189, 248, 255],
+        getFillColor: lineColor,
         radiusUnits: 'pixels',
         getRadius: 5,
       }),

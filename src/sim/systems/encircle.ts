@@ -4,13 +4,9 @@ import { distanceKm } from '../theater/grid'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
 import { assignFront } from './armies'
+import { GROUP_KM, RING_MARGIN_KM, RING_MIN_KM } from './encircleRules'
 
 const KM_PER_DEG = 111.32
-/** Ennemis à moins de cette distance de la cible : ils font partie du groupe à encercler. */
-const GROUP_KM = 25
-/** Marge au-delà du groupe ennemi pour l'anneau d'encerclement. */
-const RING_MARGIN_KM = 15
-const RING_MIN_KM = 20
 /** Les bras de la tenaille couvrent ±150° autour de l'arrière de la cible : le front reste tenu. */
 const ARC_DEG = 150
 /** Points d'attente : sur les flancs (à ±100° de l'arrière au moins), un peu plus loin que l'anneau. */

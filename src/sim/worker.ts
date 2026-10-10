@@ -18,6 +18,7 @@ import type {
 import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
 import type { SupplyView } from './systems/supplyView'
+import type { MissionPreview } from './systems/armies'
 import { loadTheater } from './theater/load'
 import type { TheaterData } from './theater/grid'
 import type { AidLevel, PeaceKind } from './politics/types'
@@ -182,6 +183,9 @@ const api = {
   },
   lineMissionArmy(armyId: number, kind: LineMissionKind): string | null {
     return act((s) => s.lineMissionArmy(armyId, kind)) ?? null
+  },
+  missionPreview(armyId: number, kind: LineMissionKind): MissionPreview | null {
+    return sim?.missionPreview(armyId, kind) ?? null
   },
   advanceArmy(armyId: number, goal: AdvanceGoal): string | null {
     return act((s) => s.advanceArmy(armyId, goal)) ?? null

@@ -4,6 +4,7 @@ import * as Comlink from 'comlink'
 import { formatGameDate, isSpeed, tickToDate } from '@/sim/core/clock'
 import { decodeRle, terrainRule } from '@/sim/theater/grid'
 import type { SupplyView } from '@/sim/systems/supplyView'
+import type { MissionPreview } from '@/sim/systems/armies'
 import type {
   AdvanceGoal,
   LineMissionKind,
@@ -666,6 +667,7 @@ export const useGameStore = defineStore('game', () => {
   function cancelMode(): void {
     mode.value = { kind: 'select' }
     lasso.value = false
+    aimPoint.value = null
   }
 
   function startOrder(order: Exclude<PlayerOrder, 'hold'>): void {
@@ -746,6 +748,25 @@ export const useGameStore = defineStore('game', () => {
   /** Mission « Percée sur un axe » : le point visé se choisit d'un clic sur la carte. */
   function startBreach(armyId: number): void {
     mode.value = { kind: 'breach', armyId }
+  }
+
+  /**
+   * Aperçu sur la carte de la mission choisie dans la fiche de l'armée, avant validation : postes, seconde
+   * ligne ou position de réserve, points clés (missions de ligne, calculés par le Worker).
+   */
+  const missionPreview = ref<(MissionPreview & { armyId: number; kind: LineMissionKind }) | null>(
+    null,
+  )
+  /** Position du pointeur sur la carte pendant la visée d'une percée ou d'un encerclement. */
+  const aimPoint = ref<LonLat | null>(null)
+
+  async function previewMission(armyId: number, kind: LineMissionKind | null): Promise<void> {
+    if (kind === null) {
+      missionPreview.value = null
+      return
+    }
+    const preview = await sim.missionPreview(armyId, kind)
+    missionPreview.value = preview ? { ...preview, armyId, kind } : null
   }
 
   /** Mission de ligne d'une armée (points clés, défense en profondeur, réserve). */
@@ -1116,6 +1137,9 @@ export const useGameStore = defineStore('game', () => {
     drawAdvanceLine,
     holdArmy,
     lineMissionArmy,
+    missionPreview,
+    previewMission,
+    aimPoint,
     startBreach,
     startRetreat,
     startOrder,

@@ -1,0 +1,315 @@
+{
+  "sha": "5bc1cd3b1f58ba99b17bd1246ccfabe3cec45a3e",
+  "days": 120,
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "summary": [
+    {
+      "country": "UKR",
+      "territory": {
+        "min": 0.48872740163062744,
+        "mean": 0.7804206546142028,
+        "max": 1.2844026940801134
+      },
+      "losses": {
+        "min": 18.5,
+        "mean": 52.9,
+        "max": 70.7
+      }
+    },
+    {
+      "country": "RUS",
+      "territory": {
+        "min": 0.8736555329837326,
+        "mean": 1.0975470202568989,
+        "max": 1.227130281412891
+      },
+      "losses": {
+        "min": 18.7,
+        "mean": 35.266666666666666,
+        "max": 60.9
+      }
+    }
+  ],
+  "games": [
+    {
+      "seed": 1,
+      "days": 120,
+      "peaceDay": null,
+      "outcome": null,
+      "timeline": [
+        {
+          "day": 0,
+          "countries": {
+            "UKR": {
+              "territory": 1,
+              "units": 25
+            },
+            "RUS": {
+              "territory": 1,
+              "units": 29
+            }
+          }
+        },
+        {
+          "day": 30,
+          "countries": {
+            "UKR": {
+              "territory": 1.0089330024813896,
+              "units": 30
+            },
+            "RUS": {
+              "territory": 0.996031558558133,
+              "units": 21
+            }
+          }
+        },
+        {
+          "day": 60,
+          "countries": {
+            "UKR": {
+              "territory": 1.044168734491315,
+              "units": 36
+            },
+            "RUS": {
+              "territory": 0.9803782617596574,
+              "units": 18
+            }
+          }
+        },
+        {
+          "day": 90,
+          "countries": {
+            "UKR": {
+              "territory": 1.1565047855370436,
+              "units": 45
+            },
+            "RUS": {
+              "territory": 0.9304735358498292,
+              "units": 22
+            }
+          }
+        },
+        {
+          "day": 120,
+          "countries": {
+            "UKR": {
+              "territory": 1.2844026940801134,
+              "units": 54
+            },
+            "RUS": {
+              "territory": 0.8736555329837326,
+              "units": 27
+            }
+          }
+        }
+      ],
+      "countries": [
+        {
+          "country": "UKR",
+          "territory": 1.2844026940801134,
+          "units": 54,
+          "losses": 18.5,
+          "destroyed": 3,
+          "created": 32
+        },
+        {
+          "country": "RUS",
+          "territory": 0.8736555329837326,
+          "units": 27,
+          "losses": 60.9,
+          "destroyed": 38,
+          "created": 36
+        }
+      ],
+      "ms": 4822
+    },
+    {
+      "seed": 2,
+      "days": 102,
+      "peaceDay": 102,
+      "outcome": "RUS : Ukraine capitule : prise de Kyiv",
+      "timeline": [
+        {
+          "day": 0,
+          "countries": {
+            "UKR": {
+              "territory": 1,
+              "units": 25
+            },
+            "RUS": {
+              "territory": 1,
+              "units": 29
+            }
+          }
+        },
+        {
+          "day": 30,
+          "countries": {
+            "UKR": {
+              "territory": 0.8446295639844027,
+              "units": 26
+            },
+            "RUS": {
+              "territory": 1.0690225350781877,
+              "units": 36
+            }
+          }
+        },
+        {
+          "day": 60,
+          "countries": {
+            "UKR": {
+              "territory": 0.7248847926267281,
+              "units": 30
+            },
+            "RUS": {
+              "territory": 1.1222185477394058,
+              "units": 40
+            }
+          }
+        },
+        {
+          "day": 90,
+          "countries": {
+            "UKR": {
+              "territory": 0.581814959234314,
+              "units": 24
+            },
+            "RUS": {
+              "territory": 1.1857766019432765,
+              "units": 48
+            }
+          }
+        },
+        {
+          "day": 102,
+          "countries": {
+            "UKR": {
+              "territory": 0.48872740163062744,
+              "units": 14
+            },
+            "RUS": {
+              "territory": 1.227130281412891,
+              "units": 50
+            }
+          }
+        }
+      ],
+      "countries": [
+        {
+          "country": "UKR",
+          "territory": 0.48872740163062744,
+          "units": 14,
+          "losses": 69.5,
+          "destroyed": 35,
+          "created": 24
+        },
+        {
+          "country": "RUS",
+          "territory": 1.227130281412891,
+          "units": 50,
+          "losses": 18.7,
+          "destroyed": 2,
+          "created": 23
+        }
+      ],
+      "ms": 3428
+    },
+    {
+      "seed": 3,
+      "days": 120,
+      "peaceDay": null,
+      "outcome": null,
+      "timeline": [
+        {
+          "day": 0,
+          "countries": {
+            "UKR": {
+              "territory": 1,
+              "units": 25
+            },
+            "RUS": {
+              "territory": 1,
+              "units": 29
+            }
+          }
+        },
+        {
+          "day": 30,
+          "countries": {
+            "UKR": {
+              "territory": 0.9429989365473237,
+              "units": 25
+            },
+            "RUS": {
+              "territory": 1.0253224358671518,
+              "units": 33
+            }
+          }
+        },
+        {
+          "day": 60,
+          "countries": {
+            "UKR": {
+              "territory": 0.8207018787663949,
+              "units": 27
+            },
+            "RUS": {
+              "territory": 1.0796522889403317,
+              "units": 36
+            }
+          }
+        },
+        {
+          "day": 90,
+          "countries": {
+            "UKR": {
+              "territory": 0.7387096774193549,
+              "units": 20
+            },
+            "RUS": {
+              "territory": 1.1160769121746115,
+              "units": 44
+            }
+          }
+        },
+        {
+          "day": 120,
+          "countries": {
+            "UKR": {
+              "territory": 0.5681318681318681,
+              "units": 15
+            },
+            "RUS": {
+              "territory": 1.1918552463740728,
+              "units": 52
+            }
+          }
+        }
+      ],
+      "countries": [
+        {
+          "country": "UKR",
+          "territory": 0.5681318681318681,
+          "units": 15,
+          "losses": 70.7,
+          "destroyed": 49,
+          "created": 39
+        },
+        {
+          "country": "RUS",
+          "territory": 1.1918552463740728,
+          "units": 52,
+          "losses": 26.2,
+          "destroyed": 6,
+          "created": 29
+        }
+      ],
+      "ms": 3886
+    }
+  ]
+}

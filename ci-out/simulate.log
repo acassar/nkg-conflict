@@ -1,0 +1,32 @@
+
+> nkg-conflict@0.1.0 simulate /home/runner/work/nkg-conflict/nkg-conflict
+> tsx scripts/simulate.ts 30
+
+Chargement : 87 ms
+J3 · UKR 25u 100.0 % · RUS 29u 100.0 % · unités 54 · guerres RUS→UKR
+J6 · UKR 25u 99.0 % · RUS 29u 100.5 % · unités 54 · guerres RUS→UKR
+J9 · UKR 25u 98.7 % · RUS 29u 100.6 % · unités 54 · guerres RUS→UKR
+J12 · UKR 25u 98.1 % · RUS 30u 100.9 % · unités 55 · guerres RUS→UKR
+J15 · UKR 25u 97.0 % · RUS 32u 101.3 % · unités 57 · guerres RUS→UKR
+J18 · UKR 25u 93.2 % · RUS 32u 103.0 % · unités 57 · guerres RUS→UKR
+J21 · UKR 25u 91.6 % · RUS 33u 103.7 % · unités 58 · guerres RUS→UKR
+J24 · UKR 22u 89.9 % · RUS 34u 104.5 % · unités 56 · guerres RUS→UKR
+J27 · UKR 22u 89.1 % · RUS 34u 104.8 % · unités 56 · guerres RUS→UKR
+J30 · UKR 22u 86.4 % · RUS 36u 106.0 % · unités 58 · guerres RUS→UKR
+720 ticks en 1130 ms (1569 µs/tick, pire journée J1 3.7 ms/h)
+Derniers événements :
+  [h660] 1re Armée coupe la base d’une percée près de Sumy
+  [h676] Décrochage : 2e brigade d'artillerie
+  [h696] Fortification achevée à Belgorod
+  [h696] Nouvelle unité à Volgograd : 8e brigade mécanisée
+  [h696] Nouvelle unité à Volgograd : 13e brigade d'infanterie
+  [h702] 1re Armée bloque une percée près de Sumy
+  [h708] 1re Armée bloque une percée près de Zaporizhzhya
+  [h708] Alerte : Front percé près de Sumy : 1 unité ennemie
+  [h709] Décrochage : 2e groupement logistique
+  [h714] Alerte : Front percé près de Zaporizhzhya : 1 unité ennemie
+  [h720] Ravitaillement coupé : 1re brigade d'infanterie
+  [h720] Ravitaillement coupé : 2e brigade d'artillerie
+  [h720] Alerte : 1 unité coupée du ravitaillement près de Sumy
+  [h720] Alerte : 1 unité coupée du ravitaillement près de Chernihiv
+  [h720] Offensive (Russie) près de Kherson

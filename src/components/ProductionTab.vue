@@ -9,6 +9,9 @@ import { useProductionStats } from '@/composables/production'
 import { useSustainability } from '@/composables/sustainability'
 import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
 
+/** domain : tiroir Production ; city : fiche de la ville choisie (inspecteur). */
+withDefaults(defineProps<{ part?: 'domain' | 'city' }>(), { part: 'domain' })
+
 const game = useGameStore()
 const { economy, selectedCity, armies } = storeToRefs(game)
 const UNIT_KINDS = Object.keys(RECRUIT_COSTS) as UnitKind[]
@@ -61,245 +64,257 @@ const warTitle = (level: WarEconomyLevel): string => {
 
 <template>
   <div class="production">
-    <!-- Capacités : ce qui tourne face à ce qui pourrait tourner. -->
-    <div v-if="stats" class="capacity" data-testid="production-capacity">
-      <div class="cap">
-        <span class="cap-label">Chantiers</span>
-        <span class="cap-value">{{ stats.construction.active }}/{{ stats.construction.max }}</span>
-        <span class="gauge"
-          ><i :style="{ width: ratio(stats.construction.active, stats.construction.max) }"
-        /></span>
-        <span class="meta"
-          >{{ round(stats.construction.used) }}/{{ round(stats.construction.gain) }} pts/j</span
-        >
-      </div>
-      <div class="cap">
-        <span class="cap-label">Formations</span>
-        <span class="cap-value">{{ stats.recruitment.active }}/{{ stats.recruitment.max }}</span>
-        <span class="gauge"
-          ><i :style="{ width: ratio(stats.recruitment.active, stats.recruitment.max) }"
-        /></span>
-        <span class="meta">casernes occupées</span>
-      </div>
-      <div class="cap">
-        <span class="cap-label">Production</span>
-        <span class="cap-value"
-          >{{ round(stats.production.used) }}/{{ round(stats.production.gain) }}</span
-        >
-        <span class="gauge"
-          ><i :style="{ width: ratio(stats.production.used, stats.production.gain) }"
-        /></span>
-        <span class="meta"
-          >engagée/gagnée par jour · stock {{ round(stats.production.stock) }}</span
-        >
-      </div>
-      <p v-if="stats.recruitment.max === 0" class="warn">
-        Aucune caserne : construisez-en une pour former des unités.
-      </p>
-      <p
-        v-else-if="stats.recruitment.active < stats.recruitment.max && stats.production.stock > 300"
-        class="free-tip"
-      >
-        {{ stats.recruitment.max - stats.recruitment.active }} caserne(s) libre(s) : choisissez une
-        ville pour y former des unités.
-      </p>
-    </div>
-
-    <label class="auto">
-      <input
-        type="checkbox"
-        :checked="game.snapshot?.autoEconomy ?? false"
-        @change="game.setAutoEconomy(($event.target as HTMLInputElement).checked)"
-      />
-      Gestion automatique (constructions et formations)
-    </label>
-
-    <div class="war-economy" data-testid="war-economy">
-      <span class="label">Économie</span>
-      <button
-        v-for="level in WAR_LEVELS"
-        :key="level"
-        :class="{ active: (economy?.warEconomy ?? 0) === level }"
-        :title="warTitle(level)"
-        @click="game.setWarEconomy(level)"
-      >
-        {{ WAR_ECONOMY[level].name }}
-      </button>
-    </div>
-
-    <!-- Soutenabilité : l'économie peut-elle maintenir l'armée au rythme actuel des pertes ? -->
-    <div v-if="sustain" class="sustain" :class="sustain.level" data-testid="sustain-panel">
-      <div class="label">
-        Soutenabilité de l'armée : <strong>{{ sustain.value }}</strong>
-        <span v-if="sustain.delta" class="meta">&nbsp;({{ sustain.delta }})</span>
-      </div>
-      <p class="meta">{{ sustain.summary }}</p>
-      <table v-if="sustain.rows.length">
-        <thead>
-          <tr>
-            <th />
-            <th title="Moyenne glissante sur une semaine">Besoins/j</th>
-            <th>Revenus/j</th>
-            <th>Solde/j</th>
-            <th>Stock</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in sustain.rows" :key="r.resource" :title="r.detail">
-            <td>{{ r.label }}</td>
-            <td>{{ round(r.need) }}</td>
-            <td>{{ round(r.income) }}</td>
-            <td :class="{ neg: r.balance < 0 }">{{ signedRound(r.balance) }}</td>
-            <td>{{ round(r.stock) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Ville sélectionnée -->
-    <section v-if="selectedCity" class="city">
-      <h3>
-        {{ selectedCity.name }}
-        <span class="meta">
-          {{ (selectedCity.pop / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) }} M
-          hab.
-          <template v-if="!isMine"> · adverse</template>
-        </span>
-      </h3>
-      <ul class="buildings">
-        <li v-for="kind in BUILDING_KINDS" :key="kind">
-          <span class="bname" :title="BUILDINGS[kind].description">{{ BUILDINGS[kind].name }}</span>
-          <span class="level">
-            {{ selectedCity.buildings[kind]
-            }}<span class="meta">/{{ BUILDINGS[kind].maxPerCity }}</span>
-            <span v-if="queuedHere(kind)" class="meta"> (+{{ queuedHere(kind) }})</span>
+    <template v-if="part === 'city'">
+      <!-- Ville sélectionnée -->
+      <section v-if="selectedCity" class="city" data-testid="city-sheet">
+        <h3>
+          {{ selectedCity.name }}
+          <span class="meta">
+            {{ (selectedCity.pop / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) }} M
+            hab.
+            <template v-if="!isMine"> · adverse</template>
           </span>
-          <button
-            v-if="isMine"
-            :disabled="
-              selectedCity.buildings[kind] + queuedHere(kind) >= BUILDINGS[kind].maxPerCity
-            "
-            :title="`${BUILDINGS[kind].cost} points de construction, ${BUILDINGS[kind].minDays} jours minimum`"
-            @click="game.queueConstruction(selectedCity.name, kind)"
-          >
-            Construire
-          </button>
-        </li>
-      </ul>
-
-      <!-- Fortifications : effet en combat et portée (cercle sur la carte). -->
-      <div v-if="fort" class="fort" data-testid="city-fort">
-        <template v-if="fort.level > 0">
-          <div>
-            Fortifications niveau {{ fort.level }} : <b>+{{ fort.bonusPct }} % de défense</b> à
-            moins de {{ fort.radiusKm }} km
-            <template v-if="!isMine"> pour les unités adverses</template>
-          </div>
-          <div class="meta">
-            {{ fort.covered }} unité{{ fort.covered > 1 ? 's' : '' }}
-            {{ isMine ? 'à vous' : 'adverse' + (fort.covered > 1 ? 's' : '') }} à portée<template
-              v-if="fort.coveredBetter > 0"
+        </h3>
+        <ul class="buildings">
+          <li v-for="kind in BUILDING_KINDS" :key="kind">
+            <span class="bname" :title="BUILDINGS[kind].description">{{
+              BUILDINGS[kind].name
+            }}</span>
+            <span class="level">
+              {{ selectedCity.buildings[kind]
+              }}<span class="meta">/{{ BUILDINGS[kind].maxPerCity }}</span>
+              <span v-if="queuedHere(kind)" class="meta"> (+{{ queuedHere(kind) }})</span>
+            </span>
+            <button
+              v-if="isMine"
+              :disabled="
+                selectedCity.buildings[kind] + queuedHere(kind) >= BUILDINGS[kind].maxPerCity
+              "
+              :title="`${BUILDINGS[kind].cost} points de construction, ${BUILDINGS[kind].minDays} jours minimum`"
+              @click="game.queueConstruction(selectedCity.name, kind)"
             >
-              (dont {{ fort.coveredBetter }} mieux protégée{{
-                fort.coveredBetter > 1 ? 's' : ''
-              }}
-              par une autre ville)</template
-            >. Le meilleur niveau à portée compte, sans cumul ; détruites si la ville est prise.
+              Construire
+            </button>
+          </li>
+        </ul>
+
+        <!-- Fortifications : effet en combat et portée (cercle sur la carte). -->
+        <div v-if="fort" class="fort" data-testid="city-fort">
+          <template v-if="fort.level > 0">
+            <div>
+              Fortifications niveau {{ fort.level }} : <b>+{{ fort.bonusPct }} % de défense</b> à
+              moins de {{ fort.radiusKm }} km
+              <template v-if="!isMine"> pour les unités adverses</template>
+            </div>
+            <div class="meta">
+              {{ fort.covered }} unité{{ fort.covered > 1 ? 's' : '' }}
+              {{ isMine ? 'à vous' : 'adverse' + (fort.covered > 1 ? 's' : '') }} à portée<template
+                v-if="fort.coveredBetter > 0"
+              >
+                (dont {{ fort.coveredBetter }} mieux protégée{{
+                  fort.coveredBetter > 1 ? 's' : ''
+                }}
+                par une autre ville)</template
+              >. Le meilleur niveau à portée compte, sans cumul ; détruites si la ville est prise.
+            </div>
+          </template>
+          <div v-else class="meta">
+            Aucune fortification. Chaque niveau donne +{{ fortBonusPct(1) }} % de défense
+            {{ isMine ? 'à vos unités' : 'aux unités du propriétaire' }} à moins de
+            {{ fort.radiusKm }} km ({{ fort.max }} niveaux au plus)<template v-if="fortQueued > 0"
+              >, un niveau en chantier</template
+            >.
+          </div>
+        </div>
+
+        <template v-if="isMine && selectedCity.buildings.barracks > 0">
+          <div class="label">Former une unité ici</div>
+          <select v-model="recruitArmy" aria-label="Armée rejointe par la recrue">
+            <option value="default">Rejoint : {{ armies[0]?.name ?? 'réserve' }}</option>
+            <option value="none">Rejoint : réserve (sans armée)</option>
+            <option v-for="a in armies" :key="a.id" :value="a.id">Rejoint : {{ a.name }}</option>
+          </select>
+          <div class="recruit">
+            <button
+              v-for="kind in UNIT_KINDS"
+              :key="kind"
+              :disabled="(economy?.manpower ?? 0) < RECRUIT_COSTS[kind].manpower"
+              :title="`${RECRUIT_COSTS[kind].production} production, ${RECRUIT_COSTS[kind].manpower} k hommes, ${RECRUIT_COSTS[kind].days} jours minimum`"
+              @click="game.queueRecruit(kind, selectedCity.name, recruitArmyId)"
+            >
+              {{ unitLabel(kind) }}
+            </button>
           </div>
         </template>
-        <div v-else class="meta">
-          Aucune fortification. Chaque niveau donne +{{ fortBonusPct(1) }} % de défense
-          {{ isMine ? 'à vos unités' : 'aux unités du propriétaire' }} à moins de
-          {{ fort.radiusKm }} km ({{ fort.max }} niveaux au plus)<template v-if="fortQueued > 0"
-            >, un niveau en chantier</template
-          >.
+        <p v-else-if="isMine" class="meta">
+          Pas de caserne : construisez-en une pour former des unités.
+        </p>
+      </section>
+    </template>
+    <template v-else>
+      <!-- Capacités : ce qui tourne face à ce qui pourrait tourner. -->
+      <div v-if="stats" class="capacity" data-testid="production-capacity">
+        <div class="cap">
+          <span class="cap-label">Chantiers</span>
+          <span class="cap-value"
+            >{{ stats.construction.active }}/{{ stats.construction.max }}</span
+          >
+          <span class="gauge"
+            ><i :style="{ width: ratio(stats.construction.active, stats.construction.max) }"
+          /></span>
+          <span class="meta"
+            >{{ round(stats.construction.used) }}/{{ round(stats.construction.gain) }} pts/j</span
+          >
         </div>
+        <div class="cap">
+          <span class="cap-label">Formations</span>
+          <span class="cap-value">{{ stats.recruitment.active }}/{{ stats.recruitment.max }}</span>
+          <span class="gauge"
+            ><i :style="{ width: ratio(stats.recruitment.active, stats.recruitment.max) }"
+          /></span>
+          <span class="meta">casernes occupées</span>
+        </div>
+        <div class="cap">
+          <span class="cap-label">Production</span>
+          <span class="cap-value"
+            >{{ round(stats.production.used) }}/{{ round(stats.production.gain) }}</span
+          >
+          <span class="gauge"
+            ><i :style="{ width: ratio(stats.production.used, stats.production.gain) }"
+          /></span>
+          <span class="meta"
+            >engagée/gagnée par jour · stock {{ round(stats.production.stock) }}</span
+          >
+        </div>
+        <p v-if="stats.recruitment.max === 0" class="warn">
+          Aucune caserne : construisez-en une pour former des unités.
+        </p>
+        <p
+          v-else-if="
+            stats.recruitment.active < stats.recruitment.max && stats.production.stock > 300
+          "
+          class="free-tip"
+        >
+          {{ stats.recruitment.max - stats.recruitment.active }} caserne(s) libre(s) : choisissez
+          une ville pour y former des unités.
+        </p>
       </div>
 
-      <template v-if="isMine && selectedCity.buildings.barracks > 0">
-        <div class="label">Former une unité ici</div>
-        <select v-model="recruitArmy" aria-label="Armée rejointe par la recrue">
-          <option value="default">Rejoint : {{ armies[0]?.name ?? 'réserve' }}</option>
-          <option value="none">Rejoint : réserve (sans armée)</option>
-          <option v-for="a in armies" :key="a.id" :value="a.id">Rejoint : {{ a.name }}</option>
-        </select>
-        <div class="recruit">
-          <button
-            v-for="kind in UNIT_KINDS"
-            :key="kind"
-            :disabled="(economy?.manpower ?? 0) < RECRUIT_COSTS[kind].manpower"
-            :title="`${RECRUIT_COSTS[kind].production} production, ${RECRUIT_COSTS[kind].manpower} k hommes, ${RECRUIT_COSTS[kind].days} jours minimum`"
-            @click="game.queueRecruit(kind, selectedCity.name, recruitArmyId)"
-          >
-            {{ unitLabel(kind) }}
-          </button>
+      <label class="auto">
+        <input
+          type="checkbox"
+          :checked="game.snapshot?.autoEconomy ?? false"
+          @change="game.setAutoEconomy(($event.target as HTMLInputElement).checked)"
+        />
+        Gestion automatique (constructions et formations)
+      </label>
+
+      <div class="war-economy" data-testid="war-economy">
+        <span class="label">Économie</span>
+        <button
+          v-for="level in WAR_LEVELS"
+          :key="level"
+          :class="{ active: (economy?.warEconomy ?? 0) === level }"
+          :title="warTitle(level)"
+          @click="game.setWarEconomy(level)"
+        >
+          {{ WAR_ECONOMY[level].name }}
+        </button>
+      </div>
+
+      <!-- Soutenabilité : l'économie peut-elle maintenir l'armée au rythme actuel des pertes ? -->
+      <div v-if="sustain" class="sustain" :class="sustain.level" data-testid="sustain-panel">
+        <div class="label">
+          Soutenabilité de l'armée : <strong>{{ sustain.value }}</strong>
+          <span v-if="sustain.delta" class="meta">&nbsp;({{ sustain.delta }})</span>
         </div>
-      </template>
-      <p v-else-if="isMine" class="meta">
-        Pas de caserne : construisez-en une pour former des unités.
-      </p>
-    </section>
-    <p v-else class="empty">Cliquez sur une ville pour voir ses bâtiments et y construire.</p>
+        <p class="meta">{{ sustain.summary }}</p>
+        <table v-if="sustain.rows.length">
+          <thead>
+            <tr>
+              <th />
+              <th title="Moyenne glissante sur une semaine">Besoins/j</th>
+              <th>Revenus/j</th>
+              <th>Solde/j</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in sustain.rows" :key="r.resource" :title="r.detail">
+              <td>{{ r.label }}</td>
+              <td>{{ round(r.need) }}</td>
+              <td>{{ round(r.income) }}</td>
+              <td :class="{ neg: r.balance < 0 }">{{ signedRound(r.balance) }}</td>
+              <td>{{ round(r.stock) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <!-- Files d'attente -->
-    <section v-if="economy" class="queues">
-      <div class="label">Constructions ({{ economy.construction.length }})</div>
-      <p v-if="economy.construction.length === 0" class="meta">Aucune</p>
-      <ul>
-        <li
-          v-for="(q, k) in economy.construction"
-          :key="q.id"
-          :class="{ waiting: k >= (stats?.construction.max ?? 0) }"
-        >
-          <div class="row">
-            <span>{{ BUILDINGS[q.kind].name }} · {{ q.city }}</span>
-            <span class="meta">
-              {{
-                k >= (stats?.construction.max ?? 0)
-                  ? 'en attente'
-                  : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, BUILDINGS[q.kind].minDays)} j`
-              }}
-            </span>
-            <button class="x" aria-label="Annuler" @click="game.cancelConstruction(q.id)">×</button>
-          </div>
-          <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
-        </li>
-      </ul>
+      <p class="empty">Cliquez sur une de vos villes pour voir ses bâtiments et y construire.</p>
 
-      <div class="label">Formations ({{ economy.recruitment.length }})</div>
-      <p v-if="economy.recruitment.length === 0" class="meta">Aucune</p>
-      <ul>
-        <li
-          v-for="q in economy.recruitment"
-          :key="q.id"
-          :class="{ waiting: !stats?.recruitment.activeIds.has(q.id) }"
-        >
-          <div class="row">
-            <span>{{ unitLabel(q.kind) }} · {{ q.city }}</span>
-            <span class="meta">
-              {{
-                !stats?.recruitment.activeIds.has(q.id)
-                  ? 'en attente de caserne'
-                  : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, RECRUIT_COSTS[q.kind].days)} j`
-              }}
-            </span>
-            <button class="x" aria-label="Annuler" @click="game.cancelRecruit(q.id)">×</button>
-          </div>
-          <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
-        </li>
-      </ul>
+      <!-- Files d'attente -->
+      <section v-if="economy" class="queues">
+        <div class="label">Constructions ({{ economy.construction.length }})</div>
+        <p v-if="economy.construction.length === 0" class="meta">Aucune</p>
+        <ul>
+          <li
+            v-for="(q, k) in economy.construction"
+            :key="q.id"
+            :class="{ waiting: k >= (stats?.construction.max ?? 0) }"
+          >
+            <div class="row">
+              <span>{{ BUILDINGS[q.kind].name }} · {{ q.city }}</span>
+              <span class="meta">
+                {{
+                  k >= (stats?.construction.max ?? 0)
+                    ? 'en attente'
+                    : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, BUILDINGS[q.kind].minDays)} j`
+                }}
+              </span>
+              <button class="x" aria-label="Annuler" @click="game.cancelConstruction(q.id)">
+                ×
+              </button>
+            </div>
+            <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
+          </li>
+        </ul>
 
-      <p class="meta daily">
-        Par jour : +{{ round(economy.daily.construction) }} construction, +{{
-          round(economy.daily.production)
-        }}
-        production<template v-if="economy.daily.productionFromConstruction"
-          >, dont {{ round(economy.daily.productionFromConstruction) }} venue des points de
-          construction inutilisés</template
-        >. Renforts versés hier : {{ Math.round(economy.daily.reinforcements * 100) }} % d'une
-        unité.
-      </p>
-    </section>
+        <div class="label">Formations ({{ economy.recruitment.length }})</div>
+        <p v-if="economy.recruitment.length === 0" class="meta">Aucune</p>
+        <ul>
+          <li
+            v-for="q in economy.recruitment"
+            :key="q.id"
+            :class="{ waiting: !stats?.recruitment.activeIds.has(q.id) }"
+          >
+            <div class="row">
+              <span>{{ unitLabel(q.kind) }} · {{ q.city }}</span>
+              <span class="meta">
+                {{
+                  !stats?.recruitment.activeIds.has(q.id)
+                    ? 'en attente de caserne'
+                    : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, RECRUIT_COSTS[q.kind].days)} j`
+                }}
+              </span>
+              <button class="x" aria-label="Annuler" @click="game.cancelRecruit(q.id)">×</button>
+            </div>
+            <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
+          </li>
+        </ul>
+
+        <p class="meta daily">
+          Par jour : +{{ round(economy.daily.construction) }} construction, +{{
+            round(economy.daily.production)
+          }}
+          production<template v-if="economy.daily.productionFromConstruction"
+            >, dont {{ round(economy.daily.productionFromConstruction) }} venue des points de
+            construction inutilisés</template
+          >. Renforts versés hier : {{ Math.round(economy.daily.reinforcements * 100) }} % d'une
+          unité.
+        </p>
+      </section>
+    </template>
   </div>
 </template>
 

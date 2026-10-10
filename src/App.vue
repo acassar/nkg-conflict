@@ -2,7 +2,7 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 import MapView from '@/map/MapView.vue'
 import TopBar from '@/components/TopBar.vue'
-import CommandPanel from '@/components/CommandPanel.vue'
+import GameFrame from '@/components/GameFrame.vue'
 import EventLog from '@/components/EventLog.vue'
 import GameOver from '@/components/GameOver.vue'
 import StartScreen from '@/components/StartScreen.vue'
@@ -80,8 +80,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <p v-else-if="game.notice" class="hint notice" :class="{ mobile: isMobile }" role="alert">
       {{ game.notice }}
     </p>
-    <CommandPanel :key="layout" />
-    <EventLog v-if="!isMobile" />
+    <GameFrame :key="layout" />
+    <EventLog v-if="!isMobile && !game.panelTab" />
     <Notifications />
     <LassoButton />
     <MapViewButton />

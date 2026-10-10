@@ -171,14 +171,29 @@ try {
     if (!wasPaused) await window.__nkg.togglePause()
   }, alertSetup)
 
-  // Sélection de l'armée du joueur et ouverture de l'onglet Armées.
-  await page.evaluate(() => {
-    const g = window.__nkg
-    const first = g.armies[0]
-    if (first) g.selectArmy(first.id)
+  // Cadre : rail de gauche, tiroir « Forces » (liste des armées), fiche de l'armée dans l'inspecteur.
+  await page.getByTestId('rail-forces').click()
+  await page.getByTestId('drawer-forces').waitFor()
+  await page.getByTestId('drawer-forces').locator('.armies li').first().click()
+  await page.getByTestId('inspector-army').waitFor()
+  const frame = await page.evaluate(() => {
+    const box = (id) => document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect()
+    const r = box('rail')
+    const d = box('drawer-forces')
+    const i = box('inspector-army')
+    return { rail: r?.x, tiroir: d?.x, inspecteur: i?.x, largeur: window.innerWidth }
   })
-  await page.getByRole('button', { name: /Armées/ }).click()
-  await page.waitForTimeout(500)
+  step('cadre', frame)
+  if (!(frame.rail < 40 && frame.tiroir < 200 && frame.inspecteur > frame.largeur - 400)) {
+    report.errors.push(`cadre : rail, tiroir ou inspecteur mal placés (${JSON.stringify(frame)})`)
+  }
+  await shot('02a-cadre-forces')
+  // Second clic sur l'entrée du rail : le tiroir se referme, l'inspecteur reste.
+  await page.getByTestId('rail-forces').click()
+  await page.waitForTimeout(300)
+  if (await page.getByTestId('drawer-forces').isVisible()) {
+    report.errors.push('cadre : le tiroir Forces ne se referme pas')
+  }
   step('armée sélectionnée', await state())
   await shot('02-armee-selectionnee')
 
@@ -228,8 +243,8 @@ try {
 
   // Diplomatie : fiche de son pays, puis d'un pays voisin via un clic sur la carte.
   await page.evaluate(() => window.__nkg.clearSelection())
-  await page.getByTestId('tab-country').click()
-  await page.getByTestId('country-tab').waitFor()
+  await page.getByTestId('rail-country').click()
+  await page.getByTestId('country-own').waitFor()
   await shot('02c-diplomatie')
   await page.evaluate(() => window.__nkg.selectCountry('POL'))
   const relationBefore = await page.evaluate(
@@ -255,7 +270,8 @@ try {
   if (!aid) report.errors.push("l'Espagne n'a pas accordé d'aide")
   await shot('02e-aide-espagne')
 
-  // Clic sur une ville étrangère (Varsovie) : la fiche de la Pologne s'ouvre.
+  // Clic sur une ville étrangère (Varsovie) : la fiche de la Pologne s'ouvre dans l'inspecteur.
+  await page.getByTestId('rail-country').click()
   await page.evaluate(() => window.__nkg.selectCountry(null))
   const warsaw = await page.evaluate(() => {
     const p = window.__nkgMap.project([21.0, 52.25])
@@ -268,7 +284,7 @@ try {
   if (clicked !== 'POL') report.errors.push(`clic sur Varsovie : fiche ${clicked} au lieu de POL`)
 
   // Production : jauges de capacité et casernes sur la carte.
-  await page.getByRole('button', { name: 'Production' }).click()
+  await page.getByTestId('rail-production').click()
   await page.getByTestId('production-capacity').waitFor()
   // Économie de guerre : mobilisation partielle choisie depuis le panneau.
   await page
@@ -277,13 +293,16 @@ try {
     .click()
   await page.waitForTimeout(500)
   const warEconomy = await page.evaluate(() => window.__nkg.snapshot.economy.warEconomy)
+  // Formation de défense territoriale : proposée dans la fiche de la ville (inspecteur).
+  await page.evaluate(() => window.__nkg.selectCity('Kyiv'))
+  await page.getByTestId('city-sheet').waitFor()
   const tdfButton = await page
     .getByRole('button', { name: 'Défense territoriale', exact: true })
     .count()
   step('économie de guerre', { niveau: warEconomy, boutonDefenseTerritoriale: tdfButton })
   if (warEconomy !== 1) report.errors.push(`économie de guerre non appliquée (${warEconomy})`)
   if (tdfButton !== 1) report.errors.push('bouton de défense territoriale absent')
-  // Soutenabilité de l'armée : bloc de l'onglet Production et indicateur de la barre du haut.
+  // Soutenabilité de l'armée : bloc du tiroir Production et indicateur de la barre du haut.
   await page.getByTestId('sustain-panel').waitFor()
   // Deux journées économiques : la première mesure sert de référence.
   await page.evaluate(() => window.__nkg.step(48))
@@ -301,6 +320,8 @@ try {
   if (!sustain.panneau.includes('Soutenabilité')) report.errors.push('bloc de soutenabilité absent')
   if (!sustain.titre?.includes('Munitions')) report.errors.push('détail de soutenabilité absent')
   await shot('02f-production-capacites')
+  // Tiroir refermé : la carte est libre pour les ordres qui suivent.
+  await page.getByTestId('rail-production').click()
 
   // Poursuite : trois unités proches du front, clic sur l'unité russe la plus proche.
   const target = await page.evaluate(() => {
@@ -323,7 +344,7 @@ try {
     return { id: best.r.id, lon: best.r.lon, lat: best.r.lat }
   })
   await page.waitForTimeout(800)
-  await page.getByRole('button', { name: /Unités/ }).click()
+  await page.getByTestId('inspector-units').waitFor()
   await page.getByTestId('order-pursue').click()
   const at = await page.evaluate(
     ([lon, lat]) => {
@@ -380,7 +401,7 @@ try {
   await page.evaluate(() =>
     window.__nkg.selectArmy(window.__nkg.armies.find((a) => a.encirclement).id),
   )
-  await page.getByRole('button', { name: /Armées/ }).click()
+  await page.getByTestId('army-sheet').waitFor()
   await shot('02g2-encerclement')
   await page.getByTestId('end-encirclement').click()
   await page.waitForTimeout(500)
@@ -395,7 +416,7 @@ try {
     g.selectArmy(army.id)
     return army.id
   })
-  await page.getByRole('button', { name: /Armées/ }).click()
+  await page.getByTestId('army-sheet').waitFor()
   await page.getByTestId('mission-advance').click()
   await page.getByTestId('advance-line').click()
   // Deux points à gauche du panneau, dans le territoire visible (la carte est zoomée sur l'armée).
@@ -471,7 +492,7 @@ try {
   }, missionArmy)
   const view = page.viewportSize()
   if (
-    breachAt.x > 0 &&
+    breachAt.x > 110 &&
     breachAt.y > 60 &&
     breachAt.x < view.width - 380 &&
     breachAt.y < view.height
@@ -786,7 +807,7 @@ try {
     { timeout: 60_000 },
   )
   await page.waitForTimeout(2000)
-  await page.getByTestId('tab-country').click()
+  await page.getByTestId('rail-country').click()
   await page.getByTestId('offmap-list').waitFor()
   const donors = await page.evaluate(() => window.__nkg.aids.filter((a) => a.to === 'UKR').length)
   await page.locator('[data-offmap="USA"]').click()
@@ -834,7 +855,7 @@ try {
   if (ukrOptions !== 1)
     report.errors.push(`options du théâtre ukrainien : ${ukrOptions} au lieu de 1`)
 
-  // Déclaration de guerre (France contre Belgique) : encart de l'onglet Armées, puis « Avancer ».
+  // Déclaration de guerre (France contre Belgique) : encart du tiroir Forces, puis « Avancer ».
   await page.evaluate(() => window.__nkg.declareWar('BEL'))
   await page.getByTestId('war-brief').waitFor({ timeout: 15_000 })
   await page.waitForTimeout(800)
@@ -856,7 +877,7 @@ try {
 
   // Coalition : droit de passage demandé aux Pays-Bas (pays tiers), réponse affichée.
   await page.evaluate(() => window.__nkg.selectCountry('NLD'))
-  await page.getByTestId('tab-country').click()
+  await page.getByTestId('inspector-country').waitFor()
   await page.getByTestId('ask-passage').click()
   await page.waitForTimeout(500)
   const passage = await page.evaluate(() => ({

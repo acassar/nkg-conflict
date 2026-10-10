@@ -24,6 +24,7 @@ import type { PlayerOrder } from '@/sim/simulation'
 import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
 import { newPlayerWars } from './warBrief'
+import { inspectorView, type Domain, type InspectKind } from './frame'
 import type { SimApi } from '@/sim/worker'
 import type { RecruitOrder } from '@/sim/economy/armyRecruit'
 import { deleteSave, listSaves, readSave, writeSave, type SaveSlot } from './saves'
@@ -125,8 +126,12 @@ export const useGameStore = defineStore('game', () => {
   const selectedArmyId = ref<number | null>(null)
   const selectedCountryCode = ref<CountryId | null>(null)
   const mode = ref<MapMode>({ kind: 'select' })
-  /** Onglet du panneau de droite. */
-  const panelTab = ref<'units' | 'armies' | 'production' | 'country' | 'log'>('units')
+  /** Tiroir ouvert depuis le rail de gauche (null : fermé). */
+  const panelTab = ref<Domain | null>(null)
+  /** Dernière sélection montrée par l'inspecteur de droite (voir `inspector`). */
+  const inspect = ref<InspectKind | null>(null)
+  /** Téléphone : le panneau unique montre l'inspecteur ou le tiroir du domaine. */
+  const sheet = ref<'domain' | 'inspector'>('domain')
   /** Tiroir du panneau sur téléphone en portrait : replié, à mi-hauteur ou plein écran. */
   const drawer = ref<'collapsed' | 'half' | 'full'>('collapsed')
   /** Hauteur affichée du tiroir, en pixels (pour placer les boutons flottants au-dessus). */
@@ -153,7 +158,7 @@ export const useGameStore = defineStore('game', () => {
   /** Guerres déjà connues de l'interface (null : à relever sur le prochain état publié). */
   let knownWars: Set<number> | null = null
   /**
-   * Nouvelle guerre du joueur : encart de l'onglet Armées qui rappelle que l'armée tient le front
+   * Nouvelle guerre du joueur : encart du tiroir Forces qui rappelle que l'armée tient le front
    * sans attaquer et propose d'avancer, de planifier une offensive ou de changer de posture.
    */
   const warBrief = ref<{ warId: number; enemy: CountryId; enemyName: string } | null>(null)
@@ -278,7 +283,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /**
-   * Repère les guerres nouvelles du joueur (déclarée par lui ou contre lui) : ouvre l'onglet Armées
+   * Repère les guerres nouvelles du joueur (déclarée par lui ou contre lui) : ouvre le tiroir Forces
    * sur son armée principale, avec l'encart de guerre. Les guerres présentes au chargement sont ignorées.
    */
   function watchWars(s: SimSnapshot): void {
@@ -293,7 +298,8 @@ export const useGameStore = defineStore('game', () => {
       warBrief.value = { warId, enemy, enemyName }
       const main = [...s.armies].sort((a, b) => b.unitIds.length - a.unitIds.length)[0]
       if (main && !s.armies.some((a) => a.id === selectedArmyId.value)) selectArmy(main.id)
-      panelTab.value = 'armies'
+      else if (selectedArmyId.value !== null) showInspector('army')
+      openDomain('forces')
     }
   }
 
@@ -330,7 +336,7 @@ export const useGameStore = defineStore('game', () => {
     if (a.kind !== 'breach') {
       selectedArmyId.value = null
       selection.value = a.unitIds.slice()
-      panelTab.value = 'units'
+      showInspector('units')
     }
   }
 
@@ -503,7 +509,9 @@ export const useGameStore = defineStore('game', () => {
     selectedArmyId.value = null
     selectedCityName.value = null
     selectedCountryCode.value = null
-    panelTab.value = 'units'
+    panelTab.value = null
+    inspect.value = null
+    sheet.value = 'domain'
     toasts.value = []
     mapView.value = 'political'
     supply.value = null
@@ -564,12 +572,40 @@ export const useGameStore = defineStore('game', () => {
 
   // ---------- Sélection ----------
 
+  /** Ouvre l'inspecteur sur un type de sélection (et le panneau sur téléphone). */
+  function showInspector(kind: InspectKind): void {
+    inspect.value = kind
+    sheet.value = 'inspector'
+  }
+
+  /** Ferme l'inspecteur si c'est ce type de sélection qu'il montre. */
+  function hideInspector(...kinds: InspectKind[]): void {
+    if (inspect.value && kinds.includes(inspect.value)) inspect.value = null
+  }
+
+  /** Ouvre le tiroir d'un domaine du rail ; sur grand écran, un second appel le referme. */
+  function openDomain(domain: Domain, toggle = false): void {
+    panelTab.value = toggle && panelTab.value === domain ? null : domain
+    sheet.value = 'domain'
+  }
+
+  /** Inspecteur affiché : la dernière sélection, si elle désigne encore quelque chose. */
+  const inspector = computed(() =>
+    inspectorView(inspect.value, {
+      units: selection.value.length,
+      army: selectedArmy.value !== null,
+      city: selectedCity.value !== null,
+      country: selectedCountry.value !== null,
+    }),
+  )
+
   function selectUnit(id: number, additive: boolean): void {
     const u = snapshot.value?.units.find((x) => x.id === id)
     if (!u || u.owner !== snapshot.value?.playerCountry) return
     if (!additive) selection.value = [id]
     else if (selection.value.includes(id)) selection.value = selection.value.filter((x) => x !== id)
     else selection.value = [...selection.value, id]
+    showInspector('units')
   }
 
   /** Sélectionne plusieurs unités à la fois (pile de pions) ; seules celles du joueur sont retenues. */
@@ -579,26 +615,33 @@ export const useGameStore = defineStore('game', () => {
     const mine = s.units.filter((u) => list.includes(u.id) && u.owner === s.playerCountry)
     const picked = mine.map((u) => u.id)
     selection.value = additive ? [...new Set([...selection.value, ...picked])] : picked
+    if (selection.value.length > 0) showInspector('units')
   }
 
   function clearSelection(): void {
     selection.value = []
+    hideInspector('units', 'army')
   }
 
   function selectArmy(id: number | null): void {
     selectedArmyId.value = id
     const army = armies.value.find((a) => a.id === id)
-    if (army) selection.value = [...army.unitIds]
+    if (army) {
+      selection.value = [...army.unitIds]
+      showInspector('army')
+    } else hideInspector('army')
   }
 
   function selectCity(name: string | null): void {
     selectedCityName.value = name
-    if (name) panelTab.value = 'production'
+    if (name) showInspector('city')
+    else hideInspector('city')
   }
 
   function selectCountry(code: CountryId | null, openPanel = true): void {
     selectedCountryCode.value = code
-    if (code && openPanel) panelTab.value = 'country'
+    if (code && openPanel) showInspector('country')
+    else if (!code) hideInspector('country')
   }
 
   // ---------- Clics sur la carte ----------
@@ -887,6 +930,7 @@ export const useGameStore = defineStore('game', () => {
   async function createArmyFromSelection(name: string): Promise<void> {
     if (selection.value.length === 0) return
     selectedArmyId.value = (await sim.createArmy(name, ids())) ?? null
+    if (selectedArmyId.value !== null) showInspector('army')
   }
 
   function addSelectionToArmy(armyId: number): Promise<void> {
@@ -1003,6 +1047,11 @@ export const useGameStore = defineStore('game', () => {
     mode,
     modeHint,
     panelTab,
+    inspect,
+    inspector,
+    sheet,
+    openDomain,
+    showInspector,
     warBrief,
     advanceToBorder,
     drawer,

@@ -82,7 +82,7 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
 <template>
   <div class="army-recruit" data-testid="army-recruit">
     <p v-if="noBarracks" class="warn">
-      Aucune caserne : construisez-en une (onglet Production) pour former des unités.
+      Aucune caserne : construisez-en une (fiche d'une de vos villes) pour former des unités.
     </p>
     <ul class="kinds">
       <li v-for="kind in UNIT_KINDS" :key="kind">

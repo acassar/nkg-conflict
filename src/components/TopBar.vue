@@ -77,7 +77,7 @@ const capacity = computed(() => {
 })
 
 function openProduction(): void {
-  game.panelTab = 'production'
+  game.openDomain('production')
 }
 
 const held = computed(() => {
@@ -91,8 +91,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const pctOf = (v: number): string => `${Math.round(v * 100)} %`
 
 function openCountry(): void {
-  game.selectCountry(null)
-  game.panelTab = 'country'
+  game.openDomain('country')
 }
 
 function quit(): void {

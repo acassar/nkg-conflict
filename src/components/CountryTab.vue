@@ -16,8 +16,11 @@ const STANCE_LABELS: Record<Stance, string> = {
   neutral: 'Neutre',
 }
 
+/** own : tiroir Diplomatie (votre pays) ; sinon fiche du pays choisi (inspecteur). */
+const props = defineProps<{ own?: boolean }>()
+
 const me = computed(() => game.snapshot?.playerCountry ?? '')
-const code = computed(() => game.selectedCountryCode ?? me.value)
+const code = computed(() => (props.own ? me.value : (game.selectedCountryCode ?? me.value)))
 const country = computed(() => game.countryByCode.get(code.value) ?? null)
 const pol = computed(() => game.politicsByCode.get(code.value) ?? null)
 const isMe = computed(() => code.value === me.value)
@@ -165,7 +168,7 @@ function confirmWar(): void {
 </script>
 
 <template>
-  <div v-if="country && pol" class="country-tab" data-testid="country-tab">
+  <div v-if="country && pol" class="country-tab" :data-testid="own ? 'country-own' : 'country-tab'">
     <div class="head">
       <span
         class="swatch"
@@ -179,7 +182,7 @@ function confirmWar(): void {
         v-if="!isMe"
         class="small"
         title="Revenir à votre pays"
-        @click="game.selectCountry(null)"
+        @click="game.selectCountry(me)"
       >
         Mon pays
       </button>

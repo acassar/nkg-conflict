@@ -281,7 +281,7 @@ try {
     const army = g.armies.find((a) => !a.encirclement && a.unitIds.length > 2)
     if (army) g.selectArmy(army.id)
   })
-  await page.getByRole('button', { name: /Armées/ }).tap()
+  await page.getByTestId('army-sheet').waitFor()
   await page.getByTestId('army-view-recruit').tap()
   await page.getByTestId('recruit-add-inf').tap()
   await page.getByTestId('recruit-add-inf').tap()
@@ -316,10 +316,21 @@ try {
   )
   await shot('m04d-points-cles')
 
-  // Tiroir : onglet Diplomatie, puis glissé vers le haut (plein écran).
-  await page.getByTestId('tab-country').tap()
-  await page.waitForTimeout(300)
+  // Barre du bas : entrée Diplomatie, retour à la sélection, puis tiroir glissé vers le haut.
+  await page.getByTestId('rail-country').tap()
+  await page.getByTestId('country-own').waitFor()
+  const domainBar = await page.locator('nav.bar').boundingBox()
+  const entries = await page.locator('nav.bar button').count()
+  step('barre du bas', { boite: domainBar, entrees: entries })
+  check(entries === 4, `la barre du bas devrait avoir quatre entrées (${entries})`)
+  check(
+    !!domainBar && domainBar.y + domainBar.height >= 844 - 40,
+    'la barre des domaines devrait être en bas',
+  )
   await shot('m05-diplomatie')
+  await page.getByTestId('sheet-inspector').tap()
+  await page.getByTestId('army-sheet').waitFor()
+  await page.getByTestId('rail-country').tap()
   const handle = await page.getByTestId('drawer-handle').boundingBox()
   if (handle) {
     const x = handle.x + handle.width / 2

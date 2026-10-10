@@ -14,11 +14,14 @@ const style = computed(() => {
   return { right: '104px', bottom: '10px' }
 })
 
-/** Légende : au-dessus des boutons sur téléphone, en haut à gauche sur ordinateur (hors du panneau). */
+/**
+ * Légende : au-dessus des boutons sur téléphone ; sur ordinateur en haut à gauche, à droite du rail
+ * et du tiroir ouvert.
+ */
 const legendStyle = computed(() => {
   if (layout.value === 'portrait') return { left: '10px', bottom: `${game.drawerHeight + 62}px` }
   if (layout.value === 'landscape') return { left: '10px', bottom: '62px' }
-  return { left: '12px', top: '56px' }
+  return { left: game.panelTab ? '440px' : '98px', top: '60px' }
 })
 
 const active = computed(() => game.mapView === 'logistics')

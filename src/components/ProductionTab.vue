@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
 import { BUILDING_KINDS, BUILDINGS, RECRUIT_COSTS, WAR_ECONOMY } from '@/sim/economy/rules'
@@ -13,16 +13,7 @@ import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
 withDefaults(defineProps<{ part?: 'domain' | 'city' }>(), { part: 'domain' })
 
 const game = useGameStore()
-const { economy, selectedCity, armies } = storeToRefs(game)
-const UNIT_KINDS = Object.keys(RECRUIT_COSTS) as UnitKind[]
-
-/** Armée rejointe par les nouvelles recrues : la première armée par défaut, ou la réserve. */
-const recruitArmy = ref<number | 'none' | 'default'>('default')
-const recruitArmyId = computed<number | null>(() => {
-  if (recruitArmy.value === 'none') return null
-  if (recruitArmy.value === 'default') return armies.value[0]?.id ?? null
-  return recruitArmy.value
-})
+const { economy, selectedCity } = storeToRefs(game)
 
 const isMine = computed(
   () => !!selectedCity.value && selectedCity.value.owner === game.snapshot?.playerCountry,
@@ -127,27 +118,13 @@ const warTitle = (level: WarEconomyLevel): string => {
           </div>
         </div>
 
-        <template v-if="isMine && selectedCity.buildings.barracks > 0">
-          <div class="label">Former une unité ici</div>
-          <select v-model="recruitArmy" aria-label="Armée rejointe par la recrue">
-            <option value="default">Rejoint : {{ armies[0]?.name ?? 'réserve' }}</option>
-            <option value="none">Rejoint : réserve (sans armée)</option>
-            <option v-for="a in armies" :key="a.id" :value="a.id">Rejoint : {{ a.name }}</option>
-          </select>
-          <div class="recruit">
-            <button
-              v-for="kind in UNIT_KINDS"
-              :key="kind"
-              :disabled="(economy?.manpower ?? 0) < RECRUIT_COSTS[kind].manpower"
-              :title="`${RECRUIT_COSTS[kind].production} production, ${RECRUIT_COSTS[kind].manpower} k hommes, ${RECRUIT_COSTS[kind].days} jours minimum`"
-              @click="game.queueRecruit(kind, selectedCity.name, recruitArmyId)"
-            >
-              {{ unitLabel(kind) }}
-            </button>
-          </div>
-        </template>
-        <p v-else-if="isMine" class="meta">
-          Pas de caserne : construisez-en une pour former des unités.
+        <p v-if="isMine" class="meta" data-testid="city-recruit-note">
+          <template v-if="selectedCity.buildings.barracks > 0">
+            {{ selectedCity.buildings.barracks }} caserne(s) : les formations se commandent depuis
+            une armée (onglet « Renforts » de sa fiche) et partent des casernes les plus proches de
+            son front.
+          </template>
+          <template v-else>Pas de caserne : construisez-en une pour former des unités.</template>
         </p>
       </section>
     </template>
@@ -195,8 +172,8 @@ const warTitle = (level: WarEconomyLevel): string => {
           "
           class="free-tip"
         >
-          {{ stats.recruitment.max - stats.recruitment.active }} caserne(s) libre(s) : choisissez
-          une ville pour y former des unités.
+          {{ stats.recruitment.max - stats.recruitment.active }} caserne(s) libre(s) : commandez des
+          renforts depuis une armée (onglet « Renforts » de sa fiche).
         </p>
       </div>
 

@@ -41,6 +41,15 @@ export interface RecruitPlan {
   productionDays: number
   /** Estimation retenue : le plus long des deux délais. */
   days: number
+  /**
+   * Formations de la commande couvertes par le stock de production actuel (après la file déjà
+   * engagée) ; les suivantes attendent que la production rentre.
+   */
+  affordable: number
+  /** Production qui manque pour toute la commande (0 si le stock suffit). */
+  shortfall: number
+  /** Jours avant l'arrivée de la dernière recrue au front : sortie de caserne, puis trajet. */
+  arrivalDays: number
 }
 
 /** Vitesse de trajet supposée des recrues vers le front, pour départager les casernes (km par jour). */
@@ -138,6 +147,9 @@ export function planArmyRecruit(input: {
   let barracksDays = 0
   let production = 0
   let manpower = 0
+  let affordable = 0
+  let lastOut = 0
+  const available = input.stock - queuedCost
   for (const kind of kinds) {
     const cost = RECRUIT_COSTS[kind]
     production += cost.production
@@ -156,6 +168,11 @@ export function planArmyRecruit(input: {
     take(slots.get(best) as number[], cost.days)
     const start = take(shared, cost.days)
     barracksDays = Math.max(barracksDays, start + cost.days)
+    if (production <= available) affordable++
+    lastOut = Math.max(
+      lastOut,
+      start + cost.days + (dist.get(best) ?? 0) / RECRUIT_TRAVEL_KM_PER_DAY,
+    )
     items.push({ kind, city: best })
     const entry = perCity.get(best) ?? {
       name: best,
@@ -182,5 +199,15 @@ export function planArmyRecruit(input: {
     barracksDays,
     productionDays,
     days: Math.max(barracksDays, productionDays),
+    affordable,
+    shortfall: missing,
+    // Trajet de la ville la plus lointaine utilisée, ajouté au délai de production s'il est plus long.
+    arrivalDays: Math.ceil(
+      Math.max(
+        lastOut,
+        productionDays +
+          Math.max(0, ...items.map((i) => dist.get(i.city) ?? 0)) / RECRUIT_TRAVEL_KM_PER_DAY,
+      ),
+    ),
   }
 }

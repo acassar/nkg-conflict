@@ -9,8 +9,9 @@ import type { ArmyState, LonLat, UnitKind } from '@/sim/core/types'
 import { useProductionStats } from '@/composables/production'
 
 /**
- * Sous-onglet « Recrutement » d'une armée : commande par type d'unité, aperçu du coût, du délai
- * et des casernes utilisées, puis commandes en cours de cette armée.
+ * Onglet « Renforts » d'une armée, seul point d'entrée du recrutement : commande par type d'unité,
+ * coût total face au stock, hommes, délai d'arrivée au front, part lancée plus tard si la production
+ * manque, casernes utilisées, puis commandes en cours de cette armée.
  */
 const props = defineProps<{ army: ArmyState }>()
 const game = useGameStore()
@@ -73,6 +74,20 @@ const pending = computed(
   () => economy.value?.recruitment.filter((q) => q.armyId === props.army.id) ?? [],
 )
 
+/** Part du stock de production que demande la commande (jauge), et dépassement. */
+const stockShare = computed(() => {
+  const p = plan.value
+  const stock = economy.value?.production ?? 0
+  if (!p) return { pct: 0, over: false }
+  return {
+    pct: stock > 0 ? Math.min(100, (100 * p.production) / stock) : 100,
+    over: p.shortfall > 0,
+  }
+})
+const costLine = (kind: UnitKind): string => {
+  const c = RECRUIT_COSTS[kind]
+  return `${c.production} prod · ${c.manpower} k h. · ${c.days} j`
+}
 const round = (v: number): string => Math.round(v).toLocaleString('fr-FR')
 const pct = (progress: number, cost: number): number => Math.min(100, (100 * progress) / cost)
 const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
@@ -89,7 +104,7 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
         <span
           class="kname"
           :title="`${RECRUIT_COSTS[kind].production} production, ${RECRUIT_COSTS[kind].manpower} k hommes, ${RECRUIT_COSTS[kind].days} jours minimum`"
-          >{{ unitLabel(kind) }}</span
+          >{{ unitLabel(kind) }}<small>{{ costLine(kind) }}</small></span
         >
         <button
           class="step"
@@ -121,18 +136,40 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
     </ul>
 
     <div v-if="plan" class="preview" data-testid="recruit-preview">
-      <p>
-        <strong>{{ total }} unité(s)</strong> · {{ round(plan.production) }} production ·
-        {{ round(plan.manpower) }} k hommes · {{ daysText(plan.days) }}
+      <div class="row">
+        <span>Production</span>
+        <span class="num"
+          >{{ round(plan.production) }} / stock {{ round(economy?.production ?? 0) }}</span
+        >
+      </div>
+      <div class="bar">
+        <div :class="{ over: stockShare.over }" :style="{ width: `${stockShare.pct}%` }" />
+      </div>
+      <div class="row">
+        <span>Hommes</span>
+        <span class="num" :class="{ warnc: manpowerShort }"
+          >{{ round(plan.manpower) }} k / {{ round(economy?.manpower ?? 0) }} k</span
+        >
+      </div>
+      <div class="row">
+        <span>Arrivée au front</span>
+        <span class="num" data-testid="recruit-eta">{{ daysText(plan.arrivalDays) }}</span>
+      </div>
+      <p v-if="plan.shortfall > 0" class="warn" data-testid="recruit-later">
+        Il manque {{ round(plan.shortfall) }} de production :
+        {{ total - plan.affordable }} formation(s) sur {{ total }} partiront plus tard, dans
+        {{ daysText(plan.productionDays) }} au rythme actuel ({{
+          round(economy?.daily.production ?? 0)
+        }}
+        par jour).
       </p>
-      <p v-if="plan.productionDays > plan.barracksDays" class="meta">
-        Délai fixé par la production ({{ round(economy?.daily.production ?? 0) }} par jour, stock
-        {{ round(economy?.production ?? 0) }}) ; casernes seules : ≈
-        {{ Math.max(1, plan.barracksDays) }} j.
-      </p>
+      <p v-else class="ok">Le stock couvre toute la commande.</p>
       <p v-if="manpowerShort" class="warn">
-        Main-d'œuvre insuffisante ({{ round(economy?.manpower ?? 0) }} k) : seules les premières
-        formations seront lancées.
+        Main-d'œuvre insuffisante : seules les premières formations seront lancées.
+      </p>
+      <p class="meta">
+        {{ total }} unité(s) · sortie de caserne {{ daysText(plan.barracksDays) }}, puis trajet
+        jusqu'au front.
       </p>
       <ul class="sites" data-testid="recruit-sites">
         <li v-for="c in plan.cities" :key="c.name">
@@ -152,7 +189,7 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
         data-testid="recruit-submit"
         @click="submit"
       >
-        Recruter
+        {{ total > 0 ? `Commander ${total} unité${total > 1 ? 's' : ''}` : 'Commander' }}
       </button>
       <button :disabled="total === 0" @click="clear">Effacer</button>
     </div>
@@ -200,9 +237,36 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
   margin-bottom: 4px;
 }
 .kname {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.kname small {
+  color: #9aa3b2;
+  font-size: 11px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+.num {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 12px;
+}
+.ok {
+  color: #3fb37f;
+  font-size: 12px;
+  margin: 4px 0;
+}
+.warnc {
+  color: #fbbf24;
+}
+.preview .bar {
+  height: 5px;
+  margin: 2px 0 6px;
+}
+.bar div.over {
+  background: #f2a33a;
 }
 .step {
   min-width: 30px;

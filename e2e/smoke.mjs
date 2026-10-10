@@ -213,7 +213,8 @@ try {
   step('ordre clic droit', { ordre: ordered })
   if (ordered !== 'move') report.errors.push(`ordre clic droit non appliqué (${ordered})`)
 
-  // Production : ville sélectionnée, chantier et formation lancés par les boutons du panneau.
+  // Production : ville sélectionnée, chantier lancé par le bouton de la fiche (les formations se
+  // commandent depuis les armées, voir plus bas).
   await page.evaluate(() => window.__nkg.selectCity('Kyiv'))
   await page.waitForTimeout(300)
   const queues = () =>
@@ -223,15 +224,14 @@ try {
     })
   const before = await queues()
   await page.getByRole('button', { name: 'Construire' }).first().click()
-  await page.getByRole('button', { name: 'Infanterie', exact: true }).click()
   await page.waitForTimeout(500)
   const afterQueue = await queues()
   step('production', { avant: before, apres: afterQueue })
   if (afterQueue.construction !== before.construction + 1) {
     report.errors.push('construction non lancée depuis le panneau')
   }
-  if (afterQueue.recruitment !== before.recruitment + 1) {
-    report.errors.push('formation non lancée depuis le panneau')
+  if (afterQueue.recruitment !== before.recruitment) {
+    report.errors.push('la fiche de la ville ne devrait plus lancer de formation')
   }
   // Fiche de la ville : effet et portée des fortifications.
   const fortText = (await page.getByTestId('city-fort').textContent())?.trim() ?? ''
@@ -293,15 +293,22 @@ try {
     .click()
   await page.waitForTimeout(500)
   const warEconomy = await page.evaluate(() => window.__nkg.snapshot.economy.warEconomy)
-  // Formation de défense territoriale : proposée dans la fiche de la ville (inspecteur).
+  // Fiche de la ville : plus de recrutement par ville, un renvoi vers les renforts des armées.
   await page.evaluate(() => window.__nkg.selectCity('Kyiv'))
   await page.getByTestId('city-sheet').waitFor()
-  const tdfButton = await page
+  const cityRecruit = await page
     .getByRole('button', { name: 'Défense territoriale', exact: true })
     .count()
-  step('économie de guerre', { niveau: warEconomy, boutonDefenseTerritoriale: tdfButton })
+  const cityNote = await page.getByTestId('city-recruit-note').count()
+  step('économie de guerre', {
+    niveau: warEconomy,
+    recrutementVille: cityRecruit,
+    renvoi: cityNote,
+  })
   if (warEconomy !== 1) report.errors.push(`économie de guerre non appliquée (${warEconomy})`)
-  if (tdfButton !== 1) report.errors.push('bouton de défense territoriale absent')
+  if (cityRecruit !== 0 || cityNote !== 1) {
+    report.errors.push('la fiche de la ville propose encore le recrutement')
+  }
   // Soutenabilité de l'armée : bloc du tiroir Production et indicateur de la barre du haut.
   await page.getByTestId('sustain-panel').waitFor()
   // Deux journées économiques : la première mesure sert de référence.
@@ -616,6 +623,12 @@ try {
   await page.getByTestId('recruit-count-art').press('Enter')
   await page.getByTestId('recruit-preview').waitFor()
   const sites = await page.getByTestId('recruit-sites').locator('li').count()
+  // Défense territoriale : commandée depuis l'armée, comme les autres types.
+  if ((await page.getByTestId('recruit-add-tdf').count()) !== 1) {
+    report.errors.push('défense territoriale absente des renforts de l’armée')
+  }
+  const eta = await page.getByTestId('recruit-eta').textContent()
+  if (!/j/.test(eta ?? '')) report.errors.push(`délai d'arrivée au front absent (${eta})`)
   await shot('02g4-recrutement-armee')
   const queuedBefore = await page.evaluate(() => window.__nkg.economy?.recruitment.length ?? 0)
   await page.getByTestId('recruit-submit').click()
@@ -639,6 +652,21 @@ try {
     )
   }
   await shot('02g5-recrutement-commandes')
+
+  // Onglet « Composition » : une ligne par type d'unité de l'armée.
+  await page.getByTestId('army-view-composition').click()
+  await page.getByTestId('army-composition').waitFor()
+  const compoRows = await page.getByTestId('army-composition').locator('li').count()
+  const kinds = await page.evaluate((id) => {
+    const g = window.__nkg
+    const army = g.armies.find((a) => a.id === id)
+    return new Set(g.snapshot.units.filter((u) => army.unitIds.includes(u.id)).map((u) => u.kind))
+      .size
+  }, missionArmy)
+  step('composition', { lignes: compoRows, types: kinds })
+  if (compoRows !== kinds)
+    report.errors.push(`composition : ${compoRows} lignes pour ${kinds} types`)
+  await shot('02g6-composition')
   await page.getByTestId('army-view-command').click()
 
   // Sauvegarde dans le navigateur, retour au menu, reprise.

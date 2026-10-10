@@ -130,3 +130,23 @@ describe("cartes de mission de l'onglet Ordre", () => {
     expect(isLineMission('retreat')).toBe(false)
   })
 })
+
+describe("onglet « Composition » d'une armée", () => {
+  it('compte les unités par type avec leur force moyenne', async () => {
+    const { armyComposition, strengthTone } = await import('@/composables/composition')
+    const rows = armyComposition([
+      { kind: 'inf', strength: 1, org: 0.8 },
+      { kind: 'inf', strength: 0.6, org: 0.4 },
+      { kind: 'tank', strength: 0.4, org: 1 },
+    ])
+    expect(rows.map((r) => [r.kind, r.count])).toEqual([
+      ['inf', 2],
+      ['tank', 1],
+    ])
+    expect(rows[0]?.strength).toBeCloseTo(0.8)
+    expect(rows[0]?.org).toBeCloseTo(0.6)
+    expect(strengthTone(0.8)).toBe('ok')
+    expect(strengthTone(0.6)).toBe('warn')
+    expect(strengthTone(0.4)).toBe('bad')
+  })
+})

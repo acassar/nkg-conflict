@@ -308,6 +308,11 @@ try {
     queuedAfter > queuedBefore,
     `recrutement par armée non lancé (${queuedBefore} → ${queuedAfter})`,
   )
+  await page.getByTestId('army-view-composition').tap()
+  await page.getByTestId('army-composition').waitFor()
+  const compo = await page.getByTestId('army-composition').boundingBox()
+  check(!!compo && compo.x >= 0 && compo.x + compo.width <= 390, 'composition hors de l’écran')
+  await shot('m04c2-composition')
   await page.getByTestId('army-view-command').tap()
 
   // Mission « Tenir les points clés » au doigt : carte visible dans le tiroir, aperçu, puis « Appliquer ».

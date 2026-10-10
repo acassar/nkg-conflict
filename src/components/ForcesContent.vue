@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
 import ArmyRecruitment from './ArmyRecruitment.vue'
+import ArmyComposition from './ArmyComposition.vue'
+import { useProductionStats } from '@/composables/production'
 import { isTouch } from '@/composables/layout'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
@@ -160,7 +162,14 @@ function missionStatus(a: ArmyState): string {
 }
 
 /** Sous-onglet de la fiche d'armée : commandement (missions, posture) ou recrutement. */
-const armyView = ref<'command' | 'recruit'>('command')
+const armyView = ref<'command' | 'composition' | 'recruit'>('command')
+
+/** Casernes libres du pays (pastille de l'onglet « Renforts »). */
+const prodStats = useProductionStats()
+const freeBarracks = computed(() => {
+  const r = prodStats.value?.recruitment
+  return r ? Math.max(0, r.max - r.active) : 0
+})
 
 /** Onglet de mission affiché pour l'armée choisie (suit la mission réelle quand elle change). */
 const missionView = ref<MissionKind>('hold')
@@ -551,14 +560,29 @@ async function createArmy(): Promise<void> {
           </button>
           <button
             role="tab"
+            :class="{ active: armyView === 'composition' }"
+            data-testid="army-view-composition"
+            @click="armyView = 'composition'"
+          >
+            Composition
+          </button>
+          <button
+            role="tab"
             :class="{ active: armyView === 'recruit' }"
             data-testid="army-view-recruit"
             @click="armyView = 'recruit'"
           >
-            Recrutement
+            Renforts<span
+              v-if="freeBarracks > 0"
+              class="tag"
+              :title="`${freeBarracks} caserne(s) libre(s)`"
+              data-testid="free-barracks"
+              >{{ freeBarracks }}</span
+            >
           </button>
         </div>
         <ArmyRecruitment v-if="armyView === 'recruit'" :army="selectedArmy" />
+        <ArmyComposition v-else-if="armyView === 'composition'" :army="selectedArmy" />
         <template v-else>
           <div data-testid="army-mission">
             <div v-for="g in MISSION_GROUPS" :key="g.label" class="mgroup">
@@ -788,11 +812,14 @@ button.active {
   background: #2563eb;
   border-color: #2563eb;
 }
-/* Sous-onglets de la fiche d'armée. */
+/* Onglets de la fiche d'armée. */
 .subtabs {
   display: flex;
   gap: 4px;
   margin: 4px 0 8px;
+}
+.subtabs .tag {
+  margin-left: 4px;
 }
 /* Encart affiché après une déclaration de guerre. */
 .war-brief {

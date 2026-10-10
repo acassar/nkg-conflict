@@ -17,7 +17,6 @@ import type {
   Posture,
   ScenarioOptions,
   SimSnapshot,
-  UnitKind,
   WarEconomyLevel,
   UnitSnapshot,
 } from '@/sim/core/types'
@@ -884,10 +883,6 @@ export const useGameStore = defineStore('game', () => {
     report(await sim.queueConstruction(city, kind))
   }
 
-  async function queueRecruit(kind: UnitKind, city: string, armyId: number | null): Promise<void> {
-    report(await sim.queueRecruit(kind, city, armyId))
-  }
-
   /** Recrutement par armée ; renvoie vrai si au moins une formation est lancée. */
   async function queueArmyRecruit(armyId: number, order: RecruitOrder): Promise<boolean> {
     const { launched, error } = await sim.queueArmyRecruit(armyId, order)
@@ -1157,7 +1152,6 @@ export const useGameStore = defineStore('game', () => {
     setPosture,
     setArmyPosture,
     queueConstruction,
-    queueRecruit,
     queueArmyRecruit,
     cancelConstruction,
     cancelRecruit,

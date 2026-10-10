@@ -65,6 +65,28 @@ describe('recrutement par armée (répartition)', () => {
     })
     expect(p.productionDays).toBe(Math.ceil((2 * RECRUIT_COSTS.tank.production) / 60))
     expect(p.days).toBe(p.productionDays)
+    expect(p.affordable).toBe(0)
+    expect(p.shortfall).toBe(2 * RECRUIT_COSTS.tank.production)
+  })
+
+  it('part couverte par le stock et arrivée au front après le trajet', () => {
+    const cost = RECRUIT_COSTS.inf.production
+    const p = planArmyRecruit({
+      sites,
+      queue: [],
+      anchors,
+      kinds: ['inf', 'inf', 'inf'],
+      stock: 2 * cost,
+      productionPerDay: cost,
+    })
+    expect(p.affordable).toBe(2)
+    expect(p.shortfall).toBe(cost)
+    // « Près » est à environ 73 km du front : un peu plus de 1 jour de trajet après la sortie.
+    expect(p.arrivalDays).toBeGreaterThan(RECRUIT_COSTS.inf.days)
+    const rich = plan(['inf'])
+    expect(rich.affordable).toBe(1)
+    expect(rich.shortfall).toBe(0)
+    expect(rich.arrivalDays).toBe(RECRUIT_COSTS.inf.days + 2)
   })
 })
 

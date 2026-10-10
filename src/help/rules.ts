@@ -30,6 +30,11 @@ import {
 } from '@/sim/systems/flanks'
 import { SOURCE_RADIUS_KM } from '@/sim/systems/supply'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
+import {
+  SUSTAIN_CRITICAL_DAYS,
+  SUSTAIN_MAX_DAYS,
+  SUSTAIN_WARNING_DAYS,
+} from '@/sim/economy/sustainability'
 
 /**
  * Aide en jeu : règles et modificateurs du combat, écrites à partir des constantes de la
@@ -48,6 +53,7 @@ export type HelpSectionId =
   | 'command'
   | 'postures'
   | 'flanks'
+  | 'sustain'
 
 export interface HelpSection {
   id: HelpSectionId
@@ -160,6 +166,14 @@ export const HELP_SECTIONS: HelpSection[] = [
     paragraphs: [
       `Recalculés chaque heure pour les unités au contact : une unité dont les ennemis à moins de ${FLANK_KM} km l'entourent sur ${TWO_SIDES_DEG}° ou plus est attaquée de deux côtés, sur ${SURROUNDED_DEG}° ou plus presque encerclée ; une unité dont ${pct(SALIENT_SHARE)} des cellules proches sont ennemies est en saillant (même effet que deux côtés). Un front droit occupe environ 110°, sans malus.`,
       `Deux côtés ou saillant : défense ${signedPct(FLANK_DEFENSE[1])}, pertes d'organisation ${signedPct(FLANK_ORG_LOSS[1])} ; presque encerclée : ${signedPct(FLANK_DEFENSE[2])} et ${signedPct(FLANK_ORG_LOSS[2])}.`,
+    ],
+  },
+  {
+    id: 'sustain',
+    title: "Soutenabilité de l'armée",
+    paragraphs: [
+      "L'indicateur « Armée » (barre du haut, onglet Production) dit si l'économie peut maintenir l'armée actuelle au rythme actuel des pertes. Chaque jour, il compare en moyenne glissante sur une semaine les besoins (renforts pour combler les pertes des unités en vie, au prix des renforts ; unités détruites, au prix d'une unité neuve ; munitions tirées) aux revenus (production, munitions, main-d'œuvre, aide étrangère comprise). Le ravitaillement ne coûte rien dans les règles actuelles.",
+      `Quand une ressource est en déficit, ses stocks donnent le nombre de jours tenables ; la plus courte est le facteur limitant. Au-delà de ${SUSTAIN_MAX_DAYS} jours, ou sans déficit, l'armée est durable (le multiplicateur indique la couverture de la ressource la plus tendue). En orange sous ${SUSTAIN_WARNING_DAYS} jours, en rouge sous ${SUSTAIN_CRITICAL_DAYS}. Les nouvelles formations n'entrent pas dans les besoins : elles agrandissent l'armée.`,
     ],
   },
 ]

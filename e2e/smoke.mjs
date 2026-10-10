@@ -283,6 +283,23 @@ try {
   step('économie de guerre', { niveau: warEconomy, boutonDefenseTerritoriale: tdfButton })
   if (warEconomy !== 1) report.errors.push(`économie de guerre non appliquée (${warEconomy})`)
   if (tdfButton !== 1) report.errors.push('bouton de défense territoriale absent')
+  // Soutenabilité de l'armée : bloc de l'onglet Production et indicateur de la barre du haut.
+  await page.getByTestId('sustain-panel').waitFor()
+  // Deux journées économiques : la première mesure sert de référence.
+  await page.evaluate(() => window.__nkg.step(48))
+  await page
+    .waitForFunction(() => window.__nkg.snapshot.economy.sustain, null, { timeout: 10_000 })
+    .catch(() => {})
+  const sustain = {
+    panneau: (await page.getByTestId('sustain-panel').innerText()).split('\n')[0],
+    barre: (await page.getByTestId('sustain').isVisible())
+      ? await page.getByTestId('sustain').innerText()
+      : null,
+    titre: await page.getByTestId('sustain').getAttribute('title'),
+  }
+  step('soutenabilité', sustain)
+  if (!sustain.panneau.includes('Soutenabilité')) report.errors.push('bloc de soutenabilité absent')
+  if (!sustain.titre?.includes('Munitions')) report.errors.push('détail de soutenabilité absent')
   await shot('02f-production-capacites')
 
   // Poursuite : trois unités proches du front, clic sur l'unité russe la plus proche.

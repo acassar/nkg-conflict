@@ -5,6 +5,7 @@ import { STANCE_COLORS } from '@/map/territoryImage'
 import { isMobile } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
 import { openHelp } from '@/composables/help'
+import { useSustainability } from '@/composables/sustainability'
 
 const game = useGameStore()
 const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
@@ -42,6 +43,7 @@ const resources = computed(() => {
     },
   ]
 })
+const sustain = useSustainability()
 const stats = useProductionStats()
 /** Jauges de capacité : chantiers et casernes occupés, production employée sur la production du jour. */
 const capacity = computed(() => {
@@ -159,6 +161,17 @@ async function onFile(event: Event): Promise<void> {
           <span class="rlabel">{{ r.label }}</span> {{ r.value }}
           <span class="delta">{{ r.delta }}</span>
         </span>
+        <span
+          v-if="sustain"
+          class="sustain"
+          :class="sustain.level"
+          :title="sustain.title"
+          data-testid="sustain"
+          @click="openProduction"
+        >
+          <span class="rlabel">Armée</span> {{ sustain.value }}
+          <span class="delta">{{ sustain.delta }}</span>
+        </span>
       </div>
 
       <div v-if="capacity" class="capacity" data-testid="capacity">
@@ -260,6 +273,12 @@ async function onFile(event: Event): Promise<void> {
             <dt>{{ r.label }}</dt>
             <dd :class="{ low: r.low }">
               {{ r.value }} <span class="delta">{{ r.delta }}</span>
+            </dd>
+          </template>
+          <template v-if="sustain">
+            <dt>Armée</dt>
+            <dd :class="sustain.level" data-testid="sustain-mobile">
+              {{ sustain.value }} <span class="delta">{{ sustain.delta }}</span>
             </dd>
           </template>
           <template v-if="game.playerPolitics">
@@ -438,6 +457,17 @@ async function onFile(event: Event): Promise<void> {
   font-size: 12px;
 }
 .resources .low {
+  color: #fca5a5;
+}
+.sustain {
+  cursor: pointer;
+}
+.sustain.warning,
+.menu-resources .warning {
+  color: #fcd34d;
+}
+.sustain.critical,
+.menu-resources .critical {
   color: #fca5a5;
 }
 @media (max-width: 1500px) {

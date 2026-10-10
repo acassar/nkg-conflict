@@ -304,6 +304,7 @@ export function updateEconomy(
     advanceRecruitment(ctx, eco)
     eco.daily.productionUsed = Math.max(0, afterSpill - eco.production)
     // Les munitions consommées sont comptées sur la journée écoulée, puis remises à zéro.
+    eco.daily.munitionsSpent = eco.daily.munitionsUsed
     eco.daily.munitionsUsed = 0
   }
 }

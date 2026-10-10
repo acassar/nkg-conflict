@@ -138,6 +138,9 @@ try {
   // Menu : ressources et fichiers.
   await page.getByTestId('menu-button').tap()
   await page.getByRole('menu').waitFor()
+  const sustainMobile = await page.getByTestId('sustain-mobile').innerText()
+  step('soutenabilité (menu)', { valeur: sustainMobile })
+  check(sustainMobile.trim().length > 0, 'soutenabilité absente du menu')
   await shot('m02-menu')
   // Aide en jeu depuis le menu : plein écran sur téléphone.
   await page.getByTestId('menu-help').tap()

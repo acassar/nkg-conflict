@@ -382,7 +382,34 @@ export interface EconomyState {
     constructionUsed?: number
     /** Production venue des points de construction inutilisés la veille (déjà comptée dans `production`). */
     productionFromConstruction?: number
+    /** Munitions tirées la veille. */
+    munitionsSpent?: number
   }
+  /** Soutenabilité de l'armée (voir economy/sustainability), absente avant la deuxième journée. */
+  sustain?: Sustainability
+}
+
+/** Ressource prise en compte par la soutenabilité de l'armée. */
+export type SustainResource = 'production' | 'munitions' | 'manpower'
+
+/** Soutenabilité de l'armée : besoins et revenus quotidiens en moyenne glissante. */
+export interface Sustainability {
+  /** Jours mesurés depuis le début de la partie ou le dernier chargement. */
+  samples: number
+  /** Besoins quotidiens : renforts, remplacement des unités détruites, munitions tirées. */
+  need: Record<SustainResource, number>
+  /** Revenus quotidiens, aide reçue comprise (matériel livré compté en production). */
+  income: Record<SustainResource, number>
+  /** Détail des besoins : renforts des unités en vie, remplacement des unités détruites. */
+  reinforce: Record<SustainResource, number>
+  replace: Record<SustainResource, number>
+  /** Part de l'aide étrangère dans les revenus. */
+  aid: { production: number; munitions: number }
+  /** Jours avant épuisement du stock limitant (null : durable, ou plus d'un an). */
+  days: number | null
+  limiting: SustainResource | null
+  /** Revenus sur besoins pour la ressource la plus tendue (null sans besoins). */
+  coverage: number | null
 }
 
 /** Ressources de départ et apports extérieurs au théâtre (industrie hors carte, aide, réserves). */

@@ -1,3 +1,4 @@
+import { updateSustainability } from './economy/sustainability'
 import { TickAccumulator } from './core/loop'
 import { isSpeed, type Speed } from './core/clock'
 import { Random } from './core/random'
@@ -527,6 +528,7 @@ export class Simulation {
     const ctx = this.ctx
     updateEconomy(ctx, this.scenario, (incomes) => applyAidFlows(ctx, incomes))
     deliverEquipment(ctx)
+    updateSustainability(ctx)
     const managed = this.mobilizedAi()
     if (this.autoEconomy && !managed.includes(this.playerCountry)) managed.push(this.playerCountry)
     for (const c of managed) updateAiEconomy(ctx, c)

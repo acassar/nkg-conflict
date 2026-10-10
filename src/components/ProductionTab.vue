@@ -6,6 +6,7 @@ import { BUILDING_KINDS, BUILDINGS, RECRUIT_COSTS, WAR_ECONOMY } from '@/sim/eco
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import type { UnitKind, WarEconomyLevel } from '@/sim/core/types'
 import { useProductionStats } from '@/composables/production'
+import { useSustainability } from '@/composables/sustainability'
 import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
 
 const game = useGameStore()
@@ -37,6 +38,9 @@ const fort = computed(() => {
 const fortQueued = computed(() => queuedHere('fort'))
 
 const stats = useProductionStats()
+const sustain = useSustainability()
+const signedRound = (v: number): string =>
+  `${v >= 0 ? '+' : '−'}${Math.round(Math.abs(v)).toLocaleString('fr-FR')}`
 /** Jours restants au rythme maximal (borne basse). */
 const etaDays = (progress: number, cost: number, minDays: number): number =>
   Math.max(1, Math.ceil(((cost - progress) / cost) * minDays))
@@ -121,6 +125,35 @@ const warTitle = (level: WarEconomyLevel): string => {
       >
         {{ WAR_ECONOMY[level].name }}
       </button>
+    </div>
+
+    <!-- Soutenabilité : l'économie peut-elle maintenir l'armée au rythme actuel des pertes ? -->
+    <div v-if="sustain" class="sustain" :class="sustain.level" data-testid="sustain-panel">
+      <div class="label">
+        Soutenabilité de l'armée : <strong>{{ sustain.value }}</strong>
+        <span v-if="sustain.delta" class="meta">&nbsp;({{ sustain.delta }})</span>
+      </div>
+      <p class="meta">{{ sustain.summary }}</p>
+      <table v-if="sustain.rows.length">
+        <thead>
+          <tr>
+            <th />
+            <th title="Moyenne glissante sur une semaine">Besoins/j</th>
+            <th>Revenus/j</th>
+            <th>Solde/j</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="r in sustain.rows" :key="r.resource" :title="r.detail">
+            <td>{{ r.label }}</td>
+            <td>{{ round(r.need) }}</td>
+            <td>{{ round(r.income) }}</td>
+            <td :class="{ neg: r.balance < 0 }">{{ signedRound(r.balance) }}</td>
+            <td>{{ round(r.stock) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Ville sélectionnée -->
@@ -318,6 +351,47 @@ const warTitle = (level: WarEconomyLevel): string => {
 }
 li.waiting {
   opacity: 0.6;
+}
+.sustain {
+  margin: 0 0 10px;
+  padding: 8px;
+  background: #1b2028;
+  border-radius: 6px;
+  border-left: 3px solid #22c55e;
+}
+.sustain.warning {
+  border-left-color: #f59e0b;
+}
+.sustain.critical {
+  border-left-color: #ef4444;
+}
+.sustain.unknown {
+  border-left-color: #4b5563;
+}
+.sustain p {
+  margin: 4px 0;
+}
+.sustain table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sustain th {
+  color: #9aa3af;
+  font-weight: 400;
+  text-align: right;
+}
+.sustain td {
+  text-align: right;
+  padding: 1px 0;
+}
+.sustain td:first-child {
+  text-align: left;
+  color: #9aa3af;
+}
+.sustain td.neg {
+  color: #fca5a5;
 }
 .war-economy {
   display: flex;

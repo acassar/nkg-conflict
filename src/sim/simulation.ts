@@ -1148,6 +1148,7 @@ export class Simulation {
             ],
             owner: grid.owner.slice(),
             terrain: grid.terrain.slice(),
+            roads: grid.roads.slice(),
             sides: ctx.sides.slice(),
           }
         : null,

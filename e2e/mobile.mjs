@@ -87,7 +87,10 @@ try {
   await page.waitForFunction(() => window.__nkg.supply?.view, null, { timeout: 10_000 })
   const legend = await page.getByTestId('logistics-legend').boundingBox()
   step('carte logistique', { legende: legend })
-  check(legend && legend.x >= 0 && legend.x + legend.width <= 390, 'légende logistique hors écran')
+  check(
+    legend && legend.x >= 0 && legend.x + legend.width <= 390 && legend.y >= 0,
+    'légende logistique hors écran',
+  )
   await shot('m02b-logistique')
   await page.getByTestId('logistics-button').tap()
 

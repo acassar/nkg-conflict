@@ -490,6 +490,31 @@ try {
     report.errors.push('carte logistique incomplète')
   }
   await shot('04c-logistique')
+  // Routes et voies ferrées : affichées avec la logistique, masquables depuis la légende.
+  const roads = await page.evaluate(() => {
+    const r = window.__nkg.grid?.roads
+    let road = 0
+    let rail = 0
+    for (let i = 0; i < (r?.length ?? 0); i++) {
+      if (r[i] & 1) road++
+      if (r[i] & 4) rail++
+    }
+    return { routes: road, rail, affichees: window.__nkg.showRoads }
+  })
+  step('routes et voies ferrées', roads)
+  if (!roads.routes || !roads.rail || !roads.affichees) report.errors.push('réseau routier absent')
+  if (!(await page.getByTestId('roads-legend').isVisible()))
+    report.errors.push('légende des routes absente')
+  await page.getByTestId('roads-toggle').click()
+  await page.waitForTimeout(300)
+  if (
+    (await page.getByTestId('roads-legend').isVisible()) ||
+    (await page.evaluate(() => window.__nkg.showRoads))
+  ) {
+    report.errors.push('la case ne masque pas les routes')
+  }
+  await shot('04d-logistique-sans-routes')
+  await page.getByTestId('roads-toggle').click()
   await page.keyboard.press('l')
   await page.waitForTimeout(300)
   if (await page.getByTestId('logistics-legend').isVisible()) {

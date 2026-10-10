@@ -15,21 +15,44 @@ async function gunzip(buffer: ArrayBuffer): Promise<Uint8Array> {
 }
 
 /**
- * Charge les données d'un théâtre. La grille mondiale (≈ 10 Mo décompressés) est un fichier binaire
- * servi à côté du jeu ; `fetchBinary` permet aux tests de la lire sur le disque.
+ * Réseau de transport du théâtre (routes et voies ferrées, un octet par cellule), généré par
+ * scripts/build-roads.mjs.
+ */
+async function loadRoads(
+  id: 'ukraine' | 'world',
+  size: number,
+  fetchBinary: (path: string) => Promise<ArrayBuffer>,
+): Promise<Uint8Array> {
+  const bytes = await gunzip(await fetchBinary(`data/roads-${id}.bin.gz`))
+  if (bytes.length !== size)
+    throw new Error(`Réseau de transport corrompu : ${id} (${bytes.length} octets)`)
+  return bytes
+}
+
+/**
+ * Charge les données d'un théâtre. La grille mondiale (≈ 10 Mo décompressés) et les réseaux de
+ * transport sont des fichiers binaires servis à côté du jeu ; `fetchBinary` permet aux tests de les
+ * lire sur le disque.
  */
 export async function loadTheater(
   id: 'ukraine' | 'world',
   fetchBinary: (path: string) => Promise<ArrayBuffer>,
 ): Promise<TheaterData> {
-  if (id === 'ukraine') return ukraineTheater as unknown as TheaterData
-  const bytes = await gunzip(await fetchBinary('data/world-grid.bin.gz'))
+  if (id === 'ukraine') {
+    const data = ukraineTheater as unknown as TheaterData
+    return { ...data, roads: await loadRoads(id, data.width * data.height, fetchBinary) }
+  }
   const size = WORLD_TABLE.width * WORLD_TABLE.height
+  const [bytes, roads] = await Promise.all([
+    fetchBinary('data/world-grid.bin.gz').then(gunzip),
+    loadRoads(id, size, fetchBinary),
+  ])
   if (bytes.length !== size * 2)
     throw new Error(`Grille mondiale corrompue (${bytes.length} octets)`)
   return {
     ...WORLD_TABLE,
     ownerBytes: bytes.subarray(0, size),
     terrainBytes: bytes.subarray(size),
+    roads,
   }
 }

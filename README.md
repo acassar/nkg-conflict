@@ -50,7 +50,7 @@ Sauvegardes : `Sauver` enregistre la partie dans le navigateur (compressée). Un
 
 Onglet Production : jauges des chantiers en cours (de 1 à 5 en parallèle, un par tranche de 20 points de construction quotidiens), des casernes occupées et de la production engagée face à la production gagnée ; tant que l'onglet est ouvert, la carte montre les casernes (occupées/total, cercle vert s'il en reste une libre) et les fortifications de vos villes.
 
-Carte logistique (`L` ou bouton camion) : territoire relié aux sources de ravitaillement en vert, territoire coupé sans contact avec l'ennemi (île, enclave) en hachures orange, poches en hachures rouges avec le nombre d'unités amies qu'elles contiennent ; cercles de portée des sources (capitale, grandes villes, dépôts : 30 km), des unités logistiques (60 km, grisé si elles sont elles-mêmes coupées) et des QG (commandement, 120 km). En paix, tout le territoire est ravitaillé.
+Carte logistique (`L` ou bouton camion) : territoire relié aux sources de ravitaillement en vert, territoire coupé sans contact avec l'ennemi (île, enclave) en hachures orange, poches en hachures rouges avec le nombre d'unités amies qu'elles contiennent ; cercles de portée des sources (capitale, grandes villes, dépôts : 30 km), des unités logistiques (60 km, grisé si elles sont elles-mêmes coupées) et des QG (commandement, 120 km). En paix, tout le territoire est ravitaillé. Les routes principales et les voies ferrées s'y affichent aussi (grands axes en jaune, routes en beige, voies ferrées en bleu nuit), masquables par la case « Routes et voies ferrées » de la légende ; la simulation ne s'en sert pas encore.
 
 Recrutement par armée (onglet Armées, sous-onglet « Recrutement » d'une armée ou d'un groupe) : un compteur par type d'unité, avec `+`/`−` ou saisie directe du nombre. Avant validation, l'aperçu donne le coût total (production, hommes), le délai estimé (casernes, ou production si elle manque) et les casernes utilisées. Chaque recrue part dans la caserne d'où elle rejoindrait l'armée le plus tôt (attente d'une caserne de la ville plus trajet estimé à 50 km par jour depuis le front de l'armée) : une caserne libre proche du front d'abord, plusieurs villes si une seule ne suffit pas, file d'attente sinon. Les recrues rejoignent l'armée à leur sortie ; les commandes en cours de l'armée s'affichent dessous et s'annulent (main-d'œuvre rendue). Si la main-d'œuvre manque, seules les premières formations sont lancées. Le recrutement par ville reste possible dans l'onglet Production.
 
@@ -129,6 +129,16 @@ VITE_PMTILES_URL=https://ton-domaine/tiles/monde.pmtiles
 node scripts/build-world.mjs chemin/vers/natural-earth-vector/geojson
 ```
 
+### Routes et voies ferrées
+
+`public/data/roads-world.bin.gz` et `public/data/roads-ukraine.bin.gz` sont générés depuis [Natural Earth](https://www.naturalearthdata.com/) (domaine public, `ne_10m_roads` et `ne_10m_railroads`) : routes et voies ferrées d'importance 7 ou moins (`scalerank`), grands axes (autoroutes, voies rapides, rocades) toujours gardés, bacs et pistes exclus. Chaque cellule traversée reçoit un octet (bit 1 route, bit 2 grand axe, bit 4 voie ferrée), lu au démarrage avec la grille du théâtre (`Grid.roads`). Les deux fichiers geojson se récupèrent sans le reste du dépôt :
+
+```bash
+git clone --depth 1 --filter=blob:none --sparse https://github.com/nvkelso/natural-earth-vector.git
+cd natural-earth-vector && git sparse-checkout set --no-cone /geojson/ne_10m_roads.geojson /geojson/ne_10m_railroads.geojson && cd ..
+node scripts/build-roads.mjs natural-earth-vector/geojson
+```
+
 ### Théâtre ukrainien
 
 `src/sim/data/theater-ukraine.json` est généré depuis [Natural Earth](https://www.naturalearthdata.com/) (domaine public) : frontières de facto, fleuves majeurs, villes de plus de 250 000 habitants. Le relief (AWS Terrain Tiles) et l'occupation du sol ([ESA WorldCover 2021](https://esa-worldcover.org/), CC BY 4.0) viennent de `data/terrain-raw.json.gz`, produit par le workflow « Données du théâtre » (`scripts/fetch-terrain.py`) et publié sur la branche `data-results`.
@@ -144,7 +154,7 @@ pnpm theater chemin/vers/natural-earth-vector/geojson
   - `politics/` : jauges, relations, guerres, paix, alliances, sanctions, mobilisation, IA diplomatique.
   - `systems/` : ravitaillement, mouvement, combat, territoire, armées, IA, pathfinding (A\*).
   - `economy/` : bâtiments, revenus, constructions, formations, renforts, IA économique.
-  - `theater/grid.ts` : grille de contrôle (propriétaire et terrain par cellule).
+  - `theater/grid.ts` : grille de contrôle (propriétaire, terrain, routes et voies ferrées par cellule).
   - `units/catalog.ts` : types d'unités de l'époque moderne.
   - `scenarios/` : scénarios de départ.
 - `src/stores/game.ts` : store Pinia, pont entre l'interface et le Worker.

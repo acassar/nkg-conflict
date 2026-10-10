@@ -130,6 +130,8 @@ export const useGameStore = defineStore('game', () => {
   const lasso = ref(false)
   const selectedCityName = ref<string | null>(null)
   const mapView = ref<MapView>('political')
+  /** Routes et voies ferrées affichées en mode Logistique (case de la légende). */
+  const showRoads = ref(true)
   /** Vue logistique, tenue à jour tant que le mode Logistique est affiché. */
   const supply = shallowRef<SupplyMap | null>(null)
   let supplyAt = 0
@@ -923,6 +925,7 @@ export const useGameStore = defineStore('game', () => {
     drawerHeight,
     lasso,
     mapView,
+    showRoads,
     supply,
     setMapView,
     notice,

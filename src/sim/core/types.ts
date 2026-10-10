@@ -323,6 +323,8 @@ export interface GridSnapshot {
   owner: Uint8Array
   /** Terrain par cellule (voir Terrain). */
   terrain: Uint8Array
+  /** Routes et voies ferrées par cellule (bits ROAD_BIT, MAJOR_ROAD_BIT, RAIL_BIT de theater/grid). */
+  roads: Uint8Array
   /** Codes des camps : sides[index] = id de pays. */
   sides: CountryId[]
 }

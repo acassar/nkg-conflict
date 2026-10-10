@@ -14,6 +14,7 @@ import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers } from './layers'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
 import { SupplyTiles } from './supplyImage'
+import { roadTiles } from './roadsImage'
 import { isTouch } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
 import { useBattles } from '@/composables/battles'
@@ -33,6 +34,7 @@ const {
   focus,
   mapView,
   supply,
+  showRoads,
 } = storeToRefs(game)
 
 // ---------- Sélection par zone ----------
@@ -191,8 +193,14 @@ let supplyTiles: SupplyTiles | null = null
 let supplyGrid: GridSnapshot | null = null
 let supplyState: Uint8Array | null = null
 let supplyLayer: TerritoryTile[] = []
+/** Routes et voies ferrées : dessinées une fois par grille, à la première ouverture du mode Logistique. */
+let roadLayer: TerritoryTile[] | null = null
 
-function logistics(): { tiles: TerritoryTile[]; view: SupplyView | null } | null {
+function logistics(): {
+  tiles: TerritoryTile[]
+  roads: TerritoryTile[]
+  view: SupplyView | null
+} | null {
   if (mapView.value !== 'logistics') return null
   const g = grid.value
   if (!g) return null
@@ -201,14 +209,20 @@ function logistics(): { tiles: TerritoryTile[]; view: SupplyView | null } | null
     supplyGrid = g
     supplyState = null
     supplyLayer = []
+    roadLayer = null
   }
+  if (showRoads.value) roadLayer ??= roadTiles(g)
   const state = supply.value?.state ?? null
   if (state !== supplyState) {
     supplyState = state
     // En paix, aucun état de cellule : le calque est effacé.
     supplyLayer = supplyTiles?.update(state ?? new Uint8Array(g.width * g.height)) ?? []
   }
-  return { tiles: supplyLayer, view: supply.value?.view ?? null }
+  return {
+    tiles: supplyLayer,
+    roads: showRoads.value ? (roadLayer ?? []) : [],
+    view: supply.value?.view ?? null,
+  }
 }
 
 function refresh(): void {
@@ -440,6 +454,7 @@ watch(
     () => game.panelTab,
     mapView,
     supply,
+    showRoads,
     freehand,
   ],
   refresh,

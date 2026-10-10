@@ -66,8 +66,16 @@ export interface TheaterData {
   /** … ou en octets bruts (grille mondiale, fichier binaire). */
   ownerBytes?: Uint8Array
   terrainBytes?: Uint8Array
+  /** Réseau de transport par cellule (bits ROAD_BIT, MAJOR_ROAD_BIT, RAIL_BIT) ; absent = aucun. */
+  roads?: Uint8Array
   cities: CityDef[]
 }
+
+/** Bits du réseau de transport d'une cellule (fichiers public/data/roads-*.bin.gz). */
+export const ROAD_BIT = 1
+/** Grand axe : autoroute ou voie rapide (toujours accompagné de ROAD_BIT). */
+export const MAJOR_ROAD_BIT = 2
+export const RAIL_BIT = 4
 
 const KM_PER_DEG_LAT = 110.57
 const KM_PER_DEG_LON_EQ = 111.32
@@ -129,6 +137,11 @@ export class Grid {
   readonly cell: number
   readonly owner: Uint8Array
   readonly terrain: Uint8Array
+  /**
+   * Routes principales et voies ferrées par cellule (Natural Earth), fixes pendant la partie.
+   * Pas encore utilisées par la simulation : elles serviront aux axes, à la vitesse et au ravitaillement.
+   */
+  readonly roads: Uint8Array
   /** Incrémenté à chaque changement de propriétaire. */
   version = 0
   /** Cellules praticables détenues par chaque camp, tenu à jour à chaque changement. */
@@ -152,6 +165,7 @@ export class Grid {
     if (this.owner.length !== size || this.terrain.length !== size) {
       throw new Error(`Grille corrompue : ${this.owner.length} cellules au lieu de ${size}`)
     }
+    this.roads = data.roads?.length === size ? data.roads : new Uint8Array(size)
     this.recount()
   }
 
@@ -205,6 +219,19 @@ export class Grid {
 
   latOf(i: number): number {
     return this.lat0 + (Math.floor(i / this.width) + 0.5) * this.cell
+  }
+
+  /** Route sur la cellule (grand axe compris). */
+  hasRoad(i: number): boolean {
+    return ((this.roads[i] ?? 0) & ROAD_BIT) !== 0
+  }
+
+  hasMajorRoad(i: number): boolean {
+    return ((this.roads[i] ?? 0) & MAJOR_ROAD_BIT) !== 0
+  }
+
+  hasRail(i: number): boolean {
+    return ((this.roads[i] ?? 0) & RAIL_BIT) !== 0
   }
 
   passable(i: number): boolean {

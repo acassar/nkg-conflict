@@ -58,7 +58,9 @@ function publish(forceGrid = false): void {
   const snapshot = sim.snapshot(forceGrid, allowGrid)
   if (snapshot.grid || snapshot.gridPatch) lastGridAt = now
   // La grille complète (≈ 10 Mo) est transférée sans copie.
-  const transfer = snapshot.grid ? [snapshot.grid.owner.buffer, snapshot.grid.terrain.buffer] : []
+  const transfer = snapshot.grid
+    ? [snapshot.grid.owner.buffer, snapshot.grid.terrain.buffer, snapshot.grid.roads.buffer]
+    : []
   listener(Comlink.transfer(snapshot, transfer))
 }
 

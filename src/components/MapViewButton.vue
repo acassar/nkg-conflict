@@ -66,6 +66,21 @@ function toggle(): void {
         <li><span class="ring logi" />Unité logistique (60 km)</li>
         <li><span class="ring hq" />QG : commandement (120 km)</li>
       </ul>
+      <label class="roads-toggle">
+        <!-- Focus rendu à la page : les raccourcis clavier (L, espace) restent actifs. -->
+        <input
+          v-model="game.showRoads"
+          type="checkbox"
+          data-testid="roads-toggle"
+          @change="($event.target as HTMLInputElement).blur()"
+        />
+        Routes et voies ferrées
+      </label>
+      <ul v-if="game.showRoads" data-testid="roads-legend">
+        <li><span class="sw major" />Grand axe (autoroute, voie rapide)</li>
+        <li><span class="sw road" />Route principale</li>
+        <li><span class="sw rail" />Voie ferrée</li>
+      </ul>
     </div>
   </template>
 </template>
@@ -142,6 +157,26 @@ function toggle(): void {
     rgba(185, 28, 28, 0.95) 0 3px,
     rgba(220, 38, 38, 0.5) 3px 6px
   );
+}
+.sw.major {
+  background: rgb(250, 204, 21);
+}
+.sw.road {
+  background: rgba(250, 245, 225, 0.75);
+}
+.sw.rail {
+  background: rgb(30, 27, 75);
+  border: 1px solid #6b7280;
+}
+.roads-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+.roads-toggle input {
+  margin: 0;
 }
 .ring {
   border-radius: 50%;

@@ -41,7 +41,7 @@ export interface LayerInput {
    * Mode « Logistique » : état du ravitaillement (calque en tuiles et vue du Worker).
    * Affiche aussi la portée des sources, des unités logistiques et des QG du joueur.
    */
-  logistics: { tiles: TerritoryTile[]; view: SupplyView | null } | null
+  logistics: { tiles: TerritoryTile[]; roads: TerritoryTile[]; view: SupplyView | null } | null
   /** Batailles en cours (icône cliquable). */
   battles: Array<{ key: string; ids: number[]; at: LonLat; mine: boolean }>
 }
@@ -98,17 +98,20 @@ function logisticsLayers(
   logistics: NonNullable<LayerInput['logistics']>,
   snapshot: SimSnapshot,
 ): Layer[] {
-  const { tiles, view } = logistics
-  const layers: Layer[] = tiles.map(
-    (t) =>
-      new BitmapLayer({
-        id: `supply-${t.id}`,
-        image: t.canvas,
-        bounds: t.bounds,
-        _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
-        textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
-      }),
-  )
+  const { tiles, roads, view } = logistics
+  const bitmap = (prefix: string, t: TerritoryTile): Layer =>
+    new BitmapLayer({
+      id: `${prefix}-${t.id}`,
+      image: t.canvas,
+      bounds: t.bounds,
+      _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
+      textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
+    })
+  // Routes et voies ferrées au-dessus des zones de ravitaillement, sous les portées et les pions.
+  const layers: Layer[] = [
+    ...tiles.map((t) => bitmap('supply', t)),
+    ...roads.map((t) => bitmap('roads', t)),
+  ]
   const mine = snapshot.units.filter((u) => u.owner === snapshot.playerCountry)
   const range = (u: UnitSnapshot, key: 'supplyRadiusKm' | 'commandRadiusKm'): number =>
     MODERN_CATALOG[u.kind][key]

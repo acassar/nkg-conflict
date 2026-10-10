@@ -1,0 +1,158 @@
+{
+  "url": "https://acassar.github.io/nkg-conflict/",
+  "ok": true,
+  "errors": [],
+  "console": [],
+  "steps": [
+    {
+      "name": "option de départ au doigt",
+      "cochee": true,
+      "decochee": true
+    },
+    {
+      "name": "alerte centrée",
+      "selection": [
+        2
+      ],
+      "center": [
+        33.75,
+        51.94999999999999
+      ]
+    },
+    {
+      "name": "alertes repliées",
+      "folded": true
+    },
+    {
+      "name": "barre du haut",
+      "hauteur": 46.1875
+    },
+    {
+      "name": "soutenabilité (menu)",
+      "valeur": "Armée\n…"
+    },
+    {
+      "name": "aide (mobile)",
+      "boite": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "name": "jauge (mobile)",
+      "boite": {
+        "x": 8,
+        "y": 52,
+        "width": 374,
+        "height": 387.828125
+      }
+    },
+    {
+      "name": "carte logistique",
+      "legende": {
+        "x": 10,
+        "y": 97.75,
+        "width": 272,
+        "height": 278.25
+      }
+    },
+    {
+      "name": "appui prolongé",
+      "texte": "Plaine : vitesse 0 %, défense 0 %",
+      "boite": {
+        "x": 10,
+        "y": 351.8125,
+        "width": 370,
+        "height": 24.1875
+      },
+      "afterPress": {
+        "selection": 0,
+        "mode": "select",
+        "tab": null
+      }
+    },
+    {
+      "name": "sélection par zone",
+      "unites": 10,
+      "tiroir": "half"
+    },
+    {
+      "name": "ordre au doigt",
+      "ordre": "move",
+      "tiroir": "half"
+    },
+    {
+      "name": "mission au doigt",
+      "avance": true
+    },
+    {
+      "name": "bataille (mobile)",
+      "boite": {
+        "x": 6,
+        "y": 52,
+        "width": 378,
+        "height": 344
+      }
+    },
+    {
+      "name": "recrutement par armée (mobile)",
+      "avant": 0,
+      "apres": 2
+    },
+    {
+      "name": "points clés (mobile)",
+      "mission": "keyPoints"
+    },
+    {
+      "name": "barre du bas",
+      "boite": {
+        "x": 1,
+        "y": 788.90625,
+        "width": 388,
+        "height": 55.09375
+      },
+      "entrees": 4
+    },
+    {
+      "name": "tiroir glissé",
+      "etat": "full"
+    },
+    {
+      "name": "file de production (mobile)",
+      "bouton": {
+        "x": 316.21875,
+        "y": 752.453125,
+        "width": 32.78125,
+        "height": 36
+      },
+      "tete": [
+        2969,
+        2970
+      ]
+    },
+    {
+      "name": "retour au menu",
+      "ok": true
+    },
+    {
+      "name": "paysage",
+      "panneau": {
+        "x": 516,
+        "y": 48,
+        "width": 322,
+        "height": 336
+      }
+    },
+    {
+      "name": "WebGL indisponible (mobile)",
+      "message": {
+        "x": 16,
+        "y": 64,
+        "width": 358,
+        "height": 319.234375
+      }
+    }
+  ]
+}

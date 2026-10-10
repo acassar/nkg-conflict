@@ -15,6 +15,12 @@ import { fatigueFactor, fatigueOf, fatigueRecoveryFactor, updateFatigue } from '
 import { postureOf } from '../units/postures'
 import { assaultFireFactor, assaultLossFactor, obstaclesUnder } from './obstacles'
 import { flankDefenseFactor, flankOrgLossFactor, flankText, updateFlanks } from './flanks'
+import {
+  kindTerrainAttack,
+  kindTerrainDefense,
+  matchup,
+  MUNITIONS_PER_SHOT_BY_KIND,
+} from '../units/kinds'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -62,7 +68,34 @@ function supplyFactor(ctx: SimContext, u: UnitState): number {
 
 function terrainDefense(ctx: SimContext, u: UnitState): number {
   const t = ctx.grid.terrain[ctx.grid.cellAt(u.lon, u.lat)]
-  return terrainRule(t).defense
+  return terrainRule(t).defense * kindTerrainDefense(u.kind, t)
+}
+
+/** Terrain sous une unité. */
+function terrainUnder(ctx: SimContext, u: UnitState): number | undefined {
+  return ctx.grid.terrain[ctx.grid.cellAt(u.lon, u.lat)]
+}
+
+/** Effet du terrain sur la puissance de feu du type de l'unité (blindés en forêt…). */
+function terrainAttack(ctx: SimContext, u: UnitState): number {
+  return kindTerrainAttack(u.kind, terrainUnder(ctx, u))
+}
+
+/** Cible de l'artillerie pour l'écran de bataille : l'ennemi le plus proche à portée. */
+function artilleryTarget(ctx: SimContext, u: UnitState): UnitState | undefined {
+  const range = ctx.catalog[u.kind].supportRangeKm
+  const side = sideIndex(ctx, u.owner)
+  let best: UnitState | undefined
+  let bestD = range
+  for (const e of ctx.units.values()) {
+    if (!ctx.matrix.hostile(side, sideIndex(ctx, e.owner))) continue
+    const d = distanceKm(u.lon, u.lat, e.lon, e.lat)
+    if (d <= bestD) {
+      bestD = d
+      best = e
+    }
+  }
+  return best
 }
 
 /** Vrai si un fleuve sépare les deux unités (échantillonnage du segment). */
@@ -114,11 +147,21 @@ export function combatModifiers(
   const theirs = foe && isOffensive(u) ? obstaclesUnder(ctx, foe) : 0
   const pctOf = (v: number): string => `${Math.round(v * 100)} %`
   const flank = runtimeOf(ctx, u.id).flank
+  const type = ctx.catalog[u.kind].name
+  const tName = terrainRule(ctx.grid.terrain[cell]).name.toLowerCase()
+  const tAttack = terrainAttack(ctx, u)
+  const tDefense = kindTerrainDefense(u.kind, ctx.grid.terrain[cell])
+  const shotAt = ctx.catalog[u.kind].supportRangeKm > 0 ? artilleryTarget(ctx, u) : foe
+  const vs = shotAt ? matchup(u, shotAt, terrainUnder(ctx, shotAt)) : null
   return {
     attack: [
       ...shared,
       { key: 'posture', label: `Posture (${posture.name})`, value: posture.attack },
       { key: 'ammo', label: 'Munitions', value: ammo },
+      ...(tAttack !== 1
+        ? ([{ key: 'kindTerrain', label: `${type} (${tName})`, value: tAttack }] as Modifier[])
+        : []),
+      ...(vs ? ([{ key: 'matchup', label: vs.label, value: vs.factor }] as Modifier[]) : []),
       ...(theirs > 0
         ? ([
             {
@@ -134,8 +177,11 @@ export function combatModifiers(
       {
         key: 'terrain',
         label: `Terrain (${terrainRule(ctx.grid.terrain[cell]).name})`,
-        value: terrainDefense(ctx, u),
+        value: terrainRule(ctx.grid.terrain[cell]).defense,
       },
+      ...(tDefense !== 1
+        ? ([{ key: 'kindTerrain', label: `${type} (${tName})`, value: tDefense }] as Modifier[])
+        : []),
       { key: 'entrench', label: 'Retranchement', value: 1 + 0.5 * u.entrench },
       { key: 'fort', label: 'Fortifications', value: fortFactor(ctx, u) },
       { key: 'posture', label: `Posture (${posture.name})`, value: posture.defense },
@@ -186,6 +232,7 @@ export function firePower(ctx: SimContext, u: UnitState): number {
     supplyFactor(ctx, u) *
     commandFactor(ctx, u) *
     postureOf(u.posture).attack *
+    terrainAttack(ctx, u) *
     fatigueFactor(u)
   )
 }
@@ -216,9 +263,12 @@ function hit(
 ): void {
   let defense = defenseValue(ctx, target)
   if (isOffensive(from) && riverBetween(ctx, from, target)) defense *= 1.4
-  // Chaque tir consomme des munitions ; l'artillerie en consomme deux fois plus.
-  const ammo = useMunitions(ctx, from.owner, ctx.catalog[from.kind].supportRangeKm > 0 ? 2 : 1)
+  // Chaque tir consomme des munitions, selon le type (l'artillerie bien plus que l'infanterie).
+  const ammo = useMunitions(ctx, from.owner, MUNITIONS_PER_SHOT_BY_KIND[from.kind])
   let fire = firePower(ctx, from) * ammo
+  // Rapport de force entre types (blindés à découvert, infanterie retranchée en ville, artillerie).
+  const vs = matchup(from, target, terrainUnder(ctx, target))
+  if (vs) fire *= vs.factor
   // Obstacles (tir direct seulement) : l'assaut perd de sa force, l'attaquant saigne davantage.
   let losses = 1
   if (direct && isOffensive(from)) fire *= assaultFireFactor(obstaclesUnder(ctx, target))

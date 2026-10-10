@@ -649,7 +649,16 @@ try {
   await page.getByTestId('rules-help').waitFor()
   const helpSections = await page.getByTestId('rules-help').locator('section').count()
   step('aide depuis le menu', { sections: helpSections })
-  if (helpSections < 8) report.errors.push(`aide incomplète (${helpSections} sections)`)
+  if (helpSections < 12) report.errors.push(`aide incomplète (${helpSections} sections)`)
+  // Section « Types d'unités » : tableau des effets du terrain par type.
+  const kindRows = await page
+    .getByTestId('rules-help')
+    .locator('section', { hasText: "Types d'unités" })
+    .locator('tr')
+    .count()
+  step('aide : types d’unités', { lignes: kindRows })
+  if (kindRows < 5)
+    report.errors.push(`aide : tableau des types d'unités absent (${kindRows} lignes)`)
   await page.getByRole('button', { name: "Fermer l'aide" }).click()
   await page.waitForTimeout(200)
 

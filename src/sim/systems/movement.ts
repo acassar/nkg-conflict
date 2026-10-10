@@ -5,6 +5,7 @@ import { CONTACT_KM, retreatFromEnemy } from './combat'
 import { WarIndex } from './spatial'
 import { postureOf } from '../units/postures'
 import { layObstacles } from './obstacles'
+import { fuelSpeedFactor, kindTerrainSpeed } from '../units/kinds'
 
 const ENTRENCH_PER_HOUR = 0.01
 
@@ -13,7 +14,9 @@ function speedKmh(ctx: SimContext, u: UnitState): number {
   const cell = grid.cellAt(u.lon, u.lat)
   const t = grid.terrain[cell]
   let v = ctx.catalog[u.kind].speedKmh * (0.5 + 0.5 * u.org)
-  v *= terrainRule(t).speed
+  v *= terrainRule(t).speed * kindTerrainSpeed(u.kind, t)
+  // Unité motorisée longtemps coupée du ravitaillement : réservoirs vides.
+  v *= fuelSpeedFactor(u)
   const owner = grid.owner[cell] ?? 0
   if (ctx.matrix.hostile(sideIndex(ctx, u.owner), owner)) v *= 0.7
   if (u.order.kind === 'retreat') v *= 1.2

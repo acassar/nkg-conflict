@@ -158,6 +158,8 @@ export type ModifierKey =
   | 'flank'
   | 'flankMorale'
   | 'fatigue'
+  | 'kindTerrain'
+  | 'matchup'
 
 /** Bataille en cours : deux camps (a : celui du joueur s'il est engagé), lieu et terrain. */
 export interface BattleReport {

@@ -43,6 +43,18 @@ import {
 } from '@/sim/systems/fatigue'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import {
+  ARMOR_OPEN_FACTOR,
+  ARMOR_URBAN_FACTOR,
+  ARTILLERY_STATIC_FACTOR,
+  FUEL_HOURS,
+  KIND_TERRAIN,
+  MUNITIONS_PER_SHOT_BY_KIND,
+  NO_FUEL_SPEED,
+  STATIC_ENTRENCH_MAX,
+  URBAN_ENTRENCH_MIN,
+} from '@/sim/units/kinds'
+import type { UnitKind } from '@/sim/core/types'
+import {
   SUSTAIN_CRITICAL_DAYS,
   SUSTAIN_MAX_DAYS,
   SUSTAIN_WARNING_DAYS,
@@ -58,6 +70,7 @@ import {
 export type HelpSectionId =
   | 'combat'
   | 'terrain'
+  | 'kinds'
   | 'entrench'
   | 'obstacles'
   | 'forts'
@@ -84,6 +97,14 @@ export function signedPct(factor: number): string {
 const pct = (v: number): string => `${Math.round(v * 100)} %`
 const days = (perHour: number): number => Math.round(1 / perHour / 24)
 
+/** « Infanterie 1, Blindés 1,5… » pour les types de combat. */
+function kindList(values: Record<UnitKind, number>): string {
+  const kinds: UnitKind[] = ['inf', 'tdf', 'mech', 'tank', 'art']
+  return kinds
+    .map((k) => `${MODERN_CATALOG[k].name.toLowerCase()} ${values[k].toLocaleString('fr-FR')}`)
+    .join(', ')
+}
+
 const logisticsKm = MODERN_CATALOG.log.supplyRadiusKm
 const hqKm = MODERN_CATALOG.hq.commandRadiusKm
 
@@ -93,9 +114,9 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: 'Combat',
     paragraphs: [
       `Deux unités ennemies à moins de ${CONTACT_KM} km sont au contact : chaque heure, chacune frappe l'ennemi le plus proche ; l'artillerie frappe aussi à distance. Les pertes dépendent du rapport entre la puissance de feu du tireur et la défense de la cible (plafonné à 4 contre 1).`,
-      "Puissance de feu = valeur d'attaque du type (ou de défense s'il n'attaque pas) × effectifs × organisation × ravitaillement × commandement × posture × munitions. Défense = valeur de défense × effectifs × organisation × ravitaillement × commandement × terrain × retranchement × fortifications × posture × flanc.",
+      "Puissance de feu = valeur d'attaque du type (ou de défense s'il n'attaque pas) × effectifs × organisation × ravitaillement × commandement × posture × munitions × terrain selon le type × rapport de force entre types × fatigue. Défense = valeur de défense × effectifs × organisation × ravitaillement × commandement × terrain (commun et selon le type) × retranchement × fortifications × posture × flanc × fatigue.",
       `Organisation : elle compte pour 25 % à 100 % de la valeur (×${(0.25).toLocaleString('fr-FR')} à vide). Sous ${pct(ROUT_ORG)} (seuil selon la posture), l'unité décroche et recule jusqu'à retrouver ${pct(RALLY_ORG)}.`,
-      `Munitions : chaque tir en consomme (l'artillerie le double) ; stock vide, puissance de feu ${signedPct(NO_MUNITIONS_FACTOR)}.`,
+      `Munitions : chaque tir en consomme, selon le type (voir Types d'unités) ; stock vide, puissance de feu ${signedPct(NO_MUNITIONS_FACTOR)}.`,
       'Fleuve : une attaque à travers un fleuve donne +40 % de défense à la cible.',
     ],
   },
@@ -119,6 +140,27 @@ export const HELP_SECTIONS: HelpSection[] = [
         const r = TERRAIN_RULES[t]!
         return [r.name, signedPct(r.defense), signedPct(r.speed)]
       }),
+    },
+  },
+  {
+    id: 'kinds',
+    title: "Types d'unités",
+    paragraphs: [
+      "Chaque type réagit au terrain à sa façon, en plus des effets communs : le tableau donne les écarts de vitesse, de puissance de feu et de défense (terrain de la cellule où se trouve l'unité).",
+      `Rapports de force : blindés contre infanterie ou défense territoriale en plaine ${signedPct(ARMOR_OPEN_FACTOR)} de feu ; contre la même infanterie en ville, retranchée à ${pct(URBAN_ENTRENCH_MIN)} ou plus, ${signedPct(ARMOR_URBAN_FACTOR)} ; artillerie contre une unité immobile retranchée à moins de ${pct(STATIC_ENTRENCH_MAX)} ${signedPct(ARTILLERY_STATIC_FACTOR)}.`,
+      `Munitions par tir : ${kindList(MUNITIONS_PER_SHOT_BY_KIND)} (infanterie = 1). Carburant : blindés, mécanisée, artillerie, logistique et QG sont motorisés ; coupés du ravitaillement plus de ${FUEL_HOURS} heures, leurs réservoirs sont vides et leur vitesse tombe à ${pct(NO_FUEL_SPEED)}. L'infanterie à pied n'en dépend pas.`,
+    ],
+    table: {
+      head: ['Type', 'Terrain', 'Vitesse', 'Feu', 'Défense'],
+      rows: (Object.keys(KIND_TERRAIN) as UnitKind[]).flatMap((k) =>
+        Object.entries(KIND_TERRAIN[k] ?? {}).map(([code, e]) => [
+          MODERN_CATALOG[k].name,
+          TERRAIN_RULES[Number(code)]?.name ?? '',
+          signedPct(e?.speed ?? 1),
+          signedPct(e?.attack ?? 1),
+          signedPct(e?.defense ?? 1),
+        ]),
+      ),
     },
   },
   {
@@ -148,7 +190,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'supply',
     title: 'Ravitaillement',
     paragraphs: [
-      `Le ravitaillement part des sources (capitale, grandes villes, dépôts : ${SOURCE_RADIUS_KM} km autour) et suit le territoire tenu ; une unité logistique ravitaillée le prolonge à ${logisticsKm} km. Une unité coupée voit sa puissance de feu et sa défense réduites (${signedPct(OUT_OF_SUPPLY_FACTOR)}), ne reçoit plus de renforts et récupère moins bien son organisation.`,
+      `Le ravitaillement part des sources (capitale, grandes villes, dépôts : ${SOURCE_RADIUS_KM} km autour) et suit le territoire tenu ; une unité logistique ravitaillée le prolonge à ${logisticsKm} km. Une unité coupée voit sa puissance de feu et sa défense réduites (${signedPct(OUT_OF_SUPPLY_FACTOR)}), ne reçoit plus de renforts et récupère moins bien son organisation ; une unité motorisée tombe aussi en panne de carburant après ${FUEL_HOURS} heures.`,
       'Le mode Logistique (touche L) montre les zones reliées, coupées et les poches.',
     ],
   },
@@ -254,6 +296,14 @@ export const MODIFIER_HELP: Record<ModifierKey, { text: string; section: HelpSec
   fatigue: {
     text: `Fatigue de l'unité : jusqu'à −${pct(FATIGUE_COMBAT_MALUS)} de feu et de défense quand elle est épuisée.`,
     section: 'fatigue',
+  },
+  kindTerrain: {
+    text: "Effet du terrain propre au type de l'unité : blindés gênés en forêt, en ville et dans les marais, infanterie avantagée en ville et en forêt, artillerie gênée en montagne.",
+    section: 'kinds',
+  },
+  matchup: {
+    text: `Rapport de force entre types : blindés contre infanterie à découvert ${signedPct(ARMOR_OPEN_FACTOR)}, contre infanterie retranchée en ville ${signedPct(ARMOR_URBAN_FACTOR)}, artillerie contre cible immobile à découvert ${signedPct(ARTILLERY_STATIC_FACTOR)}.`,
+    section: 'kinds',
   },
   flankMorale: {
     text: `Prise de flanc : l'organisation fond plus vite (${signedPct(FLANK_ORG_LOSS[1])} ou ${signedPct(FLANK_ORG_LOSS[2])} de pertes).`,

@@ -5,7 +5,14 @@ import { fortFactorAt } from '../economy/economy'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
 import { assaultFireFactor } from './obstacles'
-import { cumulativeWeights, indexAtShare } from './axes'
+import {
+  cumulativeWeights,
+  frontWeight,
+  indexAtShare,
+  keyPointKinds,
+  keyPointWeight,
+  type WeightFn,
+} from './axes'
 
 /** Largeur du couloir autour d'une portion de front assignée. */
 const FRONT_CORRIDOR_KM = 60
@@ -129,9 +136,14 @@ function behindCell(ctx: SimContext, side: number, f: FrontCell, depth: number):
  * les unités se concentrent sur les routes, voies ferrées et villes, et ne laissent que quelques postes
  * dans les secteurs calmes (terrain difficile sans route). Voir axes.ts.
  */
-function slots(ctx: SimContext, cells: FrontCell[], count: number): FrontCell[] {
+function slots(
+  ctx: SimContext,
+  cells: FrontCell[],
+  count: number,
+  weight: WeightFn = frontWeight,
+): FrontCell[] {
   if (count <= 0 || cells.length === 0) return []
-  const cum = cumulativeWeights(ctx, cells)
+  const cum = cumulativeWeights(ctx, cells, weight)
   const out: FrontCell[] = []
   for (let k = 0; k < count; k++) {
     const c = cells[indexAtShare(cum, (k + 0.5) / count)]
@@ -194,10 +206,11 @@ function favorableSlots(
   count: number,
   depth: number,
   entrenched: Map<number, number>,
+  weight: WeightFn = frontWeight,
 ): LonLat[] {
   if (count <= 0 || cells.length === 0) return []
   const { grid } = ctx
-  const cum = cumulativeWeights(ctx, cells)
+  const cum = cumulativeWeights(ctx, cells, weight)
   const out: LonLat[] = []
   for (let k = 0; k < count; k++) {
     const lo = indexAtShare(cum, k / count)
@@ -217,6 +230,34 @@ function favorableSlots(
       }
     }
     if (best >= 0) out.push([grid.lonOf(best), grid.latOf(best)])
+  }
+  return out
+}
+
+/** Deux points clés affichés sont distants d'au moins tant de km (un seul repère par ville ou nœud). */
+const KEY_POINT_SPACING_KM = 15
+/** Nombre maximal de points clés affichés pour une armée. */
+const KEY_POINT_MAX = 80
+
+/**
+ * Points clés d'une portion de front, pour l'affichage : les plus importants d'abord (ville, passage et
+ * nœud cumulés), un seul repère par endroit.
+ */
+export function frontKeyPoints(ctx: SimContext, cells: FrontCell[]): LonLat[] {
+  const { grid } = ctx
+  const ranked = cells
+    .map((c) => {
+      const k = keyPointKinds(ctx, c.cell)
+      return { cell: c.cell, n: (k & 1) + ((k >> 1) & 1) + ((k >> 2) & 1) }
+    })
+    .filter((c) => c.n > 0)
+    .sort((a, b) => b.n - a.n)
+  const out: LonLat[] = []
+  for (const { cell } of ranked) {
+    const p: LonLat = [grid.lonOf(cell), grid.latOf(cell)]
+    if (out.some((q) => distanceKm(p[0], p[1], q[0], q[1]) < KEY_POINT_SPACING_KM)) continue
+    out.push(p)
+    if (out.length >= KEY_POINT_MAX) break
   }
   return out
 }
@@ -248,10 +289,17 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   const side = sideIndex(ctx, army.owner)
   if (!army.front && !army.wholeFront) {
     army.frontLine = undefined
+    delete army.keyPoints
     return
   }
   const cells = frontCells(ctx, side, army.wholeFront ? null : army.front)
   army.frontLine = traceFront(ctx, cells)
+  // Mission « Tenir les points clés » : postes concentrés sur les villes, passages de fleuve et nœuds
+  // routiers, simple écran ailleurs.
+  const keyPoints = army.mission?.kind === 'keyPoints'
+  const weight: WeightFn = keyPoints ? keyPointWeight : frontWeight
+  if (keyPoints) army.keyPoints = frontKeyPoints(ctx, cells)
+  else delete army.keyPoints
   if (cells.length === 0) return
   const members = army.unitIds
     .map((id) => ctx.units.get(id))
@@ -281,9 +329,9 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         const c = ctx.grid.cellAt(u.lon, u.lat)
         entrenched.set(c, Math.max(entrenched.get(c) ?? 0, u.entrench))
       }
-      posts = favorableSlots(ctx, side, cells, units.length, depth, entrenched)
+      posts = favorableSlots(ctx, side, cells, units.length, depth, entrenched, weight)
     } else {
-      posts = slots(ctx, cells, units.length).map((slot) => behind(ctx, side, slot, depth))
+      posts = slots(ctx, cells, units.length, weight).map((slot) => behind(ctx, side, slot, depth))
     }
     // Chaque poste revient à l'unité la plus proche encore libre (paires triées par distance) :
     // une unité n'est jamais envoyée à l'autre bout du front quand un poste l'attend à côté.

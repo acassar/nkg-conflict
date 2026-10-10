@@ -631,6 +631,11 @@ export const useGameStore = defineStore('game', () => {
 
   const holdArmy = (id: number): Promise<void> => sim.holdArmy(id)
 
+  /** Mission « Tenir les points clés » d'une armée. */
+  async function keyPointsArmy(id: number): Promise<void> {
+    report(await sim.keyPointsArmy(id))
+  }
+
   /**
    * Clic sur la carte (et sur les unités touchées, s'il y en a).
    * Renvoie vrai si le clic a été consommé par un mode en cours.
@@ -963,6 +968,7 @@ export const useGameStore = defineStore('game', () => {
     finishAdvanceLine,
     drawAdvanceLine,
     holdArmy,
+    keyPointsArmy,
     startOrder,
     startFront,
     startOffensive,

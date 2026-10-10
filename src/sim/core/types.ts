@@ -171,10 +171,15 @@ export interface ArmyState {
    * L'encerclement (`encirclement`) est la troisième mission, gardée dans son propre champ.
    */
   mission?: ArmyMission
+  /** Mission « Tenir les points clés » : points clés tenus en force sur le front, pour l'affichage. */
+  keyPoints?: LonLat[]
 }
 
-/** Missions d'armée : tenir la ligne (comportement par défaut), avancer, encercler. */
-export type MissionKind = 'hold' | 'advance' | 'encircle'
+/**
+ * Missions d'armée : tenir la ligne (comportement par défaut), tenir les points clés (villes, passages
+ * de fleuve, nœuds routiers ; simple écran ailleurs), avancer, encercler.
+ */
+export type MissionKind = 'hold' | 'keyPoints' | 'advance' | 'encircle'
 
 /** But d'une mission « Avancer » : frontière avec un pays, trait libre ou objectif ponctuel. */
 export type AdvanceGoal =
@@ -208,7 +213,7 @@ export interface AdvanceMission {
   parentArmyId?: number | null
 }
 
-export type ArmyMission = { kind: 'hold' } | AdvanceMission
+export type ArmyMission = { kind: 'hold' } | { kind: 'keyPoints' } | AdvanceMission
 
 /**
  * Encerclement en deux temps : les unités gagnent d'abord leurs points d'attente sur les flancs,

@@ -316,6 +316,22 @@ try {
   )
   if (held !== 'hold') report.errors.push(`retour à « Tenir » non appliqué (${held})`)
 
+  // Mission « Tenir les points clés » : appliquée d'un clic, repères sur la carte, puis retour à « Tenir ».
+  await page.getByTestId('mission-keyPoints').click()
+  await page.waitForTimeout(600)
+  const keyPoints = await page.evaluate((id) => {
+    const a = window.__nkg.armies.find((x) => x.id === id)
+    return { mission: a?.mission?.kind ?? 'hold', points: a?.keyPoints?.length ?? 0 }
+  }, missionArmy)
+  const keyText = await page.getByTestId('mission-status').textContent()
+  step('mission points clés', { ...keyPoints, statut: keyText })
+  if (keyPoints.mission !== 'keyPoints') {
+    report.errors.push(`mission « Tenir les points clés » non appliquée (${keyPoints.mission})`)
+  }
+  await shot('02g3b-points-cles')
+  await page.getByTestId('mission-hold').click()
+  await page.waitForTimeout(500)
+
   // Recrutement par armée : sous-onglet « Recrutement », 3 infanteries au clic, 2 artilleries saisies.
   await page.getByTestId('army-view-recruit').click()
   for (let k = 0; k < 3; k++) await page.getByTestId('recruit-add-inf').click()

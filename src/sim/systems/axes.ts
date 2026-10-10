@@ -71,17 +71,121 @@ export function frontWeight(ctx: SimContext, cell: number): number {
   return rough(ctx.grid.terrain[cell]) ? ROUGH_WEIGHT : OPEN_WEIGHT
 }
 
+// ---------- Points clés (mission « Tenir les points clés ») ----------
+
+/** Nature d'un point clé : ville, passage de fleuve, nœud routier (bits combinables). */
+export const KEY_CITY = 1
+export const KEY_CROSSING = 2
+export const KEY_NODE = 4
+
+/** Poids d'une cellule de front sans point clé dans cette mission : simple écran. */
+const SCREEN_WEIGHT = 0.2
+/** Poids d'un point clé : base, plus tant par nature (ville, passage, nœud). */
+const KEY_BASE_WEIGHT = 2
+const KEY_KIND_WEIGHT = 3
+
+/** Points clés déjà calculés, par grille (réseau et terrain sont fixes pendant la partie). */
+const keyCache = new WeakMap<object, Map<number, number>>()
+
+/** Anneau couvert de routes à ce point (réseau dense autour d'une ville) : nœud routier. */
+const DENSE_RING_SHARE = 0.6
+
+/**
+ * Nœud routier : sur l'anneau de cellules qui entoure `cell` à la distance `ring`, au moins trois
+ * tronçons de route ou de voie ferrée distincts (une route qui ne fait que passer en donne deux), ou un
+ * anneau presque entièrement couvert de routes (étoile de routes autour d'une ville).
+ */
+function roadNode(ctx: SimContext, cell: number, ring: number): boolean {
+  const { grid } = ctx
+  const W = grid.width
+  const x0 = cell % W
+  const y0 = Math.floor(cell / W)
+  // Parcours de l'anneau dans l'ordre (sens horaire depuis le coin haut gauche).
+  const ringCells: Array<[number, number]> = []
+  for (let dx = -ring; dx < ring; dx++) ringCells.push([dx, -ring])
+  for (let dy = -ring; dy < ring; dy++) ringCells.push([ring, dy])
+  for (let dx = ring; dx > -ring; dx--) ringCells.push([dx, ring])
+  for (let dy = ring; dy > -ring; dy--) ringCells.push([-ring, dy])
+  const on = ringCells.map(([dx, dy]) => {
+    const x = x0 + dx
+    const y = y0 + dy
+    return grid.inBounds(x, y) && (grid.roads[y * W + x] ?? 0) !== 0
+  })
+  let runs = 0
+  let count = 0
+  for (let k = 0; k < on.length; k++) {
+    if (on[k]) count++
+    if (on[k] && !on[(k + on.length - 1) % on.length]) runs++
+  }
+  return runs >= 3 || count >= DENSE_RING_SHARE * on.length
+}
+
+/**
+ * Points clés à moins de `AXIS_RADIUS_KM` d'une cellule (0 = aucun) : ville (terrain urbain), passage de
+ * fleuve (route ou voie ferrée sur un fleuve ou au bord), nœud routier (trois tronçons ou plus).
+ */
+export function keyPointKinds(ctx: SimContext, cell: number): number {
+  const { grid } = ctx
+  let cache = keyCache.get(grid)
+  if (!cache) {
+    cache = new Map()
+    keyCache.set(grid, cache)
+  }
+  const known = cache.get(cell)
+  if (known !== undefined) return known
+  const W = grid.width
+  const r = axisRadiusCells(ctx)
+  const x0 = cell % W
+  const y0 = Math.floor(cell / W)
+  const river = (x: number, y: number): boolean =>
+    grid.inBounds(x, y) && grid.terrain[y * W + x] === Terrain.RIVER
+  let kinds = 0
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const x = x0 + dx
+      const y = y0 + dy
+      if (!grid.inBounds(x, y)) continue
+      const i = y * W + x
+      if (grid.terrain[i] === Terrain.URBAN) kinds |= KEY_CITY
+      if (
+        (grid.roads[i] ?? 0) !== 0 &&
+        (river(x, y) || river(x - 1, y) || river(x + 1, y) || river(x, y - 1) || river(x, y + 1))
+      ) {
+        kinds |= KEY_CROSSING
+      }
+    }
+  }
+  if (roadNode(ctx, cell, Math.max(2, r))) kinds |= KEY_NODE
+  cache.set(cell, kinds)
+  return kinds
+}
+
+/** Nombre de natures de point clé (0 à 3). */
+function kindCount(kinds: number): number {
+  return (kinds & 1) + ((kinds >> 1) & 1) + ((kinds >> 2) & 1)
+}
+
+/** Poids d'une cellule de front dans la mission « Tenir les points clés » : forts sur les points clés. */
+export function keyPointWeight(ctx: SimContext, cell: number): number {
+  const n = kindCount(keyPointKinds(ctx, cell))
+  return n > 0 ? KEY_BASE_WEIGHT + KEY_KIND_WEIGHT * n : SCREEN_WEIGHT
+}
+
+/** Fonction de poids des cellules de front (répartition des postes). */
+export type WeightFn = (ctx: SimContext, cell: number) => number
+
 /**
  * Poids cumulés le long d'une liste de cellules de front (déjà triée) : `cum[q]` = somme des poids des
- * cellules avant `q` ; `cum[n]` = total.
+ * cellules avant `q` ; `cum[n]` = total. Par défaut, le poids des axes du front discontinu.
  */
 export function cumulativeWeights(
   ctx: SimContext,
   cells: ReadonlyArray<{ cell: number }>,
+  weight: WeightFn = frontWeight,
 ): Float64Array {
   const cum = new Float64Array(cells.length + 1)
   for (let q = 0; q < cells.length; q++) {
-    cum[q + 1] = (cum[q] ?? 0) + frontWeight(ctx, (cells[q] as { cell: number }).cell)
+    cum[q + 1] = (cum[q] ?? 0) + weight(ctx, (cells[q] as { cell: number }).cell)
   }
   return cum
 }

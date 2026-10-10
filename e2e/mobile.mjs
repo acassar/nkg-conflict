@@ -194,6 +194,24 @@ try {
   )
   await page.getByTestId('army-view-command').tap()
 
+  // Mission « Tenir les points clés » au doigt : bouton visible dans le tiroir, mission appliquée.
+  const keyButton = await page.getByTestId('mission-keyPoints').boundingBox()
+  check(
+    !!keyButton && keyButton.x >= 0 && keyButton.x + keyButton.width <= 390,
+    'bouton « Points clés » hors de l’écran',
+  )
+  await page.getByTestId('mission-keyPoints').tap()
+  await page.waitForTimeout(500)
+  const keyMission = await store(
+    () => window.__nkg.armies.find((a) => a.mission?.kind === 'keyPoints')?.mission?.kind ?? null,
+  )
+  step('points clés (mobile)', { mission: keyMission })
+  check(
+    keyMission === 'keyPoints',
+    `mission « Tenir les points clés » non appliquée (${keyMission})`,
+  )
+  await shot('m04d-points-cles')
+
   // Tiroir : onglet Diplomatie, puis glissé vers le haut (plein écran).
   await page.getByTestId('tab-country').tap()
   await page.waitForTimeout(300)

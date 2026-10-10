@@ -193,12 +193,15 @@ function encirclementStatus(enc: Encirclement): string {
 
 const MISSION_NAMES: Record<MissionKind, string> = {
   hold: 'Tenir',
+  keyPoints: 'Points clés',
   advance: 'Avancer',
   encircle: 'Encercler',
 }
-const MISSION_ORDER: MissionKind[] = ['hold', 'advance', 'encircle']
+const MISSION_ORDER: MissionKind[] = ['hold', 'keyPoints', 'advance', 'encircle']
 const MISSION_HELP: Record<MissionKind, string> = {
   hold: "L'armée tient sa ligne (portion de front ou tout le front) ; une offensive ponctuelle reste possible",
+  keyPoints:
+    "L'armée tient son front en force sur les points clés (villes, passages de fleuve, nœuds routiers) et ne laisse qu'un écran ailleurs",
   advance:
     "L'armée avance jusqu'à une frontière, un trait ou un objectif, en ligne continue ; la posture règle le rythme",
   encircle: "L'armée détache un groupe autour d'une cible ennemie et garde son front avec le reste",
@@ -222,7 +225,11 @@ function missionStatus(a: ArmyState): string {
       : ''
     return `Avancer : ${m.label} · ${Math.round(m.progress * 100)} % du tracé tenu${pace}`
   }
-  let text = `Tenir : ${a.wholeFront ? 'tout le front' : a.front ? 'portion de front' : 'sans front'}`
+  const where = a.wholeFront ? 'tout le front' : a.front ? 'portion de front' : 'sans front'
+  let text =
+    m?.kind === 'keyPoints'
+      ? `Points clés : ${where}${a.keyPoints ? ` · ${a.keyPoints.length} point(s) clé(s) tenu(s)` : ''}`
+      : `Tenir : ${where}`
   if (a.offensive) {
     text += ` · offensive ${a.offensive.launched ? 'en cours' : 'planifiée'}`
     if (a.offensive.unitIds) text += ` (${a.offensive.unitIds.length} unités)`
@@ -247,8 +254,9 @@ function chooseMission(kind: MissionKind): void {
   const a = selectedArmy.value
   if (!a) return
   missionView.value = kind
-  // « Tenir » s'applique tout de suite ; les deux autres demandent un but.
-  if (kind === 'hold' && a.mission?.kind === 'advance') void game.holdArmy(a.id)
+  // « Tenir » et « Points clés » s'appliquent tout de suite ; les deux autres demandent un but.
+  if (kind === 'hold' && a.mission && a.mission.kind !== 'hold') void game.holdArmy(a.id)
+  if (kind === 'keyPoints' && a.mission?.kind !== 'keyPoints') void game.keyPointsArmy(a.id)
 }
 
 /** Armée visée par l'encart de guerre : celle choisie, sinon la plus grande. */
@@ -624,7 +632,16 @@ async function createArmy(): Promise<void> {
                 missionStatus(selectedArmy)
               }}</span>
             </div>
-            <template v-if="missionView === 'hold' && !selectedArmy.encirclement">
+            <template
+              v-if="
+                (missionView === 'hold' || missionView === 'keyPoints') &&
+                !selectedArmy.encirclement
+              "
+            >
+              <p v-if="missionView === 'keyPoints'" class="meta" data-testid="key-points-help">
+                Unités concentrées sur les villes, passages de fleuve et nœuds routiers du front
+                (repères orange sur la carte) ; simple écran ailleurs.
+              </p>
               <div class="group">
                 <span class="label">Front tenu</span>
                 <button @click="game.startFront(selectedArmy.id)">Assigner une portion</button>

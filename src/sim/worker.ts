@@ -179,6 +179,9 @@ const api = {
   holdArmy(armyId: number): void {
     act((s) => s.holdArmy(armyId))
   },
+  keyPointsArmy(armyId: number): string | null {
+    return act((s) => s.keyPointsArmy(armyId)) ?? null
+  },
   advanceArmy(armyId: number, goal: AdvanceGoal): string | null {
     return act((s) => s.advanceArmy(armyId, goal)) ?? null
   },

@@ -392,6 +392,25 @@ export function buildLayers(input: LayerInput): Layer[] {
       }),
     )
   }
+  // Mission « Tenir les points clés » de l'armée sélectionnée : points clés tenus, en orange.
+  const keyPoints =
+    selectedArmy?.mission?.kind === 'keyPoints' ? (selectedArmy.keyPoints ?? []) : []
+  if (keyPoints.length > 0) {
+    layers.push(
+      new ScatterplotLayer({
+        id: 'key-points',
+        data: keyPoints,
+        getPosition: (p: LonLat) => p,
+        getFillColor: [251, 146, 60, 120],
+        getLineColor: [251, 146, 60, 255],
+        stroked: true,
+        lineWidthUnits: 'pixels',
+        getLineWidth: 2,
+        radiusUnits: 'pixels',
+        getRadius: 7,
+      }),
+    )
+  }
   // Missions « Avancer » de l'armée sélectionnée et des armées des unités choisies : tracé visé en bleu
   // clair, objectif marqué.
   const missions = snapshot.armies

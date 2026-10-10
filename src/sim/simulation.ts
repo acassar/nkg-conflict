@@ -767,6 +767,14 @@ export class Simulation {
     holdMission(this.ctx, this.playerArmy(armyId))
   }
 
+  /** Mission « Tenir les points clés » : l'armée garde son front, en force sur les points clés. */
+  keyPointsArmy(armyId: number): string | null {
+    const army = this.playerArmy(armyId)
+    if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
+    holdMission(this.ctx, army, true)
+    return null
+  }
+
   /** Mission « Avancer » d'une armée entière. */
   advanceArmy(armyId: number, goal: AdvanceGoal): string | null {
     const army = this.playerArmy(armyId)

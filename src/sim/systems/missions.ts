@@ -233,6 +233,7 @@ export function startAdvance(
   if (lineCount === 0) return `${army.name} n'a pas d'unité de ligne pour avancer`
   // L'avance remplace l'offensive planifiée ; les unités qui attaquaient reprennent la nouvelle mission.
   army.offensive = null
+  delete army.keyPoints
   army.mission = {
     kind: 'advance',
     goal,
@@ -256,13 +257,21 @@ export function startAdvance(
   return null
 }
 
-/** Retour à « Tenir » : les unités en marche s'arrêtent et l'armée reprend son front. */
-export function holdMission(ctx: SimContext, army: ArmyState): void {
-  if (!advanceOf(army)) {
-    army.mission = undefined
+/**
+ * Retour à « Tenir » (ou passage à « Tenir les points clés » avec `keyPoints`) : les unités en marche
+ * s'arrêtent et l'armée reprend son front, avec ses postes répartis selon la mission.
+ */
+export function holdMission(ctx: SimContext, army: ArmyState, keyPoints = false): void {
+  const wasAdvance = !!advanceOf(army)
+  const changed = (army.mission?.kind === 'keyPoints') !== keyPoints
+  army.mission = keyPoints ? { kind: 'keyPoints' } : undefined
+  if (changed && keyPoints) ctx.log(`${army.name} tient les points clés du front`, army.owner)
+  if (!wasAdvance) {
+    // Nouvelle répartition des postes tout de suite (sinon à la répartition suivante).
+    if (changed && (army.front || army.wholeFront)) assignFront(ctx, army)
+    else if (!keyPoints) delete army.keyPoints
     return
   }
-  army.mission = undefined
   for (const id of army.unitIds) {
     const u = ctx.units.get(id)
     if (!u || u.direct || runtimeOf(ctx, u.id).reaction) continue

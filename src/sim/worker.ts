@@ -14,6 +14,7 @@ import type {
   SimSnapshot,
   UnitKind,
   WarEconomyLevel,
+  AutoEconomy,
 } from './core/types'
 import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
@@ -235,8 +236,11 @@ const api = {
   cancelRecruit(id: number): void {
     act((s) => s.cancelRecruit(id))
   },
-  setAutoEconomy(on: boolean): void {
-    act((s) => s.setAutoEconomy(on))
+  setAutoEconomy(part: keyof AutoEconomy, on: boolean): void {
+    act((s) => s.setAutoEconomy(part, on))
+  },
+  moveQueueItem(id: number, delta: -1 | 1 | 'first'): void {
+    act((s) => s.moveQueueItem(id, delta))
   },
   setWarEconomy(level: WarEconomyLevel): void {
     act((s) => s.setWarEconomy(level))

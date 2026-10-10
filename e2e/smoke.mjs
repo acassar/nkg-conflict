@@ -293,6 +293,37 @@ try {
     .click()
   await page.waitForTimeout(500)
   const warEconomy = await page.evaluate(() => window.__nkg.snapshot.economy.warEconomy)
+  // Tiroir Production : effets du cran choisi, file unique réordonnable, gestion automatique en deux parties.
+  const effects = await page.getByTestId('war-economy-effects').innerText()
+  if (!/\+30 %/.test(effects))
+    report.errors.push(`effets de l'économie de guerre absents (${effects})`)
+  await page.evaluate(() => {
+    window.__nkg.queueConstruction('Lviv', 'depot')
+    window.__nkg.queueConstruction('Odessa', 'depot')
+  })
+  await page.waitForTimeout(400)
+  const queueRows = await page.getByTestId('production-queue').locator('li').count()
+  const firstCity = () => page.evaluate(() => window.__nkg.snapshot.economy.construction[0]?.city)
+  const headBefore = await firstCity()
+  await page
+    .getByTestId('queue-build')
+    .nth(1)
+    .getByRole('button', { name: 'Monter dans la file des chantiers' })
+    .click()
+  await page.waitForTimeout(400)
+  const headAfter = await firstCity()
+  await page.getByTestId('auto-recruit').check()
+  await page.waitForTimeout(300)
+  const auto = await page.evaluate(() => window.__nkg.snapshot.autoEconomy)
+  await page.getByTestId('auto-recruit').uncheck()
+  step('file de production', { lignes: queueRows, tete: [headBefore, headAfter], auto })
+  if (queueRows < 3) report.errors.push(`file de production incomplète (${queueRows} lignes)`)
+  if (!headAfter || headAfter === headBefore)
+    report.errors.push('chantier non remonté dans la file')
+  if (!auto || auto.recruit !== true || auto.build !== false) {
+    report.errors.push(`gestion automatique des renforts non appliquée (${JSON.stringify(auto)})`)
+  }
+  await shot('02b2-file-production')
   // Fiche de la ville : plus de recrutement par ville, un renvoi vers les renforts des armées.
   await page.evaluate(() => window.__nkg.selectCity('Kyiv'))
   await page.getByTestId('city-sheet').waitFor()

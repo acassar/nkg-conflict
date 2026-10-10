@@ -19,6 +19,7 @@ import type {
   SimSnapshot,
   WarEconomyLevel,
   UnitSnapshot,
+  AutoEconomy,
 } from '@/sim/core/types'
 import type { PlayerOrder } from '@/sim/simulation'
 import type { AidLevel, PeaceKind } from '@/sim/politics/types'
@@ -640,6 +641,19 @@ export const useGameStore = defineStore('game', () => {
     hideInspector('units', 'army')
   }
 
+  /** Sous-onglet de la fiche d'armée : ordre (missions, posture), composition ou renforts. */
+  const armyView = ref<'command' | 'composition' | 'recruit'>('command')
+
+  /** Ouvre les renforts d'une armée du joueur (la plus grande par défaut), depuis le tiroir Production. */
+  function openArmyRecruit(id?: number): void {
+    const army =
+      armies.value.find((a) => a.id === id) ??
+      [...armies.value].sort((a, b) => b.unitIds.length - a.unitIds.length)[0]
+    if (!army) return
+    selectArmy(army.id)
+    armyView.value = 'recruit'
+  }
+
   function selectArmy(id: number | null): void {
     selectedArmyId.value = id
     const army = armies.value.find((a) => a.id === id)
@@ -892,7 +906,10 @@ export const useGameStore = defineStore('game', () => {
 
   const cancelConstruction = (id: number): Promise<void> => sim.cancelConstruction(id)
   const cancelRecruit = (id: number): Promise<void> => sim.cancelRecruit(id)
-  const setAutoEconomy = (on: boolean): Promise<void> => sim.setAutoEconomy(on)
+  const setAutoEconomy = (part: keyof AutoEconomy, on: boolean): Promise<void> =>
+    sim.setAutoEconomy(part, on)
+  const moveQueueItem = (id: number, delta: -1 | 1 | 'first'): Promise<void> =>
+    sim.moveQueueItem(id, delta)
   const setWarEconomy = (level: WarEconomyLevel): Promise<void> => sim.setWarEconomy(level)
 
   // ---------- Diplomatie ----------
@@ -1124,6 +1141,8 @@ export const useGameStore = defineStore('game', () => {
     ownerAt,
     clearSelection,
     selectArmy,
+    armyView,
+    openArmyRecruit,
     selectCity,
     selectCountry,
     cancelMode,
@@ -1156,6 +1175,7 @@ export const useGameStore = defineStore('game', () => {
     cancelConstruction,
     cancelRecruit,
     setAutoEconomy,
+    moveQueueItem,
     setWarEconomy,
     declareWar,
     proposePeace,

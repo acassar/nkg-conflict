@@ -371,6 +371,32 @@ try {
   check(full === 'full', `le tiroir devrait être plein écran (${full})`)
   await shot('m06-tiroir-plein')
 
+  // Tiroir Production : file unique, boutons de la file au doigt et dans l'écran.
+  await page.getByTestId('rail-production').tap()
+  await page.getByTestId('production-queue').waitFor()
+  await store(() => {
+    window.__nkg.queueConstruction('Lviv', 'depot')
+    window.__nkg.queueConstruction('Odessa', 'depot')
+  })
+  await page.waitForTimeout(400)
+  const down = page
+    .getByTestId('queue-build')
+    .first()
+    .getByRole('button', { name: 'Descendre dans la file des chantiers' })
+  await down.scrollIntoViewIfNeeded()
+  const downBox = await down.boundingBox()
+  const headBefore = await store(() => window.__nkg.economy?.construction[0]?.id ?? null)
+  await down.tap()
+  await page.waitForTimeout(400)
+  const headAfter = await store(() => window.__nkg.economy?.construction[0]?.id ?? null)
+  step('file de production (mobile)', { bouton: downBox, tete: [headBefore, headAfter] })
+  check(
+    !!downBox && downBox.x >= 0 && downBox.x + downBox.width <= 390,
+    'bouton de la file de production hors de l’écran',
+  )
+  check(headAfter !== headBefore, 'chantier non descendu dans la file')
+  await shot('m06a-file-production')
+
   // Retour au menu par le menu ☰, puis écran de départ.
   await page.getByTestId('menu-button').tap()
   page.once('dialog', (d) => d.accept())

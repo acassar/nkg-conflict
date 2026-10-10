@@ -23,6 +23,7 @@ import type {
   UnitKind,
   WarEconomyLevel,
   UnitState,
+  AutoEconomy,
 } from './core/types'
 import { countryName, runtimeOf, sideIndex, type SimContext } from './context'
 import { decodeRle, Grid, type TheaterData } from './theater/grid'
@@ -66,6 +67,7 @@ import {
   cancelConstruction,
   setWarEconomy,
   cancelRecruit,
+  moveQueueItem,
   initCities,
   initEconomies,
   onCityCaptured,
@@ -183,8 +185,8 @@ export class Simulation {
   private ai = new Map<CountryId, AiState>()
   /** Vrai : l'IA commande aussi le pays du joueur (parties de test, mode spectateur). */
   aiControlsPlayer = false
-  /** Vrai : l'IA gère l'économie du joueur (constructions et formations), le joueur garde ses armées. */
-  autoEconomy = false
+  /** Parties de l'économie du joueur gérées par l'IA (constructions, formations) ; le joueur garde ses armées. */
+  autoEconomy: AutoEconomy = { build: false, recruit: false }
   private initialTerritory: number[] = []
   private publishedGridVersion = -1
   private neighbors: Map<CountryId, Set<CountryId>> | null = null
@@ -385,7 +387,8 @@ export class Simulation {
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
     sim.outcome = save.outcome
-    sim.autoEconomy = save.autoEconomy ?? false
+    const auto = save.autoEconomy ?? false
+    sim.autoEconomy = typeof auto === 'boolean' ? { build: auto, recruit: auto } : { ...auto }
     for (const [c, tick] of Object.entries(save.aiLastOffensiveTick)) {
       sim.ai.set(c, newAiState(tick))
     }
@@ -567,8 +570,12 @@ export class Simulation {
     deliverEquipment(ctx)
     updateSustainability(ctx)
     const managed = this.mobilizedAi()
-    if (this.autoEconomy && !managed.includes(this.playerCountry)) managed.push(this.playerCountry)
     for (const c of managed) updateAiEconomy(ctx, c)
+    // Gestion automatique du joueur : seulement les parties choisies, jamais l'économie de guerre.
+    const auto = this.autoEconomy
+    if (!managed.includes(this.playerCountry) && (auto.build || auto.recruit)) {
+      updateAiEconomy(ctx, this.playerCountry, { warEconomy: false, ...auto })
+    }
     updateSupplySources(ctx, this.scenario)
     updatePoliticsDaily(ctx, ctx.losses)
     updatePassages(ctx)
@@ -1040,8 +1047,14 @@ export class Simulation {
     cancelRecruit(this.ctx, this.playerCountry, id)
   }
 
-  setAutoEconomy(on: boolean): void {
-    this.autoEconomy = on
+  /** Active ou coupe une partie de la gestion automatique (constructions ou renforts). */
+  setAutoEconomy(part: keyof AutoEconomy, on: boolean): void {
+    this.autoEconomy = { ...this.autoEconomy, [part]: on }
+  }
+
+  /** Change la place d'un chantier ou d'une formation dans sa file. */
+  moveQueueItem(id: number, delta: -1 | 1 | 'first'): void {
+    moveQueueItem(this.ctx, this.playerCountry, id, delta)
   }
 
   setWarEconomy(level: WarEconomyLevel): void {
@@ -1254,7 +1267,7 @@ export class Simulation {
         }),
       cities,
       economy: economy ? structuredClone(economy) : null,
-      autoEconomy: this.autoEconomy,
+      autoEconomy: { ...this.autoEconomy },
       politics: politicsSnapshot(ctx, this.playerCountry),
       events: this.events.slice(),
       territoryHeld,
@@ -1330,7 +1343,7 @@ export class Simulation {
         buildings: { ...c.buildings },
       })),
       economies: [...ctx.economies.values()].map((e) => structuredClone(e)),
-      autoEconomy: this.autoEconomy,
+      autoEconomy: { ...this.autoEconomy },
       politics: {
         countries: [...p.countries.values()].map((c) => ({ ...c })),
         relations: [...p.relations.entries()],

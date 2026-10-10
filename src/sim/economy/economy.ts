@@ -441,6 +441,42 @@ export function cancelConstruction(ctx: SimContext, country: CountryId, id: numb
   if (eco) eco.construction = eco.construction.filter((q) => q.id !== id)
 }
 
+/**
+ * Déplace un chantier ou une formation dans sa propre file : `delta` −1 monte d'un rang, +1 descend,
+ * `'first'` passe en tête. Les premiers de chaque file sont ceux qui avancent (chantiers selon les
+ * points du jour, formations une par caserne). Renvoie vrai si l'ordre a changé.
+ */
+export function moveQueueItem(
+  ctx: SimContext,
+  country: CountryId,
+  id: number,
+  delta: -1 | 1 | 'first',
+): boolean {
+  const eco = ctx.economies.get(country)
+  if (!eco) return false
+  const move = <T extends { id: number }>(queue: T[]): T[] | null => {
+    const from = queue.findIndex((q) => q.id === id)
+    if (from < 0) return null
+    const to = delta === 'first' ? 0 : Math.max(0, Math.min(queue.length - 1, from + delta))
+    if (to === from) return queue
+    const next = [...queue]
+    const [item] = next.splice(from, 1)
+    if (item) next.splice(to, 0, item)
+    return next
+  }
+  const build = move(eco.construction)
+  if (build) {
+    const changed = build !== eco.construction
+    eco.construction = build
+    return changed
+  }
+  const train = move(eco.recruitment)
+  if (!train) return false
+  const changed = train !== eco.recruitment
+  eco.recruitment = train
+  return changed
+}
+
 /** Lance la formation d'une unité. La main-d'œuvre est engagée tout de suite. */
 export function queueRecruit(
   ctx: SimContext,

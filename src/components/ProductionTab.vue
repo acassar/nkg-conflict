@@ -2,9 +2,9 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
-import { BUILDING_KINDS, BUILDINGS, RECRUIT_COSTS, WAR_ECONOMY } from '@/sim/economy/rules'
-import { MODERN_CATALOG } from '@/sim/units/catalog'
-import type { UnitKind, WarEconomyLevel } from '@/sim/core/types'
+import { BUILDING_KINDS, BUILDINGS, WAR_ECONOMY } from '@/sim/economy/rules'
+import type { WarEconomyLevel } from '@/sim/core/types'
+import { productionQueue, warEconomyEffects } from '@/composables/productionQueue'
 import { useProductionStats } from '@/composables/production'
 import { useSustainability } from '@/composables/sustainability'
 import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
@@ -35,16 +35,29 @@ const stats = useProductionStats()
 const sustain = useSustainability()
 const signedRound = (v: number): string =>
   `${v >= 0 ? '+' : '−'}${Math.round(Math.abs(v)).toLocaleString('fr-FR')}`
-/** Jours restants au rythme maximal (borne basse). */
-const etaDays = (progress: number, cost: number, minDays: number): number =>
-  Math.max(1, Math.ceil(((cost - progress) / cost) * minDays))
 const ratio = (a: number, b: number): string => `${b > 0 ? Math.min(100, (100 * a) / b) : 0}%`
 
-const pct = (progress: number, cost: number): number => Math.min(100, (100 * progress) / cost)
 const round = (v: number): string => Math.round(v).toLocaleString('fr-FR')
-const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
+
+/** File unique des chantiers et des formations. */
+const queue = computed(() => {
+  const eco = economy.value
+  const s = stats.value
+  if (!eco || !s) return []
+  return productionQueue(
+    eco,
+    s.construction.max,
+    s.recruitment.max,
+    (id) => game.armies.find((a) => a.id === id)?.name ?? null,
+  )
+})
+const freeBarracks = computed(() =>
+  stats.value ? Math.max(0, stats.value.recruitment.max - stats.value.recruitment.active) : 0,
+)
 
 const WAR_LEVELS: WarEconomyLevel[] = [0, 1, 2]
+const warLevel = computed<WarEconomyLevel>(() => economy.value?.warEconomy ?? 0)
+const warEffects = computed(() => warEconomyEffects(warLevel.value))
 const signed = (v: number): string => `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`
 const warTitle = (level: WarEconomyLevel): string => {
   const r = WAR_ECONOMY[level]
@@ -144,12 +157,12 @@ const warTitle = (level: WarEconomyLevel): string => {
           >
         </div>
         <div class="cap">
-          <span class="cap-label">Formations</span>
+          <span class="cap-label">Casernes</span>
           <span class="cap-value">{{ stats.recruitment.active }}/{{ stats.recruitment.max }}</span>
           <span class="gauge"
             ><i :style="{ width: ratio(stats.recruitment.active, stats.recruitment.max) }"
           /></span>
-          <span class="meta">casernes occupées</span>
+          <span class="meta">occupées par une formation</span>
         </div>
         <div class="cap">
           <span class="cap-label">Production</span>
@@ -166,37 +179,72 @@ const warTitle = (level: WarEconomyLevel): string => {
         <p v-if="stats.recruitment.max === 0" class="warn">
           Aucune caserne : construisez-en une pour former des unités.
         </p>
-        <p
-          v-else-if="
-            stats.recruitment.active < stats.recruitment.max && stats.production.stock > 300
-          "
-          class="free-tip"
-        >
-          {{ stats.recruitment.max - stats.recruitment.active }} caserne(s) libre(s) : commandez des
-          renforts depuis une armée (onglet « Renforts » de sa fiche).
-        </p>
+        <div v-else-if="freeBarracks > 0" class="free-tip" data-testid="free-barracks">
+          <span
+            >{{ freeBarracks }} caserne{{ freeBarracks > 1 ? 's' : '' }} libre{{
+              freeBarracks > 1 ? 's' : ''
+            }}<template v-if="stats.production.stock > 300">
+              et {{ round(stats.production.stock) }} de production en stock</template
+            >.</span
+          >
+          <button
+            v-if="game.armies.length"
+            data-testid="free-barracks-recruit"
+            @click="game.openArmyRecruit()"
+          >
+            Commander des renforts
+          </button>
+        </div>
       </div>
 
-      <label class="auto">
-        <input
-          type="checkbox"
-          :checked="game.snapshot?.autoEconomy ?? false"
-          @change="game.setAutoEconomy(($event.target as HTMLInputElement).checked)"
-        />
-        Gestion automatique (constructions et formations)
-      </label>
-
+      <!-- Économie de guerre : sélecteur à trois crans et effets du cran choisi. -->
       <div class="war-economy" data-testid="war-economy">
-        <span class="label">Économie</span>
-        <button
-          v-for="level in WAR_LEVELS"
-          :key="level"
-          :class="{ active: (economy?.warEconomy ?? 0) === level }"
-          :title="warTitle(level)"
-          @click="game.setWarEconomy(level)"
-        >
-          {{ WAR_ECONOMY[level].name }}
-        </button>
+        <p class="label">Économie</p>
+        <div class="segs">
+          <button
+            v-for="level in WAR_LEVELS"
+            :key="level"
+            class="seg"
+            :class="{ on: warLevel === level }"
+            :aria-pressed="warLevel === level"
+            :title="warTitle(level)"
+            @click="game.setWarEconomy(level)"
+          >
+            {{ WAR_ECONOMY[level].name }}
+          </button>
+        </div>
+        <ul class="effects" data-testid="war-economy-effects">
+          <li v-for="line in warEffects" :key="line">{{ line }}</li>
+        </ul>
+      </div>
+
+      <!-- Gestion automatique : constructions et renforts des armées, séparément. -->
+      <div class="auto" data-testid="auto-economy">
+        <p class="label">Gestion automatique</p>
+        <label>
+          <input
+            type="checkbox"
+            data-testid="auto-build"
+            :checked="game.snapshot?.autoEconomy.build ?? false"
+            @change="game.setAutoEconomy('build', ($event.target as HTMLInputElement).checked)"
+          />
+          <span
+            >Constructions
+            <span class="meta">fortifications au front, usines à l'arrière</span></span
+          >
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            data-testid="auto-recruit"
+            :checked="game.snapshot?.autoEconomy.recruit ?? false"
+            @change="game.setAutoEconomy('recruit', ($event.target as HTMLInputElement).checked)"
+          />
+          <span
+            >Renforts des armées
+            <span class="meta">casernes proches du front, recrues vers l'armée du front</span></span
+          >
+        </label>
       </div>
 
       <!-- Soutenabilité : l'économie peut-elle maintenir l'armée au rythme actuel des pertes ? -->
@@ -228,57 +276,64 @@ const warTitle = (level: WarEconomyLevel): string => {
         </table>
       </div>
 
-      <p class="empty">Cliquez sur une de vos villes pour voir ses bâtiments et y construire.</p>
-
-      <!-- Files d'attente -->
-      <section v-if="economy" class="queues">
-        <div class="label">Constructions ({{ economy.construction.length }})</div>
-        <p v-if="economy.construction.length === 0" class="meta">Aucune</p>
+      <!-- File unique : chantiers et formations, ce qui avance d'abord. -->
+      <section v-if="economy" class="queues" data-testid="production-queue">
+        <div class="label">File de production ({{ queue.length }})</div>
+        <p v-if="queue.length === 0" class="meta">
+          Rien en cours. Cliquez sur une de vos villes pour y construire ; les formations se
+          commandent depuis une armée.
+        </p>
         <ul>
           <li
-            v-for="(q, k) in economy.construction"
-            :key="q.id"
-            :class="{ waiting: k >= (stats?.construction.max ?? 0) }"
+            v-for="r in queue"
+            :key="r.id"
+            :class="{ waiting: !r.active }"
+            :data-testid="`queue-${r.type}`"
           >
             <div class="row">
-              <span>{{ BUILDINGS[q.kind].name }} · {{ q.city }}</span>
-              <span class="meta">
-                {{
-                  k >= (stats?.construction.max ?? 0)
-                    ? 'en attente'
-                    : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, BUILDINGS[q.kind].minDays)} j`
-                }}
+              <span class="tag" :class="r.type">{{ r.tag }}</span>
+              <span class="what"
+                >{{ r.name }} · {{ r.city }}<span v-if="r.army" class="meta"> → {{ r.army }}</span>
+                <span class="meta status">{{ r.status }}</span></span
+              >
+              <span class="moves">
+                <button
+                  class="x"
+                  :disabled="r.index === 0"
+                  :aria-label="`Monter dans la file des ${r.type === 'build' ? 'chantiers' : 'formations'}`"
+                  :title="`Monter dans la file des ${r.type === 'build' ? 'chantiers' : 'formations'}`"
+                  @click="game.moveQueueItem(r.id, -1)"
+                >
+                  ▲
+                </button>
+                <button
+                  class="x"
+                  :disabled="r.index === r.size - 1"
+                  :aria-label="`Descendre dans la file des ${r.type === 'build' ? 'chantiers' : 'formations'}`"
+                  :title="`Descendre dans la file des ${r.type === 'build' ? 'chantiers' : 'formations'}`"
+                  @click="game.moveQueueItem(r.id, 1)"
+                >
+                  ▼
+                </button>
+                <button
+                  class="x"
+                  aria-label="Annuler"
+                  title="Annuler"
+                  @click="
+                    r.type === 'build' ? game.cancelConstruction(r.id) : game.cancelRecruit(r.id)
+                  "
+                >
+                  ×
+                </button>
               </span>
-              <button class="x" aria-label="Annuler" @click="game.cancelConstruction(q.id)">
-                ×
-              </button>
             </div>
-            <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
+            <div class="bar"><div :style="{ width: `${r.pct}%` }" /></div>
           </li>
         </ul>
-
-        <div class="label">Formations ({{ economy.recruitment.length }})</div>
-        <p v-if="economy.recruitment.length === 0" class="meta">Aucune</p>
-        <ul>
-          <li
-            v-for="q in economy.recruitment"
-            :key="q.id"
-            :class="{ waiting: !stats?.recruitment.activeIds.has(q.id) }"
-          >
-            <div class="row">
-              <span>{{ unitLabel(q.kind) }} · {{ q.city }}</span>
-              <span class="meta">
-                {{
-                  !stats?.recruitment.activeIds.has(q.id)
-                    ? 'en attente de caserne'
-                    : `${Math.round(pct(q.progress, q.cost))} % · ≈ ${etaDays(q.progress, q.cost, RECRUIT_COSTS[q.kind].days)} j`
-                }}
-              </span>
-              <button class="x" aria-label="Annuler" @click="game.cancelRecruit(q.id)">×</button>
-            </div>
-            <div class="bar"><div :style="{ width: `${pct(q.progress, q.cost)}%` }" /></div>
-          </li>
-        </ul>
+        <p v-if="queue.length > 1" class="meta">
+          Les premiers chantiers et une formation par caserne avancent ; ▲ et ▼ changent l'ordre
+          dans chaque file.
+        </p>
 
         <p class="meta daily">
           Par jour : +{{ round(economy.daily.construction) }} construction, +{{
@@ -337,6 +392,10 @@ const warTitle = (level: WarEconomyLevel): string => {
   color: #fca5a5;
 }
 .capacity .free-tip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
   margin: 2px 0 0;
   color: #fcd34d;
   font-size: 12px;
@@ -386,21 +445,82 @@ li.waiting {
   color: #fca5a5;
 }
 .war-economy {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
   margin: 6px 0 10px;
 }
-.war-economy .label {
-  margin-right: 4px;
+.segs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--frame-line, #263140);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.seg {
+  border: none;
+  border-radius: 0;
+  padding: 5px 2px;
+  font-size: 11px;
+  line-height: 1.15;
+  background: #1b2028;
+  white-space: normal;
+}
+.seg + .seg {
+  border-left: 1px solid var(--frame-line, #263140);
+}
+.seg.on {
+  background: var(--frame-blue, #4c8dff);
+  color: #fff;
+}
+.effects {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #9aa3af;
 }
 .auto {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 10px;
+  color: #cbd2dc;
+}
+.auto label {
   display: flex;
   gap: 6px;
-  align-items: center;
-  margin-bottom: 8px;
-  color: #cbd2dc;
+  align-items: baseline;
+}
+.auto .meta {
+  display: block;
+  font-size: 11px;
+}
+.tag {
+  flex: none;
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0 4px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+.tag.build {
+  background: #3b3220;
+  color: #fcd34d;
+}
+.tag.train {
+  background: #1e2b40;
+  color: #93c5fd;
+}
+.what {
+  flex: 1;
+  min-width: 0;
+}
+.status {
+  display: block;
+  font-size: 11px;
+}
+.moves {
+  display: flex;
+  gap: 2px;
+  flex: none;
 }
 h3 {
   margin: 4px 0 6px;
@@ -469,7 +589,8 @@ select {
   align-items: center;
 }
 .x {
-  padding: 0 6px;
+  padding: 0 5px;
+  font-size: 11px;
 }
 .bar {
   height: 4px;

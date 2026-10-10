@@ -482,8 +482,8 @@ export interface SimSnapshot {
   cities: CityState[]
   /** Économie du joueur (celle de l'IA n'est pas publiée). */
   economy: EconomyState | null
-  /** L'économie du joueur est gérée automatiquement. */
-  autoEconomy: boolean
+  /** Parties de l'économie du joueur gérées automatiquement. */
+  autoEconomy: AutoEconomy
   politics: PoliticsSnapshot
   events: GameEvent[]
   /** Part du territoire de départ conservée par chaque camp, 0 à 1. */
@@ -563,4 +563,13 @@ export interface ScenarioPolitics {
   armiesAtStart?: boolean
   /** Aides étrangères en place au début de la partie (niveau 1 à 3). */
   aids?: Array<{ from: CountryId; to: CountryId; level: 1 | 2 | 3 }>
+}
+
+/**
+ * Gestion automatique de l'économie du joueur, en deux parties indépendantes : constructions
+ * (chantiers) et renforts des armées (formations). L'économie de guerre reste au joueur.
+ */
+export interface AutoEconomy {
+  build: boolean
+  recruit: boolean
 }

@@ -7,6 +7,17 @@ import { BUILDINGS, RECRUIT_COSTS } from './rules'
 import { relation } from '../politics/politics'
 import { territoryShares } from './national'
 
+/** Parties de l'économie confiées à l'IA : tout pour un pays IA, au choix pour le joueur. */
+export interface AiEconomyParts {
+  /** Niveau d'économie de guerre. */
+  warEconomy: boolean
+  /** Chantiers (fortifications au front, usines à l'arrière). */
+  build: boolean
+  /** Formations, versées à l'armée qui tient tout le front. */
+  recruit: boolean
+}
+const ALL_PARTS: AiEconomyParts = { warEconomy: true, build: true, recruit: true }
+
 /** Composition visée des nouvelles unités de l'IA (cycle). */
 const RECRUIT_CYCLE: UnitKind[] = ['inf', 'mech', 'inf', 'tank', 'art', 'inf', 'mech', 'log']
 const FRONT_CITY_KM = 60
@@ -61,7 +72,11 @@ function peaceTarget(ctx: SimContext, country: CountryId): number {
  *   en paix, seulement pour entretenir l'effectif visé (relevé en cas de tension) ;
  * - les nouvelles unités rejoignent l'armée qui tient tout le front.
  */
-export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
+export function updateAiEconomy(
+  ctx: SimContext,
+  country: CountryId,
+  parts: AiEconomyParts = ALL_PARTS,
+): void {
   const eco = ctx.economies.get(country)
   if (!eco) return
   const g = ctx.grid
@@ -77,14 +92,16 @@ export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
 
   // Économie de guerre : partielle en guerre, totale quand le pays perd du terrain.
   const side = sideIndex(ctx, country)
-  if (ctx.matrix.atWar[side] !== 1) setWarEconomy(ctx, country, 0)
-  else {
-    const home = territoryShares(ctx).home[side] ?? 1
-    setWarEconomy(ctx, country, home < TOTAL_WAR_HOME_SHARE ? 2 : 1)
+  if (parts.warEconomy) {
+    if (ctx.matrix.atWar[side] !== 1) setWarEconomy(ctx, country, 0)
+    else {
+      const home = territoryShares(ctx).home[side] ?? 1
+      setWarEconomy(ctx, country, home < TOTAL_WAR_HOME_SHARE ? 2 : 1)
+    }
   }
 
   // Constructions.
-  if (eco.construction.length < 2) {
+  if (parts.build && eco.construction.length < 2) {
     const frontCity = cities
       .filter((x) => x.front < FRONT_CITY_KM && x.c.buildings.fort < BUILDINGS.fort.maxPerCity)
       .sort((a, b) => b.c.def.pop - a.c.def.pop)[0]
@@ -102,6 +119,7 @@ export function updateAiEconomy(ctx: SimContext, country: CountryId): void {
   }
 
   // Formations.
+  if (!parts.recruit) return
   // Les trois villes de caserne les plus proches du front (pas de recrues en Sibérie pour l'Ukraine).
   const barracks = cities
     .filter((x) => x.c.buildings.barracks > 0)

@@ -8,6 +8,7 @@ import type {
   GameOutcome,
   ScenarioOptions,
   UnitState,
+  AutoEconomy,
 } from './types'
 import type {
   Aid,
@@ -63,7 +64,8 @@ export interface SaveFile {
   /** Villes : propriétaire (index de camp) et bâtiments. */
   cities: Array<{ name: string; owner: number; buildings: Buildings }>
   economies: EconomyState[]
-  autoEconomy?: boolean
+  /** Ancien format : un booléen pour les deux parties. */
+  autoEconomy?: boolean | AutoEconomy
   politics: {
     countries: CountryPolitics[]
     relations: Array<[string, number]>

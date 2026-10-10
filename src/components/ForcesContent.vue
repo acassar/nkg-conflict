@@ -26,7 +26,7 @@ import type {
 } from '@/sim/core/types'
 
 const game = useGameStore()
-const { selectedUnits, armies, selectedArmy, selectedArmyId } = storeToRefs(game)
+const { selectedUnits, armies, selectedArmy, selectedArmyId, armyView } = storeToRefs(game)
 const armyName = ref('')
 
 /**
@@ -160,9 +160,6 @@ function missionStatus(a: ArmyState): string {
   }
   return text
 }
-
-/** Sous-onglet de la fiche d'armée : commandement (missions, posture) ou recrutement. */
-const armyView = ref<'command' | 'composition' | 'recruit'>('command')
 
 /** Casernes libres du pays (pastille de l'onglet « Renforts »). */
 const prodStats = useProductionStats()

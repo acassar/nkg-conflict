@@ -108,6 +108,9 @@ export function updateMovement(ctx: SimContext): void {
         u.entrench = Math.min(1, u.entrench + ENTRENCH_PER_HOUR * postureOf(u.posture).entrench)
         layObstacles(ctx, u)
       }
+      // Chemin en attente de calcul (carte du monde, quelques chemins par tick) : l'ordre n'est pas
+      // terminé, l'unité attend son chemin.
+      if (!moving && rt.pathPending) continue
       if (!moving) {
         finishOrder(u)
         // Ordre direct du joueur terminé : on note l'heure, l'armée reprendra l'unité ensuite.

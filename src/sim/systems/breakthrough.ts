@@ -5,6 +5,7 @@ import { isLineUnit } from '../units/catalog'
 import { nearestCity } from './ai'
 import { planPath } from './movement'
 import { snapToAxis } from './axes'
+import { isHalted } from './restraint'
 
 /** Rayon autour d'une unité ennemie pour juger si elle s'est enfoncée dans nos lignes. */
 const SALIENT_RADIUS_KM = 25
@@ -168,6 +169,7 @@ function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): 
       .filter(
         (u) =>
           !reacting(u) &&
+          !isHalted(ctx, u) &&
           runtimeOf(ctx, u.id).stance?.decision !== 'withdraw' &&
           // Unités à leur poste ou à l'arrêt (l'armée les renverrait de toute façon au front).
           (u.order.kind === 'front' || u.order.kind === 'hold' || u.order.kind === 'idle') &&

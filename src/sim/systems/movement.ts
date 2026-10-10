@@ -23,6 +23,8 @@ function speedKmh(ctx: SimContext, u: UnitState): number {
 /** Calcule le chemin d'une unité vers une cible. Coût plus élevé en territoire ennemi sauf pour attaquer. */
 export function planPath(ctx: SimContext, u: UnitState, target: LonLat): void {
   const side = sideIndex(ctx, u.owner)
+  // Début d'un ordre offensif : point de départ gardé pour mesurer l'avance (attaque mesurée).
+  if (isOffensiveOrder(u.order.kind)) u.order.from ??= [u.lon, u.lat]
   const enemyCost = isOffensiveOrder(u.order.kind) ? 1.2 : u.order.kind === 'retreat' ? 8 : 2
   // Long trajet : recherche plus gourmande et bornée, pour ne pas figer la partie sur les grands fronts.
   const far =
@@ -143,7 +145,9 @@ export function updatePursuits(ctx: SimContext): void {
     const last = u.order.target
     const moved = !last || distanceKm(last[0], last[1], target.lon, target.lat) > PURSUIT_REPLAN_KM
     if (moved || (u.path.length === 0 && runtimeOf(ctx, u.id).engagedWith === null)) {
+      const from = u.order.from
       u.order = { kind: 'pursue', unitId: target.id, target: [target.lon, target.lat] }
+      if (from) u.order.from = from
       planPath(ctx, u, [target.lon, target.lat])
     }
   }

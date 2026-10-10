@@ -36,6 +36,8 @@ export interface Order {
   target?: LonLat
   /** Unité ennemie poursuivie (pursue). */
   unitId?: number
+  /** Position au début d'un ordre offensif (attaque, poursuite) : mesure la distance parcourue. */
+  from?: LonLat
 }
 
 /** Ordres offensifs : valeur d'attaque au combat, pas de retranchement, passage en force. */
@@ -71,6 +73,11 @@ export interface UnitState {
    * la reprend à sa répartition suivante, après au moins une heure de tenue sur place.
    */
   direct?: { doneAt?: number }
+  /**
+   * Arrêt après une attaque ou une poursuite trop poussée (voir restraint.ts) : l'unité consolide
+   * jusqu'au tour `until` sans être relancée automatiquement.
+   */
+  halt?: { until: number; reason: 'pursuit' | 'alone' | 'unsupplied' }
 }
 
 /** Postures de combat, de la plus prudente à la plus agressive. */

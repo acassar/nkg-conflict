@@ -3,6 +3,7 @@ import type { UnitState } from '../core/types'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
 import { WarIndex } from './spatial'
+import { isHalted } from './restraint'
 
 /** Puissance d'une unité pour juger si un ennemi est plus faible. */
 const power = (u: UnitState): number => u.strength * (0.25 + 0.75 * u.org)
@@ -24,6 +25,8 @@ export function updatePostureReflexes(ctx: SimContext): void {
     const p = u.posture
     if (!p || p === 'defensive' || p === 'maxDefense') continue
     if (!isLineUnit(u.kind) || !idle(u) || runtimeOf(ctx, u.id).routed) continue
+    // Unité qui consolide après une attaque trop poussée : pas de nouvel élan tout de suite.
+    if (isHalted(ctx, u)) continue
     index ??= new WarIndex(ctx)
     if (!index.has(u)) continue
     const range = p === 'maxDamage' ? 40 : p === 'offensive' ? 20 : 12

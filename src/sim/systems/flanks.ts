@@ -49,7 +49,7 @@ function bearing(a: UnitState, b: UnitState): number {
 }
 
 /** Part des cellules praticables tenues par un camp hostile autour de l'unité. */
-function enemyShare(ctx: SimContext, u: UnitState): number {
+export function enemyShare(ctx: SimContext, u: UnitState): number {
   const { grid, matrix } = ctx
   const side = sideIndex(ctx, u.owner)
   let hostile = 0

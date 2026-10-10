@@ -31,6 +31,7 @@ import { updateMovement, updatePursuits, planPath, planQueuedPaths } from './sys
 import { updatePostureReflexes } from './systems/postures'
 import { reactToBreakthroughs } from './systems/breakthrough'
 import { holdOrFallBack, stanceText } from './systems/fallback'
+import { haltText, isHalted, restrainAttacks } from './systems/restraint'
 import { battleReport } from './systems/battle'
 import {
   autoDetachment,
@@ -475,6 +476,7 @@ export class Simulation {
         updateMissions(ctx)
         updatePostureReflexes(ctx)
         reactToBreakthroughs(ctx)
+        restrainAttacks(ctx)
         holdOrFallBack(ctx)
       }
       planQueuedPaths(ctx)
@@ -1117,7 +1119,11 @@ export class Simulation {
           commanded: rt.commanded,
           posture: u.posture ?? 'balanced',
           engagedWith: rt.engagedWith,
-          stance: rt.stance ? stanceText(rt.stance) : null,
+          stance: rt.stance
+            ? stanceText(rt.stance)
+            : u.halt && isHalted(ctx, u)
+              ? haltText(u.halt.reason)
+              : null,
         }
       }),
       armies: [...ctx.armies.values()]

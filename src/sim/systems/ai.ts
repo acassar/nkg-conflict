@@ -6,6 +6,7 @@ import { defenseValue } from './combat'
 import { frontCells } from './armies'
 import { planPath } from './movement'
 import { axisBonus } from './axes'
+import { isHalted } from './restraint'
 
 const STRIKE_SIZE = 3
 const STRIKE_DEPTH_KM = 50
@@ -31,7 +32,11 @@ export function updateAi(ctx: SimContext, country: CountryId, state: AiState): v
   )
   if (enemies.length === 0) return
   const available = own.filter(
-    (u) => isLineUnit(u.kind) && u.order.kind !== 'attack' && !runtimeOf(ctx, u.id).routed,
+    (u) =>
+      isLineUnit(u.kind) &&
+      u.order.kind !== 'attack' &&
+      !runtimeOf(ctx, u.id).routed &&
+      !isHalted(ctx, u),
   )
 
   // Contre-attaque : unité ennemie isolée (hors ravitaillement) sur notre territoire.

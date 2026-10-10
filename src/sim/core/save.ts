@@ -9,7 +9,15 @@ import type {
   ScenarioOptions,
   UnitState,
 } from './types'
-import type { Aid, AidRequest, Alliance, CountryPolitics, PeaceOffer, War } from '../politics/types'
+import type {
+  Aid,
+  AidRequest,
+  Alliance,
+  CountryPolitics,
+  Passage,
+  PeaceOffer,
+  War,
+} from '../politics/types'
 
 export const SAVE_VERSION = 5
 /** Versions encore lisibles (les champs ajoutés depuis prennent leur valeur par défaut). */
@@ -67,6 +75,9 @@ export interface SaveFile {
     aids?: Aid[]
     aidRequests?: AidRequest[]
     aidRefusals?: Array<[string, number]>
+    /** Coalition : absents des sauvegardes antérieures. */
+    passages?: Passage[]
+    coalitionRefusals?: Array<[string, number]>
     nextId: number
   }
   armylessSince: Array<[string, number]>

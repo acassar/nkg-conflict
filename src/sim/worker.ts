@@ -262,6 +262,15 @@ const api = {
   callAllies(): string {
     return act((s) => s.callAllies()) ?? ''
   },
+  askToJoin(ally: CountryId): string {
+    return act((s) => s.askToJoin(ally)) ?? ''
+  },
+  askPassage(country: CountryId): string {
+    return act((s) => s.askPassage(country)) ?? ''
+  },
+  renouncePassage(country: CountryId): string | null {
+    return act((s) => s.renouncePassage(country)) ?? null
+  },
   requestAid(donor: CountryId): string | null {
     return act((s) => s.requestAid(donor)) ?? null
   },

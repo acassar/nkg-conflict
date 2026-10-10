@@ -54,6 +54,49 @@ const sanctionsAgainst = computed(
   () => politics.value?.sanctions.filter((s) => s.endsWith(`>${code.value}`)).length ?? 0,
 )
 const sameAlliance = computed(() => myAlliances.value.some((a) => a.members.includes(code.value)))
+
+// ---------- Coalition ----------
+
+const myWars = computed(
+  () =>
+    politics.value?.wars.filter(
+      (w) => w.attackers.includes(me.value) || w.defenders.includes(me.value),
+    ) ?? [],
+)
+/** Le pays affiché combat déjà dans le camp du joueur. */
+const fightsWithMe = computed(() =>
+  myWars.value.some((w) =>
+    (w.attackers.includes(me.value) ? w.attackers : w.defenders).includes(code.value),
+  ),
+)
+const passages = computed(() => politics.value?.passages ?? [])
+/** Droit de passage accordé au joueur par le pays affiché. */
+const passageToMe = computed(() =>
+  passages.value.some((p) => p.from === me.value && p.to === code.value),
+)
+/** Pays qui accordent au pays affiché un droit de passage, et pays qui le reçoivent de lui. */
+const passagesHeld = computed(() =>
+  passages.value.filter((p) => p.from === code.value).map((p) => p.to),
+)
+const passagesGiven = computed(() =>
+  passages.value.filter((p) => p.to === code.value).map((p) => p.from),
+)
+const canAskJoin = computed(
+  () =>
+    myWars.value.length > 0 &&
+    sameAlliance.value &&
+    !fightsWithMe.value &&
+    !atWarWithMe.value &&
+    !offMap.value,
+)
+const canAskPassage = computed(
+  () =>
+    myWars.value.length > 0 &&
+    !fightsWithMe.value &&
+    !atWarWithMe.value &&
+    !passageToMe.value &&
+    !offMap.value,
+)
 const owned = computed(() => {
   const v = game.snapshot?.territoryHeld[code.value]
   return v === undefined ? null : Math.round(v * 100)
@@ -179,6 +222,14 @@ function confirmWar(): void {
         <dt>Organisations</dt>
         <dd>{{ organizations.map((o) => o.name).join(', ') }}</dd>
       </template>
+      <template v-if="passagesHeld.length">
+        <dt>Droit de passage chez</dt>
+        <dd>{{ names(passagesHeld) }}</dd>
+      </template>
+      <template v-if="passagesGiven.length">
+        <dt>Passage accordé à</dt>
+        <dd>{{ names(passagesGiven) }}</dd>
+      </template>
       <template v-if="sanctionsAgainst">
         <dt>Sanctions subies</dt>
         <dd class="bad">{{ sanctionsAgainst }} pays</dd>
@@ -211,6 +262,29 @@ function confirmWar(): void {
         @click="game.proposeAlliance(country.id)"
       >
         Proposer une alliance
+      </button>
+      <button
+        v-if="canAskJoin"
+        data-testid="ask-join"
+        title="L'allié décide selon vos relations, vos ennemis communs, la distance de la guerre et son soutien à la guerre"
+        @click="game.askToJoin(country.id)"
+      >
+        Demander de participer à la guerre
+      </button>
+      <button
+        v-if="canAskPassage"
+        data-testid="ask-passage"
+        title="Vos unités pourront traverser son territoire et s'y ravitailler pendant vos guerres"
+        @click="game.askPassage(country.id)"
+      >
+        Demander le droit de passage
+      </button>
+      <button
+        v-if="passageToMe"
+        title="Vos unités quittent son territoire"
+        @click="game.renouncePassage(country.id)"
+      >
+        Renoncer au droit de passage
       </button>
     </div>
 

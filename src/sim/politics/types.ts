@@ -93,7 +93,18 @@ export interface PoliticsState {
   aidRequests: AidRequest[]
   /** Dernière demande d'aide refusée, clé « demandeur>donneur » (tick). */
   aidRefusals: Map<string, number>
+  /** Droits de passage accordés (coalition). */
+  passages: Passage[]
+  /** Dernière demande de coalition refusée, clé « demandeur>pays:join » ou « …:passage » (tick). */
+  coalitionRefusals: Map<string, number>
   nextId: number
+}
+
+/** Droit de passage : les unités de `from` traversent le territoire de `to` pendant ses guerres. */
+export interface Passage {
+  from: CountryId
+  to: CountryId
+  startTick: number
 }
 
 /** Données politiques publiées vers l'interface. */
@@ -114,4 +125,5 @@ export interface PoliticsSnapshot {
   offers: PeaceOffer[]
   aids: Aid[]
   aidRequests: AidRequest[]
+  passages: Passage[]
 }

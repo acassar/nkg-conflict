@@ -854,6 +854,23 @@ try {
     report.errors.push(`encart de guerre : « Avancer » non appliqué (${JSON.stringify(advance)})`)
   }
 
+  // Coalition : droit de passage demandé aux Pays-Bas (pays tiers), réponse affichée.
+  await page.evaluate(() => window.__nkg.selectCountry('NLD'))
+  await page.getByTestId('tab-country').click()
+  await page.getByTestId('ask-passage').click()
+  await page.waitForTimeout(500)
+  const passage = await page.evaluate(() => ({
+    reponse: window.__nkg.toasts.at(-1)?.text ?? '',
+    accorde: window.__nkg.snapshot.politics.passages.some(
+      (p) => p.from === 'FRA' && p.to === 'NLD',
+    ),
+  }))
+  step('coalition : droit de passage', passage)
+  if (!/passage|refuse/.test(passage.reponse)) {
+    report.errors.push(`coalition : réponse absente (${passage.reponse})`)
+  }
+  await shot('07b-coalition')
+
   // WebGL indisponible : la page affiche un message clair avec « Réessayer ».
   const noGl = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await noGl.addInitScript(() => {

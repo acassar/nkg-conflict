@@ -109,6 +109,7 @@ export function rebuildMatrix(ctx: SimContext): void {
     for (const x of a) for (const y of a) m.setFriends(x, y)
     for (const x of d) for (const y of d) m.setFriends(x, y)
   }
+  for (const p of ctx.politics.passages) m.setPassage(sideIndex(ctx, p.from), sideIndex(ctx, p.to))
 }
 
 export function warsOf(ctx: SimContext, code: CountryId): War[] {
@@ -130,19 +131,22 @@ export interface PoliticsHooks {
   armyName(code: CountryId): string
 }
 
-function enter(ctx: SimContext, war: War, code: CountryId, hooks: PoliticsHooks): void {
+/** Un pays entre dans une guerre : bilan territorial de départ, mobilisation. */
+export function enter(ctx: SimContext, war: War, code: CountryId, hooks: PoliticsHooks): void {
   war.startOwned[code] = ctx.grid.countOwned(sideIndex(ctx, code))
   const def = ctx.countries.get(code)
   if (def) mobilize(ctx, def, hooks.armyName(code))
 }
 
-/** Les alliés d'un pays agressé le rejoignent s'ils n'apprécient pas l'agresseur. */
+/**
+ * Les alliés d'un pays agressé le rejoignent, sauf s'ils apprécient l'agresseur. Les demandes de
+ * participation du joueur passent par la coalition (voir coalition.ts).
+ */
 function callAllies(
   ctx: SimContext,
   war: War,
   caller: CountryId,
   hooks: PoliticsHooks,
-  mustJoin = false,
 ): CountryId[] {
   const enemies = enemiesInWar(war, caller)
   const side = war.attackers.includes(caller) ? war.attackers : war.defenders
@@ -152,7 +156,6 @@ function callAllies(
     for (const m of alliance.members) {
       if (side.includes(m) || enemies.includes(m) || isOffMap(ctx, m)) continue
       if (enemies.some((e) => relation(ctx, m, e) >= 50)) continue
-      if (!mustJoin && relation(ctx, m, caller) < 30) continue
       side.push(m)
       joined.push(m)
     }
@@ -202,17 +205,9 @@ export function declareWar(
     if (other !== attacker && other !== target) addRelation(ctx, other, attacker, -5)
   }
   ctx.log(`${countryName(ctx, attacker)} déclare la guerre à ${countryName(ctx, target)}`, attacker)
-  callAllies(ctx, war, target, hooks, true)
+  callAllies(ctx, war, target, hooks)
   rebuildMatrix(ctx)
   return null
-}
-
-/** Le joueur appelle ses alliés dans ses guerres. Renvoie le nombre de pays qui le rejoignent. */
-export function callAlliesToWars(ctx: SimContext, code: CountryId, hooks: PoliticsHooks): number {
-  let n = 0
-  for (const w of warsOf(ctx, code)) n += callAllies(ctx, w, code, hooks).length
-  rebuildMatrix(ctx)
-  return n
 }
 
 /** Bilan territorial d'un pays dans une guerre : cellules tenues / cellules au début (1 = statu quo). */
@@ -271,7 +266,7 @@ const EVACUATE_MAX_CELLS = 200_000
  * qu'elle quitte, ou déplacement direct si aucun chemin n'existe. Pendant ce repli, son armée la
  * laisse (comme un ordre direct) ; elle la reprend ensuite à sa répartition suivante.
  */
-function withdrawFromClosedTerritory(ctx: SimContext): void {
+export function withdrawFromClosedTerritory(ctx: SimContext): void {
   const g = ctx.grid
   for (const u of ctx.units.values()) {
     const side = sideIndex(ctx, u.owner)
@@ -512,5 +507,6 @@ export function politicsSnapshot(ctx: SimContext, player: CountryId): PoliticsSn
     offers: ctx.politics.offers.filter((o) => o.to === player).map((o) => ({ ...o })),
     aids: ctx.politics.aids.map((a) => structuredClone(a)),
     aidRequests: ctx.politics.aidRequests.filter((r) => r.to === player).map((r) => ({ ...r })),
+    passages: ctx.politics.passages.map((p) => ({ ...p })),
   }
 }

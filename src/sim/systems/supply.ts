@@ -54,8 +54,10 @@ export function updateSupply(ctx: SimContext, only?: (side: number) => boolean):
         }
       })
     }
+    // Le ravitaillement suit le territoire des cobelligérants et celui des pays qui accordent le passage.
     const visit = (n: number): void => {
-      if (!r[n] && matrix.friendly(side, owner[n] ?? 0) && grid.passable(n)) {
+      const o = owner[n] ?? 0
+      if (!r[n] && (matrix.friendly(side, o) || matrix.passage(side, o)) && grid.passable(n)) {
         r[n] = 1
         queue[tail++] = n
       }

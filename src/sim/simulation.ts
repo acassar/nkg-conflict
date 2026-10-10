@@ -77,7 +77,6 @@ import { mobilize } from './politics/mobilization'
 import { clearObstacles } from './systems/obstacles'
 import {
   aiAcceptsPeace,
-  callAlliesToWars,
   capitulate,
   declareWar,
   enemiesInWar,
@@ -97,6 +96,13 @@ import {
   type PoliticsHooks,
 } from './politics/politics'
 import { computeNeighbors, monthlyEvents, updateDiplomacyAi } from './politics/ai'
+import {
+  askPassage,
+  askToJoin,
+  callAlliesToWars,
+  renouncePassage,
+  updatePassages,
+} from './politics/coalition'
 import {
   aidRelationsMonthly,
   answerAidRequest,
@@ -152,6 +158,8 @@ function emptyPolitics(): PoliticsState {
     aids: [],
     aidRequests: [],
     aidRefusals: new Map(),
+    passages: [],
+    coalitionRefusals: new Map(),
     nextId: 1,
   }
 }
@@ -423,6 +431,8 @@ export class Simulation {
       aids: (p.aids ?? []).map((a) => structuredClone(a)),
       aidRequests: (p.aidRequests ?? []).map((r) => ({ ...r })),
       aidRefusals: new Map(p.aidRefusals ?? []),
+      passages: (p.passages ?? []).map((x) => ({ ...x })),
+      coalitionRefusals: new Map(p.coalitionRefusals ?? []),
       nextId: p.nextId,
     }
     for (const [c, since] of save.armylessSince) sim.armylessSince.set(c, since)
@@ -554,6 +564,7 @@ export class Simulation {
     for (const c of managed) updateAiEconomy(ctx, c)
     updateSupplySources(ctx, this.scenario)
     updatePoliticsDaily(ctx, ctx.losses)
+    updatePassages(ctx)
     ctx.losses.clear()
     clearObstacles(ctx)
   }
@@ -1092,6 +1103,20 @@ export class Simulation {
     return n > 0 ? `${n} allié(s) vous rejoignent` : 'Aucun allié ne vous rejoint'
   }
 
+  /** Demande à un allié de participer aux guerres du joueur ; renvoie la réponse à afficher. */
+  askToJoin(ally: CountryId): string {
+    return askToJoin(this.ctx, this.playerCountry, ally, this.hooks).message
+  }
+
+  /** Demande un droit de passage à un pays tiers ; renvoie la réponse à afficher. */
+  askPassage(country: CountryId): string {
+    return askPassage(this.ctx, this.playerCountry, country)
+  }
+
+  renouncePassage(country: CountryId): string | null {
+    return renouncePassage(this.ctx, this.playerCountry, country)
+  }
+
   // ---------- Aide étrangère ----------
 
   /** Demande d'aide du joueur à un pays IA, qui décide aussitôt. */
@@ -1304,6 +1329,8 @@ export class Simulation {
         aids: p.aids.map((a) => structuredClone(a)),
         aidRequests: p.aidRequests.map((r) => ({ ...r })),
         aidRefusals: [...p.aidRefusals.entries()],
+        passages: p.passages.map((x) => ({ ...x })),
+        coalitionRefusals: [...p.coalitionRefusals.entries()],
         nextId: p.nextId,
       },
       armylessSince: [...this.armylessSince.entries()],

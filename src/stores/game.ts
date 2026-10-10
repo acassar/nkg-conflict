@@ -848,6 +848,19 @@ export const useGameStore = defineStore('game', () => {
     pushToast(await sim.callAllies())
   }
 
+  /** Coalition : la réponse du pays (accord ou refus et ses raisons) s'affiche en message. */
+  async function askToJoin(ally: CountryId): Promise<void> {
+    pushToast(await sim.askToJoin(ally))
+  }
+
+  async function askPassage(country: CountryId): Promise<void> {
+    pushToast(await sim.askPassage(country))
+  }
+
+  async function renouncePassage(country: CountryId): Promise<void> {
+    report(await sim.renouncePassage(country), 'Droit de passage abandonné')
+  }
+
   // ---------- Aide étrangère ----------
 
   async function requestAid(donor: CountryId): Promise<void> {
@@ -1066,6 +1079,9 @@ export const useGameStore = defineStore('game', () => {
     proposeAlliance,
     leaveAlliance,
     callAllies,
+    askToJoin,
+    askPassage,
+    renouncePassage,
     mobilize,
     requestAid,
     grantAid,

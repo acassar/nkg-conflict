@@ -1,0 +1,49 @@
+- chargement {"tick":0,"player":"UKR","wars":["RUS→UKR"],"paused":true,"units":2439,"engaged":0,"armies":1,"territoryHeld":{"UKR":100,"RUS":100},"gridVersion":1,"hasGrid":true,"events":[]}
+- survol de la carte {"texte":"Ville : vitesse −30 %, défense +50 % Route principale Voie ferrée Kyiv, capitale : 2,7 M hab."}
+- alerte centrée {"selection":[2],"center":[33.75,51.94999999999999]}
+- alertes repliées {"folded":true}
+- cadre {"rail":12,"tiroir":98,"inspecteur":1106,"largeur":1440}
+- armée sélectionnée {"tick":0,"player":"UKR","wars":["RUS→UKR"],"paused":true,"units":2439,"engaged":0,"armies":1,"territoryHeld":{"UKR":100,"RUS":100},"gridVersion":1,"hasGrid":true,"events":[]}
+- ordre clic droit {"ordre":"move"}
+- production {"avant":{"construction":0,"recruitment":0},"apres":{"construction":1,"recruitment":0}}
+- fortifications de Kyiv {"texte":"Aucune fortification. Chaque niveau donne +15 % de défense à vos unités à moins de 15 km (3 niveaux au plus)."}
+- diplomatie {"avant":40,"apres":50}
+- aide demandée {"niveau":1}
+- clic sur Varsovie {"pays":"POL"}
+- file de production {"lignes":3,"tete":["Kyiv","Lviv"],"auto":{"build":false,"recruit":true}}
+- économie de guerre {"niveau":1,"recrutementVille":0,"renvoi":1}
+- soutenabilité {"panneau":"Soutenabilité de l'armée : durable (×14,5)","barre":"Armée\ndurable\n×14,5","titre":"Soutenabilité de l'armée (moyenne glissante sur une semaine)\nLes revenus couvrent les besoins de l'armée (×14,5 sur la ressource la plus tendue) : armée durable.\nProduction : besoins 13/j, revenus 194/j, solde +181/j, stock 830 (besoins : renforts 13, unités détruites 0 · dont aide reçue 107/j)\nMunitions : besoins 4/j, revenus 158/j, solde +155/j, stock 799 (besoins : tirs des unités au contact · dont aide reçue 107/j)\nMain-d'œuvre : besoins 0 k/j, revenus 3 k/j, solde +3 k/j, stock 44 k (besoins : renforts 0, unités détruites 0)"}
+- jauges {"jauges":4,"capacites":0,"fenetre":"MUNITIONS\n799\n+157/j\n×\n\nMunitions en stock : chaque tir en consomme ; à zéro, la"}
+- poursuite {"unites":3}
+- ordre annulé {"poursuivent":0}
+- posture {"postures":["maxDamage"]}
+- encerclement {"phase":"staging"}
+- mission avancer {"mission":"advance","statut":"Avancer : trait tracé · 100 % du tracé tenu"}
+- aperçu points clés {"mission":"hold","posts":20,"points":26}
+- mission points clés {"mission":"keyPoints","points":26,"statut":"Points clés : tout le front · 26 point(s) clé(s) tenu(s)"}
+- aperçu depth {"lignes":8}
+- mission depth {"mission":"depth"}
+- aperçu reserve {"lignes":8}
+- mission reserve {"mission":"reserve"}
+- visée percée {"bandeau":{"x":447.5859375,"y":817.109375,"width":544.828125,"height":30.890625},"pointeur":[38.342254241009584,49.12496907283327]}
+- mission percée {"mission":"breach","choc":10,"statut":"Percée : 10 unité(s) de choc · 0 % de l'axe tenu"}
+- mission retraite {"mission":"retreat","statut":"Retraite : trait tracé · 0 % des unités sur la ligne"}
+- recrutement par armée {"casernes":4,"avant":0,"apres":5,"forArmy":5}
+- composition {"lignes":6,"types":6}
+- sauvegarde et reprise {"sauvee":72,"reprise":72}
+- après 8 s en vitesse 5 {"tick":643,"player":"UKR","wars":["RUS→UKR"],"paused":true,"units":2600,"engaged":4,"armies":1,"territoryHeld":{"UKR":85.6,"RUS":100.3},"gridVersion":1951,"hasGrid":true,"events":["1re Armée bloque une percée près de Zaporizhzhya","Alerte : Poche en formation près de Kharkiv : 2 unités presque entourées","Alerte : Front percé près de Zaporizhzhya : 1 unité ennemie","3e brigade mécanisée décroche (menace d'encerclement)","Alerte : Poche en formation près de Kharkiv : 1 unité presque entourée"]}
+- écran de bataille {"camps":2,"obstacles":0}
+- aide des modificateurs {"explication":true}
+- aide depuis le menu {"sections":12}
+- aide : types d’unités {"lignes":15}
+- caméra clavier {"avant":35.94369869147946,"apres":36.4051244727367}
+- perte du contexte WebGL {"nouvelle":true,"erreur":false,"canvas":2}
+- tracé du front {"morceaux":1}
+- carte logistique {"guerre":true,"sources":8,"poches":1,"relie":6038}
+- routes et voies ferrées {"routes":177245,"rail":61586,"affichees":true}
+- donneurs hors carte {"aides":5,"fiche":"USA"}
+- options de départ {"guerres":0,"alliances":0,"organisations":0,"sanctions":0,"aides":0,"optionsUkraine":1}
+- encart de guerre {"statut":"Tenir : tout le front","mission":"advance","encart":false}
+- coalition : droit de passage {"reponse":"Pays-Bas refuse (score −5 pour 40 : relations −5)","accorde":false}
+- WebGL indisponible {"bouton":true,"apresReessai":true,"erreurs":[]}
+SMOKE OK

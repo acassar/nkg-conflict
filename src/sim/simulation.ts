@@ -15,6 +15,7 @@ import type {
   GameOutcome,
   LonLat,
   OrderKind,
+  PlayerAlert,
   Posture,
   ScenarioDef,
   SimSnapshot,
@@ -31,6 +32,7 @@ import { supplyView, type SupplyView } from './systems/supplyView'
 import { updateMovement, updatePursuits, planPath, planQueuedPaths } from './systems/movement'
 import { updatePostureReflexes } from './systems/postures'
 import { reactToBreakthroughs } from './systems/breakthrough'
+import { computeAlerts } from './systems/alerts'
 import { holdOrFallBack, stanceText } from './systems/fallback'
 import { haltText, isHalted, restrainAttacks } from './systems/restraint'
 import { battleReport } from './systems/battle'
@@ -175,6 +177,8 @@ export class Simulation {
   private readonly hooks: PoliticsHooks
   /** Cadence du ravitaillement : plus espacée sur les grandes grilles (coût du remplissage). */
   private readonly supplyEvery: number
+  /** Alertes du joueur, recalculées toutes les 6 heures. */
+  private alerts: PlayerAlert[] = []
 
   private constructor(
     readonly scenario: ScenarioDef,
@@ -441,6 +445,22 @@ export class Simulation {
     updateSupplySources(this.ctx, this.scenario)
     updateSupply(this.ctx)
     updateCommand(this.ctx)
+    this.updateAlerts(false)
+  }
+
+  /**
+   * Recalcule les alertes du joueur ; chaque alerte nouvelle (clé absente du calcul précédent) est
+   * écrite au journal, sauf au chargement (`log` faux).
+   */
+  private updateAlerts(log = true): void {
+    const before = new Set(this.alerts.map((a) => a.key))
+    this.alerts = computeAlerts(this.ctx, this.playerCountry, (at) =>
+      nearestCity(this.ctx, at[0], at[1]),
+    )
+    if (!log) return
+    for (const a of this.alerts) {
+      if (!before.has(a.key)) this.log(`Alerte : ${a.text}`, this.playerCountry)
+    }
   }
 
   /**
@@ -485,6 +505,7 @@ export class Simulation {
         reactToBreakthroughs(ctx)
         restrainAttacks(ctx)
         holdOrFallBack(ctx)
+        this.updateAlerts()
       }
       planQueuedPaths(ctx)
       updateMovement(ctx)
@@ -1177,6 +1198,11 @@ export class Simulation {
       events: this.events.slice(),
       territoryHeld,
       outcome: this.outcome,
+      alerts: this.alerts.map((a) => ({
+        ...a,
+        at: [a.at[0], a.at[1]],
+        unitIds: a.unitIds.slice(),
+      })),
       grid: forceGrid
         ? {
             version: grid.version,

@@ -12,6 +12,7 @@ import type {
   CountryId,
   GridSnapshot,
   LonLat,
+  PlayerAlert,
   Posture,
   ScenarioOptions,
   SimSnapshot,
@@ -156,6 +157,10 @@ export const useGameStore = defineStore('game', () => {
    * sans attaquer et propose d'avancer, de planifier une offensive ou de changer de posture.
    */
   const warBrief = ref<{ warId: number; enemy: CountryId; enemyName: string } | null>(null)
+  /** Alertes fermées par le joueur (clés), oubliées quand l'alerte disparaît. */
+  const dismissedAlerts = ref<Set<string>>(new Set())
+  /** Liste des alertes repliée (seul le compteur reste affiché). */
+  const alertsFolded = ref(false)
   /** Demande de recentrage de la carte (début de partie). */
   const focus = ref<{ at: LonLat; zoom: number; nonce: number } | null>(null)
   /** Recentrer la carte dès l'arrivée du prochain état (nouvelle partie ou chargement). */
@@ -207,6 +212,13 @@ export const useGameStore = defineStore('game', () => {
         notifyEvents(next)
       }
       watchWars(next)
+      // Les alertes fermées qui ont disparu peuvent revenir plus tard.
+      if (dismissedAlerts.value.size) {
+        const live = new Set(next.alerts.map((a) => a.key))
+        if ([...dismissedAlerts.value].some((k) => !live.has(k))) {
+          dismissedAlerts.value = new Set([...dismissedAlerts.value].filter((k) => live.has(k)))
+        }
+      }
       // On retire de la sélection les unités disparues.
       const alive = new Set(next.units.map((u) => u.id))
       if (selection.value.some((id) => !alive.has(id))) {
@@ -300,6 +312,26 @@ export const useGameStore = defineStore('game', () => {
 
   function dismissToast(id: number): void {
     toasts.value = toasts.value.filter((t) => t.id !== id)
+  }
+
+  /** Alertes du joueur encore affichées (non fermées). */
+  const alerts = computed<PlayerAlert[]>(() =>
+    (snapshot.value?.alerts ?? []).filter((a) => !dismissedAlerts.value.has(a.key)),
+  )
+
+  /** Ferme une alerte ; elle ne revient que si la situation disparaît puis se reproduit. */
+  function dismissAlert(key: string): void {
+    dismissedAlerts.value = new Set([...dismissedAlerts.value, key])
+  }
+
+  /** Centre la carte sur une alerte ; sélectionne les unités du joueur concernées. */
+  function focusAlert(a: PlayerAlert): void {
+    focus.value = { at: [a.at[0], a.at[1]], zoom: 7.5, nonce: Date.now() }
+    if (a.kind !== 'breach') {
+      selectedArmyId.value = null
+      selection.value = a.unitIds.slice()
+      panelTab.value = 'units'
+    }
   }
 
   const started = computed(() => snapshot.value !== null)
@@ -946,6 +978,10 @@ export const useGameStore = defineStore('game', () => {
     loading,
     started,
     focus,
+    alerts,
+    alertsFolded,
+    dismissAlert,
+    focusAlert,
     selection,
     selectedUnits,
     armies,

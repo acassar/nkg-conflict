@@ -68,6 +68,66 @@ try {
   await page.waitForTimeout(3500)
   await shot('m01-partie')
 
+  // Alertes : deux alertes posées sur une unité du joueur (partie en pause, pour qu'aucun nouvel état
+  // ne les efface), puis « Centrer » (carte et sélection), fermeture et liste repliée.
+  const alertSetup = await page.evaluate(async () => {
+    const g = window.__nkg
+    const wasPaused = g.snapshot.paused
+    const camera = {
+      center: window.__nkgMap.getCenter().toArray(),
+      zoom: window.__nkgMap.getZoom(),
+    }
+    if (!wasPaused) await g.togglePause()
+    await new Promise((r) => setTimeout(r, 300))
+    const u = g.snapshot.units.find((x) => x.owner === g.snapshot.playerCountry)
+    const alert = {
+      kind: 'encircled',
+      key: `encircled:${u.id}`,
+      at: [u.lon, u.lat],
+      unitIds: [u.id],
+      place: 'Test',
+      text: '1 unité coupée du ravitaillement près de Test',
+    }
+    const breach = { ...alert, kind: 'breach', key: 'breach:0', text: 'Front percé près de Test' }
+    g.snapshot = { ...g.snapshot, alerts: [alert, breach] }
+    return { id: u.id, at: alert.at, wasPaused, camera }
+  })
+  await page.getByTestId('player-alert').first().waitFor({ timeout: 5000 })
+  await shot('m01b-alerte')
+  await page.getByTestId('player-alert').first().getByRole('button', { name: 'Centrer' }).tap()
+  await page.waitForTimeout(1800)
+  const alertFocus = await page.evaluate(() => ({
+    selection: window.__nkg.selection.slice(),
+    center: window.__nkgMap.getCenter().toArray(),
+  }))
+  step('alerte centrée', alertFocus)
+  check(
+    alertFocus.selection.length === 1 && alertFocus.selection[0] === alertSetup.id,
+    "« Centrer » ne sélectionne pas l'unité de l'alerte",
+  )
+  check(
+    Math.abs(alertFocus.center[0] - alertSetup.at[0]) < 0.5 &&
+      Math.abs(alertFocus.center[1] - alertSetup.at[1]) < 0.5,
+    "« Centrer » ne centre pas la carte sur l'alerte",
+  )
+  await page.getByTestId('player-alert').first().getByRole('button', { name: 'Fermer' }).tap()
+  await page.waitForTimeout(300)
+  check((await page.getByTestId('player-alert').count()) === 1, 'alerte non fermée')
+  // Liste repliée pour la suite du test : seul le compteur reste, il ne masque pas la carte.
+  await page
+    .getByTestId('player-alerts')
+    .getByRole('button', { name: /^\d+ alertes?/ })
+    .tap()
+  const folded = await page.evaluate(() => window.__nkg.alertsFolded)
+  step('alertes repliées', { folded })
+  check(folded, 'liste des alertes non repliée')
+  // Caméra et sélection rendues comme avant, pour la suite du test.
+  await page.evaluate(async ({ wasPaused, camera }) => {
+    window.__nkgMap.jumpTo(camera)
+    window.__nkg.clearSelection()
+    if (!wasPaused) await window.__nkg.togglePause()
+  }, alertSetup)
+
   // La barre du haut tient sur une ligne et ne déborde pas.
   const bar = await page.locator('header.topbar').boundingBox()
   step('barre du haut', { hauteur: bar?.height })

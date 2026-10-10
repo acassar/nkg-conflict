@@ -415,6 +415,22 @@ export interface GridSnapshot {
   sides: CountryId[]
 }
 
+/** Nature d'une alerte du joueur : front percé, unités encerclées, poche en formation. */
+export type AlertKind = 'breach' | 'encircled' | 'pocket'
+
+/** Alerte du joueur (situation qui demande son attention), avec le point où centrer la carte. */
+export interface PlayerAlert {
+  kind: AlertKind
+  /** Identifiant stable tant que le groupe garde son unité de plus petit identifiant. */
+  key: string
+  at: LonLat
+  /** Unités concernées (ennemies pour une percée, du joueur sinon). */
+  unitIds: number[]
+  /** Ville la plus proche. */
+  place: string
+  text: string
+}
+
 export interface SimSnapshot {
   scenarioId: string
   tick: number
@@ -435,6 +451,8 @@ export interface SimSnapshot {
   /** Part du territoire de départ conservée par chaque camp, 0 à 1. */
   territoryHeld: Record<CountryId, number>
   outcome: GameOutcome | null
+  /** Alertes du joueur, les plus graves en premier (recalculées toutes les 6 heures). */
+  alerts: PlayerAlert[]
   /** Grille complète : seulement au chargement d'une partie. */
   grid: GridSnapshot | null
   /** Cellules modifiées depuis la publication précédente : [cellule, propriétaire, …]. */

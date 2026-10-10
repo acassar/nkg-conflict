@@ -145,6 +145,8 @@ const status = (u: UnitSnapshot): string => {
   if (u.posture !== 'balanced') parts.push(POSTURES[u.posture].name.toLowerCase())
   if (u.engaged) parts.push('au contact')
   if (u.stance) parts.push(u.stance)
+  if (u.relief) parts.push('en relève')
+  if (u.fatigue >= 0.3) parts.push(`fatigue ${Math.round(u.fatigue * 100)} %`)
   if (!u.supplied) parts.push('hors ravitaillement')
   if (!u.commanded && u.kind !== 'hq') parts.push('hors commandement')
   return parts.join(' · ')

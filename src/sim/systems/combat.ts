@@ -11,6 +11,7 @@ import { fortFactor, useMunitions } from '../economy/economy'
 import { NO_MUNITIONS_FACTOR } from '../economy/rules'
 import { moraleFactor } from '../politics/politics'
 import { WarIndex } from './spatial'
+import { fatigueFactor, fatigueOf, fatigueRecoveryFactor, updateFatigue } from './fatigue'
 import { postureOf } from '../units/postures'
 import { assaultFireFactor, assaultLossFactor, obstaclesUnder } from './obstacles'
 import { flankDefenseFactor, flankOrgLossFactor, flankText, updateFlanks } from './flanks'
@@ -96,6 +97,13 @@ export function combatModifiers(
     { key: 'supply', label: 'Ravitaillement', value: supplyFactor(ctx, u) },
     { key: 'command', label: 'Commandement', value: commandFactor(ctx, u) },
   ]
+  if (fatigueOf(u) >= 0.01) {
+    shared.push({
+      key: 'fatigue',
+      label: `Fatigue (${Math.round(fatigueOf(u) * 100)} %)`,
+      value: fatigueFactor(u),
+    })
+  }
   const eco = ctx.economies.get(u.owner)
   const ammo = eco && eco.munitions <= 0 ? NO_MUNITIONS_FACTOR : 1
   const cell = ctx.grid.cellAt(u.lon, u.lat)
@@ -177,7 +185,8 @@ export function firePower(ctx: SimContext, u: UnitState): number {
     (0.25 + 0.75 * u.org) *
     supplyFactor(ctx, u) *
     commandFactor(ctx, u) *
-    postureOf(u.posture).attack
+    postureOf(u.posture).attack *
+    fatigueFactor(u)
   )
 }
 
@@ -193,7 +202,8 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     fortFactor(ctx, u) *
     (1 + 0.5 * u.entrench) *
     postureOf(u.posture).defense *
-    flankDefenseFactor(ctx, u)
+    flankDefenseFactor(ctx, u) *
+    fatigueFactor(u)
   )
 }
 
@@ -245,7 +255,8 @@ export function updateCombat(ctx: SimContext): void {
       !rt.supplied ||
       rt.routed ||
       u.hoursOutOfSupply > 0 ||
-      u.strength < 0.05
+      u.strength < 0.05 ||
+      fatigueOf(u) > 0
     ) {
       active.push(u)
     }
@@ -282,8 +293,9 @@ export function updateCombat(ctx: SimContext): void {
         m = moraleFactor(ctx, u.owner)
         morale.set(u.owner, m)
       }
-      u.org = Math.min(1, u.org + recovery * m)
+      u.org = Math.min(1, u.org + recovery * m * fatigueRecoveryFactor(u))
     }
+    updateFatigue(u, rt, isOffensive(u), index)
     if (!rt.supplied) {
       u.hoursOutOfSupply++
       if (u.hoursOutOfSupply > 72) u.strength = Math.max(0, u.strength - 0.002)

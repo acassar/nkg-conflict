@@ -4,6 +4,7 @@ import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactorAt } from '../economy/economy'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
+import { REST_KM, RELIEF_MAX_SHARE, selectRelief } from './fatigue'
 import { assaultFireFactor } from './obstacles'
 import {
   cumulativeWeights,
@@ -385,7 +386,13 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   // pour que leur départ ne décale pas les postes de toute l'armée.
   const withdrawing = (u: UnitState): boolean =>
     runtimeOf(ctx, u.id).stance?.decision === 'withdraw'
-  const line = members.filter((u) => isLineUnit(u.kind))
+  // Relève : les unités de ligne les plus fatiguées se reposent en retrait (fatigue.ts) ; leurs
+  // postes reviennent au reste de la ligne. Une armée en réserve est déjà au repos.
+  const resting = selectRelief(
+    members.filter((u) => isLineUnit(u.kind)),
+    army.mission?.kind === 'reserve' ? 0 : RELIEF_MAX_SHARE,
+  )
+  const line = members.filter((u) => isLineUnit(u.kind) && !resting.includes(u))
   const rear = members.filter((u) => !isLineUnit(u.kind))
 
   /** Postes d'une ligne de `count` unités, à `depth` cellules derrière le contact. */
@@ -483,6 +490,8 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   }
   const deep = army.mission?.kind === 'depth' || army.mission?.kind === 'reserve'
   const cellsFor = (km: number): number => Math.max(1, Math.round(km / (ctx.grid.cell * 111)))
+  // Unités en relève : hors de portée de l'ennemi, derrière les lignes.
+  if (resting.length > 0) place(resting, Math.max(LINE_DEPTH + 2, cellsFor(REST_KM + 10)))
   const mission = army.mission?.kind
   if (mission === 'reserve') {
     // Réserve : en retrait du front, prête à intervenir sur les percées (breakthrough.ts).

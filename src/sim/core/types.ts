@@ -78,6 +78,10 @@ export interface UnitState {
    * jusqu'au tour `until` sans être relancée automatiquement.
    */
   halt?: { until: number; reason: 'pursuit' | 'alone' | 'unsupplied' }
+  /** Fatigue, 0 à 1 (absente : unité fraîche). Voir systems/fatigue.ts. */
+  fatigue?: number
+  /** En relève : envoyée au repos en retrait par son armée jusqu'à ce que sa fatigue retombe. */
+  relief?: boolean
 }
 
 /** Postures de combat, de la plus prudente à la plus agressive. */
@@ -105,6 +109,10 @@ export interface UnitSnapshot {
   engagedWith: number | null
   /** Unité menacée : décision et motif (« tient : position forte », « décroche : … »). */
   stance: string | null
+  /** Fatigue, 0 à 1. */
+  fatigue: number
+  /** Au repos en retrait (relève organisée par son armée). */
+  relief: boolean
 }
 
 /** Unité dans le rapport de bataille. */
@@ -149,6 +157,7 @@ export type ModifierKey =
   | 'obstacleLosses'
   | 'flank'
   | 'flankMorale'
+  | 'fatigue'
 
 /** Bataille en cours : deux camps (a : celui du joueur s'il est engagé), lieu et terrain. */
 export interface BattleReport {

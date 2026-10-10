@@ -1196,6 +1196,8 @@ export class Simulation {
           commanded: rt.commanded,
           posture: u.posture ?? 'balanced',
           engagedWith: rt.engagedWith,
+          fatigue: u.fatigue ?? 0,
+          relief: u.relief === true,
           stance: rt.stance
             ? stanceText(rt.stance)
             : u.halt && isHalted(ctx, u)

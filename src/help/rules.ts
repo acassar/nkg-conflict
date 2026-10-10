@@ -29,6 +29,18 @@ import {
   TWO_SIDES_DEG,
 } from '@/sim/systems/flanks'
 import { SOURCE_RADIUS_KM } from '@/sim/systems/supply'
+import {
+  FATIGUE_ATTACK_FACTOR,
+  FATIGUE_COMBAT_MALUS,
+  FATIGUE_COMBAT_PER_HOUR,
+  FATIGUE_FRONT_PER_HOUR,
+  FATIGUE_RECOVERY_MALUS,
+  FATIGUE_REST_PER_HOUR,
+  RELIEF_END,
+  RELIEF_MAX_SHARE,
+  RELIEF_START,
+  REST_KM,
+} from '@/sim/systems/fatigue'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import {
   SUSTAIN_CRITICAL_DAYS,
@@ -53,6 +65,7 @@ export type HelpSectionId =
   | 'command'
   | 'postures'
   | 'flanks'
+  | 'fatigue'
   | 'sustain'
 
 export interface HelpSection {
@@ -169,6 +182,15 @@ export const HELP_SECTIONS: HelpSection[] = [
     ],
   },
   {
+    id: 'fatigue',
+    title: 'Fatigue et relève',
+    paragraphs: [
+      `Une unité s'use au front : sa fatigue monte de ${pct(FATIGUE_COMBAT_PER_HOUR * 24)} par jour au contact (${signedPct(FATIGUE_ATTACK_FACTOR)} en attaque), de ${pct(FATIGUE_FRONT_PER_HOUR * 24)} par jour avec un ennemi à moins de ${REST_KM} km, et baisse de ${pct(FATIGUE_REST_PER_HOUR * 24)} par jour au repos, plus loin.`,
+      `Une unité épuisée perd jusqu'à ${pct(FATIGUE_COMBAT_MALUS)} de puissance de feu et de défense, et récupère son organisation jusqu'à ${pct(FATIGUE_RECOVERY_MALUS)} moins vite.`,
+      `Relève : l'armée envoie au repos, en retrait, ses unités de ligne fatiguées à ${pct(RELIEF_START)} ou plus (au plus ${pct(RELIEF_MAX_SHARE)} de ses unités de ligne à la fois, les plus fatiguées d'abord) et répartit leurs postes entre les autres ; elles reprennent leur place sous ${pct(RELIEF_END)}. Une unité au contact ne part qu'une fois le contact rompu. L'IA fait de même avec ses armées.`,
+    ],
+  },
+  {
     id: 'sustain',
     title: "Soutenabilité de l'armée",
     paragraphs: [
@@ -228,6 +250,10 @@ export const MODIFIER_HELP: Record<ModifierKey, { text: string; section: HelpSec
   flank: {
     text: `Prise de flanc : ${signedPct(FLANK_DEFENSE[1])} (deux côtés, saillant) ou ${signedPct(FLANK_DEFENSE[2])} (presque encerclée).`,
     section: 'flanks',
+  },
+  fatigue: {
+    text: `Fatigue de l'unité : jusqu'à −${pct(FATIGUE_COMBAT_MALUS)} de feu et de défense quand elle est épuisée.`,
+    section: 'fatigue',
   },
   flankMorale: {
     text: `Prise de flanc : l'organisation fond plus vite (${signedPct(FLANK_ORG_LOSS[1])} ou ${signedPct(FLANK_ORG_LOSS[2])} de pertes).`,

@@ -153,9 +153,15 @@ export function assess(
   return { threat, defense, ring, supplied, helped, strongPoint, risk }
 }
 
-/** Décision tirée de l'évaluation : tenir (avec son motif) ou décrocher (avec la cause principale). */
-export function decide(a: Assessment): Stance {
-  const limit = WITHDRAW_RISK * (a.strongPoint ? 1.5 : 1)
+/** Défense en profondeur : la première ligne décroche dès ce facteur du risque habituel (terrain cédé). */
+export const DEPTH_WITHDRAW_FACTOR = 0.6
+
+/**
+ * Décision tirée de l'évaluation : tenir (avec son motif) ou décrocher (avec la cause principale).
+ * `factor` abaisse le seuil de décrochage (défense en profondeur).
+ */
+export function decide(a: Assessment, factor = 1): Stance {
+  const limit = WITHDRAW_RISK * (a.strongPoint ? 1.5 : 1) * factor
   if (a.helped) return { decision: 'hold', reason: 'reinforcements', risk: a.risk }
   if (a.risk < limit) {
     return { decision: 'hold', reason: a.strongPoint ? 'strongPoint' : 'tenable', risk: a.risk }
@@ -272,7 +278,7 @@ export function holdOrFallBack(ctx: SimContext): void {
         rt.stance = undefined
         continue
       }
-      const stance = decide(a)
+      const stance = decide(a, army.mission?.kind === 'depth' ? DEPTH_WITHDRAW_FACTOR : 1)
       if (stance.decision === 'withdraw') {
         const target = fallbackPoint(ctx, u, nearby)
         if (!target) {

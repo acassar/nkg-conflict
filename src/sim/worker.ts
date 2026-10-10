@@ -4,6 +4,7 @@ import { isSpeed } from './core/clock'
 import { parseSave, serializeSave } from './core/save'
 import type {
   AdvanceGoal,
+  LineMissionKind,
   BattleReport,
   BuildingKind,
   CountryId,
@@ -179,8 +180,8 @@ const api = {
   holdArmy(armyId: number): void {
     act((s) => s.holdArmy(armyId))
   },
-  keyPointsArmy(armyId: number): string | null {
-    return act((s) => s.keyPointsArmy(armyId)) ?? null
+  lineMissionArmy(armyId: number, kind: LineMissionKind): string | null {
+    return act((s) => s.lineMissionArmy(armyId, kind)) ?? null
   },
   advanceArmy(armyId: number, goal: AdvanceGoal): string | null {
     return act((s) => s.advanceArmy(armyId, goal)) ?? null

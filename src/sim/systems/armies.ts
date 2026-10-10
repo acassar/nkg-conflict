@@ -114,6 +114,46 @@ function behind(ctx: SimContext, side: number, f: FrontCell, depth: number): Lon
   return [ctx.grid.lonOf(i), ctx.grid.latOf(i)]
 }
 
+/** Directions de recul tentées quand l'arrière est bloqué : de biais, puis de côté. */
+const DETOURS: ReadonlyArray<number> = [0, 1, -1, 2, -2]
+const COMPASS: ReadonlyArray<[number, number]> = [
+  [1, 0],
+  [1, 1],
+  [0, 1],
+  [-1, 1],
+  [-1, 0],
+  [-1, -1],
+  [0, -1],
+  [1, -1],
+]
+
+/**
+ * Recul profond (seconde ligne, réserve) : comme `behind`, mais en contournant les obstacles (fleuve
+ * infranchissable, frontière d'un pays tiers) de biais ou de côté, sans jamais revenir vers l'ennemi.
+ */
+function deepBehind(ctx: SimContext, side: number, f: FrontCell, depth: number): LonLat {
+  const { grid } = ctx
+  let x = f.cell % grid.width
+  let y = Math.floor(f.cell / grid.width)
+  const base = COMPASS.findIndex(([dx, dy]) => dx === f.back[0] && dy === f.back[1])
+  if (base < 0) return behind(ctx, side, f, depth)
+  for (let k = 0; k < depth; k++) {
+    let moved = false
+    for (const turn of DETOURS) {
+      const [dx, dy] = COMPASS[(base + turn + 8) % 8] as [number, number]
+      if (!grid.inBounds(x + dx, y + dy)) continue
+      const n = grid.index(x + dx, y + dy)
+      if (grid.owner[n] !== side || !grid.passable(n)) continue
+      x += dx
+      y += dy
+      moved = true
+      break
+    }
+    if (!moved) break
+  }
+  return [grid.lonOf(grid.index(x, y)), grid.latOf(grid.index(x, y))]
+}
+
 /** Cellule atteinte en reculant de `depth` cellules depuis une cellule de front. */
 function behindCell(ctx: SimContext, side: number, f: FrontCell, depth: number): number {
   const { grid } = ctx
@@ -154,6 +194,11 @@ function slots(
 
 /** Profondeur des postes des unités de ligne (en cellules derrière le contact). */
 const LINE_DEPTH = 2
+/** Défense en profondeur : part des unités de ligne au contact ; distance de la seconde ligne (km). */
+const DEPTH_FORWARD_SHARE = 0.6
+const SECOND_LINE_KM = 25
+/** Réserve : distance de ses postes derrière le front (km). */
+const RESERVE_KM = 40
 /** Écart au milieu de son secteur toléré par un poste favorable : −5 % de valeur au bord du secteur. */
 const OFF_CENTER_PENALTY = 0.05
 /** Fleuve devant le poste : même bonus que dans le combat (assaut à travers un fleuve). */
@@ -320,19 +365,33 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   const line = members.filter((u) => isLineUnit(u.kind))
   const rear = members.filter((u) => !isLineUnit(u.kind))
 
-  const place = (units: UnitState[], depth: number, favorable = false): void => {
-    let posts: LonLat[]
-    if (favorable) {
-      // Retranchement acquis : une unité installée garde la valeur de sa position.
-      const entrenched = new Map<number, number>()
-      for (const u of units) {
-        const c = ctx.grid.cellAt(u.lon, u.lat)
-        entrenched.set(c, Math.max(entrenched.get(c) ?? 0, u.entrench))
-      }
-      posts = favorableSlots(ctx, side, cells, units.length, depth, entrenched, weight)
-    } else {
-      posts = slots(ctx, cells, units.length, weight).map((slot) => behind(ctx, side, slot, depth))
+  /** Postes d'une ligne de `count` unités, à `depth` cellules derrière le contact. */
+  const linePosts = (units: UnitState[], count: number, depth: number, favorable: boolean) => {
+    if (!favorable) {
+      // Seconde ligne et réserve : le recul contourne les obstacles.
+      const back = deep ? deepBehind : behind
+      return slots(ctx, cells, count, weight).map((slot) => back(ctx, side, slot, depth))
     }
+    // Retranchement acquis : une unité installée garde la valeur de sa position.
+    const entrenched = new Map<number, number>()
+    for (const u of units) {
+      const c = ctx.grid.cellAt(u.lon, u.lat)
+      entrenched.set(c, Math.max(entrenched.get(c) ?? 0, u.entrench))
+    }
+    return favorableSlots(ctx, side, cells, count, depth, entrenched, weight)
+  }
+
+  /**
+   * Place les unités sur une ou plusieurs lignes de postes (`layers` : nombre d'unités et profondeur de
+   * chaque ligne ; une seule ligne pour toutes les unités par défaut).
+   */
+  const place = (
+    units: UnitState[],
+    depth: number,
+    favorable = false,
+    layers: Array<{ count: number; depth: number }> = [{ count: units.length, depth }],
+  ): void => {
+    const posts: LonLat[] = layers.flatMap((l) => linePosts(units, l.count, l.depth, favorable))
     // Chaque poste revient à l'unité la plus proche encore libre (paires triées par distance) :
     // une unité n'est jamais envoyée à l'autre bout du front quand un poste l'attend à côté.
     const pairs: Array<{ u: number; p: number; d: number }> = []
@@ -388,6 +447,26 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         planPath(ctx, u, target)
       }
     }
+  }
+  const deep = army.mission?.kind === 'depth' || army.mission?.kind === 'reserve'
+  const cellsFor = (km: number): number => Math.max(1, Math.round(km / (ctx.grid.cell * 111)))
+  const mission = army.mission?.kind
+  if (mission === 'reserve') {
+    // Réserve : en retrait du front, prête à intervenir sur les percées (breakthrough.ts).
+    const depth = Math.max(LINE_DEPTH + 1, cellsFor(RESERVE_KM))
+    place(line, depth)
+    place(rear, depth + 2)
+    return
+  }
+  if (mission === 'depth' && line.length >= 2) {
+    // Défense en profondeur : première ligne au contact, seconde ligne en arrière.
+    const forward = Math.ceil(line.length * DEPTH_FORWARD_SHARE)
+    place(line, LINE_DEPTH, picksFavorablePosts(army), [
+      { count: forward, depth: LINE_DEPTH },
+      { count: line.length - forward, depth: Math.max(LINE_DEPTH + 1, cellsFor(SECOND_LINE_KM)) },
+    ])
+    place(rear, Math.max(7, cellsFor(SECOND_LINE_KM) + 2))
+    return
   }
   place(line, LINE_DEPTH, picksFavorablePosts(army))
   place(rear, 7)

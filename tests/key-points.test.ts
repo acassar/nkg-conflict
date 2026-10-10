@@ -78,7 +78,7 @@ describe('mission « Tenir les points clés »', () => {
     const onFront = cells.filter((c) => keyPointKinds(ctx, c.cell) !== 0).length / cells.length
     const before = keyShare(sim, army)
 
-    expect(sim.keyPointsArmy(army.id)).toBeNull()
+    expect(sim.lineMissionArmy(army.id, 'keyPoints')).toBeNull()
     expect(missionKind(army)).toBe('keyPoints')
     const after = keyShare(sim, army)
     expect(after.posts).toBeGreaterThan(5)
@@ -99,7 +99,7 @@ describe('mission « Tenir les points clés »', () => {
     const sim = Simulation.fromScenario(ukraine2026, theater, 7)
     const army = biggestArmy(sim, 'UKR')
     sim.setArmyPosture(army.id, 'defensive')
-    sim.keyPointsArmy(army.id)
+    sim.lineMissionArmy(army.id, 'keyPoints')
     sim.step(48)
     expect(missionKind(army)).toBe('keyPoints')
     expect(keyShare(sim, army).share).toBeGreaterThan(0.5)

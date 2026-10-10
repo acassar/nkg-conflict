@@ -4,6 +4,7 @@ import type {
   AdvanceMission,
   ArmyState,
   LonLat,
+  LineMissionKind,
   MissionKind,
   UnitState,
 } from '../core/types'
@@ -257,19 +258,32 @@ export function startAdvance(
   return null
 }
 
+/** Message du journal au passage à une mission de ligne. */
+const LINE_MISSION_LOG: Record<LineMissionKind, string> = {
+  hold: 'tient sa ligne',
+  keyPoints: 'tient les points clés du front',
+  depth: 'organise une défense en profondeur',
+  reserve: 'passe en réserve derrière le front',
+}
+
 /**
- * Retour à « Tenir » (ou passage à « Tenir les points clés » avec `keyPoints`) : les unités en marche
- * s'arrêtent et l'armée reprend son front, avec ses postes répartis selon la mission.
+ * Retour à « Tenir », ou passage à une autre mission de ligne (`kind` : points clés, défense en
+ * profondeur, réserve) : les unités en marche s'arrêtent et l'armée reprend son front, avec ses postes
+ * répartis selon la mission.
  */
-export function holdMission(ctx: SimContext, army: ArmyState, keyPoints = false): void {
+export function holdMission(
+  ctx: SimContext,
+  army: ArmyState,
+  kind: LineMissionKind = 'hold',
+): void {
   const wasAdvance = !!advanceOf(army)
-  const changed = (army.mission?.kind === 'keyPoints') !== keyPoints
-  army.mission = keyPoints ? { kind: 'keyPoints' } : undefined
-  if (changed && keyPoints) ctx.log(`${army.name} tient les points clés du front`, army.owner)
+  const changed = (army.mission?.kind ?? 'hold') !== kind
+  army.mission = kind === 'hold' ? undefined : { kind }
+  if (changed && kind !== 'hold') ctx.log(`${army.name} ${LINE_MISSION_LOG[kind]}`, army.owner)
   if (!wasAdvance) {
     // Nouvelle répartition des postes tout de suite (sinon à la répartition suivante).
     if (changed && (army.front || army.wholeFront)) assignFront(ctx, army)
-    else if (!keyPoints) delete army.keyPoints
+    else if (kind !== 'keyPoints') delete army.keyPoints
     return
   }
   for (const id of army.unitIds) {

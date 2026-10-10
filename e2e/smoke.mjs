@@ -329,6 +329,22 @@ try {
     report.errors.push(`mission « Tenir les points clés » non appliquée (${keyPoints.mission})`)
   }
   await shot('02g3b-points-cles')
+
+  // Missions « Défense en profondeur » puis « Réserve » : appliquées d'un clic chacune.
+  for (const [kind, name] of [
+    ['depth', '02g3c-profondeur'],
+    ['reserve', '02g3d-reserve'],
+  ]) {
+    await page.getByTestId(`mission-${kind}`).click()
+    await page.waitForTimeout(600)
+    const got = await page.evaluate(
+      (id) => window.__nkg.armies.find((x) => x.id === id)?.mission?.kind ?? 'hold',
+      missionArmy,
+    )
+    step(`mission ${kind}`, { mission: got })
+    if (got !== kind) report.errors.push(`mission ${kind} non appliquée (${got})`)
+    await shot(name)
+  }
   await page.getByTestId('mission-hold').click()
   await page.waitForTimeout(500)
 

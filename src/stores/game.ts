@@ -6,6 +6,7 @@ import { decodeRle, terrainRule } from '@/sim/theater/grid'
 import type { SupplyView } from '@/sim/systems/supplyView'
 import type {
   AdvanceGoal,
+  LineMissionKind,
   BattleReport,
   BuildingKind,
   CountryId,
@@ -631,9 +632,9 @@ export const useGameStore = defineStore('game', () => {
 
   const holdArmy = (id: number): Promise<void> => sim.holdArmy(id)
 
-  /** Mission « Tenir les points clés » d'une armée. */
-  async function keyPointsArmy(id: number): Promise<void> {
-    report(await sim.keyPointsArmy(id))
+  /** Mission de ligne d'une armée (points clés, défense en profondeur, réserve). */
+  async function lineMissionArmy(id: number, kind: LineMissionKind): Promise<void> {
+    report(await sim.lineMissionArmy(id, kind))
   }
 
   /**
@@ -968,7 +969,7 @@ export const useGameStore = defineStore('game', () => {
     finishAdvanceLine,
     drawAdvanceLine,
     holdArmy,
-    keyPointsArmy,
+    lineMissionArmy,
     startOrder,
     startFront,
     startOffensive,

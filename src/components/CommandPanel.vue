@@ -194,14 +194,37 @@ function encirclementStatus(enc: Encirclement): string {
 const MISSION_NAMES: Record<MissionKind, string> = {
   hold: 'Tenir',
   keyPoints: 'Points clés',
+  depth: 'Profondeur',
+  reserve: 'Réserve',
   advance: 'Avancer',
   encircle: 'Encercler',
 }
-const MISSION_ORDER: MissionKind[] = ['hold', 'keyPoints', 'advance', 'encircle']
+const MISSION_ORDER: MissionKind[] = [
+  'hold',
+  'keyPoints',
+  'depth',
+  'reserve',
+  'advance',
+  'encircle',
+]
+/** Missions qui gardent le front de l'armée, appliquées d'un clic. */
+const LINE_MISSIONS: ReadonlyArray<MissionKind> = ['hold', 'keyPoints', 'depth', 'reserve']
+/** Aide affichée sous les missions de ligne autres que « Tenir ». */
+const LINE_MISSION_TEXT: Partial<Record<MissionKind, string>> = {
+  keyPoints:
+    'Unités concentrées sur les villes, passages de fleuve et nœuds routiers du front (repères orange sur la carte) ; simple écran ailleurs.',
+  depth:
+    "Trois cinquièmes des unités de ligne tiennent le contact, les autres une seconde ligne 25 km en arrière ; la première ligne décroche plus tôt et cède du terrain pour user l'attaquant.",
+  reserve:
+    "Unités en retrait, 40 km derrière le front de l'armée ; elles contre-attaquent toute percée à moins de 150 km, puis reviennent.",
+}
 const MISSION_HELP: Record<MissionKind, string> = {
   hold: "L'armée tient sa ligne (portion de front ou tout le front) ; une offensive ponctuelle reste possible",
   keyPoints:
     "L'armée tient son front en force sur les points clés (villes, passages de fleuve, nœuds routiers) et ne laisse qu'un écran ailleurs",
+  depth:
+    "L'armée tient son front sur deux lignes ; la première décroche plus tôt et cède du terrain pour user l'attaquant",
+  reserve: "L'armée reste en retrait de son front et intervient sur les percées",
   advance:
     "L'armée avance jusqu'à une frontière, un trait ou un objectif, en ligne continue ; la posture règle le rythme",
   encircle: "L'armée détache un groupe autour d'une cible ennemie et garde son front avec le reste",
@@ -229,7 +252,11 @@ function missionStatus(a: ArmyState): string {
   let text =
     m?.kind === 'keyPoints'
       ? `Points clés : ${where}${a.keyPoints ? ` · ${a.keyPoints.length} point(s) clé(s) tenu(s)` : ''}`
-      : `Tenir : ${where}`
+      : m?.kind === 'depth'
+        ? `Défense en profondeur : ${where}`
+        : m?.kind === 'reserve'
+          ? `Réserve : derrière ${where === 'sans front' ? 'sa position' : where}`
+          : `Tenir : ${where}`
   if (a.offensive) {
     text += ` · offensive ${a.offensive.launched ? 'en cours' : 'planifiée'}`
     if (a.offensive.unitIds) text += ` (${a.offensive.unitIds.length} unités)`
@@ -254,9 +281,13 @@ function chooseMission(kind: MissionKind): void {
   const a = selectedArmy.value
   if (!a) return
   missionView.value = kind
-  // « Tenir » et « Points clés » s'appliquent tout de suite ; les deux autres demandent un but.
-  if (kind === 'hold' && a.mission && a.mission.kind !== 'hold') void game.holdArmy(a.id)
-  if (kind === 'keyPoints' && a.mission?.kind !== 'keyPoints') void game.keyPointsArmy(a.id)
+  // Les missions de ligne s'appliquent tout de suite ; « Avancer » et « Encercler » demandent un but.
+  const current = a.mission?.kind ?? 'hold'
+  if (kind === current) return
+  if (kind === 'hold') void game.holdArmy(a.id)
+  else if (kind === 'keyPoints' || kind === 'depth' || kind === 'reserve') {
+    void game.lineMissionArmy(a.id, kind)
+  }
 }
 
 /** Armée visée par l'encart de guerre : celle choisie, sinon la plus grande. */
@@ -632,15 +663,13 @@ async function createArmy(): Promise<void> {
                 missionStatus(selectedArmy)
               }}</span>
             </div>
-            <template
-              v-if="
-                (missionView === 'hold' || missionView === 'keyPoints') &&
-                !selectedArmy.encirclement
-              "
-            >
-              <p v-if="missionView === 'keyPoints'" class="meta" data-testid="key-points-help">
-                Unités concentrées sur les villes, passages de fleuve et nœuds routiers du front
-                (repères orange sur la carte) ; simple écran ailleurs.
+            <template v-if="LINE_MISSIONS.includes(missionView) && !selectedArmy.encirclement">
+              <p
+                v-if="LINE_MISSION_TEXT[missionView]"
+                class="meta"
+                :data-testid="`mission-help-${missionView}`"
+              >
+                {{ LINE_MISSION_TEXT[missionView] }}
               </p>
               <div class="group">
                 <span class="label">Front tenu</span>

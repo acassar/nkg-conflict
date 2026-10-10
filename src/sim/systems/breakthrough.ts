@@ -30,6 +30,10 @@ const BLOCK_AHEAD_KM = 12
 /** Distance maximale entre le point de coupure et la route ou voie ferrée visée (axe de la percée). */
 const CUT_AXIS_KM = 10
 
+/** Armée en réserve : portée de son intervention, unités engagées par percée (toutes disponibles). */
+const RESERVE_REACT_KM = 150
+const RESERVE_RESPONDERS = 4
+
 /** Durée maximale d'une réaction avant retour au poste. */
 const REACTION_TICKS = 72
 
@@ -149,10 +153,16 @@ export function reactToBreakthroughs(ctx: SimContext): void {
 
 function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): void {
   const reacting = (u: UnitState): Reaction | undefined => runtimeOf(ctx, u.id).reaction
+  // Armée en réserve : toutes ses unités peuvent intervenir, plus loin, même retranchées.
+  const reserve = army.mission?.kind === 'reserve'
+  const reactKm = reserve ? RESERVE_REACT_KM : REACT_KM
+  const perBreach = reserve ? RESERVE_RESPONDERS : RESPONDERS_PER_BREACH
   const line = army.unitIds
     .map((id) => ctx.units.get(id))
     .filter((u): u is UnitState => !!u && isLineUnit(u.kind) && !runtimeOf(ctx, u.id).routed)
-  let budget = Math.floor(line.length * MAX_REACTING_SHARE) - line.filter((u) => reacting(u)).length
+  let budget =
+    Math.floor(line.length * (reserve ? 1 : MAX_REACTING_SHARE)) -
+    line.filter((u) => reacting(u)).length
   for (const e of intruders) {
     if (budget <= 0) return
     const already = line.filter((u) => reacting(u)?.intruder === e.id)
@@ -173,11 +183,13 @@ function reactInArmy(ctx: SimContext, army: ArmyState, intruders: UnitState[]): 
           runtimeOf(ctx, u.id).stance?.decision !== 'withdraw' &&
           // Unités à leur poste ou à l'arrêt (l'armée les renverrait de toute façon au front).
           (u.order.kind === 'front' || u.order.kind === 'hold' || u.order.kind === 'idle') &&
-          u.entrench < HOLD_ENTRENCH &&
-          distanceKm(u.lon, u.lat, e.lon, e.lat) <= REACT_KM,
+          (reserve || u.entrench < HOLD_ENTRENCH) &&
+          distanceKm(u.lon, u.lat, e.lon, e.lat) <= reactKm,
       )
-      .sort((a, b) => a.entrench - b.entrench || reach(a) - reach(b))
-      .slice(0, Math.min(budget, RESPONDERS_PER_BREACH - already.length))
+      .sort((a, b) =>
+        reserve ? reach(a) - reach(b) : a.entrench - b.entrench || reach(a) - reach(b),
+      )
+      .slice(0, Math.min(budget, perBreach - already.length))
     if (free.length === 0) continue
     const team = [...already, ...free]
     const ratio = team.reduce((s, u) => s + punch(ctx, u), 0) / Math.max(0.01, guard(ctx, e))

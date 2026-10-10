@@ -177,9 +177,13 @@ export interface ArmyState {
 
 /**
  * Missions d'armée : tenir la ligne (comportement par défaut), tenir les points clés (villes, passages
- * de fleuve, nœuds routiers ; simple écran ailleurs), avancer, encercler.
+ * de fleuve, nœuds routiers ; simple écran ailleurs), défense en profondeur (deux lignes, terrain cédé
+ * pour user l'attaquant), réserve (en retrait, intervient sur les percées), avancer, encercler.
  */
-export type MissionKind = 'hold' | 'keyPoints' | 'advance' | 'encircle'
+export type MissionKind = 'hold' | 'keyPoints' | 'depth' | 'reserve' | 'advance' | 'encircle'
+
+/** Missions qui tiennent un front, sans but à atteindre : elles changent la répartition des postes. */
+export type LineMissionKind = 'hold' | 'keyPoints' | 'depth' | 'reserve'
 
 /** But d'une mission « Avancer » : frontière avec un pays, trait libre ou objectif ponctuel. */
 export type AdvanceGoal =
@@ -213,7 +217,7 @@ export interface AdvanceMission {
   parentArmyId?: number | null
 }
 
-export type ArmyMission = { kind: 'hold' } | { kind: 'keyPoints' } | AdvanceMission
+export type ArmyMission = { kind: LineMissionKind } | AdvanceMission
 
 /**
  * Encerclement en deux temps : les unités gagnent d'abord leurs points d'attente sur les flancs,

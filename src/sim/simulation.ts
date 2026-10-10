@@ -4,6 +4,7 @@ import { Random } from './core/random'
 import { encodeRle, SAVE_VERSION, type SaveFile } from './core/save'
 import type {
   AdvanceGoal,
+  LineMissionKind,
   ArmyState,
   BattleReport,
   BuildingKind,
@@ -767,11 +768,14 @@ export class Simulation {
     holdMission(this.ctx, this.playerArmy(armyId))
   }
 
-  /** Mission « Tenir les points clés » : l'armée garde son front, en force sur les points clés. */
-  keyPointsArmy(armyId: number): string | null {
+  /**
+   * Mission de ligne d'une armée : « Tenir », « Tenir les points clés », « Défense en profondeur » ou
+   * « Réserve ». L'armée garde son front ; la mission règle la répartition de ses postes.
+   */
+  lineMissionArmy(armyId: number, kind: LineMissionKind): string | null {
     const army = this.playerArmy(armyId)
     if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
-    holdMission(this.ctx, army, true)
+    holdMission(this.ctx, army, kind)
     return null
   }
 

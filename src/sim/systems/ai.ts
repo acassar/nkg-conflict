@@ -7,19 +7,33 @@ import { frontCells } from './armies'
 import { planPath } from './movement'
 import { axisBonus } from './axes'
 import { isHalted } from './restraint'
+import { WarIndex } from './spatial'
+import { updateAiArmies, type AiArmyMemory } from './aiArmies'
 
 const STRIKE_SIZE = 3
 const STRIKE_DEPTH_KM = 50
 /** Une offensive tous les ~3 jours au plus. */
 const OFFENSIVE_COOLDOWN_TICKS = 72
 
+/** Revue des armées (posture et mission) une fois par jour. */
+const ARMY_REVIEW_TICKS = 24
+
 export interface AiState {
   lastOffensiveTick: number
+  /** Dernière revue des armées (posture et mission). */
+  lastArmyReview: number
+  /** Mémoire de l'IA pour chacune de ses armées. */
+  armies: Map<number, AiArmyMemory>
+}
+
+export function newAiState(lastOffensiveTick = 0): AiState {
+  return { lastOffensiveTick, lastArmyReview: -Infinity, armies: new Map() }
 }
 
 /**
  * IA adverse, appelée toutes les 12 h de jeu :
- * - toutes ses armées tiennent le front entier (géré par updateArmies) ;
+ * - toutes ses armées tiennent le front entier (géré par updateArmies) ; chaque jour, elle choisit leur
+ *   posture et leur mission selon la situation (voir aiArmies.ts) ;
  * - elle contre-attaque les unités ennemies isolées sur son territoire ;
  * - quand ses troupes sont en état, elle frappe le point le plus faible du front avec ses meilleures unités,
  *   de préférence sur un axe (route, voie ferrée, ville).
@@ -31,9 +45,23 @@ export function updateAi(ctx: SimContext, country: CountryId, state: AiState): v
     ctx.matrix.hostile(side, sideIndex(ctx, u.owner)),
   )
   if (enemies.length === 0) return
+  let breaching = false
+  if (ctx.tick - state.lastArmyReview >= ARMY_REVIEW_TICKS) {
+    state.lastArmyReview = ctx.tick
+    breaching = updateAiArmies(ctx, country, state.armies, new WarIndex(ctx))
+  }
+  // Unités du groupe de choc d'une percée : elles suivent leur mission.
+  const shock = new Set<number>()
+  for (const a of ctx.armies.values()) {
+    if (a.owner === country && a.mission?.kind === 'breach') {
+      breaching = true
+      for (const id of a.mission.shockIds) shock.add(id)
+    }
+  }
   const available = own.filter(
     (u) =>
       isLineUnit(u.kind) &&
+      !shock.has(u.id) &&
       u.order.kind !== 'attack' &&
       !runtimeOf(ctx, u.id).routed &&
       !isHalted(ctx, u),
@@ -49,8 +77,9 @@ export function updateAi(ctx: SimContext, country: CountryId, state: AiState): v
     available.splice(available.indexOf(hunter), 1)
   }
 
-  // Offensive : seulement si les troupes sont reposées.
-  if (ctx.tick - state.lastOffensiveTick < OFFENSIVE_COOLDOWN_TICKS) return
+  // Offensive : seulement si les troupes sont reposées, hors percée en cours et hors défense max.
+  if (breaching || ctx.tick - state.lastOffensiveTick < OFFENSIVE_COOLDOWN_TICKS) return
+  if (armyPostureOf(ctx, country) === 'maxDefense') return
   const avgOrg = available.reduce((s, u) => s + u.org, 0) / Math.max(1, available.length)
   if (available.length < STRIKE_SIZE * 2 || avgOrg < 0.6) return
 
@@ -92,6 +121,17 @@ export function updateAi(ctx: SimContext, country: CountryId, state: AiState): v
   for (const u of strike) attack(ctx, u, target)
   state.lastOffensiveTick = ctx.tick
   ctx.log(`Offensive (${countryName(ctx, country)}) près de ${nearestCity(ctx, lon, lat)}`, country)
+}
+
+/** Posture de la principale armée du pays (la plus nombreuse). */
+function armyPostureOf(ctx: SimContext, country: CountryId): string {
+  let best: { n: number; p: string } = { n: -1, p: 'balanced' }
+  for (const a of ctx.armies.values()) {
+    if (a.owner === country && a.unitIds.length > best.n) {
+      best = { n: a.unitIds.length, p: a.posture ?? 'balanced' }
+    }
+  }
+  return best.p
 }
 
 /** Préfère les unités puissantes, en forme et proches de l'objectif. */

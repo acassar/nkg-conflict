@@ -51,7 +51,7 @@ import {
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
 import { assignFront, launchOffensive, snapToFront, updateArmies } from './systems/armies'
-import { updateAi, nearestCity, type AiState } from './systems/ai'
+import { updateAi, nearestCity, newAiState, type AiState } from './systems/ai'
 import {
   cancelConstruction,
   setWarEconomy,
@@ -242,7 +242,7 @@ export class Simulation {
   private aiState(country: CountryId): AiState {
     let s = this.ai.get(country)
     if (!s) {
-      s = { lastOffensiveTick: 0 }
+      s = newAiState()
       this.ai.set(country, s)
     }
     return s
@@ -366,7 +366,7 @@ export class Simulation {
     sim.outcome = save.outcome
     sim.autoEconomy = save.autoEconomy ?? false
     for (const [c, tick] of Object.entries(save.aiLastOffensiveTick)) {
-      sim.ai.set(c, { lastOffensiveTick: tick })
+      sim.ai.set(c, newAiState(tick))
     }
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
     for (const [

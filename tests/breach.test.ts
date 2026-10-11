@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
+import { runtimeOf } from '@/sim/context'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { BREACH_CORRIDOR_KM, frontCells } from '@/sim/systems/armies'
 import { BREACH_SHOCK_SHARE, missionKind } from '@/sim/systems/missions'
@@ -92,7 +93,12 @@ describe('mission « Percée sur un axe »', () => {
     sim.holdArmy(army.id)
     expect(missionKind(army)).toBe('hold')
     sim.step(24)
-    const back = shock.filter((u) => sim.ctx.units.has(u.id) && u.order.kind === 'front')
+    // De retour au front, ou occupées ailleurs par les règles ordinaires (riposte à une percée, déroute).
+    const back = shock.filter((u) => {
+      if (!sim.ctx.units.has(u.id)) return false
+      const rt = runtimeOf(sim.ctx, u.id)
+      return u.order.kind === 'front' || !!rt.reaction || rt.routed
+    })
     expect(back.length).toBeGreaterThan(shock.length / 2)
   })
 

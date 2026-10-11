@@ -82,6 +82,8 @@ export interface UnitState {
   fatigue?: number
   /** En relève : envoyée au repos en retrait par son armée jusqu'à ce que sa fatigue retombe. */
   relief?: boolean
+  /** Division de la brigade (voir systems/formations.ts) ; absente pour la logistique et les QG. */
+  divisionId?: number
 }
 
 /** Postures de combat, de la plus prudente à la plus agressive. */
@@ -113,6 +115,8 @@ export interface UnitSnapshot {
   fatigue: number
   /** Au repos en retrait (relève organisée par son armée). */
   relief: boolean
+  /** Division de la brigade, ou null (logistique, QG, unité hors armée). */
+  divisionId: number | null
 }
 
 /** Unité dans le rapport de bataille. */
@@ -169,6 +173,26 @@ export interface BattleReport {
   lat: number
   a: BattleUnit[]
   b: BattleUnit[]
+}
+
+/** Échelon d'une formation : division (des brigades) ou corps (des divisions). */
+export type FormationKind = 'division' | 'corps'
+
+/**
+ * Division ou corps : groupe nommé et durable sous une armée (voir systems/formations.ts). Sert à
+ * l'affichage selon le zoom, à la sélection et au secteur commun dans la répartition du front ; la
+ * simulation reste à la brigade. Les brigades portent `divisionId`, les divisions `parentId` (corps).
+ */
+export interface FormationState {
+  id: number
+  owner: CountryId
+  kind: FormationKind
+  /** Numéro dans l'échelon du pays (« 3e division », « IIe corps »). */
+  number: number
+  name: string
+  armyId: number
+  /** Corps d'une division (null pour un corps, ou une division sans corps). */
+  parentId: number | null
 }
 
 export interface ArmyState {
@@ -479,6 +503,8 @@ export interface SimSnapshot {
   countries: CountryDef[]
   units: UnitSnapshot[]
   armies: ArmyState[]
+  /** Divisions et corps de tous les pays (affichage selon le zoom, ordre de bataille). */
+  formations: FormationState[]
   cities: CityState[]
   /** Économie du joueur (celle de l'IA n'est pas publiée). */
   economy: EconomyState | null

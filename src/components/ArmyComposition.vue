@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
-import { armyComposition, strengthTone } from '@/composables/composition'
+import { armyComposition, orderOfBattle, strengthTone } from '@/composables/composition'
 import type { ArmyState } from '@/sim/core/types'
 
 /**
- * Onglet « Composition » d'une armée : nombre d'unités par type, effectifs et organisation moyens.
- * L'ordre de bataille en corps et divisions viendra avec la phase D.
+ * Onglet « Composition » d'une armée : nombre d'unités par type, effectifs et organisation moyens,
+ * puis ordre de bataille en corps et divisions (un clic sur une formation sélectionne ses brigades).
  */
 const props = defineProps<{ army: ArmyState }>()
 const game = useGameStore()
 
-const rows = computed(() => {
+const members = computed(() => {
   const ids = new Set(props.army.unitIds)
-  return armyComposition(game.snapshot?.units.filter((u) => ids.has(u.id)) ?? [])
+  return game.snapshot?.units.filter((u) => ids.has(u.id)) ?? []
 })
+const rows = computed(() => armyComposition(members.value))
+const oob = computed(() => orderOfBattle(members.value, game.snapshot?.formations ?? []))
 const pct = (v: number): string => `${Math.round(v * 100)} %`
 const width = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) * 100)}%`
 </script>
@@ -38,9 +40,35 @@ const width = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) *
         <div class="meta">Organisation moyenne {{ pct(r.org) }}</div>
       </li>
     </ul>
-    <p class="meta">
-      L'ordre de bataille en corps et divisions s'affichera ici quand ils existeront (phase D).
-    </p>
+    <p class="kicker">Ordre de bataille</p>
+    <p v-if="oob.length === 0" class="meta">Aucune division.</p>
+    <div v-for="c in oob" :key="c.id ?? 'hors'" class="corps" data-testid="oob-corps">
+      <button
+        class="formation corps-name"
+        :disabled="c.id === null"
+        :title="c.id === null ? '' : 'Sélectionner les brigades du corps'"
+        @click="game.selectUnits(c.unitIds, false)"
+      >
+        <span>{{ c.name }}</span>
+        <span class="num">{{ c.unitIds.length }} br.</span>
+      </button>
+      <ul>
+        <li v-for="d in c.divisions" :key="d.id">
+          <button
+            class="formation"
+            data-testid="oob-division"
+            title="Sélectionner les brigades de la division"
+            @click="game.selectUnits(d.unitIds, false)"
+          >
+            <span>{{ d.name }}</span>
+            <span class="num">{{ d.unitIds.length }} br. · {{ pct(d.strength) }}</span>
+          </button>
+          <span class="bar"
+            ><i :class="strengthTone(d.strength)" :style="{ width: width(d.strength) }"
+          /></span>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -102,5 +130,33 @@ li {
 .meta {
   color: #9aa3af;
   font-size: 12px;
+}
+.corps {
+  margin-bottom: 6px;
+}
+.formation {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.formation:disabled {
+  cursor: default;
+}
+.corps-name {
+  font-weight: 600;
+  padding: 4px 0;
+}
+.corps li .bar {
+  display: block;
+  margin-top: 3px;
 }
 </style>

@@ -11,7 +11,7 @@ import type {
 } from './core/types'
 import type { CityDef, Grid } from './theater/grid'
 import type { UnitType } from './units/catalog'
-import type { UnitKind } from './core/types'
+import type { FormationState, UnitKind } from './core/types'
 import type { Pathfinder } from './systems/pathfinding'
 import type { SideMatrix } from './politics/matrix'
 import type { PoliticsState } from './politics/types'
@@ -78,6 +78,10 @@ export interface SimContext {
   losses: Map<CountryId, number>
   /** Obstacles (mines, barbelés, positions préparées), par cellule. */
   obstacles: Map<number, ObstacleField>
+  /** Divisions et corps, par identifiant (numérotation propre, voir systems/formations.ts). */
+  formations: Map<number, FormationState>
+  /** Prochain identifiant de formation. */
+  nextFormationId: number
   /** Nouvel identifiant unique (unités, armées, files d'attente). */
   allocId(): number
   /** `minor` : gardé seulement pour le joueur et les pays en guerre. */

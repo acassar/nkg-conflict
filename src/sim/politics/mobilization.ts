@@ -1,3 +1,4 @@
+import { updateFormations } from '../systems/formations'
 import { sideIndex, type SimContext } from '../context'
 import type { ArmyState, CountryDef, LonLat, UnitKind, UnitState } from '../core/types'
 import { assignFront, frontCells } from '../systems/armies'
@@ -198,10 +199,14 @@ export function mobilize(
   if (eco && explicit) {
     for (const def of explicit) eco.unitCounters[def.kind]++
   }
-  // Déploiement immédiat sur le front (les unités sans position fixée).
-  if (frontCells(ctx, sideIndex(ctx, country.id), null).length > 0) {
-    assignFront(ctx, { ...army, unitIds: army.unitIds.filter((id) => !fixed.has(id)) }, true)
-  }
+  // Déploiement immédiat sur le front (les unités sans position fixée), puis divisions et corps formés
+  // de brigades voisines sur le front (ou dans leurs garnisons). Second déploiement : chaque division
+  // prend son secteur dès le départ, sans remaniement au premier jour.
+  const front = frontCells(ctx, sideIndex(ctx, country.id), null).length > 0
+  const deployed = { ...army, unitIds: army.unitIds.filter((id) => !fixed.has(id)) }
+  if (front) assignFront(ctx, deployed, true)
+  updateFormations(ctx, army)
+  if (front) assignFront(ctx, deployed, true)
 }
 
 /**

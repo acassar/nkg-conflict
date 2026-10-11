@@ -12,8 +12,8 @@ import type { ArmyState, CityState, LonLat, SimSnapshot, UnitSnapshot } from '@/
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { FORT_RADIUS_KM, formationSlots } from '@/sim/economy/rules'
 import { fortBonusLabel } from '@/sim/economy/forts'
-import { stackIcon, unitIcon } from './unitIcons'
-import { isStack, stackUnits, type MapUnit } from './clusters'
+import { FORMATION_ICON_SCALE, formationIcon, stackIcon, unitIcon } from './unitIcons'
+import { formationPawns, isStack, stackUnits, type MapUnit } from './clusters'
 import { stanceColor, type TerritoryTile } from './territoryImage'
 import { BASE_ROAD_WIDTH, type RoadLines } from './roadsImage'
 import type { LineBlock } from './lineBlocks'
@@ -802,6 +802,8 @@ export function buildLayers(input: LayerInput): Layer[] {
   const neutral = snapshot.units.filter(
     (u) => (input.stances.get(u.owner) ?? 'neutral') === 'neutral' && !selection.has(u.id),
   )
+  // Divisions et corps : un pion par formation quand le zoom réunit ses brigades.
+  const formations = new Map(snapshot.formations.map((f) => [f.id, f]))
   for (const [id, list, size, opacity] of [
     ['units-neutral', neutral, 24, 0.75],
     ['units', involved, 34, 1],
@@ -809,17 +811,25 @@ export function buildLayers(input: LayerInput): Layer[] {
     layers.push(
       new IconLayer<MapUnit>({
         id,
-        data: stackUnits(list, input.zoom, size + 4),
+        data: stackUnits(formationPawns(list, formations, input.zoom), input.zoom, size + 4),
         getPosition: (m) => [m.lon, m.lat],
         getIcon: (m) =>
           isStack(m)
-            ? stackIcon(
-                m.units,
-                colorOf(m.owner),
-                m.units.some((u) => selection.has(u.id)),
-              )
+            ? m.formation
+              ? formationIcon(
+                  m.units,
+                  m.formation.kind,
+                  colorOf(m.owner),
+                  m.units.some((u) => selection.has(u.id)),
+                )
+              : stackIcon(
+                  m.units,
+                  colorOf(m.owner),
+                  m.units.some((u) => selection.has(u.id)),
+                )
             : unitIcon(m, colorOf(m.owner), selection.has(m.id)),
-        getSize: size,
+        // Pion de formation plus haut (marque d'échelon) : même taille de cadre qu'une brigade.
+        getSize: (m) => (isStack(m) && m.formation ? size * FORMATION_ICON_SCALE : size),
         sizeUnits: 'pixels',
         opacity,
         pickable: true,

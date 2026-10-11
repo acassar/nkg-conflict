@@ -6,6 +6,7 @@ import ArmyRecruitment from './ArmyRecruitment.vue'
 import ArmyComposition from './ArmyComposition.vue'
 import { useProductionStats } from '@/composables/production'
 import { isTouch } from '@/composables/layout'
+import { selectionFormation } from '@/composables/composition'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import {
@@ -82,6 +83,12 @@ function summary(list: UnitSnapshot[]): {
   }
 }
 const selectionSummary = computed(() => summary(selectedUnits.value))
+/** Division (et corps) des unités choisies : « 3e division · IIe corps ». */
+const formationLabel = computed(() => {
+  const f = selectionFormation(selectedUnits.value, game.snapshot?.formations ?? [])
+  if (!f) return null
+  return [f.division?.name, f.corps?.name].filter(Boolean).join(' · ')
+})
 /** Posture commune de la sélection, ou null si elle est mêlée. */
 const selectionPosture = computed(() => {
   const set = new Set(selectedUnits.value.map((u) => u.posture))
@@ -309,6 +316,9 @@ async function createArmy(): Promise<void> {
             {{ selectionSummary.unsupplied }} sans ravitaillement
           </span>
         </div>
+        <p v-if="formationLabel" class="formation-label" data-testid="selection-formation">
+          {{ formationLabel }}
+        </p>
         <div class="group">
           <span class="label">Mouvement</span>
           <button
@@ -1135,5 +1145,10 @@ h3 {
 }
 .forces h3:first-child {
   margin-top: 0;
+}
+.formation-label {
+  margin: 4px 0 0;
+  color: #9aa3af;
+  font-size: 12px;
 }
 </style>

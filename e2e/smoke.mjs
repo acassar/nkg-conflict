@@ -713,7 +713,10 @@ try {
   // Onglet « Composition » : une ligne par type d'unité de l'armée.
   await page.getByTestId('army-view-composition').click()
   await page.getByTestId('army-composition').waitFor()
-  const compoRows = await page.getByTestId('army-composition').locator('li').count()
+  const compoRows = await page
+    .getByTestId('army-composition')
+    .locator('li[data-testid^="composition-"]')
+    .count()
   const kinds = await page.evaluate((id) => {
     const g = window.__nkg
     const army = g.armies.find((a) => a.id === id)
@@ -724,6 +727,43 @@ try {
   if (compoRows !== kinds)
     report.errors.push(`composition : ${compoRows} lignes pour ${kinds} types`)
   await shot('02g6-composition')
+
+  // Ordre de bataille : corps et divisions de l'armée ; un clic sélectionne les brigades d'une division.
+  const oobDivisions = await page.getByTestId('oob-division').count()
+  const oobCorps = await page.getByTestId('oob-corps').count()
+  await page.getByTestId('oob-division').first().click()
+  await page.getByTestId('selection-formation').waitFor({ timeout: 5000 })
+  const picked = await page.evaluate(() => {
+    const g = window.__nkg
+    const ids = new Set(g.selection)
+    const units = g.snapshot.units.filter((u) => ids.has(u.id))
+    return { n: units.length, divisions: new Set(units.map((u) => u.divisionId)).size }
+  })
+  const formationText = await page.getByTestId('selection-formation').innerText()
+  step('ordre de bataille', {
+    corps: oobCorps,
+    divisions: oobDivisions,
+    choisie: picked,
+    formationText,
+  })
+  if (oobDivisions < 2 || oobCorps < 1) {
+    report.errors.push(`ordre de bataille vide (${oobCorps} corps, ${oobDivisions} divisions)`)
+  }
+  if (picked.n < 1 || picked.divisions !== 1 || !/division/.test(formationText)) {
+    report.errors.push(
+      `sélection d'une division incorrecte (${JSON.stringify(picked)}, « ${formationText} »)`,
+    )
+  }
+  await shot('02g7-division-choisie')
+  // Pions de division et de corps selon le zoom (captures).
+  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [36.5, 48.8], zoom: 6 }))
+  await page.waitForTimeout(1500)
+  await shot('04f-pions-divisions')
+  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [34, 48.5], zoom: 4.6 }))
+  await page.waitForTimeout(1500)
+  await shot('04g-pions-corps')
+  await page.evaluate((id) => window.__nkg.selectArmy(id), missionArmy)
+  await page.waitForTimeout(300)
   await page.getByTestId('army-view-command').click()
 
   // Sauvegarde dans le navigateur, retour au menu, reprise.

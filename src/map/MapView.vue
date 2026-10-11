@@ -8,7 +8,7 @@ import { Protocol } from 'pmtiles'
 import { storeToRefs } from 'pinia'
 import type { CityState, GridSnapshot, LonLat } from '@/sim/core/types'
 import type { SupplyView } from '@/sim/systems/supplyView'
-import { isStack, type MapUnit } from './clusters'
+import { formationMembers, isStack, type MapUnit } from './clusters'
 import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers, type MissionPreviewShapes } from './layers'
@@ -359,7 +359,13 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
   }
   const item = info.layer?.id.startsWith('units') ? (info.object as MapUnit | undefined) : undefined
   if (item) {
-    const units = isStack(item) ? item.units : [item]
+    // Pion de division ou de corps : toute la formation, brigades écartées comprises.
+    const units =
+      isStack(item) && item.formation && game.snapshot
+        ? formationMembers(game.snapshot.units, game.snapshot.formations, item.formation.id)
+        : isStack(item)
+          ? item.units
+          : [item]
     // Un ordre en cours de saisie peut viser une unité (attaque, encerclement).
     if (point && game.mapClick(point, units)) return
     const mine = units.filter((u) => u.owner === me)

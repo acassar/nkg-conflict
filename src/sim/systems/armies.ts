@@ -10,6 +10,7 @@ import { distanceKm, Terrain, terrainRule } from '../theater/grid'
 import { fortFactorAt } from '../economy/economy'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
+import { updateFormations } from './formations'
 import { REST_KM, RELIEF_MAX_SHARE, selectRelief } from './fatigue'
 import { assaultFireFactor } from './obstacles'
 import {
@@ -197,6 +198,118 @@ function slots(
     if (c) out.push(c)
   }
   return out
+}
+
+/**
+ * Écart ajouté, pour une brigade, à la distance d'un poste hors du secteur de sa division : elle préfère
+ * son secteur, sans traverser le front pour l'atteindre. Un secteur strict (écart infini) déplaçait trop
+ * d'unités chaque jour : sur le théâtre ukrainien, l'Ukraine capitulait dans 6 parties sur 12 (2 sans).
+ */
+export const OUT_OF_SECTOR_KM = 100
+
+/**
+ * Secteurs des divisions sur une ligne de postes rangés le long du front (`dist` : distances unité ×
+ * poste). Les divisions (et les brigades sans division, chacune seule) sont classées selon la position
+ * moyenne, le long du front, du poste le plus proche de leurs brigades ; chacune reçoit autant de postes
+ * contigus qu'elle a de brigades, et ses brigades prennent ensuite les plus proches dans ce secteur.
+ */
+export function divisionSectors(units: UnitState[], posts: number, dist: Float64Array): void {
+  if (posts !== units.length || units.length < 2) return
+  const groups = new Map<number, { members: number[]; at: number }>()
+  units.forEach((u, ui) => {
+    let best = 0
+    let bestKm = Infinity
+    for (let pi = 0; pi < posts; pi++) {
+      const km = dist[ui * posts + pi] ?? Infinity
+      if (km < bestKm) {
+        bestKm = km
+        best = pi
+      }
+    }
+    const key = u.divisionId ?? -u.id
+    const g = groups.get(key) ?? { members: [], at: 0 }
+    g.at += best
+    g.members.push(ui)
+    groups.set(key, g)
+  })
+  if (groups.size === units.length) return
+  const ordered = [...groups.values()].sort(
+    (a, b) =>
+      a.at / a.members.length - b.at / b.members.length ||
+      (a.members[0] ?? 0) - (b.members[0] ?? 0),
+  )
+  let start = 0
+  for (const g of ordered) {
+    const end = start + g.members.length
+    for (const ui of g.members) {
+      for (let pi = 0; pi < posts; pi++) {
+        if (pi < start || pi >= end)
+          dist[ui * posts + pi] = (dist[ui * posts + pi] ?? 0) + OUT_OF_SECTOR_KM
+      }
+    }
+    start = end
+  }
+}
+
+/** Fenêtre (en postes) dans laquelle deux brigades peuvent échanger leurs postes pour rapprocher leurs divisions. */
+const COHESION_WINDOW = 3
+/** Trajet supplémentaire accepté pour un échange (les deux brigades réunies), en km. */
+const COHESION_MAX_KM = 30
+/** Passes d'échanges. */
+const COHESION_PASSES = 4
+
+/**
+ * Secteur commun des divisions : après l'attribution des postes au plus proche, des brigades proches
+ * échangent leurs postes quand cela met côte à côte des brigades d'une même division, sans allonger
+ * le trajet total de plus de COHESION_MAX_KM. Les postes doivent être rangés le long du front
+ * (`unitAt[poste]` = index de la brigade, −1 sans brigade ; `dist` : distances brigade × poste).
+ * Seuls des échanges locaux : la ligne garde sa forme, aucune brigade n'est envoyée loin.
+ */
+export function divisionCohesion(
+  units: ReadonlyArray<Pick<UnitState, 'divisionId'>>,
+  unitAt: Int32Array,
+  dist: Float64Array,
+  frozen: Uint8Array,
+): void {
+  const P = unitAt.length
+  const key = (pi: number): number | undefined => {
+    const ui = unitAt[pi] ?? -1
+    return ui < 0 ? undefined : units[ui]?.divisionId
+  }
+  const adjacency = (from: number, to: number): number => {
+    let n = 0
+    for (let pi = Math.max(0, from); pi < Math.min(P - 1, to); pi++) {
+      const a = key(pi)
+      if (a !== undefined && a === key(pi + 1)) n++
+    }
+    return n
+  }
+  const km = (ui: number, pi: number): number => dist[ui * P + pi] ?? 0
+  for (let pass = 0; pass < COHESION_PASSES; pass++) {
+    let changed = false
+    for (let i = 0; i < P; i++) {
+      for (let j = i + 1; j <= Math.min(P - 1, i + COHESION_WINDOW); j++) {
+        const a = unitAt[i] ?? -1
+        const b = unitAt[j] ?? -1
+        if (a < 0 || b < 0 || frozen[a] || frozen[b]) continue
+        const ka = units[a]?.divisionId
+        const kb = units[b]?.divisionId
+        if (ka === kb) continue
+        const extra = km(a, j) + km(b, i) - km(a, i) - km(b, j)
+        if (extra > COHESION_MAX_KM) continue
+        const before = adjacency(i - 1, j + 1)
+        unitAt[i] = b
+        unitAt[j] = a
+        if (adjacency(i - 1, j + 1) > before) {
+          changed = true
+          continue
+        }
+        unitAt[i] = a
+        unitAt[j] = b
+      }
+    }
+    if (!changed) break
+  }
 }
 
 /** Profondeur des postes des unités de ligne (en cellules derrière le contact). */
@@ -439,6 +552,9 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         dist[ui * P + pi] = distanceKm(u.lon, u.lat, p[0], p[1])
       })
     })
+    // Distances réelles, gardées pour les échanges de postes ; `dist` reçoit l'écart hors secteur.
+    const real = layers.length === 1 ? dist.slice() : dist
+    if (layers.length === 1) divisionSectors(units, P, dist)
     const order = new Uint32Array(dist.length)
     for (let k = 0; k < order.length; k++) order[k] = k
     order.sort((a, b) => (dist[a] ?? 0) - (dist[b] ?? 0) || a - b)
@@ -460,6 +576,9 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     const unitDone = new Uint8Array(units.length)
     const postDone = new Uint8Array(P)
     let left = Math.min(units.length, P)
+    // Attribution au plus proche : (brigade, poste) dans l'ordre où les paires sont trouvées.
+    const pairs: number[] = []
+    const unitAt = new Int32Array(P).fill(-1)
     for (const k of order) {
       if (left === 0) break
       const ui = Math.floor(k / P)
@@ -468,9 +587,26 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       unitDone[ui] = 1
       postDone[pi] = 1
       left--
+      pairs.push(ui)
+      unitAt[pi] = ui
+    }
+    // Secteur commun des divisions (une seule ligne de postes, rangés le long du front).
+    if (layers.length === 1) {
+      const frozen = new Uint8Array(units.length)
+      units.forEach((u, ui) => {
+        if (withdrawing(u)) frozen[ui] = 1
+      })
+      divisionCohesion(units, unitAt, real, frozen)
+    }
+    const postOf = new Int32Array(units.length).fill(-1)
+    unitAt.forEach((ui, pi) => {
+      if (ui >= 0) postOf[ui] = pi
+    })
+    for (const ui of pairs) {
+      const pi = postOf[ui] ?? -1
       const u = units[ui]
       const target = posts[pi]
-      if (!u || !target || withdrawing(u)) continue
+      if (pi < 0 || !u || !target || withdrawing(u)) continue
       if (teleport) {
         ;[u.lon, u.lat] = target
         u.order = { kind: 'front', target }
@@ -829,6 +965,10 @@ export function launchOffensive(ctx: SimContext, army: ArmyState): void {
 export function updateArmies(ctx: SimContext): void {
   for (const army of ctx.armies.values()) {
     army.unitIds = army.unitIds.filter((id) => ctx.units.has(id))
+  }
+  // Divisions et corps : départs, dissolutions, recrues rangées (avant la répartition du front).
+  updateFormations(ctx)
+  for (const army of ctx.armies.values()) {
     // Missions « Avancer » et « Retraite ordonnée » : les unités suivent leur ligne (voir missions.ts),
     // pas le front. En percée, seul le groupe de choc attaque : le reste de l'armée garde son front.
     if (army.mission?.kind === 'advance' || army.mission?.kind === 'retreat') continue

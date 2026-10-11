@@ -343,6 +343,8 @@ try {
   await page.getByTestId('army-composition').waitFor()
   const compo = await page.getByTestId('army-composition').boundingBox()
   check(!!compo && compo.x >= 0 && compo.x + compo.width <= 390, 'composition hors de l’écran')
+  const oob = await page.getByTestId('oob-division').first().boundingBox()
+  check(!!oob && oob.x >= 0 && oob.x + oob.width <= 390, 'ordre de bataille hors de l’écran')
   await shot('m04c2-composition')
   await page.getByTestId('army-view-command').tap()
 

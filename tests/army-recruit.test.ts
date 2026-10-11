@@ -112,13 +112,18 @@ describe('recrutement par armée (simulation)', () => {
     }
     const existing = new Set(sim.ctx.units.keys())
     eco.production += 1e5
-    sim.step(24 * 40)
+    // Recrues vues dans l'armée jour après jour (certaines peuvent tomber au front pendant ces 40 jours).
+    const recruits = new Set<number>()
+    for (let d = 0; d < 40; d++) {
+      sim.step(24)
+      for (const u of sim.ctx.units.values()) {
+        if (u.owner === 'UKR' && !existing.has(u.id) && u.armyId === army.id) recruits.add(u.id)
+      }
+    }
     expect(eco.recruitment.filter((q) => q.armyId === army.id)).toHaveLength(0)
-    const recruits = [...sim.ctx.units.values()].filter(
-      (u) => u.owner === 'UKR' && !existing.has(u.id) && u.armyId === army.id,
-    )
-    // Quatre brigades formées ; une recrue peut déjà être tombée au front en 40 jours de guerre.
-    expect(recruits.length).toBeGreaterThanOrEqual(3)
+    // Brigades versées dans l'armée à leur sortie de caserne ; une formation se perd si sa ville tombe
+    // (Donetsk, près du front, peut être prise pendant ces 40 jours).
+    expect(recruits.size).toBeGreaterThanOrEqual(3)
   })
 
   it('ne lance que ce que la main-d’œuvre permet', () => {

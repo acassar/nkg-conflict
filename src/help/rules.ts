@@ -43,6 +43,13 @@ import {
 } from '@/sim/systems/fatigue'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import {
+  CORPS_DIVISIONS,
+  DIVISION_MANEUVER,
+  DIVISION_SUPPORT,
+  JOIN_KM,
+} from '@/sim/systems/formations'
+import { OUT_OF_SECTOR_KM } from '@/sim/systems/armies'
+import {
   ARMOR_OPEN_FACTOR,
   ARMOR_URBAN_FACTOR,
   ARTILLERY_STATIC_FACTOR,
@@ -199,6 +206,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: 'Commandement',
     paragraphs: [
       `Une unité à moins de ${hqKm} km d'un quartier général de son pays (qui n'est pas en déroute) est commandée : feu et défense ${signedPct(COMMAND_FACTOR)}, et elle récupère plus vite son organisation hors combat.`,
+      `Divisions et corps : les brigades de chaque armée sont regroupées automatiquement en divisions (${DIVISION_MANEUVER} brigades de manœuvre et ${DIVISION_SUPPORT} d'artillerie au plus), les divisions en corps (${CORPS_DIVISIONS} au plus). Une recrue rejoint la division incomplète la plus proche (${JOIN_KM} km au plus), sinon une nouvelle division est formée. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
     ],
   },
   {

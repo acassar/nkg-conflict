@@ -4,6 +4,7 @@ import type {
   ArmyState,
   Buildings,
   EconomyState,
+  FormationState,
   GameEvent,
   GameOutcome,
   ScenarioOptions,
@@ -37,6 +38,8 @@ export interface SaveFile {
   nextId: number
   units: UnitState[]
   armies: ArmyState[]
+  /** Divisions et corps (absents des sauvegardes antérieures : reformés au chargement). */
+  formations?: FormationState[]
   events: GameEvent[]
   outcome: GameOutcome | null
   /** Dernière offensive de l'IA militaire, par pays. */

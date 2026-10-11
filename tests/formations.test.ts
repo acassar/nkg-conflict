@@ -1,0 +1,245 @@
+import { describe, expect, it } from 'vitest'
+import theaterJson from '@/sim/data/theater-ukraine.json'
+import { Simulation } from '@/sim/simulation'
+import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
+import { parseSave, serializeSave } from '@/sim/core/save'
+import { distanceKm, type TheaterData } from '@/sim/theater/grid'
+import {
+  CORPS_DIVISIONS,
+  DIVISION_MANEUVER,
+  DIVISION_SUPPORT,
+  formationName,
+  formationUnits,
+  updateFormations,
+} from '@/sim/systems/formations'
+import { divisionCohesion, divisionSectors } from '@/sim/systems/armies'
+import { orderOfBattle, selectionFormation } from '@/composables/composition'
+import { formationMembers, formationPawns, isStack } from '@/map/clusters'
+import { isBrigade } from '@/sim/units/catalog'
+import type { FormationState, UnitSnapshot, UnitState } from '@/sim/core/types'
+
+const theater = theaterJson as unknown as TheaterData
+
+const newGame = (): Simulation => Simulation.fromScenario(ukraine2026, theater, 3)
+
+const divisionsOf = (sim: Simulation, owner: string): FormationState[] =>
+  [...sim.ctx.formations.values()].filter((f) => f.owner === owner && f.kind === 'division')
+
+describe('divisions et corps', () => {
+  it('regroupe dès le départ toutes les brigades en divisions, et les divisions en corps', () => {
+    const sim = newGame()
+    const ctx = sim.ctx
+    for (const u of ctx.units.values()) {
+      if (isBrigade(u.kind)) expect(u.divisionId).toBeDefined()
+      else expect(u.divisionId).toBeUndefined()
+    }
+    for (const d of divisionsOf(sim, 'UKR')) {
+      const members = formationUnits(ctx, d.id)
+      expect(members.filter((u) => u.kind !== 'art').length).toBeLessThanOrEqual(DIVISION_MANEUVER)
+      expect(members.filter((u) => u.kind === 'art').length).toBeLessThanOrEqual(DIVISION_SUPPORT)
+      expect(d.parentId).not.toBeNull()
+    }
+    const corps = [...ctx.formations.values()].filter((f) => f.kind === 'corps')
+    for (const c of corps) {
+      const n = [...ctx.formations.values()].filter((f) => f.parentId === c.id).length
+      expect(n).toBeGreaterThan(0)
+      expect(n).toBeLessThanOrEqual(CORPS_DIVISIONS)
+    }
+    // Brigades voisines : une division part groupée sur le front.
+    const spans = divisionsOf(sim, 'UKR').map((d) => {
+      const m = formationUnits(ctx, d.id)
+      let max = 0
+      for (const a of m)
+        for (const b of m) max = Math.max(max, distanceKm(a.lon, a.lat, b.lon, b.lat))
+      return max
+    })
+    spans.sort((a, b) => a - b)
+    expect(spans[Math.floor(spans.length / 2)]).toBeLessThan(80)
+  })
+
+  it('nomme les formations à la française', () => {
+    expect(formationName('division', 1)).toBe('1re division')
+    expect(formationName('division', 12)).toBe('12e division')
+    expect(formationName('corps', 1)).toBe('Ier corps')
+    expect(formationName('corps', 4)).toBe('IVe corps')
+  })
+
+  it('une recrue rejoint la division incomplète la plus proche ; une division vide est dissoute', () => {
+    const sim = newGame()
+    const ctx = sim.ctx
+    const [division] = divisionsOf(sim, 'UKR')
+    if (!division) throw new Error('aucune division')
+    const members = formationUnits(ctx, division.id)
+    const [lost, ...others] = members
+    if (!lost) throw new Error('division vide')
+    // Une brigade détruite libère une place ; une recrue de son armée, à côté, la reprend.
+    ctx.units.delete(lost.id)
+    const recruit: UnitState = {
+      ...structuredClone(lost),
+      id: ctx.allocId(),
+      name: 'recrue',
+      lon: others[0]?.lon ?? lost.lon,
+      lat: others[0]?.lat ?? lost.lat,
+    }
+    delete recruit.divisionId
+    ctx.units.set(recruit.id, recruit)
+    ctx.armies.get(division.armyId)?.unitIds.push(recruit.id)
+    updateFormations(ctx)
+    expect(recruit.divisionId).toBe(division.id)
+    // Toutes ses brigades détruites : la division disparaît.
+    for (const u of formationUnits(ctx, division.id)) ctx.units.delete(u.id)
+    updateFormations(ctx)
+    expect(ctx.formations.has(division.id)).toBe(false)
+  })
+
+  it("une brigade qui change d'armée quitte sa division ; un groupe d'encerclement la garde", () => {
+    const sim = newGame()
+    const ctx = sim.ctx
+    const [division] = divisionsOf(sim, 'UKR')
+    const [a, b] = division ? formationUnits(ctx, division.id) : []
+    if (!division || !a || !b) throw new Error('division incomplète')
+    const enemy = [...ctx.units.values()].find((u) => u.owner === 'RUS')
+    if (!enemy) throw new Error('pas d’ennemi')
+    // Encerclement : le groupe détaché garde les divisions de ses brigades.
+    expect(sim.encircle([a.id, b.id], enemy.id)).toBeNull()
+    expect(a.armyId).not.toBe(division.armyId)
+    updateFormations(ctx)
+    expect(a.divisionId).toBe(division.id)
+    // Nouvelle armée ordinaire : la brigade quitte sa division et en rejoint une de cette armée.
+    const other = sim.createArmy('Armée de test', [b.id])
+    const army = ctx.armies.get(other)
+    if (army) army.encirclement = undefined
+    b.armyId = other
+    updateFormations(ctx)
+    expect(b.divisionId).not.toBe(division.id)
+    expect(ctx.formations.get(b.divisionId ?? -1)?.armyId).toBe(other)
+  })
+
+  it('garde divisions et corps dans les sauvegardes', () => {
+    const sim = newGame()
+    sim.step(24)
+    const save = parseSave(serializeSave(sim.toSave()))
+    const loaded = Simulation.fromSave(save, ukraine2026, theater)
+    expect([...loaded.ctx.formations.values()]).toEqual([...sim.ctx.formations.values()])
+    const u = [...sim.ctx.units.values()].find((x) => x.divisionId !== undefined)
+    expect(loaded.ctx.units.get(u?.id ?? -1)?.divisionId).toBe(u?.divisionId)
+    // Sauvegarde sans formations (antérieure) : reformées au chargement.
+    delete save.formations
+    for (const x of save.units) delete x.divisionId
+    const old = Simulation.fromSave(save, ukraine2026, theater)
+    expect(old.ctx.formations.size).toBeGreaterThan(0)
+  })
+})
+
+describe('secteur commun', () => {
+  it('donne des postes contigus à chaque division, au plus proche dans son secteur', () => {
+    // Quatre postes alignés tous les 10 km, deux divisions entremêlées : 1, 2, 1, 2.
+    const units = [1, 2, 1, 2].map((d, k) => ({ id: k + 1, divisionId: d }) as UnitState)
+    const P = 4
+    const dist = new Float64Array(16)
+    units.forEach((_, ui) => {
+      for (let pi = 0; pi < P; pi++) dist[ui * P + pi] = Math.abs(ui - pi) * 10
+    })
+    divisionSectors(units, P, dist)
+    // Hors secteur : plus cher que n'importe quel poste du secteur.
+    const inSector = (ui: number, pi: number): boolean => (dist[ui * P + pi] ?? 0) < 100
+    expect([0, 1].every((pi) => inSector(0, pi) && inSector(2, pi))).toBe(true)
+    expect([2, 3].every((pi) => inSector(1, pi) && inSector(3, pi))).toBe(true)
+  })
+
+  it('échange les postes de brigades voisines pour réunir une division, sans trajet excessif', () => {
+    const units = [1, 2, 1, 2].map((d) => ({ divisionId: d }))
+    const near = new Float64Array(16)
+    for (let ui = 0; ui < 4; ui++)
+      for (let pi = 0; pi < 4; pi++) near[ui * 4 + pi] = Math.abs(ui - pi) * 5
+    const unitAt = Int32Array.from([0, 1, 2, 3])
+    divisionCohesion(units, unitAt, near, new Uint8Array(4))
+    const keys = [...unitAt].map((ui) => units[ui]?.divisionId)
+    expect(keys[0]).toBe(keys[1])
+    expect(keys[2]).toBe(keys[3])
+    // Postes éloignés de 100 km : l'échange coûterait trop, rien ne bouge.
+    const far = new Float64Array(16)
+    for (let ui = 0; ui < 4; ui++)
+      for (let pi = 0; pi < 4; pi++) far[ui * 4 + pi] = Math.abs(ui - pi) * 100
+    const fixed = Int32Array.from([0, 1, 2, 3])
+    divisionCohesion(units, fixed, far, new Uint8Array(4))
+    expect([...fixed]).toEqual([0, 1, 2, 3])
+  })
+})
+
+describe('affichage et ordre de bataille', () => {
+  const formations: FormationState[] = [
+    { id: 1, owner: 'UKR', kind: 'corps', number: 1, name: 'Ier corps', armyId: 9, parentId: null },
+    {
+      id: 2,
+      owner: 'UKR',
+      kind: 'division',
+      number: 1,
+      name: '1re division',
+      armyId: 9,
+      parentId: 1,
+    },
+    {
+      id: 3,
+      owner: 'UKR',
+      kind: 'division',
+      number: 2,
+      name: '2e division',
+      armyId: 9,
+      parentId: 1,
+    },
+  ]
+  const unit = (id: number, divisionId: number, lon: number): UnitSnapshot =>
+    ({
+      id,
+      owner: 'UKR',
+      kind: 'inf',
+      lon,
+      lat: 49,
+      strength: 0.8,
+      org: 0.6,
+      divisionId,
+      supplied: true,
+      engaged: false,
+    }) as UnitSnapshot
+  // Deux divisions de trois brigades, à 0,2° d'écart, séparées de 1°.
+  const units = [
+    unit(1, 2, 30),
+    unit(2, 2, 30.2),
+    unit(3, 2, 30.4),
+    unit(4, 3, 31.4),
+    unit(5, 3, 31.6),
+    unit(6, 3, 31.8),
+  ]
+  const byId = new Map(formations.map((f) => [f.id, f]))
+
+  it('un pion par corps de loin, par division à zoom moyen, par brigade de près', () => {
+    const far = formationPawns(units, byId, 4)
+    expect(far).toHaveLength(1)
+    expect(isStack(far[0]!) && far[0].formation?.kind).toBe('corps')
+    const mid = formationPawns(units, byId, 6)
+    expect(mid.map((m) => (isStack(m) ? m.formation?.name : 'brigade'))).toEqual([
+      '1re division',
+      '2e division',
+    ])
+    expect(formationPawns(units, byId, 9).every((m) => !isStack(m))).toBe(true)
+    expect(formationMembers(units, formations, 1).map((u) => u.id)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(formationMembers(units, formations, 3).map((u) => u.id)).toEqual([4, 5, 6])
+  })
+
+  it("ordre de bataille d'une armée et formation d'une sélection", () => {
+    const oob = orderOfBattle(units, formations)
+    expect(oob).toHaveLength(1)
+    expect(oob[0]?.name).toBe('Ier corps')
+    expect(oob[0]?.divisions.map((d) => [d.name, d.unitIds.length])).toEqual([
+      ['1re division', 3],
+      ['2e division', 3],
+    ])
+    expect(oob[0]?.divisions[0]?.strength).toBeCloseTo(0.8)
+    expect(selectionFormation(units.slice(0, 1), formations)?.division?.name).toBe('1re division')
+    const both = selectionFormation(units, formations)
+    expect(both?.division).toBeNull()
+    expect(both?.corps?.name).toBe('Ier corps')
+    expect(selectionFormation([{ divisionId: null }], formations)).toBeNull()
+  })
+})

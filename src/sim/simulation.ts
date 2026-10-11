@@ -1,3 +1,4 @@
+import { updateFormations } from './systems/formations'
 import { updateSustainability } from './economy/sustainability'
 import { TickAccumulator } from './core/loop'
 import { isSpeed, type Speed } from './core/clock'
@@ -242,6 +243,8 @@ export class Simulation {
       economies: new Map(),
       losses: new Map(),
       obstacles: new Map(),
+      formations: new Map(),
+      nextFormationId: 1,
       allocId: () => this.nextId++,
       log: (text, owner, minor) => this.log(text, owner, minor),
     }
@@ -385,6 +388,8 @@ export class Simulation {
     ctx.grid.takeDirty()
     for (const u of save.units) ctx.units.set(u.id, structuredClone(u))
     for (const a of save.armies) ctx.armies.set(a.id, structuredClone(a))
+    for (const f of save.formations ?? []) ctx.formations.set(f.id, { ...f })
+    ctx.nextFormationId = Math.max(0, ...[...ctx.formations.keys()]) + 1
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
     sim.outcome = save.outcome
@@ -461,10 +466,13 @@ export class Simulation {
       }
       ctx.unsuppliedCells[side] = pockets
     })
+    updateFormations(ctx)
     return sim
   }
 
   private afterLoad(): void {
+    // Divisions et corps : formés au début de la partie, complétés pour une sauvegarde qui n'en a pas.
+    updateFormations(this.ctx)
     updateSupplySources(this.ctx, this.scenario)
     updateSupply(this.ctx)
     updateCommand(this.ctx)
@@ -1254,6 +1262,7 @@ export class Simulation {
           engagedWith: rt.engagedWith,
           fatigue: u.fatigue ?? 0,
           relief: u.relief === true,
+          divisionId: u.divisionId ?? null,
           stance: rt.stance
             ? stanceText(rt.stance)
             : u.halt && isHalted(ctx, u)
@@ -1271,6 +1280,7 @@ export class Simulation {
           }
           return copy
         }),
+      formations: [...ctx.formations.values()].map((f) => ({ ...f })),
       cities,
       economy: economy ? structuredClone(economy) : null,
       autoEconomy: { ...this.autoEconomy },
@@ -1320,6 +1330,7 @@ export class Simulation {
       nextId: this.nextId,
       units: [...ctx.units.values()].map((u) => structuredClone(u)),
       armies: [...ctx.armies.values()].map((a) => structuredClone(a)),
+      formations: [...ctx.formations.values()].map((f) => ({ ...f })),
       events: this.events.slice(),
       outcome: this.outcome,
       aiLastOffensiveTick: Object.fromEntries(

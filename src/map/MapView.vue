@@ -376,7 +376,7 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
     return
   }
   if (point && game.mapClick(point)) return
-  if (info.layer?.id === 'cities' && info.object) {
+  if ((info.layer?.id === 'cities' || info.layer?.id === 'capital-stars') && info.object) {
     const city = info.object as CityState
     // Ville du joueur : production ; ville étrangère : fiche du pays.
     if (city.owner === me) game.selectCity(city.name)

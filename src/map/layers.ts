@@ -18,6 +18,16 @@ import { stanceColor, type TerritoryTile } from './territoryImage'
 import { BASE_ROAD_WIDTH, type RoadLines } from './roadsImage'
 import type { LineBlock } from './lineBlocks'
 import { BORDER_STYLE, type BorderBlocks } from './borders'
+import {
+  CAPITAL_STAR_SIZE,
+  CITY_DOT_RADIUS,
+  STAR_ICON,
+  cityNameOffset,
+  cityNameSize,
+  cityTier,
+  declutterCities,
+  zoomScale,
+} from './cityLabels'
 import type { Stance } from '@/stores/game'
 import type { SupplyPocket, SupplyView } from '@/sim/systems/supplyView'
 
@@ -254,7 +264,12 @@ export function buildLayers(input: LayerInput): Layer[] {
   )
   const colorOf = (id: string | null): Rgb => (id ? colors.get(id) : undefined) ?? [140, 140, 140]
   const selectedUnits = snapshot.units.filter((u) => selection.has(u.id))
-  const cities = visibleCities(snapshot, input.zoom)
+  const shown = visibleCities(snapshot, input.zoom)
+  // Points et noms : les petites villes dont le nom chevaucherait un autre sont masquées ; les
+  // fortifications et dépôts restent signalés sur toutes les villes affichées.
+  const cities = declutterCities(shown, input.zoom, input.selectedCity)
+  const capitals = cities.filter((c) => c.capital)
+  const starSize = CAPITAL_STAR_SIZE * zoomScale(input.zoom)
   const layers: Layer[] = []
 
   // Relief, réseau de transport puis territoire : relief et territoire en tuiles reprojetées de
@@ -317,7 +332,7 @@ export function buildLayers(input: LayerInput): Layer[] {
     // Fortifications : anneau gris d'autant plus épais que le niveau est élevé.
     new ScatterplotLayer<CityState>({
       id: 'city-forts',
-      data: cities.filter((c) => c.buildings.fort > 0),
+      data: shown.filter((c) => c.buildings.fort > 0),
       getPosition: (c) => [c.lon, c.lat],
       filled: false,
       stroked: true,
@@ -331,7 +346,7 @@ export function buildLayers(input: LayerInput): Layer[] {
     // Dépôts : carré blanc sous la ville.
     new TextLayer<CityState>({
       id: 'city-depots',
-      data: cities.filter((c) => c.buildings.depot > 0),
+      data: shown.filter((c) => c.buildings.depot > 0),
       getPosition: (c) => [c.lon, c.lat],
       getText: () => '■',
       getSize: 11,
@@ -344,21 +359,45 @@ export function buildLayers(input: LayerInput): Layer[] {
     }),
     new ScatterplotLayer<CityState>({
       id: 'cities',
-      data: cities,
+      data: cities.filter((c) => !c.capital),
       getPosition: (c) => [c.lon, c.lat],
       getFillColor: (c) => [...colorOf(c.owner), 255],
       getLineColor: (c) =>
         c.name === input.selectedCity ? [250, 204, 21, 255] : [20, 24, 31, 255],
-      getLineWidth: (c) => (c.name === input.selectedCity ? 3 : 1),
+      getLineWidth: (c) => (c.name === input.selectedCity ? 3 : 1.2),
       lineWidthUnits: 'pixels',
       stroked: true,
       radiusUnits: 'pixels',
-      getRadius: (c) => (c.capital ? 6 : 4),
+      getRadius: (c) => CITY_DOT_RADIUS[cityTier(c.pop)],
       pickable: true,
       updateTriggers: {
         getFillColor: [snapshot.cities.map((c) => c.owner).join(), input.stances],
         getLineColor: input.selectedCity,
         getLineWidth: input.selectedCity,
+      },
+    }),
+    // Capitales : étoile sombre (contour, jaune si sélectionnée) sous une étoile à la couleur du pays.
+    new IconLayer<CityState>({
+      id: 'capital-stars-outline',
+      data: capitals,
+      getPosition: (c) => [c.lon, c.lat],
+      getIcon: () => STAR_ICON,
+      getSize: (c) => starSize + (c.name === input.selectedCity ? 7 : 4),
+      sizeUnits: 'pixels',
+      getColor: (c) => (c.name === input.selectedCity ? [250, 204, 21, 255] : [20, 24, 31, 255]),
+      updateTriggers: { getSize: [input.selectedCity, starSize], getColor: input.selectedCity },
+    }),
+    new IconLayer<CityState>({
+      id: 'capital-stars',
+      data: capitals,
+      getPosition: (c) => [c.lon, c.lat],
+      getIcon: () => STAR_ICON,
+      getSize: starSize,
+      sizeUnits: 'pixels',
+      getColor: (c) => [...colorOf(c.owner), 255],
+      pickable: true,
+      updateTriggers: {
+        getColor: [snapshot.cities.map((c) => c.owner).join(), input.stances],
       },
     }),
   )
@@ -800,20 +839,26 @@ export function buildLayers(input: LayerInput): Layer[] {
   )
   // Noms des villes au-dessus des pions, pour rester lisibles.
   layers.push(
-    new TextLayer<CityState>({
-      id: 'city-names',
-      data: cities,
-      getPosition: (c) => [c.lon, c.lat],
-      getText: (c) => c.name,
-      getSize: (c) => (c.capital ? 14 : 11),
-      getColor: [30, 34, 40, 255],
-      getPixelOffset: [0, -12],
-      fontWeight: 600,
-      outlineWidth: 3,
-      outlineColor: [255, 255, 255, 200],
-      fontSettings: { sdf: true },
-      characterSet: 'auto',
-    }),
+    ...(['names', 'capital-names'] as const).map(
+      (kind) =>
+        new TextLayer<CityState>({
+          id: `city-${kind}`,
+          data: cities.filter((c) => c.capital === (kind === 'capital-names')),
+          getPosition: (c) => [c.lon, c.lat],
+          getText: (c) => c.name,
+          getSize: (c) => cityNameSize(c, input.zoom),
+          getColor: [246, 244, 236, 255],
+          getPixelOffset: (c) => [0, cityNameOffset(c, input.zoom)],
+          fontFamily: 'Barlow, "Helvetica Neue", Arial, sans-serif',
+          fontWeight: kind === 'capital-names' ? 700 : 500,
+          // Halo sombre : lisible sur la mer, le relief comme sur toutes les couleurs de territoire.
+          outlineWidth: 4,
+          outlineColor: [14, 17, 23, 235],
+          fontSettings: { sdf: true, buffer: 8, radius: 14 },
+          characterSet: 'auto',
+          updateTriggers: { getSize: input.zoom, getPixelOffset: input.zoom },
+        }),
+    ),
   )
   if (input.logistics) layers.push(...pocketLabels(input.logistics.view))
   return layers

@@ -17,7 +17,7 @@ export function isStack(item: MapUnit): item is UnitStack {
 }
 
 /** Position en pixels Web Mercator au niveau de zoom donné (tuiles de 512 px, comme MapLibre). */
-function toPixels(lon: number, lat: number, zoom: number): [number, number] {
+export function toPixels(lon: number, lat: number, zoom: number): [number, number] {
   const scale = 512 * 2 ** zoom
   const sin = Math.sin((lat * Math.PI) / 180)
   return [

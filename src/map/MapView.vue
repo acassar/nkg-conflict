@@ -711,10 +711,18 @@ const PAN_KEYS: Record<string, [number, number]> = {
 const held = new Set<string>()
 let fast = false
 let panFrame = 0
+/** Instant de l'image précédente du déplacement au clavier (0 : premier appui). */
+let panLast = 0
+/** Vitesse de la caméra au clavier, en pixels par seconde (Maj : rapide). */
+const PAN_SPEED = 720
+const PAN_SPEED_FAST = 1680
 
-function panLoop(): void {
+function panLoop(now: number): void {
   panFrame = 0
-  if (!map || held.size === 0) return
+  if (!map || held.size === 0) {
+    panLast = 0
+    return
+  }
   let dx = 0
   let dy = 0
   for (const code of held) {
@@ -724,8 +732,12 @@ function panLoop(): void {
       dy += d[1]
     }
   }
-  const speed = fast ? 28 : 12
-  if (dx || dy) map.panBy([dx * speed, dy * speed], { duration: 0 })
+  // Pas proportionnel au temps écoulé : même vitesse quelle que soit la fréquence d'images
+  // (plafonné après une longue image, pour ne pas faire de bond).
+  const dt = panLast ? Math.min(0.1, (now - panLast) / 1000) : 1 / 60
+  panLast = now
+  const step = (fast ? PAN_SPEED_FAST : PAN_SPEED) * dt
+  if (dx || dy) map.panBy([dx * step, dy * step], { duration: 0 })
   panFrame = requestAnimationFrame(panLoop)
 }
 

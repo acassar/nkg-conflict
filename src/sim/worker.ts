@@ -12,7 +12,6 @@ import type {
   LonLat,
   Posture,
   ScenarioOptions,
-  SimSnapshot,
   UnitKind,
   WarEconomyLevel,
   BudgetSector,
@@ -21,6 +20,7 @@ import type {
 } from './core/types'
 import { buildScenario, SCENARIOS } from './scenarios'
 import { Simulation, type PlayerOrder } from './simulation'
+import { SnapshotPublisher, type PublishedSnapshot } from './publish'
 import type { SupplyView } from './systems/supplyView'
 import type { MissionPreview } from './systems/armies'
 import { loadTheater } from './theater/load'
@@ -36,7 +36,9 @@ const FRAME_MS = 50
 const GRID_MIN_INTERVAL_MS = 250
 
 let sim: Simulation | null = null
-let listener: ((snapshot: SimSnapshot) => void) | null = null
+let listener: ((published: PublishedSnapshot) => void) | null = null
+/** Différences depuis la publication précédente (voir publish.ts). */
+const publisher = new SnapshotPublisher()
 let last = performance.now()
 let lastGridAt = 0
 const theaters = new Map<string, Promise<TheaterData>>()
@@ -63,11 +65,13 @@ function publish(forceGrid = false): void {
   const allowGrid = forceGrid || now - lastGridAt >= GRID_MIN_INTERVAL_MS
   const snapshot = sim.snapshot(forceGrid, allowGrid)
   if (snapshot.grid || snapshot.gridPatch) lastGridAt = now
+  // Grille complète = nouvelle partie, chargement ou nouvel abonné : tout est renvoyé.
+  if (forceGrid) publisher.reset()
   // La grille complète (≈ 10 Mo) est transférée sans copie.
   const transfer = snapshot.grid
     ? [snapshot.grid.owner.buffer, snapshot.grid.terrain.buffer, snapshot.grid.roads.buffer]
     : []
-  listener(Comlink.transfer(snapshot, transfer))
+  listener(Comlink.transfer(publisher.encode(snapshot), transfer))
 }
 
 // Boucle temps réel : le Worker convertit le temps écoulé en ticks, puis publie l'état.
@@ -114,7 +118,7 @@ const api = {
       .map((c) => ({ code: c.id, name: c.name, pop: c.pop ?? 0 }))
       .sort((a, b) => b.pop - a.pop)
   },
-  subscribe(callback: (snapshot: SimSnapshot) => void): void {
+  subscribe(callback: (published: PublishedSnapshot) => void): void {
     listener = callback
     publish(true)
   },

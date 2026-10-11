@@ -19,7 +19,14 @@ import type {
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { FORT_RADIUS_KM, formationSlots } from '@/sim/economy/rules'
 import { fortBonusLabel } from '@/sim/economy/forts'
-import { FORMATION_ICON_SCALE, formationIcon, stackIcon, unitIcon } from './unitIcons'
+import {
+  FORMATION_ICON_SCALE,
+  formationIcon,
+  gaugeIcon,
+  stackIcon,
+  unitIcon,
+  type GaugeShape,
+} from './unitIcons'
 import { formationPawns, isStack, stackUnits, type MapUnit } from './clusters'
 import { stanceColor, type TerritoryTile } from './territoryImage'
 import { BASE_ROAD_WIDTH, type RoadLines } from './roadsImage'
@@ -105,6 +112,46 @@ export interface LayerInput {
 }
 
 /** Icône de bataille : deux sabres croisés sur un disque. */
+/** Jauges d'un pion (moyennes pour une pile ou une formation). */
+interface PawnGauges {
+  lon: number
+  lat: number
+  shape: GaugeShape
+  /** Brigade et formation : effectifs, matériel, organisation ; pile : effectifs, organisation. */
+  values: number[]
+  routed: boolean
+}
+
+function pawnGauges(m: MapUnit): PawnGauges {
+  if (!isStack(m)) {
+    return {
+      lon: m.lon,
+      lat: m.lat,
+      shape: 'unit',
+      values: [m.strength, m.equipment, m.org],
+      routed: m.routed,
+    }
+  }
+  let strength = 0
+  let equipment = 0
+  let org = 0
+  for (const u of m.units) {
+    strength += u.strength
+    equipment += u.equipment
+    org += u.org
+  }
+  const n = Math.max(1, m.units.length)
+  return m.formation
+    ? {
+        lon: m.lon,
+        lat: m.lat,
+        shape: 'formation',
+        values: [strength / n, equipment / n, org / n],
+        routed: false,
+      }
+    : { lon: m.lon, lat: m.lat, shape: 'stack', values: [strength / n, org / n], routed: false }
+}
+
 function battleIcon(mine: boolean): { url: string; width: number; height: number; id: string } {
   const fill = mine ? '#b91c1c' : '#57534e'
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="${fill}" stroke="#fff" stroke-width="4"/><g stroke="#fff" stroke-width="6" stroke-linecap="round"><path d="M18 18 L46 46"/><path d="M46 18 L18 46"/></g><g stroke="#fff" stroke-width="4" stroke-linecap="round"><path d="M14 40 L24 50"/><path d="M50 40 L40 50"/></g></svg>`
@@ -863,10 +910,13 @@ export function buildLayers(input: LayerInput): Layer[] {
     ['units-neutral', neutral, 24, 0.75],
     ['units', involved, 34, 1],
   ] as const) {
+    const pawns = stackUnits(formationPawns(list, formations, input.zoom), input.zoom, size + 4)
+    const pawnSize = (m: MapUnit): number =>
+      isStack(m) && m.formation ? size * FORMATION_ICON_SCALE : size
     layers.push(
       new IconLayer<MapUnit>({
         id,
-        data: stackUnits(formationPawns(list, formations, input.zoom), input.zoom, size + 4),
+        data: pawns,
         getPosition: (m) => [m.lon, m.lat],
         getIcon: (m) =>
           isStack(m)
@@ -884,13 +934,30 @@ export function buildLayers(input: LayerInput): Layer[] {
                 )
             : unitIcon(m, colorOf(m.owner), selection.has(m.id)),
         // Pion de formation plus haut (marque d'échelon) : même taille de cadre qu'une brigade.
-        getSize: (m) => (isStack(m) && m.formation ? size * FORMATION_ICON_SCALE : size),
+        getSize: pawnSize,
         sizeUnits: 'pixels',
         opacity,
         pickable: true,
         updateTriggers: { getIcon: [[...selection].join(), input.stances] },
       }),
     )
+    // Jauges sous le cadre : une couche par jauge, superposée au pion (voir gaugeIcon).
+    const gauges = pawns.map(pawnGauges)
+    for (const row of [0, 1, 2] as const) {
+      layers.push(
+        new IconLayer<PawnGauges>({
+          id: `gauges-${id}-${row}`,
+          // Les piles n'ont que deux jauges.
+          data: row === 2 ? gauges.filter((g) => g.shape !== 'stack') : gauges,
+          getPosition: (g) => [g.lon, g.lat],
+          getIcon: (g) => gaugeIcon(g.shape, row, g.values[row] ?? 0, g.routed),
+          getSize: (g) => (g.shape === 'formation' ? size * FORMATION_ICON_SCALE : size),
+          sizeUnits: 'pixels',
+          opacity,
+          pickable: false,
+        }),
+      )
+    }
   }
   // Batailles : icône au-dessus des pions, clic pour le détail.
   layers.push(

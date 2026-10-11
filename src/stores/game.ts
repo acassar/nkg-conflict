@@ -29,6 +29,7 @@ import { newPlayerWars } from './warBrief'
 import { inspectorView, type Domain, type InspectKind } from './frame'
 import { pushSample, type GaugeId, type ResourceSample } from '@/composables/gauges'
 import type { SimApi } from '@/sim/worker'
+import { SnapshotReceiver, type PublishedSnapshot } from '@/sim/publish'
 import type { RecruitOrder } from '@/sim/economy/armyRecruit'
 import type { BuildAdvice } from '@/sim/economy/buildAdvice'
 import { deleteSave, listSaves, readSave, writeSave, type SaveSlot } from './saves'
@@ -193,8 +194,13 @@ export const useGameStore = defineStore('game', () => {
   let lastAutosaveTick = 0
   let saving = false
 
+  /** État complet reconstruit à partir des différences publiées par le Worker. */
+  const receiver = new SnapshotReceiver()
+
   void sim.subscribe(
-    Comlink.proxy((next: SimSnapshot) => {
+    Comlink.proxy((published: PublishedSnapshot) => {
+      // Toujours appliqué, même ignoré : les publications suivantes ne portent que les différences.
+      const next = receiver.apply(published)
       if (!active) return
       if (next.grid) {
         grid.value = next.grid

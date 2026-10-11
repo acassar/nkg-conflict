@@ -1,5 +1,14 @@
 import { equipmentOf } from './units/equipment'
 import { updateFormations } from './systems/formations'
+import {
+  atSea,
+  dropSeaTransits,
+  heldPorts,
+  landUnits,
+  navalCapacity,
+  portCapacity,
+  updateNaval,
+} from './systems/naval'
 import { updateSustainability } from './economy/sustainability'
 import { TickAccumulator } from './core/loop'
 import { isSpeed, type Speed } from './core/clock'
@@ -252,6 +261,7 @@ export class Simulation {
       obstacles: new Map(),
       formations: new Map(),
       nextFormationId: 1,
+      sea: [],
       allocId: () => this.nextId++,
       log: (text, owner, minor) => this.log(text, owner, minor),
     }
@@ -396,6 +406,7 @@ export class Simulation {
     for (const u of save.units) ctx.units.set(u.id, structuredClone(u))
     for (const a of save.armies) ctx.armies.set(a.id, structuredClone(a))
     for (const f of save.formations ?? []) ctx.formations.set(f.id, { ...f })
+    ctx.sea = (save.sea ?? []).map((t) => structuredClone(t))
     ctx.nextFormationId = Math.max(0, ...[...ctx.formations.keys()]) + 1
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
@@ -573,6 +584,7 @@ export class Simulation {
         run('tenir ou décrocher', () => holdOrFallBack(ctx))
         run('alertes', () => this.updateAlerts())
       }
+      run('marine', () => updateNaval(ctx))
       run('chemins', () => planQueuedPaths(ctx))
       run('mouvement', () => updateMovement(ctx))
       run('combat', () => updateCombat(ctx))
@@ -661,6 +673,7 @@ export class Simulation {
     // Ennemis au moment de la capitulation (pour décider d'une victoire du joueur).
     const enemies = new Set(warsOf(ctx, code).flatMap((w) => enemiesInWar(w, code)))
     capitulate(ctx, code, reason)
+    dropSeaTransits(ctx, code)
     this.armylessSince.delete(code)
     if (code === this.playerCountry) {
       const winner = [...enemies][0] ?? ''
@@ -763,6 +776,12 @@ export class Simulation {
   }
 
   /** Poursuite : les unités suivent la cible jusqu'à sa destruction ou sa fuite hors de portée. */
+  /** Débarquement (marine provisoire) des unités choisies sur une côte. */
+  landUnits(ids: number[], target: LonLat): string | null {
+    const units = this.playerUnits(ids).filter((u) => !runtimeOf(this.ctx, u.id).routed)
+    return landUnits(this.ctx, this.playerCountry, units, target)
+  }
+
   pursueUnit(ids: number[], targetId: number): string | null {
     const target = this.enemyTarget(targetId)
     if (typeof target === 'string') return target
@@ -1323,6 +1342,23 @@ export class Simulation {
         at: [a.at[0], a.at[1]],
         unitIds: a.unitIds.slice(),
       })),
+      naval: {
+        capacity: navalCapacity(ctx, this.playerCountry),
+        ports: heldPorts(ctx, this.playerCountry).map((c) => ({
+          name: c.def.name,
+          lon: c.def.lon,
+          lat: c.def.lat,
+          capacity: portCapacity(c.def.pop),
+        })),
+        atSea: atSea(ctx, this.playerCountry).map((t) => ({
+          id: t.unit.id,
+          name: t.unit.name,
+          kind: t.unit.kind,
+          port: t.port,
+          to: [t.to[0], t.to[1]],
+          arriveTick: t.arriveTick,
+        })),
+      },
       grid: forceGrid
         ? {
             version: grid.version,
@@ -1361,6 +1397,7 @@ export class Simulation {
       units: [...ctx.units.values()].map((u) => structuredClone(u)),
       armies: [...ctx.armies.values()].map((a) => structuredClone(a)),
       formations: [...ctx.formations.values()].map((f) => ({ ...f })),
+      sea: ctx.sea.map((t) => structuredClone(t)),
       events: this.events.slice(),
       outcome: this.outcome,
       aiLastOffensiveTick: Object.fromEntries(

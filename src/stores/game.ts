@@ -63,6 +63,8 @@ export type MapMode =
 
   /** Mission « Percée sur un axe » d'une armée : clic sur le point visé. */
   | { kind: 'breach'; armyId: number }
+  /** Débarquement des unités choisies (marine provisoire) : clic sur une côte. */
+  | { kind: 'landing' }
 
 export type AdvanceGoalKind = AdvanceGoal['kind']
 
@@ -476,6 +478,7 @@ export const useGameStore = defineStore('game', () => {
     }
     if (m.kind === 'breach')
       return "Percée : cliquez sur le point visé chez l'ennemi (Échap pour annuler)"
+    if (m.kind === 'landing') return 'Débarquement : cliquez sur une côte (Échap pour annuler)'
     if (m.kind === 'offensive') {
       return m.first
         ? "Offensive : cliquez sur l'objectif"
@@ -692,6 +695,11 @@ export const useGameStore = defineStore('game', () => {
     if (selection.value.length > 0) mode.value = { kind: 'order', order }
   }
 
+  /** Débarquement (marine provisoire) : les unités choisies embarquent, la côte se désigne d'un clic. */
+  function startLanding(): void {
+    if (selection.value.length > 0) mode.value = { kind: 'landing' }
+  }
+
   function startFront(armyId: number): void {
     mode.value = { kind: 'front', armyId, first: null }
   }
@@ -820,6 +828,15 @@ export const useGameStore = defineStore('game', () => {
     }
     if (m.kind === 'breach') {
       void (async () => report(await sim.breachArmy(m.armyId, lonLat(point))))()
+      cancelMode()
+      return true
+    }
+    if (m.kind === 'landing') {
+      void (async () =>
+        report(
+          await sim.landUnits(ids(), lonLat(point)),
+          "Embarquement : les brigades débarqueront à l'arrivée du convoi",
+        ))()
       cancelMode()
       return true
     }
@@ -1214,6 +1231,7 @@ export const useGameStore = defineStore('game', () => {
     startBreach,
     startRetreat,
     startOrder,
+    startLanding,
     startFront,
     startOffensive,
     startTargetOrder,

@@ -18,6 +18,7 @@ import { fortFactor, useMunitions } from '../economy/economy'
 import { NO_MUNITIONS_FACTOR } from '../economy/rules'
 import { moraleFactor } from '../politics/politics'
 import { WarIndex } from './spatial'
+import { LANDING_FACTOR, landingFactor } from './naval'
 import { fatigueFactor, fatigueOf, fatigueRecoveryFactor, updateFatigue } from './fatigue'
 import { postureOf } from '../units/postures'
 import { assaultFireFactor, assaultLossFactor, obstaclesUnder } from './obstacles'
@@ -148,6 +149,13 @@ export function combatModifiers(
       value: fatigueFactor(u),
     })
   }
+  if (landingFactor(ctx, u) < 1) {
+    shared.push({
+      key: 'landing',
+      label: `Débarquement (${Math.round((1 - LANDING_FACTOR) * 100)} %)`,
+      value: LANDING_FACTOR,
+    })
+  }
   const eco = ctx.economies.get(u.owner)
   const ammo = eco && eco.munitions <= 0 ? NO_MUNITIONS_FACTOR : 1
   const cell = ctx.grid.cellAt(u.lon, u.lat)
@@ -244,7 +252,8 @@ export function firePower(ctx: SimContext, u: UnitState): number {
     commandFactor(ctx, u) *
     postureOf(u.posture).attack *
     terrainAttack(ctx, u) *
-    fatigueFactor(u)
+    fatigueFactor(u) *
+    landingFactor(ctx, u)
   )
 }
 
@@ -261,7 +270,8 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     (1 + 0.5 * u.entrench) *
     postureOf(u.posture).defense *
     flankDefenseFactor(ctx, u) *
-    fatigueFactor(u)
+    fatigueFactor(u) *
+    landingFactor(ctx, u)
   )
 }
 

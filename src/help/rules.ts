@@ -1,4 +1,17 @@
 import type { ModifierKey } from '@/sim/core/types'
+import {
+  EMBARK_HOURS,
+  EMBARK_KM,
+  LANDING_FACTOR,
+  LANDING_HOURS,
+  LANDING_ORG,
+  MAX_LANDING_KM,
+  OPPOSED_KM,
+  OPPOSED_LOSS,
+  PORT_BASE_CAPACITY,
+  PORT_CAPACITY_MAX,
+  SEA_KM_PER_HOUR,
+} from '@/sim/systems/naval'
 import { AID_CAP, AID_MONEY_SHARE } from '@/sim/politics/aidLevels'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import { Terrain, TERRAIN_RULES } from '@/sim/theater/grid'
@@ -106,6 +119,7 @@ export type HelpSectionId =
   | 'fatigue'
   | 'sustain'
   | 'budget'
+  | 'naval'
 
 export interface HelpSection {
   id: HelpSectionId
@@ -289,6 +303,15 @@ export const HELP_SECTIONS: HelpSection[] = [
       `L'IA (et la gestion automatique des constructions) ne lance une usine que si ses usines militaires sont payées et que sa réserve dépasse ${FACTORY_RESERVE_DAYS} jours de budget ; elle mène alors autant de chantiers que ses usines civiles le permettent.`,
     ],
   },
+  {
+    id: 'naval',
+    title: 'Marine (provisoire)',
+    paragraphs: [
+      `Pas encore de navires : chaque port tenu (ville au bord de la mer) offre une capacité de transport de ${PORT_BASE_CAPACITY} brigade, plus 1 par million d'habitants (${PORT_CAPACITY_MAX} au plus). La somme des ports tenus, pris compris, fixe le nombre de brigades qu'un pays peut avoir en mer à la fois.`,
+      `Débarquement : une brigade à moins de ${EMBARK_KM} km d'un port tenu embarque, quitte la carte (${EMBARK_HOURS} heures d'embarquement, puis ${SEA_KM_PER_HOUR} km par heure, ${MAX_LANDING_KM} km au plus) et débarque sur la côte choisie : à soi, à un ennemi, à un allié ou à un pays qui accorde le passage. À l'arrivée, son organisation tombe à ${pct(LANDING_ORG)} au plus, elle n'est pas retranchée et perd ${pct(1 - LANDING_FACTOR)} de feu et de défense pendant ${LANDING_HOURS} heures ; si un ennemi est à moins de ${OPPOSED_KM} km, elle perd aussi ${pct(OPPOSED_LOSS)} de ses effectifs et de son matériel. Si la côte s'est fermée entre-temps, elle rentre à son port.`,
+      "Tête de pont : une unité débarquée n'est ravitaillée que si elle est reliée à son territoire, ou par un port pris : un pays en guerre qui tient au moins un de ses ports nationaux ravitaille par la mer depuis chaque port étranger qu'il tient.",
+    ],
+  },
 ]
 
 /** Explication courte de chaque modificateur de l'écran de bataille, et sa section d'aide. */
@@ -348,6 +371,10 @@ export const MODIFIER_HELP: Record<ModifierKey, { text: string; section: HelpSec
   flank: {
     text: `Prise de flanc : ${signedPct(FLANK_DEFENSE[1])} (deux côtés, saillant) ou ${signedPct(FLANK_DEFENSE[2])} (presque encerclée).`,
     section: 'flanks',
+  },
+  landing: {
+    text: `Débarquement récent : −${pct(1 - LANDING_FACTOR)} de feu et de défense pendant ${LANDING_HOURS} heures.`,
+    section: 'naval',
   },
   fatigue: {
     text: `Fatigue de l'unité : jusqu'à −${pct(FATIGUE_COMBAT_MALUS)} de feu et de défense quand elle est épuisée.`,

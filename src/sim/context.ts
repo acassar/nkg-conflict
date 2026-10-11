@@ -11,7 +11,7 @@ import type {
 } from './core/types'
 import type { CityDef, Grid } from './theater/grid'
 import type { UnitType } from './units/catalog'
-import type { FormationState, UnitKind } from './core/types'
+import type { FormationState, SeaTransit, UnitKind } from './core/types'
 import type { Pathfinder } from './systems/pathfinding'
 import type { SideMatrix } from './politics/matrix'
 import type { PoliticsState } from './politics/types'
@@ -80,6 +80,8 @@ export interface SimContext {
   obstacles: Map<number, ObstacleField>
   /** Divisions et corps, par identifiant (numérotation propre, voir systems/formations.ts). */
   formations: Map<number, FormationState>
+  /** Unités en mer (marine provisoire), hors de `units` jusqu'à leur débarquement. */
+  sea: SeaTransit[]
   /** Prochain identifiant de formation. */
   nextFormationId: number
   /** Nouvel identifiant unique (unités, armées, files d'attente). */

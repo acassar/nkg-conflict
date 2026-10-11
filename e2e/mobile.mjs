@@ -256,6 +256,13 @@ try {
   check(selected > 0, 'la sélection par zone ne sélectionne rien')
   check(drawer === 'half', `le tiroir devrait s'ouvrir à mi-hauteur (${drawer})`)
   await shot('m03-selection')
+  // Marine provisoire : bouton « Débarquer » (l'Ukraine tient Odessa), dans la largeur de l'écran.
+  const landingBox = await page.getByTestId('order-landing').boundingBox()
+  step('bouton Débarquer (mobile)', { boite: landingBox })
+  check(
+    !!landingBox && landingBox.x >= 0 && landingBox.x + landingBox.width <= 390,
+    `bouton « Débarquer » absent ou hors de l'écran (${JSON.stringify(landingBox)})`,
+  )
 
   // Ordre au doigt : bouton « Déplacer », le tiroir se replie, puis toucher la destination.
   await page.getByRole('button', { name: 'Déplacer', exact: true }).tap()

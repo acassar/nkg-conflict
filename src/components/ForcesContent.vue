@@ -8,6 +8,8 @@ import { useProductionStats } from '@/composables/production'
 import { isTouch } from '@/composables/layout'
 import { selectionFormation } from '@/composables/composition'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
+import { EMBARK_KM } from '@/sim/systems/naval'
+import { distanceKm } from '@/sim/theater/grid'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import {
   MISSION_GROUPS,
@@ -21,12 +23,33 @@ import type {
   ArmyState,
   Encirclement,
   MissionKind,
+  NavalSnapshot,
   OrderKind,
   Posture,
   UnitSnapshot,
 } from '@/sim/core/types'
 
 const game = useGameStore()
+
+/** Marine provisoire du joueur : ports tenus, capacité, unités en mer. */
+const naval = computed(
+  () => game.snapshot?.naval ?? { capacity: 0, ports: [], atSea: [] as NavalSnapshot['atSea'] },
+)
+/** « Débarquer » : une unité choisie près d'un port tenu, et de la place dans les convois. */
+const landing = computed(() => {
+  const free = naval.value.capacity - naval.value.atSea.length
+  const near = selectedUnits.value.filter((u) =>
+    naval.value.ports.some((p) => distanceKm(u.lon, u.lat, p.lon, p.lat) <= EMBARK_KM),
+  ).length
+  if (near === 0)
+    return { ok: false, title: `Aucune unité choisie à moins de ${EMBARK_KM} km d'un port tenu` }
+  if (free <= 0)
+    return { ok: false, title: 'Capacité navale épuisée : toutes les places sont en mer' }
+  return {
+    ok: true,
+    title: `Embarquer ${Math.min(near, free)} brigade(s) au port le plus proche, puis cliquer sur une côte (${free} place(s) libre(s))`,
+  }
+})
 const { selectedUnits, armies, selectedArmy, selectedArmyId, armyView } = storeToRefs(game)
 const armyName = ref('')
 
@@ -332,6 +355,15 @@ async function createArmy(): Promise<void> {
           <button title="Tenir la position (H)" @click="game.hold()">Tenir</button>
           <button title="Se replier (R)" @click="game.startOrder('retreat')">Se replier</button>
           <button
+            v-if="naval.ports.length > 0"
+            :disabled="!landing.ok"
+            :title="landing.title"
+            data-testid="order-landing"
+            @click="game.startLanding()"
+          >
+            Débarquer
+          </button>
+          <button
             title="Annule l'ordre en cours : les unités s'arrêtent (celles d'une armée reprennent leur poste)"
             data-testid="cancel-order"
             @click="game.cancelOrders()"
@@ -493,6 +525,19 @@ async function createArmy(): Promise<void> {
         <button class="close" data-testid="war-brief-close" @click="game.warBrief = null">
           Fermer
         </button>
+      </section>
+      <section v-if="naval.atSea.length > 0" class="at-sea" data-testid="at-sea">
+        <p class="label">
+          En mer : {{ naval.atSea.length }} / {{ naval.capacity }} brigade{{
+            naval.capacity > 1 ? 's' : ''
+          }}
+        </p>
+        <ul>
+          <li v-for="t in naval.atSea" :key="t.id">
+            {{ t.name }} · parti de {{ t.port }} · débarque dans
+            {{ Math.max(0, t.arriveTick - (game.snapshot?.tick ?? 0)) }} h
+          </li>
+        </ul>
       </section>
       <ul class="armies">
         <li
@@ -845,6 +890,17 @@ button.active {
   margin-left: 4px;
 }
 /* Encart affiché après une déclaration de guerre. */
+.at-sea {
+  border: 1px solid #1e3a5f;
+  background: rgba(30, 58, 95, 0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.at-sea li {
+  padding: 2px 0;
+}
 .war-brief {
   border: 1px solid #b91c1c;
   background: rgba(127, 29, 29, 0.25);

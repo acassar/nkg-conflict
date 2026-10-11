@@ -1120,6 +1120,45 @@ try {
   if (ukrOptions !== 1)
     report.errors.push(`options du théâtre ukrainien : ${ukrOptions} au lieu de 1`)
 
+  // Marine provisoire : deux brigades près de Nice embarquent pour Brest (clic sur la côte).
+  const nearNice = await page.evaluate(() => {
+    const g = window.__nkg
+    const nice = g.snapshot.naval.ports.find((p) => p.name === 'Nice')
+    const km = (u) => Math.hypot((u.lon - nice.lon) * 80, (u.lat - nice.lat) * 111)
+    return g.snapshot.units
+      .filter((u) => u.owner === 'FRA' && km(u) < 35)
+      .slice(0, 2)
+      .map((u) => u.id)
+  })
+  await page.evaluate((ids) => window.__nkg.selectUnits(ids, false), nearNice)
+  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [1.5, 46.2], zoom: 4.6 }))
+  await page.waitForTimeout(500)
+  await page.getByTestId('order-landing').click()
+  const brest = await page.evaluate(() => {
+    const p = window.__nkgMap.project([-4.45, 48.4])
+    return [p.x, p.y]
+  })
+  await page.mouse.click(brest[0], brest[1])
+  await page.waitForTimeout(800)
+  const sea = await page.evaluate(() => window.__nkg.snapshot.naval)
+  step('débarquement', {
+    choisies: nearNice.length,
+    enMer: sea.atSea.length,
+    capacite: sea.capacity,
+    ports: sea.ports.map((p) => p.name),
+  })
+  if (nearNice.length === 0 || sea.atSea.length !== nearNice.length)
+    report.errors.push(`débarquement : ${sea.atSea.length} en mer sur ${nearNice.length}`)
+  if (!(await page.getByTestId('at-sea').isVisible())) await page.getByTestId('rail-forces').click()
+  await page
+    .getByTestId('at-sea')
+    .waitFor({ timeout: 5000 })
+    .catch(() => {})
+  if (!(await page.getByTestId('at-sea').isVisible()))
+    report.errors.push('débarquement : liste « En mer » absente du tiroir Forces')
+  await shot('06b-debarquement')
+  await page.evaluate(() => window.__nkg.selectUnits([], false))
+
   // Déclaration de guerre (France contre Belgique) : encart du tiroir Forces, puis « Avancer ».
   await page.evaluate(() => window.__nkg.declareWar('BEL'))
   await page.getByTestId('war-brief').waitFor({ timeout: 15_000 })

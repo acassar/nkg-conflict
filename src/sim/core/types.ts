@@ -73,6 +73,8 @@ export interface UnitState {
    * la reprend à sa répartition suivante, après au moins une heure de tenue sur place.
    */
   direct?: { doneAt?: number }
+  /** Tick du dernier débarquement (malus pendant quelques heures, voir naval.ts). */
+  landedAt?: number
   /**
    * Arrêt après une attaque ou une poursuite trop poussée (voir restraint.ts) : l'unité consolide
    * jusqu'au tour `until` sans être relancée automatiquement.
@@ -172,6 +174,7 @@ export type ModifierKey =
   | 'flank'
   | 'flankMorale'
   | 'fatigue'
+  | 'landing'
   | 'kindTerrain'
   | 'matchup'
 
@@ -454,6 +457,16 @@ export interface BudgetDay {
   aid?: { in: number; out: number }
 }
 
+/** Unité en mer (marine provisoire) : hors de la carte jusqu'à son débarquement. */
+export interface SeaTransit {
+  unit: UnitState
+  /** Port d'embarquement (retour si la côte se ferme). */
+  port: string
+  to: LonLat
+  departTick: number
+  arriveTick: number
+}
+
 export interface RecruitItem {
   id: number
   kind: UnitKind
@@ -585,6 +598,20 @@ export interface PlayerAlert {
   text: string
 }
 
+export interface NavalSnapshot {
+  /** Brigades que le pays peut avoir en mer à la fois (somme des ports tenus). */
+  capacity: number
+  ports: Array<{ name: string; lon: number; lat: number; capacity: number }>
+  atSea: Array<{
+    id: number
+    name: string
+    kind: UnitKind
+    port: string
+    to: LonLat
+    arriveTick: number
+  }>
+}
+
 export interface SimSnapshot {
   scenarioId: string
   tick: number
@@ -609,6 +636,8 @@ export interface SimSnapshot {
   outcome: GameOutcome | null
   /** Alertes du joueur, les plus graves en premier (recalculées toutes les 6 heures). */
   alerts: PlayerAlert[]
+  /** Marine provisoire du joueur : ports tenus, capacité et unités en mer. */
+  naval: NavalSnapshot
   /** Grille complète : seulement au chargement d'une partie. */
   grid: GridSnapshot | null
   /** Cellules modifiées depuis la publication précédente : [cellule, propriétaire, …]. */

@@ -1,4 +1,5 @@
 import { equipmentOf } from '../units/equipment'
+import { seaSupplySources } from '../systems/naval'
 import { runtimeOf, sideIndex, type CityRuntime, type SimContext } from '../context'
 import type {
   BudgetSector,
@@ -148,7 +149,7 @@ export function invalidateCityIndex(ctx: SimContext): void {
   cityIndex.delete(ctx)
 }
 
-/** Sources de ravitaillement : celles du scénario, plus les dépôts des villes tenues. */
+/** Sources de ravitaillement : celles du scénario, plus les dépôts et les ports pris des villes tenues. */
 /** Population à partir de laquelle une ville nationale sert de source de ravitaillement. */
 const HUB_MIN_POP = 300_000
 
@@ -181,7 +182,9 @@ export function updateSupplySources(ctx: SimContext, scenario: ScenarioDef): voi
         : [capital.get(side) ?? largest.get(side)?.at, ...(hubs.get(side) ?? [])].filter(
             (p): p is LonLat => !!p,
           )
-    ctx.supplySources[country.id] = [...base, ...(depots.get(side) ?? [])]
+    // Ports pris : ils ravitaillent les têtes de pont par la mer (marine provisoire), en guerre.
+    const sea = ctx.matrix.atWar[side] === 1 ? seaSupplySources(ctx, country.id) : []
+    ctx.supplySources[country.id] = [...base, ...(depots.get(side) ?? []), ...sea]
   }
 }
 

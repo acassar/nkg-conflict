@@ -5,6 +5,7 @@ import type {
   Buildings,
   EconomyState,
   FormationState,
+  SeaTransit,
   GameEvent,
   GameOutcome,
   ScenarioOptions,
@@ -40,6 +41,8 @@ export interface SaveFile {
   armies: ArmyState[]
   /** Divisions et corps (absents des sauvegardes antérieures : reformés au chargement). */
   formations?: FormationState[]
+  /** Unités en mer (marine provisoire ; absentes des sauvegardes antérieures). */
+  sea?: SeaTransit[]
   events: GameEvent[]
   outcome: GameOutcome | null
   /** Dernière offensive de l'IA militaire, par pays. */

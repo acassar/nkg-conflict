@@ -1,0 +1,1229 @@
+{
+  "code": "KOR",
+  "name": "Corée du Sud",
+  "iso3": "KOR",
+  "macro": {
+    "gdpB": {
+      "value": 1872.375,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 51684564,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.601,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 569000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 400000,
+      "year": 2025,
+      "source": "Wikipédia (article Republic of Korea Army)",
+      "url": "https://en.wikipedia.org/wiki/Republic_of_Korea_Army"
+    },
+    "armies": [
+      {
+        "name": "Commandement des opérations terrestres",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "Brigade des feux (Fires Brigade)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "Corps de la capitale",
+            "divisions": [
+              {
+                "name": "17e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "17e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "17e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "17e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "17e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "51e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "51e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "51e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "51e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "51e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ],
+            "brigades": [
+              {
+                "name": "Brigade d'artillerie de la capitale",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "Ier corps",
+            "divisions": [
+              {
+                "name": "1e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "1e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "1e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "1e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "1e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "9e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "9e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "9e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "9e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "9e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "25e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "25e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "25e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "25e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "25e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ],
+            "brigades": [
+              {
+                "name": "2e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "30e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade de soutien logistique",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "IIe corps",
+            "divisions": [
+              {
+                "name": "7e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "7e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "7e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "7e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "7e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "15e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "15e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "15e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "15e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "15e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ],
+            "brigades": [
+              {
+                "name": "3e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade de soutien logistique",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "IIIe corps",
+            "divisions": [
+              {
+                "name": "12e division d'infanterie",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "12e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "12e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "12e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "12e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "21e division d'infanterie",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "21e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "21e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "21e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "21e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "22e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "22e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "22e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "22e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "22e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ],
+            "brigades": [
+              {
+                "name": "1re brigade de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "23e brigade de sécurité",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "20e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "102e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade de soutien logistique",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "Ve corps",
+            "divisions": [
+              {
+                "name": "3e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "3e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "5e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "5e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "5e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "5e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "5e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "6e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "6e div. – brigade d'infanterie 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "6e div. – brigade d'infanterie 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "6e div. – brigade d'infanterie 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "6e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ],
+            "brigades": [
+              {
+                "name": "1re brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade de soutien logistique",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "VIIe corps de manœuvre",
+            "divisions": [
+              {
+                "name": "Division mécanisée de la capitale",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "16e brigade d'infanterie mécanisée (division combinée ROK-US)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "26e brigade d'infanterie mécanisée",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Brigade d'artillerie divisionnaire",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "2e division de réaction rapide",
+                "type": "aeromobile",
+                "brigades": [
+                  {
+                    "name": "2e div. – brigade d'assaut aérien 1 (estimée)",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2e div. – brigade d'assaut aérien 2 (estimée)",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2e div. – brigade d'assaut aérien 3 (estimée)",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2e div. – brigade d'artillerie divisionnaire (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "8e division de manœuvre",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "1re brigade d'infanterie mécanisée (« brigade de cavalerie »)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "60e brigade d'infanterie mécanisée",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "73e brigade d'infanterie mécanisée",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Brigade d'artillerie divisionnaire",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "11e division de manœuvre",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "9e brigade d'infanterie mécanisée",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "13e brigade d'infanterie mécanisée",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "61e brigade d'infanterie mécanisée",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Brigade d'artillerie divisionnaire",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ],
+            "brigades": [
+              {
+                "name": "7e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ],
+        "divisions": [
+          {
+            "name": "36e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "36e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "36e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "36e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "36e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "55e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "55e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Second commandement des opérations",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "31e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "31e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "31e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "31e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "31e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "32e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "32e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "35e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "35e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "37e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "37e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "37e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "37e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "37e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "39e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "39e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "39e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "39e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "39e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "50e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "50e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "50e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "50e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "50e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "53e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "53e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "53e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "53e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "53e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement de défense de la capitale",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1re brigade de défense aérienne",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1er groupe de sécurité",
+            "type": "defense_territoriale",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "52e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "52e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "52e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "52e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "52e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "56e division d'infanterie",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "56e div. – brigade d'infanterie 1 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "56e div. – brigade d'infanterie 2 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "56e div. – brigade d'infanterie 3 (estimée)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "56e div. – brigade d'artillerie divisionnaire (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement des forces de mobilisation",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "60e division d'infanterie",
+            "type": "garde_nationale",
+            "brigades": [
+              {
+                "name": "60e div. – brigade d'infanterie 1 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "60e div. – brigade d'infanterie 2 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "60e div. – brigade d'infanterie 3 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "66e division d'infanterie",
+            "type": "garde_nationale",
+            "brigades": [
+              {
+                "name": "66e div. – brigade d'infanterie 1 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "66e div. – brigade d'infanterie 2 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "66e div. – brigade d'infanterie 3 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "72e division d'infanterie",
+            "type": "garde_nationale",
+            "brigades": [
+              {
+                "name": "72e div. – brigade d'infanterie 1 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e div. – brigade d'infanterie 2 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e div. – brigade d'infanterie 3 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "73e division d'infanterie",
+            "type": "garde_nationale",
+            "brigades": [
+              {
+                "name": "73e div. – brigade d'infanterie 1 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e div. – brigade d'infanterie 2 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e div. – brigade d'infanterie 3 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "75e division d'infanterie",
+            "type": "garde_nationale",
+            "brigades": [
+              {
+                "name": "75e div. – brigade d'infanterie 1 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e div. – brigade d'infanterie 2 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e div. – brigade d'infanterie 3 (estimée)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement des opérations spéciales et de l'aviation",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "1e brigade de forces spéciales",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "3e brigade de forces spéciales",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "7e brigade de forces spéciales",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "9e brigade de forces spéciales",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade de forces spéciales",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "13e brigade de missions spéciales",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1re brigade d'aviation de combat",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade d'aviation de combat",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "Corps des fusiliers marins de la République de Corée",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "9e brigade de fusiliers marins (Jeju)",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "Commandement de défense des îles du Nord-Ouest",
+            "brigades": [
+              {
+                "name": "6e brigade de fusiliers marins (Baengnyeong)",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Unité de Yeonpyeong",
+                "type": "infanterie_marine",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": [
+          {
+            "name": "1re division de fusiliers marins",
+            "type": "infanterie_marine",
+            "brigades": [
+              {
+                "name": "2e brigade de fusiliers marins",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade de fusiliers marins",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7e brigade de fusiliers marins",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade d'artillerie de marine",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "2e division de fusiliers marins",
+            "type": "infanterie_marine",
+            "brigades": [
+              {
+                "name": "1re brigade de fusiliers marins",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade de fusiliers marins",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "8e brigade de fusiliers marins",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade d'artillerie de marine",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Republic of Korea Army Ground Operations Command",
+        "url": "https://en.wikipedia.org/wiki/Republic_of_Korea_Army_Ground_Operations_Command"
+      },
+      {
+        "title": "Wikipedia – Structure of the Republic of Korea Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_Republic_of_Korea_Army"
+      },
+      {
+        "title": "Wikipedia – 8th / 11th Maneuver Division, Capital Mechanized Infantry Division",
+        "url": "https://en.wikipedia.org/wiki/11th_Maneuver_Division"
+      },
+      {
+        "title": "Wikipedia – Republic of Korea Marine Corps",
+        "url": "https://en.wikipedia.org/wiki/Republic_of_Korea_Marine_Corps"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Corps, divisions et brigades indépendantes réels (structure 2023-2025, Wikipédia). Les brigades internes des divisions d'infanterie ne sont pas nommées dans les sources : 3 brigades d'infanterie + 1 brigade d'artillerie par division, estimées (régiments transformés en brigades en décembre 2020). Types estimés : divisions du GOC motorisee (12e et 21e en montagne), divisions territoriales du 2e commandement et de la défense de la capitale = defense_territoriale, divisions de mobilisation (60, 66, 72, 73, 75) = garde_nationale. 52e et 56e divisions placées sous le Commandement de défense de la capitale par hypothèse (pour atteindre les 34 divisions annoncées). 28e division (dissolution prévue en 2025) exclue. La 1re brigade mécanisée figure à la fois sous la 8e division et sous la division de la capitale : placée sous la 8e. 2e division de réaction rapide : brigades d'assaut aérien non nommées. Commandement des missiles stratégiques et régiments de commandos de corps (700e à 705e) omis. Effectif : 400 000 selon Wikipédia (2025) ; fusiliers marins (29 000) non compris."
+  }
+}

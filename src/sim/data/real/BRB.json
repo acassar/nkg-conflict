@@ -1,0 +1,24 @@
+{
+  "code": "BRB",
+  "name": "Barbade",
+  "iso3": "BRB",
+  "macro": {
+    "gdpB": {
+      "value": 8.017,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 282623,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": {
+      "value": 1000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

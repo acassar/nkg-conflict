@@ -1,0 +1,275 @@
+{
+  "code": "GRC",
+  "name": "Grèce",
+  "iso3": "GRC",
+  "macro": {
+    "gdpB": {
+      "value": 280.476,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 10413962,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.989,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 147000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025-07",
+    "armyPersonnel": {
+      "value": 90000,
+      "year": 2021,
+      "source": "Wikipédia « Hellenic Army » (armedforces.co.uk), dont ~30 000 conscrits",
+      "url": "https://en.wikipedia.org/wiki/Hellenic_Army"
+    },
+    "armies": [
+      {
+        "name": "1re Armée (Larissa)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "Commandement militaire suprême d'Épire et de Macédoine (ex-IIIe corps / NRDC-GR, Thessalonique)",
+            "brigades": [
+              {
+                "name": "8e brigade d'infanterie motorisée (Ioannina)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "9e brigade d'infanterie mécanisée (Kozani)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1er régiment d'infanterie (Florina)",
+                "type": "infanterie_legere",
+                "echelon": "regiment"
+              },
+              {
+                "name": "10e régiment d'infanterie « Rupel » (Serres)",
+                "type": "infanterie_legere",
+                "echelon": "regiment"
+              },
+              {
+                "name": "15e régiment d'infanterie (Kastoria)",
+                "type": "infanterie_legere",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Ire division d'infanterie (Veroia) – forces de réaction rapide",
+                "type": "aeromobile",
+                "brigades": [
+                  {
+                    "name": "1re brigade parachutiste / commandos (Rentina)",
+                    "type": "aeroportee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "32e brigade de marines (Volos)",
+                    "type": "infanterie_marine",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "71e brigade aéromobile « Pontos » (Nea Santa)",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "1re brigade d'aviation de l'armée de terre (Stefanovikeio)",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "IIe division d'infanterie mécanisée (Edessa)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "24e brigade blindée (Litochoro)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "33e brigade mécanisée (Polykastro)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "34e brigade mécanisée (Assiros)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "IVe corps d'armée « Thrace » (Xanthi)",
+            "brigades": [
+              {
+                "name": "1er régiment d'artillerie lance-roquettes multiples (Drama)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "XIIe division d'infanterie mécanisée (Alexandroupoli)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "7e brigade mécanisée « Sarantaporos » (Soufli)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "23e brigade blindée (Alexandroupoli)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "31e brigade mécanisée « Kamia » (Feres)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "XVIe division d'infanterie mécanisée (Didymoteicho)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "3e brigade mécanisée « Rimini » (Kavyli)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "21e brigade blindée (Komotini)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "30e brigade mécanisée « Tomoritsa » (Lagos)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "XXe division blindée (Kavala)",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "25e brigade blindée (Xanthi)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "29e brigade mécanisée « Pogradets » (Komotini)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "50e brigade mécanisée « Apsos » (Soufli)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Commandement militaire suprême de l'Intérieur et des Îles (ASDEN, Athènes)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "5e brigade (Crète, La Canée)",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "79e commandement supérieur de la Garde nationale (Samos)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "80e commandement supérieur de la Garde nationale (Kos)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "88e commandement militaire (Lemnos)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "95e commandement supérieur de la Garde nationale (Rhodes)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "96e commandement supérieur de la Garde nationale (Chios)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "98e commandement supérieur de la Garde nationale (Lesbos)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Formations of the Hellenic Army",
+        "url": "https://en.wikipedia.org/wiki/Formations_of_the_Hellenic_Army"
+      },
+      {
+        "title": "Wikipedia – IV Army Corps (Greece)",
+        "url": "https://en.wikipedia.org/wiki/IV_Army_Corps_(Greece)"
+      },
+      {
+        "title": "Wikipedia – 1st Infantry Division (Greece)",
+        "url": "https://en.wikipedia.org/wiki/1st_Infantry_Division_(Greece)"
+      },
+      {
+        "title": "Wikipedia – 2nd Mechanized Infantry Division (Greece)",
+        "url": "https://en.wikipedia.org/wiki/2nd_Mechanized_Infantry_Division_(Greece)"
+      },
+      {
+        "title": "Wikipedia – NATO Rapid Deployable Corps – Greece",
+        "url": "https://en.wikipedia.org/wiki/NATO_Rapid_Deployable_Corps_%E2%80%93_Greece"
+      },
+      {
+        "title": "Wikipedia – Hellenic Army",
+        "url": "https://en.wikipedia.org/wiki/Hellenic_Army"
+      },
+      {
+        "title": "ELISME – Agenda 2030 (fév. 2025)",
+        "url": "https://elisme.gr/en/atzenta-2030-syntagma-sti-mesogeion-nea-taxiarchia-volo/"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Brigades des XIIe, XVIe et XXe divisions d'après la page du IVe corps (la page de la XXe division donne une ancienne répartition 21e/23e/25e blindées). IIIe corps renommé en 2025 « Commandement militaire suprême d'Épire et de Macédoine ». La réforme « Agenda 2030 » (2025) prévoit la dissolution de la 7e brigade mécanisée et la transformation du 10e régiment en brigade mécanisée : non appliquée ici faute de confirmation. Les commandements supérieurs de la Garde nationale des îles (ASDEN) sont des formations d'active de niveau brigade, typées infanterie légère par défaut. Commandement interarmées des opérations spéciales, unités d'artillerie/défense sol-air de niveau bataillon, génie et soutien non inclus. Effectif : chiffre global sans année précise (~2021)."
+  }
+}

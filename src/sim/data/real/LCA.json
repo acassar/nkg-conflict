@@ -1,0 +1,20 @@
+{
+  "code": "LCA",
+  "name": "Sainte-Lucie",
+  "iso3": "LCA",
+  "macro": {
+    "gdpB": {
+      "value": 2.651,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 180149,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

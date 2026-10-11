@@ -1,0 +1,20 @@
+{
+  "code": "MHL",
+  "name": "Îles Marshall",
+  "iso3": "MHL",
+  "macro": {
+    "gdpB": {
+      "value": 0.308,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 36282,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

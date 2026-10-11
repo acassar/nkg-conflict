@@ -1,0 +1,1315 @@
+{
+  "code": "VNM",
+  "name": "Viêt Nam",
+  "iso3": "VNM",
+  "macro": {
+    "gdpB": {
+      "value": 494.046,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 101598527,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.154,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 522000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 412000,
+      "year": 2014,
+      "source": "IISS Military Balance 2014 via Wikipédia",
+      "url": "https://en.wikipedia.org/wiki/People%27s_Army_of_Vietnam"
+    },
+    "armies": [
+      {
+        "name": "Forces terrestres de l'Armée populaire du Vietnam",
+        "generated": true,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "12e corps d'armée (Binh đoàn 12)",
+            "brigades": [
+              {
+                "name": "203e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "241e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "673e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "164e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "368e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "299e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "308e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "308e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "308e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "308e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "312e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "312e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "312e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "312e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "325e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "325e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "325e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "325e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "390e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "27e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "48e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "64e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "34e corps d'armée",
+            "brigades": [
+              {
+                "name": "273e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "234e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "40e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "434e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "9e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "9e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "9e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "9e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "10e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "24e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "28e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "66e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "4e régiment d'artillerie",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "31e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "866e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "922e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "977e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "320e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "320e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "320e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "320e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "1re région militaire",
+            "brigades": [
+              {
+                "name": "409e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "382e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "210e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "575e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "123e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "111e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "421e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "422e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "246e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "567e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "677e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "3e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "3e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "3e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "3e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "306e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "306e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "306e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "306e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "346e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "346e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "346e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "346e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "2e région militaire",
+            "brigades": [
+              {
+                "name": "406e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "168e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "297e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "543e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "754e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "880e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "121e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "254e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "741e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "247e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "877e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "304e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "9e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "24e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "66e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "316e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "98e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "148e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "174e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "355e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "82e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "192e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "752e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "3e région militaire",
+            "brigades": [
+              {
+                "name": "405e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "454e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "214e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "513e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "242e brigade de défense des îles",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "50e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "125e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "836e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "126e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "568e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "151e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "180e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "855e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "350e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "350e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "350e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "350e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "395e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "395e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "395e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "395e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "4e région militaire",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "324e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "324e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "324e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "324e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "968e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "968e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "968e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "968e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "5e région militaire",
+            "brigades": [
+              {
+                "name": "574e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "572e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "573e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "270e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "280e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "885e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "971e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "887e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "990e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "896e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "974e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "584e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "888e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "2e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "1e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "38e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "95e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "305e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "108e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "210e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "803e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "307e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "29e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "93e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "94e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "315e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "142e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "143e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "733e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "7e région militaire",
+            "brigades": [
+              {
+                "name": "26e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "25e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Régiment Gia Định",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Régiment Minh Đạm",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Régiment Đồng Nai",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "6e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "10e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "736e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "174e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "738e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "812e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "994Ae régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "994Be régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "5e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "4e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "5e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "271e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "7e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "141e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "165e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "209e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "302e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "88e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "201e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "429e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "309e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "31e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "96e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "250e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "9e région militaire",
+            "brigades": [
+              {
+                "name": "416e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "6e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "226e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "25e brigade du génie (RM9)",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "950e brigade (défense de Phú Quốc)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "152e régiment (défense de Thổ Chu)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "114e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "897e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "932e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "43e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "320e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "924e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "44e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "45e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "892e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "893e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "46e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "894e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "896e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "4e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "2e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "10e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "30e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "8e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "1e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "2e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "9e régiment d'infanterie",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "330e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "330e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "330e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "330e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Haut commandement de la capitale Hanoï",
+            "brigades": [
+              {
+                "name": "59e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "692e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "757e régiment d'infanterie (local)",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "301e division",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "301e div. – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "301e div. – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "301e div. – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Commandements d'armes (directement subordonnés au ministère)",
+            "brigades": [
+              {
+                "name": "1re brigade de commandos (Arme des forces spéciales)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "201e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "202e brigade de chars",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "45e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "204e brigade de lance-roquettes multiples",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "490e brigade de missiles",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "675e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "239e brigade de franchissement",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "249e brigade de franchissement",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "144e brigade de la Garde (état-major)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – People's Army of Vietnam",
+        "url": "https://en.wikipedia.org/wiki/People%27s_Army_of_Vietnam"
+      },
+      {
+        "title": "Wikipedia – 12th Corps (Vietnam)",
+        "url": "https://en.wikipedia.org/wiki/12th_Corps_(Vietnam)"
+      },
+      {
+        "title": "Wikipedia – 34th Corps (Vietnam)",
+        "url": "https://en.wikipedia.org/wiki/34th_Corps_(Vietnam)"
+      },
+      {
+        "title": "Wikipedia – 1st, 2nd, 3rd, 5th, 7th, 9th Military Region (Vietnam)",
+        "url": "https://en.wikipedia.org/wiki/5th_Military_Region_(Vietnam_People%27s_Army)"
+      },
+      {
+        "title": "Wikipedia – Hanoi Capital Command",
+        "url": "https://en.wikipedia.org/wiki/Hanoi_Capital_Command"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Pas d'échelon armée : armée générée ; les 2 corps (12e : fusion 1er+2e corps en 2023 ; 34e : fusion 3e+4e corps en 2024), les 7 régions militaires, le commandement de la capitale et les commandements d'armes traités comme corps. Divisions organisées en régiments (echelon regiment) ; régiments réels quand la source les rattache à une division, sinon 3 régiments « estimés ». 4e région militaire : divisions 324e et 968e connues (article sans liste d'unités), brigades d'appui non trouvées. Régiments provinciaux/locaux classés defense_territoriale ; groupes économico-défensifs omis. 368e brigade d'artillerie citée à la fois au 12e corps et à la 5e RM : gardée au 12e corps. Rattachement des brigades d'appui du 34e corps incertain (mise en page de la source). Unités d'armes stationnées à Hanoï (201e chars, 45e artillerie, 1re commandos, brigades de franchissement) regroupées dans les commandements d'armes ; 202e brigade de chars et 490e/204e/675e brigades d'artillerie-missiles idem. Brigades de transmissions, transport et chimie omises. Infanterie de marine (27 000 hommes selon l'IISS 2025, brigades non identifiées dans les sources consultées) non incluse. Effectif : 412 000 (IISS 2014), aucun chiffre plus récent trouvé pour l'armée de terre."
+  }
+}

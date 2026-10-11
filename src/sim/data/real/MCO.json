@@ -1,0 +1,16 @@
+{
+  "code": "MCO",
+  "name": "Monaco",
+  "iso3": "MCO",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 38341,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

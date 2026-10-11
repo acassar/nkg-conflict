@@ -1,0 +1,16 @@
+{
+  "code": "MNP",
+  "name": "îles Mariannes du Nord",
+  "iso3": "MNP",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 43541,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

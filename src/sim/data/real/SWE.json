@@ -1,0 +1,140 @@
+{
+  "code": "SWE",
+  "name": "Suède",
+  "iso3": "SWE",
+  "macro": {
+    "gdpB": {
+      "value": 668.999,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 10596620,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.471,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 15000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2026-03",
+    "armyPersonnel": {
+      "value": 15300,
+      "year": 2024,
+      "source": "Wikipédia « Swedish Army » (chiffre non officiel)",
+      "url": "https://en.wikipedia.org/wiki/Swedish_Army"
+    },
+    "armies": [
+      {
+        "name": "Armén (Armée de terre suédoise)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "Brigade de Scanie méridionale (MekB 7, Revingehed)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de la Garde (IB 1, Kungsängen)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Groupement de combat de Gotland (P 18, Visby)",
+            "type": "mecanisee",
+            "echelon": "brigade",
+            "strengthPct": 35
+          },
+          {
+            "name": "Régiment d'artillerie de Boden (A 8)",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Régiment de défense aérienne (Lv 6, Halmstad)",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Régiment du génie de Göta (Ing 2, Eksjö)",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Régiment de hussards (K 3, Karlsborg) – 31e bataillon de chasseurs",
+            "type": "aeroportee",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Régiment de dragons du Norrland (K 4, Arvidsjaur) – chasseurs norrlandais",
+            "type": "reconnaissance",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Hemvärnet – Région militaire Nord (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Hemvärnet – Région militaire Centre (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Hemvärnet – Région militaire Ouest (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Hemvärnet – Région militaire Sud (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1re division (Skövde)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "Brigade du Skaraborg (MekB 4, Skövde)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade du Norrbotten (NMekB 19, Boden)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Swedish Army",
+        "url": "https://en.wikipedia.org/wiki/Swedish_Army"
+      },
+      {
+        "title": "Wikipedia – List of Swedish Army brigades",
+        "url": "https://en.wikipedia.org/wiki/List_of_Swedish_Army_brigades"
+      },
+      {
+        "title": "J. Lindfors (chef de l'armée), « Svenska Arméns utveckling från 2026 och framåt », KKrVA Tema Armén 2026:1",
+        "url": "https://kkrva.se/hot/2026:1/01-lindfors-svenska-armen.pdf"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Quatre brigades actives (MekB 4, MekB 7, NMekB 19, IB 1) et une division ; selon le chef de l'armée (2026), la 1re division comprend les brigades 4 et 19, la 7e est en montée en puissance (mission FLF en Lettonie) ; deux autres divisions sont envisagées. Le groupement de Gotland est de niveau bataillon renforcé (complétude ~35 % d'une brigade, estimée). Régiments A 8, Lv 6, Ing 2, K 3 et K 4 représentent les bataillons d'appui et de chasseurs qu'ils mettent sur pied. Hemvärnet (~40 bataillons territoriaux) regroupé en 4 entrées estimées par région militaire. Effectif d'active non officiel."
+  }
+}

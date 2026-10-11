@@ -1,0 +1,24 @@
+{
+  "code": "BTN",
+  "name": "Bhoutan",
+  "iso3": "BTN",
+  "macro": {
+    "gdpB": {
+      "value": 3.474,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 796682,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": {
+      "value": 6000,
+      "year": 2000,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

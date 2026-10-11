@@ -1,0 +1,168 @@
+{
+  "code": "BLR",
+  "name": "Biélorussie",
+  "iso3": "BLR",
+  "macro": {
+    "gdpB": {
+      "value": 92.766,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 9085991,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.397,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 158000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 18000,
+      "year": 2024,
+      "source": "Wikipédia « Belarusian Ground Forces » (infobox, chiffre non sourcé) ; l'IISS donne 48 600 actifs pour l'ensemble des forces armées en 2025",
+      "url": "https://en.wikipedia.org/wiki/Belarusian_Ground_Forces"
+    },
+    "armies": [
+      {
+        "name": "Forces terrestres biélorusses",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "465e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "336e brigade d'artillerie de roquettes",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "22e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "51e groupe d'artillerie mixte de la Garde",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "188e brigade du génie",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "Commandement opérationnel Ouest (Grodno)",
+            "brigades": [
+              {
+                "name": "6e brigade mécanisée de la Garde",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "11e brigade mécanisée de la Garde",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "111e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1199e régiment d'artillerie mixte",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "557e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Commandement opérationnel Nord-Ouest (Barysaw)",
+            "brigades": [
+              {
+                "name": "120e brigade mécanisée de la Garde",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "19e brigade mécanisée de la Garde",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "231e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7e régiment du génie",
+                "type": "genie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Forces d'opérations spéciales",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "38e brigade d'assaut aérien de la Garde (Brest)",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "103e brigade aéroportée de la Garde (Vitebsk)",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e brigade de spetsnaz (Maryina Horka)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipédia — Belarusian Ground Forces",
+        "url": "https://en.wikipedia.org/wiki/Belarusian_Ground_Forces"
+      },
+      {
+        "title": "Wikipédia — Armed Forces of Belarus (IISS Military Balance 2025)",
+        "url": "https://en.wikipedia.org/wiki/Armed_Forces_of_Belarus"
+      },
+      {
+        "title": "Wikipédia — Special Operations Forces (Belarus)",
+        "url": "https://en.wikipedia.org/wiki/Special_Operations_Forces_(Belarus)"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Pas d'échelon armée : une armée générée « Forces terrestres biélorusses » ; les deux commandements opérationnels (ex-28e et 65e corps d'armée) sont traités comme corps. Rattachement des brigades aux commandements déduit de l'ordre de la liste Wikipédia et des garnisons (6e Grodno, 11e Slonim à l'Ouest ; 120e Minsk, 19e Zaslonava au Nord-Ouest). Les forces d'opérations spéciales (≈6 150 h., IISS 2022) forment une armée séparée. Les brigades mécanisées 19e et 120e/6e/11e sont partiellement à effectif réduit (≈50 % en 2021 selon ICDS) ; anciennes brigades à effectif réduit (37e, 50e) et formations de défense territoriale non incluses faute de source récente. Unités sol-air, transmissions et logistique exclues. Effectif terrestre de 18 000 non sourcé sur Wikipédia."
+  }
+}

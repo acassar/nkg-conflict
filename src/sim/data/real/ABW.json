@@ -1,0 +1,20 @@
+{
+  "code": "ABW",
+  "name": "Aruba",
+  "iso3": "ABW",
+  "macro": {
+    "gdpB": {
+      "value": 4.521,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 108785,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

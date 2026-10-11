@@ -1,0 +1,521 @@
+{
+  "code": "JPN",
+  "name": "Japon",
+  "iso3": "JPN",
+  "macro": {
+    "gdpB": {
+      "value": 4435.163,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 123366734,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.412,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 261000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 150700,
+      "year": 2023,
+      "source": "Wikipédia (infobox JGSDF ; IISS Military Balance 2023)",
+      "url": "https://en.wikipedia.org/wiki/Japan_Ground_Self-Defense_Force"
+    },
+    "reservists": {
+      "value": 56000,
+      "year": 2023,
+      "source": "Wikipédia (infobox JGSDF)",
+      "url": "https://en.wikipedia.org/wiki/Japan_Ground_Self-Defense_Force"
+    },
+    "armies": [
+      {
+        "name": "Armée du Nord",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "5e brigade",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade (déploiement rapide)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1re brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1re brigade d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "3e brigade du génie",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Corps aérien de l'Armée du Nord",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "2e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "25e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "26e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "3e régiment de déploiement rapide",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "2e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "2e régiment d'artillerie (mécanisé)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "7e division",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "71e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "72e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "73e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "11e régiment d'infanterie mécanisée",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "7e régiment d'artillerie (mécanisé)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "7e régiment d'artillerie antiaérienne",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Armée du Nord-Est",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "2e brigade du génie",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Régiment d'artillerie de l'Armée du Nord-Est",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "4e régiment de missiles sol-mer",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "5e groupe d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Corps aérien de l'Armée du Nord-Est",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "6e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "20e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "22e régiment de déploiement rapide",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "44e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "9e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "5e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "21e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "39e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "9e bataillon de reconnaissance de combat",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Armée de l'Est",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "12e brigade (assaut aérien)",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1re brigade du génie",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Régiment d'artillerie de l'Armée de l'Est",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "2e groupe d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Corps aérien de l'Armée de l'Est",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "1e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "32e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "34e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1e bataillon de reconnaissance de combat",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Armée du Centre",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "13e brigade",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "14e brigade (déploiement rapide)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "4e brigade du génie",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Régiment d'artillerie de l'Armée du Centre",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "8e groupe d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Corps aérien de l'Armée du Centre",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "3e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "7e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "36e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "37e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "3e bataillon de reconnaissance de combat",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "10e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "14e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "33e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "35e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "10e bataillon de reconnaissance de combat",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Armée de l'Ouest",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "15e brigade (Okinawa)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e brigade du génie",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Bataillon de chars de l'Armée de l'Ouest",
+            "type": "blindee",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Corps aérien de l'Armée de l'Ouest",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "4e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "16e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "40e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "41e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "4e bataillon de reconnaissance de combat",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "8e division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "12e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "42e régiment de déploiement rapide",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "43e régiment d'infanterie",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement de la composante terrestre",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1re brigade aéroportée",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade amphibie de déploiement rapide",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1re brigade d'hélicoptères",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Groupe des opérations spéciales",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Régiment central de déploiement rapide",
+            "type": "aeromobile",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Japan Ground Self-Defense Force",
+        "url": "https://en.wikipedia.org/wiki/Japan_Ground_Self-Defense_Force"
+      },
+      {
+        "title": "Wikipedia – Northern / North Eastern / Eastern / Central / Western Army (Japan)",
+        "url": "https://en.wikipedia.org/wiki/Northern_Army_(Japan)"
+      },
+      {
+        "title": "Wikipedia – 1st…10th Division (Japan) (articles par division)",
+        "url": "https://en.wikipedia.org/wiki/7th_Division_(Japan)"
+      },
+      {
+        "title": "Ministère de la Défense – 2e division (site officiel JGSDF)",
+        "url": "https://www.mod.go.jp/gsdf/nae/2d/unit/unit.html"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Les 5 armées régionales sont les armées ; pas d'échelon corps. Divisions japonaises organisées en régiments (de taille bataillon renforcé) : listés avec echelon regiment (infanterie, déploiement rapide, chars, artillerie) ; bataillons de reconnaissance de combat ajoutés comme régiments de reconnaissance ; bataillons DCA/génie divisionnaires omis. Les 7 brigades de manœuvre (5e, 11e, 12e, 13e, 14e, 15e, aéroportée) et la brigade amphibie sont des brigades à part entière ; leurs types motorisee/mecanisee (11e et 14e = brigades de déploiement rapide) sont estimés. Les régiments d'artillerie d'armée, groupes DCA et corps aériens d'armée sont listés comme régiments. Régiments de réserve et brigades d'entraînement omis. 15e brigade prévue pour devenir division ; fusion SOG + régiment central de déploiement rapide annoncée pour 2026. Effectif 150 700 (2023) ; IISS 2025 non vérifié."
+  }
+}

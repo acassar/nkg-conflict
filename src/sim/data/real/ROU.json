@@ -1,0 +1,170 @@
+{
+  "code": "ROU",
+  "name": "Roumanie",
+  "iso3": "ROU",
+  "macro": {
+    "gdpB": {
+      "value": 427.941,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 19020271,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.281,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 128000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2026-06",
+    "armyPersonnel": {
+      "value": 35500,
+      "year": 2025,
+      "source": "Infobox Wikipédia « Romanian Land Forces » (fourchette 35 500–43 000, année non précisée)",
+      "url": "https://en.wikipedia.org/wiki/Romanian_Land_Forces"
+    },
+    "armies": [
+      {
+        "name": "Forțele Terestre Române (Armée de terre roumaine)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "1re brigade d'appui à la manœuvre « Argedava » (Bucarest)",
+            "type": "soutien",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade multinationale Sud-Est (ex-2e brigade d'infanterie « Rovine », Craiova)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "30e brigade de garde « Mihai Viteazul » (Bucarest)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "18e brigade ISR « Decebal » (Timișoara)",
+            "type": "reconnaissance",
+            "echelon": "brigade"
+          },
+          {
+            "name": "8e brigade de missiles tactiques-opératifs « Alexandru Ioan Cuza » (Focșani)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "10e brigade du génie « Dunărea de Jos » (Brăila)",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "2e division d'infanterie « Getica » (Buzău)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "9e brigade mécanisée « Mărășești » (Constanța)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "15e brigade mécanisée « Podu Înalt » (Iași)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "282e brigade blindée « Unirea Principatelor » (Focșani)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "52e régiment d'artillerie « Alexandru Tell » (Bârlad)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "53e régiment de missiles antiaériens « Tropaeum Traiani » (Medgidia)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "61e régiment de missiles antiaériens « Pelendava » (Craiova)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "528e régiment ISR « Vlad Țepeș » (Brăila)",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "4e division d'infanterie « Gemina » (Cluj-Napoca)",
+            "type": "montagne",
+            "brigades": [
+              {
+                "name": "2e brigade de chasseurs de montagne « Sarmizegetusa » (Brașov)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "61e brigade de chasseurs de montagne « Virgil Bădulescu » (Miercurea Ciuc)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade mécanisée « Grigore Bălan » (Bistrița)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "69e régiment d'artillerie « Silvania » (Șimleu Silvaniei)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "50e régiment de missiles antiaériens « Andrei Mureșianu » (Florești)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "317e régiment ISR « Vlădeasa » (Cluj-Napoca)",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Structure of the Romanian Land Forces",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_Romanian_Land_Forces"
+      },
+      {
+        "title": "Wikipedia – Romanian Land Forces",
+        "url": "https://en.wikipedia.org/wiki/Romanian_Land_Forces"
+      },
+      {
+        "title": "Wikipedia – 1st Infantry Division (Romania)",
+        "url": "https://en.wikipedia.org/wiki/1st_Infantry_Division_(Romania)"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Deux divisions de manœuvre (2e Getica, 4e Gemina) ; la 1re division « Dacica » a été dissoute en 2015 (QG devenu MND-SE OTAN), ses brigades passant sous l'état-major des forces terrestres. La page Wikipédia est confuse (doublons) : rattachements par ordre de liste. La 1re brigade « Argedava » (ex-mécanisée) est désormais une brigade d'appui à la manœuvre (CIMIC, NRBC, PM, DCA, logistique) : typée « soutien ». Le Commandement des forces d'opérations spéciales dépend de l'état-major général (interarmées) et n'est pas inclus ; l'aviation de l'armée relève de l'armée de l'air. Effectif non daté ; IISS 2010 citait 43 000."
+  }
+}

@@ -1,0 +1,1510 @@
+{
+  "code": "RUS",
+  "name": "Russie",
+  "iso3": "RUS",
+  "macro": {
+    "gdpB": {
+      "value": 2587.938,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 143513328,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 7.501,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 1454000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025-12",
+    "armyPersonnel": {
+      "value": 550000,
+      "year": 2025,
+      "source": "IISS The Military Balance 2025 via Wikipédia « Russian Ground Forces » (dont ~100 000 conscrits)",
+      "url": "https://en.wikipedia.org/wiki/Russian_Ground_Forces"
+    },
+    "recruitmentPerMonth": {
+      "value": 23700,
+      "year": 2026,
+      "source": "71 216 nouveaux contractuels au T1 2026 (données budgétaires fédérales, J. Kluge / Novaya Gazeta Europe), soit ~23 700/mois",
+      "url": "https://novayagazeta.eu/en/articles/2026/06/10/russias-military-recruitment-rate-fell-to-three-year-low-in-first-quarter-of-2026-en-news"
+    },
+    "armies": [
+      {
+        "name": "1re armée blindée de la Garde (DM Moscou)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "27e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "96e brigade de reconnaissance",
+            "type": "reconnaissance",
+            "echelon": "brigade"
+          },
+          {
+            "name": "112e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "288e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "49e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "2e division de fusiliers motorisés (Garde, Tamanskaïa)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "1e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "15e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "147e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "4e division de chars (Garde, Kantemirovskaïa)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "12e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "13e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "423e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "275e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "47e division de chars (Garde)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "26e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "153e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "245e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "20e armée interarmes de la Garde (DM Moscou)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "236e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "448e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "53e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "3e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "237e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "252e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "752e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "99e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "144e division de fusiliers motorisés (Garde)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "59e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "254e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "488e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "856e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "6e armée interarmes (DM Léningrad)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "9e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "26e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "68e division de fusiliers motorisés (Garde)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "régiment 1 de la 68e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 2 de la 68e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 3 de la 68e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "69e division de fusiliers motorisés (Garde)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "régiment 1 de la 69e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 2 de la 69e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 3 de la 69e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "District militaire de Léningrad — corps d'armée",
+        "generated": true,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "11e corps d'armée (Kaliningrad)",
+            "brigades": [
+              {
+                "name": "152e brigade de missiles",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "244e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "18e division de fusiliers motorisés (Garde)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "79e régiment de fusiliers motorisés",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "275e régiment de fusiliers motorisés",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "280e régiment de fusiliers motorisés",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "11e régiment de chars",
+                    "type": "blindee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "52e régiment d'artillerie",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "14e corps d'armée (Mourmansk)",
+            "brigades": [
+              {
+                "name": "80e brigade arctique de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "200e brigade de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "45e brigade d'artillerie de grande puissance",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "44e corps d'armée (Petrozavodsk)",
+            "brigades": [],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "3e armée interarmes de la Garde (DM Sud, ex-2e corps LNR)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "4e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "6e brigade cosaque de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "7e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "85e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "88e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "123e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "51e armée interarmes de la Garde (DM Sud, ex-1er corps DNR)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "9e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "110e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "114e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "132e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "14e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "86e régiment de fusiliers",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "87e régiment de fusiliers",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "109e régiment de fusiliers",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "1487e régiment de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "8e armée interarmes de la Garde (DM Sud)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "47e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "238e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "78e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "20e division de fusiliers motorisés (Garde)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "33e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "255e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "944e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "150e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "102e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "103e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "68e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "163e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "381e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "18e armée interarmes (DM Sud)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "126e brigade de défense côtière",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "127e brigade de reconnaissance",
+            "type": "reconnaissance",
+            "echelon": "brigade"
+          },
+          {
+            "name": "144e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "74e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "8e régiment d'artillerie",
+            "type": "artillerie",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "70e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "24e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "26e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "28e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "17e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "47e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "régiment 1 de la 47e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 2 de la 47e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 3 de la 47e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "49e armée interarmes (DM Sud)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "34e brigade de fusiliers motorisés (montagne)",
+            "type": "montagne",
+            "echelon": "brigade"
+          },
+          {
+            "name": "205e brigade cosaque de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "7e base militaire (Abkhazie)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "227e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "90e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "58e armée interarmes de la Garde (DM Sud)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "136e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "4e base militaire de la Garde (Ossétie du Sud)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "100e brigade de reconnaissance",
+            "type": "reconnaissance",
+            "echelon": "brigade"
+          },
+          {
+            "name": "291e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "12e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "67e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "19e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "429e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "503e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "292e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "42e division de fusiliers motorisés (Garde)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "70e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "71e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "291e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "50e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "71e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "régiment 1 de la 71e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 2 de la 71e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 3 de la 71e DFM (estimé)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "District militaire Sud — unités hors armée",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "102e base militaire (Arménie)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "2e armée interarmes de la Garde (DM Centre)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "15e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "30e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "385e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "92e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "297e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "27e division de fusiliers motorisés (Garde)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "433e régiment de fusiliers motorisés (27e DFM)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "506e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "589e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "41e armée interarmes de la Garde (DM Centre)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "35e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "55e brigade de fusiliers motorisés (montagne)",
+            "type": "montagne",
+            "echelon": "brigade"
+          },
+          {
+            "name": "74e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "120e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "119e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "61e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "201e base militaire (Tadjikistan)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "90e division de chars (Garde)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "6e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "80e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "239e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "228e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "400e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "25e armée interarmes (DM Centre)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "164e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "169e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade de chars",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "73e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "75e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "67e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "31e régiment",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "37e régiment",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "District militaire Centre — corps d'armée",
+        "generated": true,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "3e corps d'armée (Moulino)",
+            "brigades": [
+              {
+                "name": "72e brigade de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "17e brigade d'artillerie de grande puissance",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "6e division de fusiliers motorisés",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "1008e régiment de fusiliers motorisés",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "1307e régiment de fusiliers motorisés",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "1442e régiment de fusiliers motorisés",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "1486e régiment de fusiliers motorisés",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "89e régiment de chars",
+                    "type": "blindee",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "5e armée interarmes (DM Est)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "57e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "60e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "305e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "8e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "127e division de fusiliers motorisés",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "114e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "143e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "392e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "394e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "433e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1466e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "218e régiment de chars",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "872e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "29e armée interarmes de la Garde (DM Est)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "36e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "35e armée interarmes (DM Est)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "38e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "64e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "69e brigade de couverture",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "165e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "36e armée interarmes (DM Est)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "5e brigade de chars de la Garde",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "37e brigade de fusiliers motorisés",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "30e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "103e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "District militaire Est — corps d'armée",
+        "generated": true,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "68e corps d'armée (Sakhaline/Kouriles)",
+            "brigades": [
+              {
+                "name": "39e brigade de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1428e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "18e division d'artillerie-mitrailleuses",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "46e régiment d'artillerie-mitrailleuses",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "49e régiment d'artillerie-mitrailleuses",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Troupes aéroportées (VDV)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "11e brigade d'assaut aérien de la Garde",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "31e brigade d'assaut aérien de la Garde",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "83e brigade d'assaut aérien de la Garde",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "45e brigade de spetsnaz de la Garde",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "52e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "7e division d'assaut aérien (montagne) de la Garde",
+            "type": "aeromobile",
+            "brigades": [
+              {
+                "name": "56e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "108e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "247e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1141e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "76e division d'assaut aérien de la Garde",
+            "type": "aeromobile",
+            "brigades": [
+              {
+                "name": "104e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "234e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "237e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1140e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "98e division aéroportée de la Garde",
+            "type": "aeroportee",
+            "brigades": [
+              {
+                "name": "217e régiment aéroporté",
+                "type": "aeroportee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "299e régiment aéroporté",
+                "type": "aeroportee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "331e régiment aéroporté",
+                "type": "aeroportee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1065e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "104e division aéroportée de la Garde",
+            "type": "aeroportee",
+            "brigades": [
+              {
+                "name": "328e régiment aéroporté",
+                "type": "aeroportee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "337e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "345e régiment d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1180e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "106e division aéroportée de la Garde",
+            "type": "aeroportee",
+            "brigades": [
+              {
+                "name": "51e régiment aéroporté",
+                "type": "aeroportee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "119e régiment aéroporté",
+                "type": "aeroportee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "137e régiment aéroporté",
+                "type": "aeroportee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1182e régiment d'artillerie",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "44e division d'assaut aérien",
+            "type": "aeromobile",
+            "brigades": [
+              {
+                "name": "111e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "387e régiment de fusiliers motorisés",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Infanterie navale (troupes côtières de la Flotte)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "61e brigade d'infanterie navale (Flotte du Nord)",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "810e brigade d'infanterie navale de la Garde (Flotte de la mer Noire)",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "40e brigade d'infanterie navale (Kamtchatka, Flotte du Pacifique)",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "77e brigade d'infanterie navale (Flottille de la Caspienne)",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "55e division d'infanterie navale de la Garde (Flotte du Pacifique, ex-155e brigade)",
+            "type": "infanterie_marine",
+            "brigades": [
+              {
+                "name": "390e régiment d'infanterie navale",
+                "type": "infanterie_marine",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 2 de la 55e DIN (estimé)",
+                "type": "infanterie_marine",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "120e division d'infanterie navale de la Garde (Flotte de la Baltique, ex-336e brigade)",
+            "type": "infanterie_marine",
+            "brigades": [
+              {
+                "name": "régiment 1 de la 120e DIN (estimé)",
+                "type": "infanterie_marine",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment 2 de la 120e DIN (estimé)",
+                "type": "infanterie_marine",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipédia — Russo-Ukrainian war (2022–present) order of battle",
+        "url": "https://en.wikipedia.org/wiki/Order_of_battle_for_the_Russian_invasion_of_Ukraine"
+      },
+      {
+        "title": "Wikipédia — Russian Ground Forces (districts, armées, corps ; effectifs IISS 2025)",
+        "url": "https://en.wikipedia.org/wiki/Russian_Ground_Forces"
+      },
+      {
+        "title": "Wikipédia — 3rd Guards Combined Arms Army",
+        "url": "https://en.wikipedia.org/wiki/3rd_Guards_Combined_Arms_Army"
+      },
+      {
+        "title": "Wikipédia — 51st Guards Combined Arms Army (ISW oct. 2025)",
+        "url": "https://en.wikipedia.org/wiki/51st_Guards_Combined_Arms_Army"
+      },
+      {
+        "title": "Wikipédia — 25th Combined Arms Army (ISW sept. 2025)",
+        "url": "https://en.wikipedia.org/wiki/25th_Combined_Arms_Army"
+      },
+      {
+        "title": "Wikipédia — 18th Combined Arms Army",
+        "url": "https://en.wikipedia.org/wiki/18th_Combined_Arms_Army"
+      },
+      {
+        "title": "Wikipédia — 2nd Guards Combined Arms Army",
+        "url": "https://en.wikipedia.org/wiki/2nd_Guards_Combined_Arms_Army"
+      },
+      {
+        "title": "Wikipédia — 5th Combined Arms Army (ISW déc. 2025)",
+        "url": "https://en.wikipedia.org/wiki/5th_Combined_Arms_Army"
+      },
+      {
+        "title": "Wikipédia — Russian Airborne Forces",
+        "url": "https://en.wikipedia.org/wiki/Russian_Airborne_Forces"
+      },
+      {
+        "title": "Wikipédia — Russian Naval Infantry (divisions 55e et 120e, déc. 2025)",
+        "url": "https://en.wikipedia.org/wiki/Russian_Naval_Infantry"
+      },
+      {
+        "title": "Wikipédia — articles des divisions (18e, 20e, 27e, 70e, 90e, 150e, 6e DFM)",
+        "url": "https://en.wikipedia.org/wiki/90th_Guards_Tank_Division_(2016%E2%80%93present)"
+      },
+      {
+        "title": "Novaya Gazeta Europe — recrutement T1 2026",
+        "url": "https://novayagazeta.eu/en/articles/2026/06/10/russias-military-recruitment-rate-fell-to-three-year-low-in-first-quarter-of-2026-en-news"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Les districts militaires (Moscou, Léningrad, Sud, Centre, Est) sont indiqués dans le nom des armées ; les corps d'armée hors armée (11e, 14e, 44e, 3e, 68e) sont placés dans des armées « District … — corps d'armée » générées. Sources Wikipédia d'actualité inégale (ISW 2023 à déc. 2025) : composition probablement incomplète, surtout pour les régiments mobilisés/territoriaux et les créations 2025-2026 (expansions de brigades en divisions dans le DM Est non confirmées). Seuls les régiments de manœuvre et d'artillerie des divisions sont listés ; brigades d'artillerie, de missiles et sol-air d'armée incluses ; génie, NBC, soutien, commandement exclus. Entrées « (estimé) » : régiments non identifiés des 68e/69e/47e/71e DFM et des 55e/120e divisions d'infanterie navale (créées 2024-2025 à partir de brigades). 44e corps d'armée : composition inconnue (liste vide). Le 22e corps d'armée (Crimée) a été fusionné dans la 18e armée ; la 810e brigade navale est placée avec l'infanterie navale. Spetsnaz du GRU, Rosgvardia, unités Akhmat et formations « volontaires » exclues. Effectif 550 000 = IISS 2025 pour les forces terrestres (VDV et infanterie navale en sus, VDV ~ 40–60 000)."
+  }
+}

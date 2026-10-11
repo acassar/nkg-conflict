@@ -1,0 +1,173 @@
+{
+  "code": "CAN",
+  "name": "Canada",
+  "iso3": "CAN",
+  "macro": {
+    "gdpB": {
+      "value": 2319.9,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 41651653,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.627,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 72000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2026-09",
+    "armyPersonnel": {
+      "value": 22500,
+      "year": 2024,
+      "source": "Wikipedia – Canadian Army (Force régulière)",
+      "url": "https://en.wikipedia.org/wiki/Canadian_Army"
+    },
+    "reservists": {
+      "value": 21500,
+      "year": 2024,
+      "source": "Wikipedia – Canadian Army (dont 5 300 Rangers canadiens)",
+      "url": "https://en.wikipedia.org/wiki/Canadian_Army"
+    },
+    "armies": [
+      {
+        "name": "Armée canadienne",
+        "generated": true,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1re Division canadienne (division de manœuvre, Edmonton)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "1er Groupe-brigade mécanisé du Canada (1 GBMC)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e Groupe-brigade mécanisé du Canada (2 GBMC)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e Groupe-brigade mécanisé du Canada (5 GBMC)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Régiment d'infanterie légère (3 bataillons légers de la Force régulière)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re Brigade d'artillerie du Canada",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "6e Brigade d'appui au combat du Canada",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re Brigade de soutien du Canada",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "2e Division canadienne (défense du Canada, Montréal)",
+            "type": "garde_nationale",
+            "brigades": [
+              {
+                "name": "31e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "33e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "34e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "36e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "37e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "38e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "39e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "41e Groupe-brigade du Canada (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Canadian Army at a Glance (canada.ca, oct. 2026)",
+        "url": "https://www.canada.ca/en/army/news-publications/2026/10/ca-glance.html"
+      },
+      {
+        "title": "Canadian Army Divisions Overview (canada.ca)",
+        "url": "https://www.canada.ca/en/army/services/army-modernization/resources/ca-div-overview.html"
+      },
+      {
+        "title": "Wikipedia – Structure of the Canadian Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_Canadian_Army"
+      },
+      {
+        "title": "Wikipedia – Canadian Army",
+        "url": "https://en.wikipedia.org/wiki/Canadian_Army"
+      },
+      {
+        "title": "CTV News – restructuration des divisions (sept. 2026)",
+        "url": "https://www.ctvnews.ca/vancouver/article/canadian-army-restructures-divisions-around-major-conflict-territorial-defence/"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Structure après la restructuration de juin 2026 : 1re Div. = division de manœuvre ; 2e Div. = défense du Canada commandant les 10 groupes-brigades de réserve (typés garde_nationale, en réalité de la taille de bataillons/groupements tactiques) ; 5e Div. dissoute le 27 juin 2026 ; ancien QG 1re Div. devenu QG Force interarmées de réaction (CJOC). Le régiment d'infanterie légère regroupe 3 bataillons (taille brigade) ; nom exact non confirmé. 6 BAC typée genie (génie, défense aérienne, GE). Groupe(s) de Rangers canadiens et compagnies d'intervention arctique omis. La brigade multinationale en Lettonie (dirigée par le Canada, ~2 000 Canadiens issus des GBMC) n'est pas comptée séparément. Effectifs 2024."
+  }
+}

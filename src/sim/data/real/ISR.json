@@ -1,0 +1,393 @@
+{
+  "code": "ISR",
+  "name": "Israël",
+  "iso3": "ISR",
+  "macro": {
+    "gdpB": {
+      "value": 610.778,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 10122800,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 7.809,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 178000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 126000,
+      "year": 2023,
+      "source": "IISS Military Balance 2023 via Wikipédia « Israeli Ground Forces »",
+      "url": "https://en.wikipedia.org/wiki/Israeli_Ground_Forces"
+    },
+    "reservists": {
+      "value": 400000,
+      "year": 2023,
+      "source": "IISS Military Balance 2023 via Wikipédia « Israeli Ground Forces »",
+      "url": "https://en.wikipedia.org/wiki/Israeli_Ground_Forces"
+    },
+    "armies": [
+      {
+        "name": "Commandement Nord",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "36e division « Ga'ash »",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "1re brigade d'infanterie « Golani »",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7e brigade blindée « Saar me-Golan »",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "188e brigade blindée « Barak »",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "282e brigade d'artillerie « Golan »",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "146e division « Ha-Mapatz » (réserve)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "2e brigade d'infanterie « Carmeli » (réserve)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "4e brigade blindée « Kiryati » (réserve)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "205e brigade blindée « Egrof HaBarzel » (réserve)",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "91e division « Galilée » (territoriale)",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "300e brigade territoriale « Bar'am »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "769e brigade territoriale « Hiram »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade d'infanterie « Alexandroni » (réserve)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "210e division « Bashan » (territoriale)",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "474e brigade territoriale « Golan »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "810e brigade de montagne « Hermon »",
+                "type": "montagne",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement Centre",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "98e division parachutiste « Ha-Esh »",
+            "type": "aeroportee",
+            "brigades": [
+              {
+                "name": "35e brigade parachutiste",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "89e brigade commando « Oz »",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e brigade parachutiste « Hod Ha-Hanit » (réserve)",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "551e brigade parachutiste « Hetzei HaEsh » (réserve)",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "99e division « Ha-Bazak » (réserve)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "900e brigade d'infanterie « Kfir »",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade d'infanterie « HaSharon » (réserve)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "646e brigade parachutiste « Shualei Marom » (réserve)",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "877e division « Judée-Samarie » (territoriale)",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "417e brigade territoriale « Vallée du Jourdain »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "421e brigade territoriale « Ephraïm »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "426e brigade territoriale « Etzion »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "431e brigade territoriale « Menashe »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "434e brigade territoriale « Yehuda »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "442e brigade territoriale « Samarie »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "443e brigade territoriale « Binyamin »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement Sud",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "162e division blindée « Ha-Plada »",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "84e brigade d'infanterie « Givati »",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "401e brigade blindée « I'kvot haBarzel »",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "933e brigade d'infanterie « Nahal »",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "215e brigade d'artillerie « Amud HaEsh »",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "143e division « Gaza » (territoriale)",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "6643e brigade territoriale « Katif » (Sud)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7643e brigade territoriale « Gefen » (Nord)",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "80e division « Edom » (territoriale)",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "512e brigade territoriale « Paran »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "406e brigade territoriale « Yoav »",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "460e brigade blindée « Bnei Or » (école des blindés)",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "252e division « Sinaï » (réserve)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "10e brigade blindée « Harel » (réserve)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "12e brigade d'infanterie « Negev » (réserve)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "16e brigade d'infanterie « Jérusalem » (réserve)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement des forces terrestres (formations non endivisionnées)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "8e brigade blindée « HaZaken » (réserve)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "14e brigade blindée « Machatz » (réserve)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "179e brigade blindée « Re'em » (réserve)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "828e brigade d'infanterie « Bislamach » (école)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "214e brigade de feux de précision",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "209e brigade d'artillerie « Kidon » (réserve)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "213e brigade d'artillerie « HaTkuma » (réserve)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "454e brigade d'artillerie « Tabor » (réserve)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "7338e brigade d'artillerie « Adirim » (réserve)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipédia — Gaza war order of battle",
+        "url": "https://en.wikipedia.org/wiki/Gaza_war_order_of_battle"
+      },
+      {
+        "title": "Wikipédia — List of brigades of the Israel Defense Forces",
+        "url": "https://en.wikipedia.org/wiki/List_of_brigades_of_the_Israel_Defense_Forces"
+      },
+      {
+        "title": "Wikipédia — Israeli Ground Forces",
+        "url": "https://en.wikipedia.org/wiki/Israeli_Ground_Forces"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Commandements régionaux traités comme armées. Rattachements d'après l'ordre de bataille de la guerre de Gaza (Wikipédia) ; 36e et 162e divisions incluent leurs brigades d'artillerie (282e, 215e) d'après connaissance générale. Brigades territoriales (Cisjordanie, frontières) d'après la liste Wikipédia, rattachement aux 80e/91e/210e/877e divisions selon leur secteur. Brigades blindées de réserve 8e, 14e, 179e et brigades d'artillerie de réserve placées au niveau du commandement des forces terrestres (rattachement divisionnaire inconnu ; la 340e division blindée de réserve « Idan » n'a pas été détaillée). Non inclus : Home Front Command, écoles (261e), nouvelles formations 2024-2025 (brigade Hashmonaïm, division de la frontière Est) faute de source vérifiée, unités de forces spéciales de niveau bataillon. La plupart des brigades d'active sont complètes, les brigades de réserve mobilisées massivement depuis 2023."
+  }
+}

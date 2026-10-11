@@ -1,0 +1,16 @@
+{
+  "code": "FRO",
+  "name": "îles Féroé",
+  "iso3": "FRO",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 54900,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

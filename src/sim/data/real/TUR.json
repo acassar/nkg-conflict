@@ -1,0 +1,540 @@
+{
+  "code": "TUR",
+  "name": "Turquie",
+  "iso3": "TUR",
+  "macro": {
+    "gdpB": {
+      "value": 1597.301,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 85878556,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.908,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 512000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 260200,
+      "year": 2024,
+      "source": "IISS Military Balance (Land Forces, ordre de grandeur rapporté ; Wikipédia donne 401 500 selon les TSK, total non ventilé)",
+      "url": "https://en.wikipedia.org/wiki/Turkish_Land_Forces"
+    },
+    "armies": [
+      {
+        "name": "1re Armée (Istanbul)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "2e Corps (Gelibolu)",
+            "brigades": [
+              {
+                "name": "4e brigade d'infanterie mécanisée (Keşan)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "8e brigade d'infanterie mécanisée (Tekirdağ)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "18e brigade d'infanterie mécanisée (Çanakkale)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "95e brigade blindée (Malkara)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "41e brigade commando (Vize)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "102e régiment d'artillerie (Uzunköprü)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment du génie de corps (Gelibolu)",
+                "type": "genie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "3e Corps — Corps de réaction rapide de l'OTAN (Istanbul)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "52e division blindée tactique (Hadımköy)",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "2e brigade blindée (Kartal)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "66e brigade d'infanterie mécanisée (Istanbul)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "23e division d'infanterie motorisée tactique (Hasdal)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "6e régiment d'infanterie motorisée (Hasdal)",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "23e régiment d'infanterie motorisée (Samandıra)",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "47e régiment d'infanterie motorisée (Metris)",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "5e Corps (Çorlu)",
+            "brigades": [
+              {
+                "name": "1re brigade blindée (Babaeski)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "54e brigade d'infanterie mécanisée (Edirne)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e brigade d'infanterie mécanisée (Süloğlu)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "65e brigade d'infanterie mécanisée (Lüleburgaz)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "105e régiment d'artillerie (Çorlu)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment du génie de corps (Pınarhisar)",
+                "type": "genie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": [
+          {
+            "name": "15e division d'infanterie (Köseköy)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "brigade/régiment d'instruction (15e div.) 1 (estimée)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade/régiment d'instruction (15e div.) 2 (estimée)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "2e Armée (Malatya)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "4e Corps (Ankara)",
+            "brigades": [
+              {
+                "name": "28e brigade d'infanterie mécanisée (Mamak)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade commando (Talas)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade commando (Bolu)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "58e régiment d'artillerie (Polatlı)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "6e Corps (Adana)",
+            "brigades": [
+              {
+                "name": "5e brigade blindée (Gaziantep)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "39e brigade d'infanterie mécanisée (İskenderun)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "106e régiment d'artillerie (İslahiye)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "7e Corps (Diyarbakır)",
+            "brigades": [
+              {
+                "name": "16e brigade d'infanterie mécanisée (Diyarbakır)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "20e brigade d'infanterie mécanisée (Şanlıurfa)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "70e brigade d'infanterie mécanisée (Mardin)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "172e brigade blindée (Silopi)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade d'infanterie motorisée (Lice)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "6e brigade d'infanterie motorisée",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade commando (Siirt)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "107e régiment d'artillerie (Siverek)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "3e division d'infanterie tactique (Yüksekova)",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "34e brigade frontalière (Şemdinli)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade commando et de guerre en montagne de Hakkari",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "3e Armée (Erzincan)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "8e Corps (Elazığ)",
+            "brigades": [
+              {
+                "name": "1re brigade d'infanterie mécanisée (Doğubeyazıt)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "12e brigade d'infanterie mécanisée (Ağrı)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "10e brigade d'infanterie motorisée (Tatvan)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "34e brigade d'infanterie motorisée (Patnos)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "49e brigade d'infanterie motorisée (Bingöl)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "51e brigade d'infanterie motorisée (Hozat)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "17e brigade d'infanterie motorisée (Kiğı)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "4e brigade commando (Tunceli)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "108e régiment d'artillerie (Erciş)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "9e Corps (Erzurum)",
+            "brigades": [
+              {
+                "name": "4e brigade blindée (Palandöken)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "14e brigade d'infanterie mécanisée (Kars)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "25e brigade d'infanterie mécanisée (Ardahan)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "9e brigade d'infanterie motorisée (Sarıkamış)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "48e brigade d'infanterie motorisée (Trabzon)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "109e régiment d'artillerie (Erzurum)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Armée de l'Égée (İzmir)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "57e brigade d'artillerie d'instruction (İzmir)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "19e brigade d'infanterie (Edremit)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade d'infanterie motorisée (Denizli)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e régiment d'infanterie (Muğla)",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "Force de paix turque à Chypre",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "14e brigade blindée (Kythrea)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "régiment de forces spéciales",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "régiment d'artillerie",
+            "type": "artillerie",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "28e division d'infanterie mécanisée (Paşaköy)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "régiment mécanisé (28e div.) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment mécanisé (28e div.) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "39e division d'infanterie mécanisée (Çamlıbel)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "régiment mécanisé (39e div.) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "régiment mécanisé (39e div.) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement des forces terrestres — unités centrales",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "brigade commando 1 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade commando 2 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade commando 3 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Commandement des forces spéciales (ÖKK, sous l'état-major général)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1er régiment d'aviation de l'armée",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "2e régiment d'aviation de l'armée",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "3e régiment d'aviation de l'armée",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "4e régiment d'aviation de l'armée",
+            "type": "aviation_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipédia — Turkish Land Forces (structure)",
+        "url": "https://en.wikipedia.org/wiki/Turkish_Land_Forces"
+      },
+      {
+        "title": "IISS Military Balance 2022 (décompte cité par Wikipédia)",
+        "url": "https://en.wikipedia.org/wiki/Turkish_Land_Forces"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "4 armées + force de Chypre, 9 corps, d'après la structure Wikipédia (doublons de la source supprimés). Brigades de la 52e division blindée (2e blindée, 66e méca.) d'après connaissance générale ; brigades/régiments des 15e, 28e et 39e divisions ESTIMÉS. La 34e brigade frontalière et la brigade de Hakkari sont placées sous la 3e division (Yüksekova) par hypothèse. IISS 2022 compte 8 brigades commando : 5 nommées, 3 estimées placées au niveau central. Effectif : ordre de grandeur IISS (~260 000, dont conscrits), non vérifié en ligne ; Wikipédia donne 401 500 (chiffre TSK). Gendarmerie et forces engagées en Syrie/Irak (par rotation) non distinguées."
+  }
+}

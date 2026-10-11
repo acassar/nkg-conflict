@@ -1,0 +1,665 @@
+{
+  "code": "EGY",
+  "name": "Égypte",
+  "iso3": "EGY",
+  "macro": {
+    "gdpB": {
+      "value": 364.64,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 118365995,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 0.606,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 836000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2023",
+    "armyPersonnel": {
+      "value": 310000,
+      "year": 2023,
+      "source": "IISS Military Balance 2023 via Wikipédia « Egyptian Army »",
+      "url": "https://en.wikipedia.org/wiki/Egyptian_Army"
+    },
+    "reservists": {
+      "value": 375000,
+      "year": 2023,
+      "source": "IISS Military Balance 2023 via Wikipédia « Egyptian Army »",
+      "url": "https://en.wikipedia.org/wiki/Egyptian_Army"
+    },
+    "armies": [
+      {
+        "name": "2e Armée de campagne (Ismaïlia)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "3e brigade d'infanterie mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "16e brigade d'infanterie mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "57e brigade blindée",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "135e brigade d'infanterie mécanisée indépendante (ex-130e amphibie)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "41e brigade d'artillerie à moyenne portée",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie à longue portée (2e Armée) 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie à longue portée (2e Armée) 2 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade du génie (2e Armée) 1 (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade du génie (2e Armée) 2 (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade du génie (2e Armée) 3 (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "6e division blindée",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "brigade blindée (6e division blindée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade blindée (6e division blindée) 2 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (6e division blindée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (6e division blindée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "7e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (7e division mécanisée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (7e division mécanisée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (7e division mécanisée) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (7e division mécanisée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "16e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (16e division mécanisée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (16e division mécanisée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (16e division mécanisée) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (16e division mécanisée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "18e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (18e div.) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (18e div.) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (18e div.) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie divisionnaire (18e div.)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "3e Armée de campagne (Suez)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "11e brigade blindée",
+            "type": "blindee",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "4e division blindée",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "2e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "54e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "188e brigade d'artillerie à moyenne portée",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "19e division d'infanterie",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (19e division d'infanterie) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'infanterie (19e division d'infanterie) 1 (estimée)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'infanterie (19e division d'infanterie) 2 (estimée)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (19e division d'infanterie) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "23e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (23e division mécanisée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (23e division mécanisée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (23e division mécanisée) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (23e division mécanisée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Régions militaires et réserve générale (rattachement non précisé)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "23e brigade blindée indépendante",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "44e brigade blindée indépendante",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "76e brigade blindée indépendante",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "116e brigade mécanisée indépendante",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "117e brigade mécanisée indépendante",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "305e brigade mécanisée indépendante",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "170e brigade aéroportée",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "182e brigade aéroportée",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "222e brigade aéromobile",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "224e brigade aéromobile",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "groupe commando Sa'ka 1 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "groupe commando Sa'ka 2 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "groupe commando Sa'ka 3 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "groupe commando Sa'ka 4 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "groupe commando Sa'ka 5 (estimée)",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 2 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 3 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 4 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 5 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 6 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 7 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 8 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 9 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 10 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 11 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 12 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade du génie 1 (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade du génie 2 (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade du génie 3 (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "Garde républicaine (1re division blindée)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "33e brigade blindée de la Garde républicaine",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35e brigade blindée de la Garde républicaine",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "510e brigade mécanisée de la Garde républicaine",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "512e brigade mécanisée de la Garde républicaine",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie automotrice de la Garde républicaine",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "9e division blindée",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "brigade blindée (9e division blindée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade blindée (9e division blindée) 2 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (9e division blindée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (9e division blindée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "21e division blindée",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "brigade blindée (21e division blindée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade blindée (21e division blindée) 2 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (21e division blindée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (21e division blindée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "2e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (2e division mécanisée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (2e division mécanisée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (2e division mécanisée) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (2e division mécanisée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "3e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (3e division mécanisée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (3e division mécanisée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (3e division mécanisée) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (3e division mécanisée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "33e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (33e division mécanisée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (33e division mécanisée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (33e division mécanisée) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (33e division mécanisée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "36e division mécanisée",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "brigade blindée (36e division mécanisée) 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (36e division mécanisée) 1 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée (36e division mécanisée) 2 (estimée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (36e division mécanisée) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipédia — Structure of the Egyptian Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_Egyptian_Army"
+      },
+      {
+        "title": "Wikipédia — Second Army (Egypt)",
+        "url": "https://en.wikipedia.org/wiki/Second_Army_(Egypt)"
+      },
+      {
+        "title": "Wikipédia — Third Army (Egypt)",
+        "url": "https://en.wikipedia.org/wiki/Third_Army_(Egypt)"
+      },
+      {
+        "title": "Wikipédia — Egyptian Army (IISS Military Balance 2023)",
+        "url": "https://en.wikipedia.org/wiki/Egyptian_Army"
+      }
+    ],
+    "confidence": "faible",
+    "notes": "Liste des divisions et des brigades indépendantes d'après Wikipédia « Structure of the Egyptian Army » (sans date ni rattachement). Rattachement aux 2e et 3e Armées d'après leurs pages Wikipédia (2e Armée vérifiée avr. 2023, 3e Armée mai 2018) ; les autres divisions sont placées dans une armée générée (régions militaires Centre/Nord/Ouest/Sud, rattachement inconnu). Brigades internes des divisions ESTIMÉES (div. blindée = 2 blindées + 1 méca. + art. ; div. méca. = 1 blindée + 2 méca. + art.), sauf 4e division blindée (nommée). Wikipédia liste ≈29 numéros de brigades d'artillerie sans rattachement : 12 brigades d'artillerie indépendantes estimées en plus des artilleries divisionnaires. 6 brigades antichars (citation manquante) non incluses. Commandos Sa'ka (5 groupes) et génie estimés. Gardes-frontières exclus."
+  }
+}

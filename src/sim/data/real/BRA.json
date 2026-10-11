@@ -1,0 +1,323 @@
+{
+  "code": "BRA",
+  "name": "Brésil",
+  "iso3": "BRA",
+  "macro": {
+    "gdpB": {
+      "value": 2279.918,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 212812405,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.054,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 762000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 212217,
+      "year": 2024,
+      "source": "Wikipédia « Brazilian Army » (décret d'effectifs 2023, Exército Brasileiro)",
+      "url": "https://en.wikipedia.org/wiki/Brazilian_Army"
+    },
+    "reservists": {
+      "value": 1000000,
+      "year": 2017,
+      "source": "McCann 2017 via Wikipédia « Brazilian Army »",
+      "url": "https://en.wikipedia.org/wiki/Brazilian_Army"
+    },
+    "armies": [
+      {
+        "name": "Comando Militar da Amazônia (Manaus)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1re brigade d'infanterie de jungle (Boa Vista)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade d'infanterie de jungle (São Gabriel da Cachoeira)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "16e brigade d'infanterie de jungle (Tefé)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "17e brigade d'infanterie de jungle (Porto Velho)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e groupement du génie (Manaus)",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "Comando Militar do Norte (Belém)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "22e brigade d'infanterie de jungle (Macapá)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "23e brigade d'infanterie de jungle (Marabá)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "Comando Militar do Nordeste (Recife)",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "7e division d'armée (Recife)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "7e brigade d'infanterie motorisée (Natal)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "10e brigade d'infanterie motorisée (Recife)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Comando Militar do Leste (Rio de Janeiro)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "brigade d'infanterie parachutiste (Rio de Janeiro)",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1re division d'armée (Rio de Janeiro)",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "4e brigade d'infanterie légère de montagne (Juiz de Fora)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "9e brigade d'infanterie motorisée (Rio de Janeiro)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Comando Militar do Sudeste (São Paulo)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1re brigade d'artillerie antiaérienne (Guarujá)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "2e division d'armée (São Paulo)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "11e brigade d'infanterie légère (Campinas)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "12e brigade d'infanterie légère aéromobile (Caçapava)",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Comando Militar do Sul (Porto Alegre)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "8e brigade d'infanterie motorisée (Pelotas)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Commandement de l'artillerie de l'armée (Porto Alegre)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "4e groupement du génie (Porto Alegre)",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "3e division d'armée (Santa Maria)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "6e brigade d'infanterie blindée (Santa Maria)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade de cavalerie mécanisée (Santiago)",
+                "type": "reconnaissance",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade de cavalerie mécanisée (Uruguaiana)",
+                "type": "reconnaissance",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade de cavalerie mécanisée (Bagé)",
+                "type": "reconnaissance",
+                "echelon": "brigade"
+              },
+              {
+                "name": "artillerie divisionnaire de la 3e DE (Cruz Alta)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "5e division d'armée (Curitiba)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "5e brigade de cavalerie blindée (Ponta Grossa)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "14e brigade d'infanterie motorisée (Florianópolis)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "15e brigade d'infanterie mécanisée (Cascavel)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "artillerie divisionnaire de la 5e DE (Curitiba)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Comando Militar do Oeste (Campo Grande)",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "9e division d'armée (Campo Grande)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "4e brigade de cavalerie mécanisée (Dourados)",
+                "type": "reconnaissance",
+                "echelon": "brigade"
+              },
+              {
+                "name": "13e brigade d'infanterie motorisée (Cuiabá)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "18e brigade d'infanterie de frontière (Corumbá)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Comando Militar do Planalto (Brasília)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "3e brigade d'infanterie motorisée (Cristalina)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Commandement des opérations spéciales (Goiânia)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipédia — Southern Military Command (Brazil)",
+        "url": "https://en.wikipedia.org/wiki/Southern_Military_Command_(Brazil)"
+      },
+      {
+        "title": "Wikipédia — Amazon / Northern / Northeastern / Eastern / Southeastern / Western / Planalto Military Commands",
+        "url": "https://en.wikipedia.org/wiki/Amazon_Military_Command"
+      },
+      {
+        "title": "Wikipédia — Brazilian Army",
+        "url": "https://en.wikipedia.org/wiki/Brazilian_Army"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Les 8 commandements militaires de zone sont traités comme armées ; les divisions d'armée (DE) sont des états-majors territoriaux auxquels les brigades sont rattachées. Liste des brigades d'après les pages Wikipédia de chaque commandement. Rattachement des brigades du Sud aux 3e et 5e DE et de la 18e brigade de frontière (Corumbá) à la 9e DE d'après connaissance générale (non précisé par la source). Brigades de cavalerie mécanisée classées « reconnaissance ». Commandement de l'aviation de l'armée (Taubaté) et Comando de Defesa Cibernética non inclus. Effectif ≈212 000 dont ≈112 000 conscrits (IISS 2023)."
+  }
+}

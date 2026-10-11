@@ -1,0 +1,1446 @@
+{
+  "code": "IND",
+  "name": "Inde",
+  "iso3": "IND",
+  "macro": {
+    "gdpB": {
+      "value": 3916.312,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 1463865525,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.295,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 3068000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025-10",
+    "armyPersonnel": {
+      "value": 1248000,
+      "year": 2024,
+      "source": "Wikipédia « Indian Army » (infobox, chiffre repris d'India Today / IISS)",
+      "url": "https://en.wikipedia.org/wiki/Indian_Army"
+    },
+    "reservists": {
+      "value": 960000,
+      "year": 2014,
+      "source": "IISS Military Balance 2014 via Wikipédia « Indian Army »",
+      "url": "https://en.wikipedia.org/wiki/Indian_Army"
+    },
+    "armies": [
+      {
+        "name": "Commandement Nord (Udhampur)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "XIV Corps (Leh)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "3e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (3e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (3e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (3e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (3e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "8e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (8e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (8e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (8e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (8e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XV Corps (Srinagar)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "19e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (19e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (19e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (19e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (19e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "28e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (28e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (28e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (28e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (28e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XVI Corps (Nagrota)",
+            "brigades": [
+              {
+                "name": "10e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "10e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (10e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (10e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (10e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (10e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "25e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (25e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (25e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (25e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (25e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "39e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (39e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (39e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (39e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (39e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "I Corps (Mathura)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "4e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (4e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (4e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (4e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (4e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "23e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (23e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (23e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (23e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (23e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "33e division blindée",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "brigade blindée (33e div.) 1 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée (33e div.) 2 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade mécanisée (33e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (33e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Commandement Ouest (Chandimandir)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "II Corps (Ambala)",
+            "brigades": [
+              {
+                "name": "474e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "612e brigade indépendante de défense aérienne mécanisée",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "1e division blindée",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "brigade blindée (1e div.) 1 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée (1e div.) 2 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade mécanisée (1e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (1e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "14e division RAPID (Reorganised Army Plains Infantry Division)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (14e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (14e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée/mécanisée (14e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (14e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "22e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (22e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (22e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (22e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (22e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "IX Corps (Yol)",
+            "brigades": [
+              {
+                "name": "2e brigade blindée indépendante",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade blindée indépendante",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "26e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (26e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (26e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (26e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (26e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "29e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (29e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (29e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (29e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (29e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XI Corps (Jalandhar)",
+            "brigades": [
+              {
+                "name": "23e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "7e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (7e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (7e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (7e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (7e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "9e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (9e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (9e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (9e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (9e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "15e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (15e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (15e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (15e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (15e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": [
+          {
+            "name": "40e division d'artillerie",
+            "type": "artillerie",
+            "brigades": [
+              {
+                "name": "brigade d'artillerie (40e div.) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (40e div.) 2 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (40e div.) 3 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement Sud-Ouest (Jaipur)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "X Corps (Bathinda)",
+            "brigades": [
+              {
+                "name": "6e brigade blindée indépendante",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "615e brigade indépendante de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "471e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "16e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (16e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (16e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (16e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (16e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "18e division RAPID (Reorganised Army Plains Infantry Division)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (18e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (18e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée/mécanisée (18e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (18e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "24e division RAPID (Reorganised Army Plains Infantry Division)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (24e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (24e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée/mécanisée (24e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (24e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": [
+          {
+            "name": "42e division d'artillerie",
+            "type": "artillerie",
+            "brigades": [
+              {
+                "name": "brigade d'artillerie (42e div.) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (42e div.) 2 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (42e div.) 3 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement Sud (Pune)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "XII Corps (Jodhpur)",
+            "brigades": [
+              {
+                "name": "4e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "340e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "11e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (11e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (11e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (11e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (11e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "12e division RAPID (Reorganised Army Plains Infantry Division)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (12e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (12e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée/mécanisée (12e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (12e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XXI Corps (Bhopal)",
+            "brigades": [
+              {
+                "name": "475e brigade du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "31e division blindée",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "brigade blindée (31e div.) 1 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée (31e div.) 2 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade mécanisée (31e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (31e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "36e division RAPID (Reorganised Army Plains Infantry Division)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (36e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (36e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade blindée/mécanisée (36e div.) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (36e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "54e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (54e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (54e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (54e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (54e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": [
+          {
+            "name": "41e division d'artillerie",
+            "type": "artillerie",
+            "brigades": [
+              {
+                "name": "brigade d'artillerie (41e div.) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (41e div.) 2 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (41e div.) 3 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Commandement Est (Kolkata)",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "III Corps (Dimapur)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "2e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (2e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (2e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (2e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (2e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "57e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (57e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (57e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (57e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (57e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "56e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (56e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (56e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (56e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (56e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "IV Corps (Tezpur)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "71e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (71e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (71e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (71e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (71e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "5e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (5e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (5e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (5e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (5e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "21e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (21e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (21e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (21e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (21e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XXXIII Corps (Siliguri)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "17e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (17e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (17e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (17e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (17e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "20e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (20e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (20e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (20e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (20e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "27e division de montagne",
+                "type": "montagne",
+                "brigades": [
+                  {
+                    "name": "brigade de montagne (27e div.) 1 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (27e div.) 2 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade de montagne (27e div.) 3 (estimée)",
+                    "type": "montagne",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (27e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XVII Corps (Panagarh, corps de frappe de montagne)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "59e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (59e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (59e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (59e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (59e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "72e division d'infanterie",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "brigade d'infanterie (72e div.) 1 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (72e div.) 2 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'infanterie (72e div.) 3 (estimée)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade d'artillerie (72e div.) 1 (estimée)",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Commandement Centre (Lucknow)",
+        "generated": false,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "6e division de montagne",
+            "type": "montagne",
+            "brigades": [
+              {
+                "name": "brigade de montagne (6e div.) 1 (estimée)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade de montagne (6e div.) 2 (estimée)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade de montagne (6e div.) 3 (estimée)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'artillerie (6e div.) 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Quartier général de l'armée et réserve générale (rattachement non précisé)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "50e brigade parachutiste indépendante",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie indépendante 1 (estimée)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie indépendante 2 (estimée)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie indépendante 3 (estimée)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie indépendante 4 (estimée)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie indépendante 5 (estimée)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie indépendante 6 (estimée)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie indépendante 7 (estimée)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 2 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 3 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 4 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 5 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 6 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 7 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 8 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 9 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 10 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 11 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 12 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 13 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'artillerie indépendante 14 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade de défense aérienne indépendante 1 (estimée)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade du génie indépendante 1 (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipédia — Indian Army (structure, tableau des commandements)",
+        "url": "https://en.wikipedia.org/wiki/Indian_Army"
+      },
+      {
+        "title": "Wikipédia — XVII Corps (India)",
+        "url": "https://en.wikipedia.org/wiki/XVII_Corps_(India)"
+      },
+      {
+        "title": "Wikipédia — 33rd Armoured Division (India)",
+        "url": "https://en.wikipedia.org/wiki/33rd_Armoured_Division_(India)"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "7 commandements opérationnels (traités comme armées), 14 corps et 41 divisions nommés d'après le tableau Wikipédia (dont 71e div. de montagne et 72e div. d'infanterie récemment levées). Les brigades internes des divisions ne sont pas publiées : elles sont ESTIMÉES selon le gabarit type (div. d'infanterie/montagne = 3 brigades + 1 brigade d'artillerie ; RAPID = 2 inf. + 1 blindée/méca. + art. ; div. blindée = 2 blindées + 1 méca. + art. ; div. d'artillerie = 3 brigades). Brigades indépendantes nommées d'après Wikipédia ; les autres (7 inf., 14 art., 1 DCA, 1 génie) sont estimées à partir des totaux Wikipédia (5 blindées, 15 art., 7 inf., 1 para, 3 DCA, 4 génie) et placées faute de mieux au QG de l'armée. Non pris en compte : réorganisation en cours en brigades interarmes « Rudra » et bataillons « Bhairav » annoncée en 2025, Territorial Army, Assam Rifles (paramilitaire)."
+  }
+}

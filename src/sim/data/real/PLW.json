@@ -1,0 +1,20 @@
+{
+  "code": "PLW",
+  "name": "Palaos",
+  "iso3": "PLW",
+  "macro": {
+    "gdpB": {
+      "value": 0.345,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 17663,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

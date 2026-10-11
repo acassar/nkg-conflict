@@ -1,0 +1,24 @@
+{
+  "code": "STP",
+  "name": "Sao Tomé-et-Principe",
+  "iso3": "STP",
+  "macro": {
+    "gdpB": {
+      "value": 0.981,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 240254,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": {
+      "value": 1000,
+      "year": 1999,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

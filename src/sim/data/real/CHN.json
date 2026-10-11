@@ -1,0 +1,1498 @@
+{
+  "code": "CHN",
+  "name": "République populaire de Chine",
+  "iso3": "CHN",
+  "macro": {
+    "gdpB": {
+      "value": 19626.247,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 1406585000,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.725,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 2535000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 960000,
+      "year": 2025,
+      "source": "Wikipédia (infobox PLAGF, effectif 2025, IISS Military Balance)",
+      "url": "https://en.wikipedia.org/wiki/People%27s_Liberation_Army_Ground_Force"
+    },
+    "armies": [
+      {
+        "name": "Commandement du théâtre Est – forces terrestres",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "301e brigade de défense côtière",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "302e brigade de défense côtière",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "303e brigade de défense côtière",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "304e brigade de défense côtière",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "31e brigade de pontonniers",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1re brigade d'artillerie à longue portée (lance-roquettes)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "71e groupe d'armées",
+            "brigades": [
+              {
+                "name": "2e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "160e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "235e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "178e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "179e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "72e groupe d'armées",
+            "brigades": [
+              {
+                "name": "10e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade interarmes amphibie",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "124e brigade interarmes amphibie",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "85e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "90e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "73e groupe d'armées",
+            "brigades": [
+              {
+                "name": "86e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "14e brigade interarmes amphibie",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "91e brigade interarmes amphibie",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "145e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "73e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Commandement du théâtre Sud – forces terrestres",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "74e groupe d'armées",
+            "brigades": [
+              {
+                "name": "1e brigade interarmes amphibie",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "125e brigade interarmes amphibie",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "132e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "163e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "154e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "16e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "74e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "74e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "74e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "74e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "74e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "74e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "75e groupe d'armées",
+            "brigades": [
+              {
+                "name": "32e brigade interarmes de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "37e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "42e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "122e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "31e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "123e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "121e brigade d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Garnisons de Hong Kong et Macao",
+            "brigades": [
+              {
+                "name": "Brigade d'infanterie de la garnison de Hong Kong",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Unités de la garnison de Macao (bataillon/régiment)",
+                "type": "motorisee",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Commandement du théâtre Ouest – forces terrestres",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "76e groupe d'armées",
+            "brigades": [
+              {
+                "name": "17e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "56e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "62e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "149e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "182e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "76e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "76e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "76e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "76e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "76e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "76e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "77e groupe d'armées",
+            "brigades": [
+              {
+                "name": "39e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "40e brigade interarmes de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "139e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "150e brigade interarmes de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "181e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "District militaire du Xinjiang",
+            "brigades": [
+              {
+                "name": "84e brigade de forces spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "84e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "84e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "84e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "9e régiment du génie de combat",
+                "type": "genie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "361e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "362e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "363e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "364e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "365e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "366e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "367e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "368e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "369e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "370e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "371e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "372e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "373e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "374e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "375e régiment de défense frontalière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "4e division interarmes",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "4e div. – régiment interarmes 1 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "4e div. – régiment interarmes 2 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "4e div. – régiment interarmes 3 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "4e div. – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "4e div. – régiment de défense aérienne (estimé)",
+                    "type": "defense_sol_air",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "6e division interarmes",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "6e div. – régiment interarmes 1 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "6e div. – régiment interarmes 2 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "6e div. – régiment interarmes 3 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "6e div. – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "6e div. – régiment de défense aérienne (estimé)",
+                    "type": "defense_sol_air",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "8e division interarmes",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "8e div. – régiment interarmes 1 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "8e div. – régiment interarmes 2 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "8e div. – régiment interarmes 3 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "8e div. – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "8e div. – régiment de défense aérienne (estimé)",
+                    "type": "defense_sol_air",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "11e division interarmes",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "11e div. – régiment interarmes 1 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "11e div. – régiment interarmes 2 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "11e div. – régiment interarmes 3 (estimé)",
+                    "type": "mecanisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "11e div. – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "11e div. – régiment de défense aérienne (estimé)",
+                    "type": "defense_sol_air",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "District militaire du Tibet",
+            "brigades": [
+              {
+                "name": "52e brigade interarmes de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "53e brigade interarmes de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "54e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "85e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "85e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "85e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "85e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "85e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade de transport motorisé",
+                "type": "soutien",
+                "echelon": "brigade"
+              },
+              {
+                "name": "351e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "352e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "353e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "354e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "355e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "356e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "357e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "358e régiment de garde-frontière",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Commandement du théâtre Nord – forces terrestres",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "78e groupe d'armées",
+            "brigades": [
+              {
+                "name": "8e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "48e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "68e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "115e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "202e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "204e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "78e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "78e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "78e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "78e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "78e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "78e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "79e groupe d'armées",
+            "brigades": [
+              {
+                "name": "116e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "190e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "46e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "200e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "119e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "191e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "79e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "79e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "79e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "79e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "79e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "79e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "80e groupe d'armées",
+            "brigades": [
+              {
+                "name": "47e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "69e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "118e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "138e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "199e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "203e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Commandement du théâtre Centre – forces terrestres",
+        "generated": false,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "81e groupe d'armées",
+            "brigades": [
+              {
+                "name": "7e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "70e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "162e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "189e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "194e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "195e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "82e groupe d'armées",
+            "brigades": [
+              {
+                "name": "6e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "112e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "127e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "151e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "196e brigade interarmes légère",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade d'opérations spéciales",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade d'aviation de l'armée de terre",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "83e groupe d'armées",
+            "brigades": [
+              {
+                "name": "11e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "58e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "60e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "113e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "131e brigade interarmes lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "193e brigade interarmes moyenne",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "161e brigade d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "83e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "83e brigade de défense aérienne",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              },
+              {
+                "name": "83e brigade du génie et de défense chimique",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "83e brigade de soutien",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Garnison de Pékin",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "1re division de la Garde",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "3e régiment de la Garde",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "4e régiment de la Garde",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "5e régiment de la Garde",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "3e division de la Garde",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "11e régiment de la Garde",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "13e régiment de la Garde",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "17e régiment de la Garde",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Régiment blindé",
+                    "type": "blindee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Régiment d'artillerie",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Régiment d'artillerie antiaérienne",
+                    "type": "defense_sol_air",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Corps des fusiliers marins de la Marine de l'APL",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1re brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "3e brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "4e brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "6e brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'opérations spéciales (Jiaolong)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'aviation embarquée",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "Corps aéroporté de l'Armée de l'air de l'APL",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "127e brigade aéroportée",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "128e brigade aéroportée",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "130e brigade aéroportée",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "131e brigade aéroportée",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "133e brigade aéroportée",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "134e brigade aéroportée",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'opérations spéciales aéroportée",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'aviation de transport",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de soutien",
+            "type": "soutien",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – People's Liberation Army Ground Force",
+        "url": "https://en.wikipedia.org/wiki/People%27s_Liberation_Army_Ground_Force"
+      },
+      {
+        "title": "Wikipedia – Eastern Theater Command",
+        "url": "https://en.wikipedia.org/wiki/Eastern_Theater_Command"
+      },
+      {
+        "title": "Wikipedia – Southern Theater Command",
+        "url": "https://en.wikipedia.org/wiki/Southern_Theater_Command"
+      },
+      {
+        "title": "Wikipedia – Central Theater Command",
+        "url": "https://en.wikipedia.org/wiki/Central_Theater_Command"
+      },
+      {
+        "title": "Wikipedia – 71st..83rd Group Army (articles par groupe d'armées)",
+        "url": "https://en.wikipedia.org/wiki/76th_Group_Army"
+      },
+      {
+        "title": "GlobalSecurity – 79th Group Army",
+        "url": "https://www.globalsecurity.org/military/world/china/79ga.htm"
+      },
+      {
+        "title": "Wikipedia – Xinjiang Military District",
+        "url": "https://en.wikipedia.org/wiki/Xinjiang_Military_District"
+      },
+      {
+        "title": "Wikipedia – Tibet Military District",
+        "url": "https://en.wikipedia.org/wiki/Tibet_Military_District"
+      },
+      {
+        "title": "Wikipedia – PLA Navy Marine Corps",
+        "url": "https://en.wikipedia.org/wiki/People%27s_Liberation_Army_Navy_Marine_Corps"
+      },
+      {
+        "title": "Wikipedia – PLAAF Airborne Corps",
+        "url": "https://en.wikipedia.org/wiki/People%27s_Liberation_Army_Air_Force_Airborne_Corps"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Conventions : théâtres = armées, groupes d'armées = corps ; districts militaires du Xinjiang/Tibet, garnison de Pékin et garnisons HK/Macao traités comme corps. Brigades interarmes : lourde=blindee, moyenne=mecanisee, légère=motorisee, amphibie=infanterie_marine. Listes post-2017 issues des articles Wikipédia (non toutes datées). 76e GA : 12e brigade transférée à la Force des fusées en 2022, non remplacée dans les sources. 83e GA : brigades d'aviation et d'opérations spéciales non listées (la 161e brigade d'assaut aérien en tient lieu). 77e et 82e GA : brigades génie et défense chimique séparées dans la source, fusionnées ici. Divisions du Xinjiang (4e, 6e, 8e, 11e) : composition en régiments estimée (3 rég. interarmes + artillerie + DCA), type mecanisee supposé. Brigades de défense côtière et régiments frontaliers classés defense_territoriale. Corps aéroporté (armée de l'air) et fusiliers marins (marine) inclus car combattants terrestres ; 127e/128e/130e notées aéromobiles (assaut aérien) d'après une source taïwanaise de 2024. Effectif : 960 000 hors marines (estimation de 100 000 citée par Wikipédia) et aéroportés (~45 000). Unités de soutien de théâtre (renseignement, transmissions, guerre électronique, transport) omises sauf exceptions."
+  }
+}

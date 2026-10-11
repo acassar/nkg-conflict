@@ -1,0 +1,214 @@
+{
+  "code": "ITA",
+  "name": "Italie",
+  "iso3": "ITA",
+  "macro": {
+    "gdpB": {
+      "value": 2550.111,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 58915656,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.889,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 338000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2026-07",
+    "armyPersonnel": {
+      "value": 98310,
+      "year": 2024,
+      "source": "Infobox Wikipédia « Italian Army » (probablement Rapporto Esercito 2024)",
+      "url": "https://en.wikipedia.org/wiki/Italian_Army"
+    },
+    "armies": [
+      {
+        "name": "Esercito Italiano (Armée de terre italienne)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "Brigade parachutiste « Folgore » (Livourne)",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade aéromobile « Friuli » (Bologne)",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de soutien de l'aviation de l'armée (Viterbe)",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de renseignement tactique (Anzio)",
+            "type": "reconnaissance",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e régiment d'artillerie de campagne « Superga »",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "52e régiment d'artillerie de campagne « Torino »",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "4e régiment d'artillerie antiaérienne « Peschiera »",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "17e régiment d'artillerie antiaérienne « Sforzesca »",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "121e régiment d'artillerie antiaérienne « Ravenna »",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "2e régiment du génie pontonnier",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "6e régiment de pionniers",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Régiment du génie ferroviaire",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "9e régiment d'assaut parachutiste « Col Moschin »",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "4e régiment alpin parachutiste",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "185e régiment parachutiste de reconnaissance et d'acquisition d'objectifs « Folgore »",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "Commandement des troupes alpines (Bolzano)",
+            "type": "montagne",
+            "brigades": [
+              {
+                "name": "Brigade alpine « Taurinense » (Turin)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade alpine « Julia » (Udine)",
+                "type": "montagne",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "Division multinationale Sud (Florence)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "132e brigade blindée « Ariete » (Pordenone)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade de cavalerie « Pozzuolo del Friuli » (Gorizia)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade mécanisée « Sassari » (Sassari)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "Division « Acqui » (Capoue)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "Brigade mécanisée « Granatieri di Sardegna » (Rome)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade mécanisée « Aosta » (Messine)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade mécanisée « Pinerolo » (Bari)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade de bersagliers « Garibaldi » (Caserte)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Brigade de marine « San Marco » (Marina Militare)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "Brigade de marine « San Marco » (Brindisi)",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Structure of the Italian Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_Italian_Army"
+      },
+      {
+        "title": "Wikipedia – Italian Army",
+        "url": "https://en.wikipedia.org/wiki/Italian_Army"
+      },
+      {
+        "title": "Wikipedia – San Marco Marine Brigade",
+        "url": "https://en.wikipedia.org/wiki/San_Marco_Marine_Brigade"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Structure d'après Wikipédia « Structure of the Italian Army » (état après les réaffectations de brigades du 1er juillet 2026). La mise en page aplatie rend certains rattachements incertains : Pozzuolo del Friuli et Sassari placées sous la Division multinationale Sud, Aosta, Pinerolo et Garibaldi sous la division Acqui, par ordre de liste. Folgore, Friuli et les commandements d'appui (artillerie, antiaérien, génie, forces spéciales) rattachés directement à l'armée. NRDC-ITA (QG OTAN) non modélisé comme corps. Régiments de transmissions, NRBC, logistiques et 3e régiment d'appui au ciblage non inclus. La brigade San Marco (marine) est incluse dans une armée séparée générée ; non vérifiée dans cette recherche."
+  }
+}

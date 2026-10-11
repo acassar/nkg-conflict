@@ -1,0 +1,20 @@
+{
+  "code": "KNA",
+  "name": "Saint-Christophe-et-Niévès",
+  "iso3": "KNA",
+  "macro": {
+    "gdpB": {
+      "value": 1.082,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 46922,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

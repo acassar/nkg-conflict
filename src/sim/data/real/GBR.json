@@ -1,0 +1,183 @@
+{
+  "code": "GBR",
+  "name": "Royaume-Uni",
+  "iso3": "GBR",
+  "macro": {
+    "gdpB": {
+      "value": 4003.022,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 69487000,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.353,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 153000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2026-04",
+    "armyPersonnel": {
+      "value": 74370,
+      "year": 2026,
+      "source": "Wikipedia – British Army (réguliers, avril 2026 ; + 4 460 Gurkhas)",
+      "url": "https://en.wikipedia.org/wiki/British_Army"
+    },
+    "reservists": {
+      "value": 25730,
+      "year": 2026,
+      "source": "Wikipedia – British Army (réserve volontaire, avril 2026)",
+      "url": "https://en.wikipedia.org/wiki/British_Army"
+    },
+    "armies": [
+      {
+        "name": "Field Army",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "16 Air Assault Brigade Combat Team",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11th Brigade (défense avancée / Estonie)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1st Aviation Brigade Combat Team",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "7 Air Defence Group",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "8 Engineer Brigade",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Army Special Operations Brigade",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1st (United Kingdom) Division",
+            "type": "motorisee",
+            "brigades": [
+              {
+                "name": "4th Light Brigade Combat Team",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7th Light Mechanised Brigade Combat Team",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1st Deep Recce Strike Brigade (en reconstitution, York)",
+                "type": "reconnaissance",
+                "echelon": "brigade",
+                "strengthPct": 30
+              },
+              {
+                "name": "19th Light Brigade (réserve)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "102 Operational Sustainment Brigade",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "3rd (United Kingdom) Division",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "12th Armoured Brigade Combat Team",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "20th Armoured Brigade Combat Team",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3rd Deep Recce Strike Brigade",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "25 (Close Support) Engineer Group",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "101 Operational Sustainment Brigade",
+                "type": "soutien",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Royal Marines (Commando Forces)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "3 Commando Brigade Royal Marines",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Structure of the British Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_British_Army"
+      },
+      {
+        "title": "Wikipedia – 3rd Deep Reconnaissance Strike Brigade",
+        "url": "https://en.wikipedia.org/wiki/3rd_Deep_Reconnaissance_Strike_Brigade"
+      },
+      {
+        "title": "Wikipedia – British Army",
+        "url": "https://en.wikipedia.org/wiki/British_Army"
+      },
+      {
+        "title": "FW-Mag – future structure of the British Army (août 2025)",
+        "url": "https://fw-mag.com/shownews/667/some-information-emerges-about-the-future-structure-of-the-british-army"
+      },
+      {
+        "title": "British Army – 3 Deep Reconnaissance Strike BCT",
+        "url": "https://www.army.mod.uk/learn-and-explore/about-the-army/formations-divisions-and-brigades/3rd-united-kingdom-division/3-deep-reconnaissance-strike-brigade-combat-team"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Pas d'échelon armée/corps national (l'ARRC est un QG de corps OTAN) : Field Army utilisée comme armée. Le 1st DRS BCT a été resubordonné comme 3rd DRS Brigade (3e Div.) le 1er sept. 2025 ; une nouvelle DRS de la 1re Div. est mentionnée (York) mais semble en constitution (strengthPct estimé). 3rd DRS typée artillerie (5 régiments RA + 4 régiments de cavalerie). 4th et 7th brigades sur Foxhound/Jackal (Boxer à venir pour la 7th) : motorisee. 19th Light Brigade = seule brigade de réserve. 77th Brigade (opérations d'information), Home Command et brigades régionales omis. 3 Commando Brigade (Royal Navy) incluse comme infanterie de marine dans une armée générée ; effectifs Royal Marines non comptés."
+  }
+}

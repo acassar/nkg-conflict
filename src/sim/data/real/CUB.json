@@ -1,0 +1,24 @@
+{
+  "code": "CUB",
+  "name": "Cuba",
+  "iso3": "CUB",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 10937203,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.876,
+      "year": 2018,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 76000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

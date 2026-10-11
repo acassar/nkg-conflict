@@ -1,0 +1,24 @@
+{
+  "code": "KOS",
+  "name": "Kosovo",
+  "iso3": "XKX",
+  "macro": {
+    "gdpB": {
+      "value": 12.449,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD (UVK) relayé par StatisticsTimes"
+    },
+    "pop": {
+      "value": 1576876,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.853,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": null
+  },
+  "oob": null
+}

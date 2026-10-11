@@ -1,0 +1,24 @@
+{
+  "code": "SYR",
+  "name": "Syrie",
+  "iso3": "SYR",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 25620427,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 4.056,
+      "year": 2010,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 269000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

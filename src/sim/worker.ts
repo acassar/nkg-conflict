@@ -180,6 +180,9 @@ const api = {
   landUnits(ids: number[], target: LonLat): string | null {
     return act((s) => s.landUnits(ids, target)) ?? null
   },
+  transportUnits(ids: number[], target: LonLat): string | null {
+    return act((s) => s.transportUnits(ids, target)) ?? null
+  },
   encircle(ids: number[], targetId: number): string | null {
     return act((s) => s.encircle(ids, targetId)) ?? null
   },

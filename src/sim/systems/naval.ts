@@ -77,8 +77,14 @@ export function navalCapacity(ctx: SimContext, country: CountryId): number {
   return heldPorts(ctx, country).reduce((n, c) => n + portCapacity(c.def.pop), 0)
 }
 
+/** Unités d'un pays en mer : débarquements et transports par mer (ils partagent la capacité navale). */
 export function atSea(ctx: SimContext, country: CountryId): SeaTransit[] {
-  return ctx.sea.filter((t) => t.unit.owner === country)
+  return ctx.sea.filter((t) => t.unit.owner === country && (!t.mode || t.mode === 'sea'))
+}
+
+/** Débarquements en cours d'un pays (sans les transports stratégiques). */
+export function landings(ctx: SimContext, country: CountryId): SeaTransit[] {
+  return ctx.sea.filter((t) => t.unit.owner === country && !t.mode)
 }
 
 /** Port tenu le plus proche d'un point, dans la limite d'embarquement. */
@@ -164,6 +170,12 @@ export function landUnits(
 }
 
 function embark(ctx: SimContext, u: UnitState, port: string, to: LonLat, arriveTick: number): void {
+  leaveMap(ctx, u)
+  ctx.sea.push({ unit: u, port, to: [to[0], to[1]], departTick: ctx.tick, arriveTick })
+}
+
+/** L'unité quitte la carte, son armée et sa division le temps d'un trajet (mer, rail ou air). */
+export function leaveMap(ctx: SimContext, u: UnitState): void {
   ctx.units.delete(u.id)
   ctx.runtime.delete(u.id)
   for (const a of ctx.armies.values()) {
@@ -176,7 +188,6 @@ function embark(ctx: SimContext, u: UnitState, port: string, to: LonLat, arriveT
   u.order = { kind: 'hold' }
   u.path = []
   u.entrench = 0
-  ctx.sea.push({ unit: u, port, to: [to[0], to[1]], departTick: ctx.tick, arriveTick })
 }
 
 /**
@@ -186,9 +197,9 @@ function embark(ctx: SimContext, u: UnitState, port: string, to: LonLat, arriveT
  */
 export function updateNaval(ctx: SimContext): void {
   if (ctx.sea.length === 0) return
-  const due = ctx.sea.filter((t) => t.arriveTick <= ctx.tick)
+  const due = ctx.sea.filter((t) => !t.mode && t.arriveTick <= ctx.tick)
   if (due.length === 0) return
-  ctx.sea = ctx.sea.filter((t) => t.arriveTick > ctx.tick)
+  ctx.sea = ctx.sea.filter((t) => t.mode || t.arriveTick > ctx.tick)
   const index = new WarIndex(ctx)
   for (const t of due) {
     const u = t.unit
@@ -227,7 +238,7 @@ export function updateNaval(ctx: SimContext): void {
   }
 }
 
-function nearestPlace(ctx: SimContext, at: LonLat): string {
+export function nearestPlace(ctx: SimContext, at: LonLat): string {
   let best = ''
   let bestKm = Infinity
   for (const c of ctx.cities) {
@@ -255,7 +266,7 @@ export function seaSupplySources(ctx: SimContext, country: CountryId): LonLat[] 
   return held.filter((c) => c.def.country !== country).map((c): LonLat => [c.def.lon, c.def.lat])
 }
 
-/** Fin des traversées d'un pays (capitulation, fin de partie) : les unités en mer sont perdues. */
+/** Fin des trajets d'un pays (capitulation, fin de partie) : les unités en mer ou en route sont perdues. */
 export function dropSeaTransits(ctx: SimContext, country: CountryId): void {
   ctx.sea = ctx.sea.filter((t) => t.unit.owner !== country)
 }

@@ -9,6 +9,7 @@ import {
   portCapacity,
   updateNaval,
 } from './systems/naval'
+import { AIR_CAPACITY, inTransit, transportUnits, updateTransport } from './systems/transport'
 import { updateSustainability } from './economy/sustainability'
 import { TickAccumulator } from './core/loop'
 import { isSpeed, type Speed } from './core/clock'
@@ -585,6 +586,7 @@ export class Simulation {
         run('alertes', () => this.updateAlerts())
       }
       run('marine', () => updateNaval(ctx))
+      run('transport', () => updateTransport(ctx))
       run('chemins', () => planQueuedPaths(ctx))
       run('mouvement', () => updateMovement(ctx))
       run('combat', () => updateCombat(ctx))
@@ -780,6 +782,12 @@ export class Simulation {
   landUnits(ids: number[], target: LonLat): string | null {
     const units = this.playerUnits(ids).filter((u) => !runtimeOf(this.ctx, u.id).routed)
     return landUnits(this.ctx, this.playerCountry, units, target)
+  }
+
+  /** Transport stratégique des unités choisies vers la ville amie la plus proche du point visé. */
+  transportUnits(ids: number[], target: LonLat): string | null {
+    const units = this.playerUnits(ids).filter((u) => !runtimeOf(this.ctx, u.id).routed)
+    return transportUnits(this.ctx, this.playerCountry, units, target)
   }
 
   pursueUnit(ids: number[], targetId: number): string | null {
@@ -1356,6 +1364,17 @@ export class Simulation {
           kind: t.unit.kind,
           port: t.port,
           to: [t.to[0], t.to[1]],
+          arriveTick: t.arriveTick,
+        })),
+      },
+      transport: {
+        airCapacity: AIR_CAPACITY,
+        inTransit: inTransit(ctx, this.playerCountry).map((t) => ({
+          id: t.unit.id,
+          name: t.unit.name,
+          kind: t.unit.kind,
+          mode: t.mode ?? 'rail',
+          dest: t.dest ?? '',
           arriveTick: t.arriveTick,
         })),
       },

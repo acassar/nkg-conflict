@@ -1159,6 +1159,44 @@ try {
   await shot('06b-debarquement')
   await page.evaluate(() => window.__nkg.selectUnits([], false))
 
+  // Transport stratégique : deux brigades de la région parisienne partent pour Bordeaux par le rail.
+  const eastIds = await page.evaluate(() =>
+    window.__nkg.snapshot.units
+      .filter(
+        (u) => u.owner === 'FRA' && Math.abs(u.lon - 2.35) < 1 && Math.abs(u.lat - 48.86) < 0.7,
+      )
+      .slice(0, 2)
+      .map((u) => u.id),
+  )
+  await page.evaluate((ids) => window.__nkg.selectUnits(ids, false), eastIds)
+  await page.waitForTimeout(300)
+  await page.getByTestId('order-transport').click()
+  const bordeaux = await page.evaluate(() => {
+    const p = window.__nkgMap.project([-0.58, 44.84])
+    return [p.x, p.y]
+  })
+  await page.mouse.click(bordeaux[0], bordeaux[1])
+  await page.waitForTimeout(800)
+  const transit = await page.evaluate(() => window.__nkg.snapshot.transport.inTransit)
+  step('transport stratégique', {
+    choisies: eastIds.length,
+    enRoute: transit.map((t) => `${t.name} · ${t.mode} · ${t.dest}`),
+  })
+  if (
+    eastIds.length === 0 ||
+    transit.length !== eastIds.length ||
+    transit.some((t) => t.mode !== 'rail' || t.dest !== 'Bordeaux')
+  )
+    report.errors.push(`transport : ${JSON.stringify(transit)} pour ${eastIds.length} unité(s)`)
+  await page
+    .getByTestId('in-transit')
+    .waitFor({ timeout: 5000 })
+    .catch(() => {})
+  if (!(await page.getByTestId('in-transit').isVisible()))
+    report.errors.push('transport : liste « En route » absente du tiroir Forces')
+  await shot('06c-transport')
+  await page.evaluate(() => window.__nkg.selectUnits([], false))
+
   // Déclaration de guerre (France contre Belgique) : encart du tiroir Forces, puis « Avancer ».
   await page.evaluate(() => window.__nkg.declareWar('BEL'))
   await page.getByTestId('war-brief').waitFor({ timeout: 15_000 })

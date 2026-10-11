@@ -9,6 +9,7 @@ import { isTouch } from '@/composables/layout'
 import { selectionFormation } from '@/composables/composition'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { EMBARK_KM } from '@/sim/systems/naval'
+import { MODE_NAMES } from '@/sim/systems/transport'
 import { distanceKm } from '@/sim/theater/grid'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import {
@@ -24,6 +25,7 @@ import type {
   Encirclement,
   MissionKind,
   NavalSnapshot,
+  TransportSnapshot,
   OrderKind,
   Posture,
   UnitSnapshot,
@@ -34,6 +36,14 @@ const game = useGameStore()
 /** Marine provisoire du joueur : ports tenus, capacité, unités en mer. */
 const naval = computed(
   () => game.snapshot?.naval ?? { capacity: 0, ports: [], atSea: [] as NavalSnapshot['atSea'] },
+)
+/** Transport stratégique du joueur : unités en route vers une ville. */
+const transport = computed(
+  () =>
+    game.snapshot?.transport ?? {
+      airCapacity: 0,
+      inTransit: [] as TransportSnapshot['inTransit'],
+    },
 )
 /** « Débarquer » : une unité choisie près d'un port tenu, et de la place dans les convois. */
 const landing = computed(() => {
@@ -355,6 +365,13 @@ async function createArmy(): Promise<void> {
           <button title="Tenir la position (H)" @click="game.hold()">Tenir</button>
           <button title="Se replier (R)" @click="game.startOrder('retreat')">Se replier</button>
           <button
+            title="Transport stratégique (rail, mer ou air) : cliquer ensuite sur la ville d'arrivée, chez vous ou chez un ami"
+            data-testid="order-transport"
+            @click="game.startTransport()"
+          >
+            Transporter
+          </button>
+          <button
             v-if="naval.ports.length > 0"
             :disabled="!landing.ok"
             :title="landing.title"
@@ -535,6 +552,15 @@ async function createArmy(): Promise<void> {
         <ul>
           <li v-for="t in naval.atSea" :key="t.id">
             {{ t.name }} · parti de {{ t.port }} · débarque dans
+            {{ Math.max(0, t.arriveTick - (game.snapshot?.tick ?? 0)) }} h
+          </li>
+        </ul>
+      </section>
+      <section v-if="transport.inTransit.length > 0" class="at-sea" data-testid="in-transit">
+        <p class="label">En route : {{ transport.inTransit.length }} unité(s)</p>
+        <ul>
+          <li v-for="t in transport.inTransit" :key="t.id">
+            {{ t.name }} · {{ MODE_NAMES[t.mode] }} vers {{ t.dest }} · arrive dans
             {{ Math.max(0, t.arriveTick - (game.snapshot?.tick ?? 0)) }} h
           </li>
         </ul>

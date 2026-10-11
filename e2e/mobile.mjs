@@ -263,6 +263,12 @@ try {
     !!landingBox && landingBox.x >= 0 && landingBox.x + landingBox.width <= 390,
     `bouton « Débarquer » absent ou hors de l'écran (${JSON.stringify(landingBox)})`,
   )
+  const transportBox = await page.getByTestId('order-transport').boundingBox()
+  step('bouton Transporter (mobile)', { boite: transportBox })
+  check(
+    !!transportBox && transportBox.x >= 0 && transportBox.x + transportBox.width <= 390,
+    `bouton « Transporter » absent ou hors de l'écran (${JSON.stringify(transportBox)})`,
+  )
 
   // Ordre au doigt : bouton « Déplacer », le tiroir se replie, puis toucher la destination.
   await page.getByRole('button', { name: 'Déplacer', exact: true }).tap()

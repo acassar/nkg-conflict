@@ -66,6 +66,8 @@ export type MapMode =
   | { kind: 'breach'; armyId: number }
   /** Débarquement des unités choisies (marine provisoire) : clic sur une côte. */
   | { kind: 'landing' }
+  /** Transport stratégique des unités choisies : clic sur la ville d'arrivée. */
+  | { kind: 'transport' }
 
 export type AdvanceGoalKind = AdvanceGoal['kind']
 
@@ -485,6 +487,8 @@ export const useGameStore = defineStore('game', () => {
     if (m.kind === 'breach')
       return "Percée : cliquez sur le point visé chez l'ennemi (Échap pour annuler)"
     if (m.kind === 'landing') return 'Débarquement : cliquez sur une côte (Échap pour annuler)'
+    if (m.kind === 'transport')
+      return "Transport : cliquez sur la ville d'arrivée, chez vous ou chez un ami (Échap pour annuler)"
     if (m.kind === 'offensive') {
       return m.first
         ? "Offensive : cliquez sur l'objectif"
@@ -706,6 +710,11 @@ export const useGameStore = defineStore('game', () => {
     if (selection.value.length > 0) mode.value = { kind: 'landing' }
   }
 
+  /** Transport stratégique (rail, mer ou air) : la ville d'arrivée se désigne d'un clic. */
+  function startTransport(): void {
+    if (selection.value.length > 0) mode.value = { kind: 'transport' }
+  }
+
   function startFront(armyId: number): void {
     mode.value = { kind: 'front', armyId, first: null }
   }
@@ -842,6 +851,15 @@ export const useGameStore = defineStore('game', () => {
         report(
           await sim.landUnits(ids(), lonLat(point)),
           "Embarquement : les brigades débarqueront à l'arrivée du convoi",
+        ))()
+      cancelMode()
+      return true
+    }
+    if (m.kind === 'transport') {
+      void (async () =>
+        report(
+          await sim.transportUnits(ids(), lonLat(point)),
+          "Transport : les unités apparaîtront dans la ville d'arrivée",
         ))()
       cancelMode()
       return true
@@ -1238,6 +1256,7 @@ export const useGameStore = defineStore('game', () => {
     startRetreat,
     startOrder,
     startLanding,
+    startTransport,
     startFront,
     startOffensive,
     startTargetOrder,

@@ -457,14 +457,24 @@ export interface BudgetDay {
   aid?: { in: number; out: number }
 }
 
-/** Unité en mer (marine provisoire) : hors de la carte jusqu'à son débarquement. */
+/** Mode d'un transport stratégique (voir systems/transport.ts). */
+export type TransportMode = 'rail' | 'sea' | 'air'
+
+/**
+ * Unité hors de la carte le temps d'un trajet : débarquement (marine provisoire, sans `mode`) ou
+ * transport stratégique vers une ville (`mode` et `dest`).
+ */
 export interface SeaTransit {
   unit: UnitState
-  /** Port d'embarquement (retour si la côte se ferme). */
+  /** Port d'embarquement (débarquement : retour si la côte se ferme) ; ville de départ sinon. */
   port: string
   to: LonLat
   departTick: number
   arriveTick: number
+  /** Transport stratégique : mode, ville d'arrivée et point de départ (retour si l'arrivée se ferme). */
+  mode?: TransportMode
+  dest?: string
+  from?: LonLat
 }
 
 export interface RecruitItem {
@@ -612,6 +622,19 @@ export interface NavalSnapshot {
   }>
 }
 
+export interface TransportSnapshot {
+  /** Places de transport aérien du pays et places prises. */
+  airCapacity: number
+  inTransit: Array<{
+    id: number
+    name: string
+    kind: UnitKind
+    mode: TransportMode
+    dest: string
+    arriveTick: number
+  }>
+}
+
 export interface SimSnapshot {
   scenarioId: string
   tick: number
@@ -638,6 +661,8 @@ export interface SimSnapshot {
   alerts: PlayerAlert[]
   /** Marine provisoire du joueur : ports tenus, capacité et unités en mer. */
   naval: NavalSnapshot
+  /** Transport stratégique du joueur : unités en route vers une ville. */
+  transport: TransportSnapshot
   /** Grille complète : seulement au chargement d'une partie. */
   grid: GridSnapshot | null
   /** Cellules modifiées depuis la publication précédente : [cellule, propriétaire, …]. */

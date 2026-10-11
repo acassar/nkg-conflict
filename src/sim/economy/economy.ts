@@ -1,3 +1,4 @@
+import { equipmentOf } from '../units/equipment'
 import { runtimeOf, sideIndex, type CityRuntime, type SimContext } from '../context'
 import type {
   BuildingKind,
@@ -332,27 +333,33 @@ function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number)
   return points - left
 }
 
-/** Renforts : les unités ravitaillées hors combat récupèrent des effectifs, payés en production et main-d'œuvre. */
+/**
+ * Renforts : les unités ravitaillées hors combat récupèrent des hommes (payés en main-d'œuvre) et du
+ * matériel (payé en production, la moitié du prix d'une unité neuve), chacun de son côté : faute de
+ * production, une unité retrouve ses hommes sans son matériel, et inversement.
+ */
 function reinforce(ctx: SimContext, eco: EconomyState): void {
   for (const u of ctx.units.values()) {
-    if (u.owner !== eco.country || u.strength >= 1) continue
+    if (u.owner !== eco.country) continue
+    const gear = equipmentOf(u)
+    if (u.strength >= 1 && gear >= 1) continue
     const rt = runtimeOf(ctx, u.id)
     if (!rt.supplied || rt.engagedWith !== null || rt.routed) continue
-    const want = Math.min(REINFORCE_PER_DAY, 1 - u.strength)
+    if (eco.production <= 0 && eco.manpower <= 0) break
     const cost = RECRUIT_COSTS[u.kind]
-    // Un renfort coûte la moitié de la production d'une unité neuve, et sa pleine main-d'œuvre.
-    const prod = want * cost.production * 0.5
-    const men = want * cost.manpower
-    const share = Math.min(
-      1,
-      eco.production / Math.max(prod, 1e-9),
-      eco.manpower / Math.max(men, 1e-9),
-    )
-    if (share <= 0) break
-    u.strength += want * share
-    eco.production -= prod * share
-    eco.manpower -= men * share
-    eco.daily.reinforcements += want * share
+    const menWant = Math.min(REINFORCE_PER_DAY, 1 - u.strength)
+    const gearWant = Math.min(REINFORCE_PER_DAY, 1 - gear)
+    const men = menWant * cost.manpower
+    const prod = gearWant * cost.production * 0.5
+    const menShare = menWant > 0 ? Math.min(1, Math.max(0, eco.manpower) / Math.max(men, 1e-9)) : 0
+    const gearShare =
+      gearWant > 0 ? Math.min(1, Math.max(0, eco.production) / Math.max(prod, 1e-9)) : 0
+    // Le matériel est fixé avant les hommes : absent, il suivrait sinon les effectifs.
+    u.equipment = gear + gearWant * gearShare
+    u.strength += menWant * menShare
+    eco.production -= prod * gearShare
+    eco.manpower -= men * menShare
+    eco.daily.reinforcements += (menWant * menShare + gearWant * gearShare) / 2
   }
 }
 

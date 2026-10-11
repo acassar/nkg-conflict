@@ -37,7 +37,9 @@ const width = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) *
           /></span>
           <span class="num">{{ pct(r.strength) }}</span>
         </div>
-        <div class="meta">Organisation moyenne {{ pct(r.org) }}</div>
+        <div class="meta">
+          Matériel {{ pct(r.equipment) }} · organisation moyenne {{ pct(r.org) }}
+        </div>
       </li>
     </ul>
     <p class="kicker">Ordre de bataille</p>

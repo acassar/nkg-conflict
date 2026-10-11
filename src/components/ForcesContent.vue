@@ -70,6 +70,7 @@ const armyOf = (id: number | null): string =>
 /** Synthèse d'un groupe d'unités : effectifs et organisation moyens, contacts, ravitaillement. */
 function summary(list: UnitSnapshot[]): {
   strength: number
+  equipment: number
   org: number
   engaged: number
   unsupplied: number
@@ -77,6 +78,7 @@ function summary(list: UnitSnapshot[]): {
   const n = Math.max(1, list.length)
   return {
     strength: list.reduce((s, u) => s + u.strength, 0) / n,
+    equipment: list.reduce((s, u) => s + u.equipment, 0) / n,
     org: list.reduce((s, u) => s + u.org, 0) / n,
     engaged: list.filter((u) => u.engaged).length,
     unsupplied: list.filter((u) => !u.supplied).length,
@@ -406,6 +408,13 @@ async function createArmy(): Promise<void> {
               <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
                 <i :style="{ width: cssPct(u.strength) }" class="strength" />
               </span>
+              <span
+                class="gauge"
+                data-testid="unit-equipment"
+                :title="`Matériel ${pct(u.equipment)}`"
+              >
+                <i :style="{ width: cssPct(u.equipment) }" class="equipment" />
+              </span>
               <span class="gauge" :title="`Organisation ${pct(u.org)}`">
                 <i :style="{ width: cssPct(u.org) }" class="org" />
               </span>
@@ -530,6 +539,13 @@ async function createArmy(): Promise<void> {
               ><i :style="{ width: cssPct(sheetSummary.strength) }" class="strength"
             /></span>
             <span class="num">{{ pct(sheetSummary.strength) }}</span>
+          </div>
+          <div class="bar-row">
+            <span>Matériel</span>
+            <span class="gauge wide"
+              ><i :style="{ width: cssPct(sheetSummary.equipment) }" class="equipment"
+            /></span>
+            <span class="num">{{ pct(sheetSummary.equipment) }}</span>
           </div>
           <div class="bar-row">
             <span>Organisation</span>
@@ -1099,6 +1115,9 @@ ul {
 }
 .gauge .strength {
   background: #22c55e;
+}
+.gauge .equipment {
+  background: #f59e0b;
 }
 .gauge .org {
   background: #3b82f6;

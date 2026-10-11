@@ -171,6 +171,9 @@ function focus(): void {
                 <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
                   <i class="strength" :style="{ width: `${u.strength * 100}%` }" />
                 </span>
+                <span class="gauge" :title="`Matériel ${pct(u.equipment)}`">
+                  <i class="equipment" :style="{ width: `${u.equipment * 100}%` }" />
+                </span>
                 <span class="gauge" :title="`Organisation ${pct(u.org)}`">
                   <i class="org" :style="{ width: `${u.org * 100}%` }" />
                 </span>
@@ -382,6 +385,9 @@ li.routed {
 }
 .gauge .strength {
   background: #22c55e;
+}
+.gauge .equipment {
+  background: #f59e0b;
 }
 .gauge .org {
   background: #3b82f6;

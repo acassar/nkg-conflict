@@ -8,13 +8,15 @@ export interface CompositionRow {
   count: number
   /** Effectifs moyens, 0 à 1. */
   strength: number
+  /** Matériel moyen, 0 à 1. */
+  equipment: number
   /** Organisation moyenne, 0 à 1. */
   org: number
 }
 
 /** Composition par type, dans l'ordre du catalogue ; les types absents sont omis. */
 export function armyComposition(
-  units: ReadonlyArray<Pick<UnitSnapshot, 'kind' | 'strength' | 'org'>>,
+  units: ReadonlyArray<Pick<UnitSnapshot, 'kind' | 'strength' | 'equipment' | 'org'>>,
 ): CompositionRow[] {
   const rows: CompositionRow[] = []
   for (const kind of Object.keys(MODERN_CATALOG) as UnitKind[]) {
@@ -25,6 +27,7 @@ export function armyComposition(
       name: MODERN_CATALOG[kind].name,
       count: list.length,
       strength: list.reduce((s, u) => s + u.strength, 0) / list.length,
+      equipment: list.reduce((s, u) => s + u.equipment, 0) / list.length,
       org: list.reduce((s, u) => s + u.org, 0) / list.length,
     })
   }

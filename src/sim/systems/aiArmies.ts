@@ -1,3 +1,4 @@
+import { combatStrength } from '../units/equipment'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, LineMissionKind, LonLat, Posture, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
@@ -88,7 +89,7 @@ export interface ArmyPlan {
 /** Puissance d'une unité pour le rapport de force (blindés et mécanisés comptent davantage). */
 function punch(u: UnitState): number {
   const kind = u.kind === 'tank' ? 1.5 : u.kind === 'mech' ? 1.25 : 1
-  return kind * u.strength * (0.25 + 0.75 * u.org)
+  return kind * combatStrength(u) * (0.25 + 0.75 * u.org)
 }
 
 function lineOf(ctx: SimContext, army: ArmyState): UnitState[] {

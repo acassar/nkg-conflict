@@ -1,3 +1,4 @@
+import { equipmentOf } from './units/equipment'
 import { updateFormations } from './systems/formations'
 import { updateSustainability } from './economy/sustainability'
 import { TickAccumulator } from './core/loop'
@@ -1263,6 +1264,7 @@ export class Simulation {
           fatigue: u.fatigue ?? 0,
           relief: u.relief === true,
           divisionId: u.divisionId ?? null,
+          equipment: equipmentOf(u),
           stance: rt.stance
             ? stanceText(rt.stance)
             : u.halt && isHalted(ctx, u)

@@ -754,6 +754,12 @@ try {
       `sélection d'une division incorrecte (${JSON.stringify(picked)}, « ${formationText} »)`,
     )
   }
+  // Effectifs et matériel : une jauge de matériel par unité choisie.
+  const gearGauges = await page.getByTestId('unit-equipment').count()
+  step('jauges de matériel', { jauges: gearGauges, unites: picked.n })
+  if (gearGauges !== picked.n) {
+    report.errors.push(`jauges de matériel : ${gearGauges} pour ${picked.n} unités`)
+  }
   await shot('02g7-division-choisie')
   // Pions de division et de corps selon le zoom (captures).
   await page.evaluate(() => window.__nkgMap.jumpTo({ center: [36.5, 48.8], zoom: 6 }))

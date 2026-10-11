@@ -1,3 +1,4 @@
+import { equipmentOf } from './units/equipment'
 import type { SimContext } from './context'
 
 /**
@@ -10,6 +11,7 @@ export function multiplyForces(ctx: SimContext, factor: number): void {
   const k = Math.floor(factor)
   if (k <= 1) return
   for (const u of [...ctx.units.values()]) {
+    u.equipment = equipmentOf(u) / k
     u.strength /= k
     const army = u.armyId !== null ? ctx.armies.get(u.armyId) : undefined
     for (let i = 1; i < k; i++) {

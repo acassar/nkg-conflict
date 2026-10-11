@@ -25,6 +25,7 @@ const unit = (id: number, owner: string, lon: number, lat: number): UnitSnapshot
   fatigue: 0,
   relief: false,
   divisionId: null,
+  equipment: 1,
 })
 
 describe('piles de pions', () => {

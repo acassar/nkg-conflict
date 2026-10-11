@@ -1,3 +1,4 @@
+import { equipmentOf } from '../units/equipment'
 import type { SimContext } from '../context'
 import type { CountryId, Sustainability, SustainResource, UnitKind } from '../core/types'
 import { RECRUIT_COSTS } from './rules'
@@ -33,6 +34,7 @@ interface Seen {
   owner: CountryId
   kind: UnitKind
   strength: number
+  equipment: number
 }
 
 /** Pertes du jour par pays, valorisées au prix des renforts et des unités neuves. */
@@ -47,7 +49,12 @@ function measureLosses(ctx: SimContext): Map<CountryId, DayLosses> | null {
   const before = previous.get(ctx)
   const now = new Map<number, Seen>()
   for (const u of ctx.units.values()) {
-    now.set(u.id, { owner: u.owner, kind: u.kind, strength: u.strength })
+    now.set(u.id, {
+      owner: u.owner,
+      kind: u.kind,
+      strength: u.strength,
+      equipment: equipmentOf(u),
+    })
   }
   previous.set(ctx, now)
   if (!before) return null
@@ -67,12 +74,14 @@ function measureLosses(ctx: SimContext): Map<CountryId, DayLosses> | null {
       e.replace.manpower += cost.manpower
       continue
     }
-    const lost = prev.strength - u.strength
-    if (lost <= 0) continue
-    // Même prix que les renforts de la simulation : moitié de la production, pleine main-d'œuvre.
+    // Même prix que les renforts de la simulation : le matériel à moitié du prix en production d'une
+    // unité neuve, les hommes au prix plein en main-d'œuvre.
+    const men = prev.strength - u.strength
+    const gear = prev.equipment - equipmentOf(u)
+    if (men <= 0 && gear <= 0) continue
     const e = entry(u.owner)
-    e.reinforce.production += lost * cost.production * 0.5
-    e.reinforce.manpower += lost * cost.manpower
+    if (gear > 0) e.reinforce.production += gear * cost.production * 0.5
+    if (men > 0) e.reinforce.manpower += men * cost.manpower
   }
   return out
 }

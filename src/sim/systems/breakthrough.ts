@@ -1,3 +1,4 @@
+import { combatStrength } from '../units/equipment'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, LonLat, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
@@ -55,12 +56,12 @@ export function reactionOf(ctx: SimContext, id: number): Reaction | undefined {
 
 /** Puissance offensive brute d'une unité. */
 function punch(ctx: SimContext, u: UnitState): number {
-  return ctx.catalog[u.kind].attack * u.strength * (0.25 + 0.75 * u.org)
+  return ctx.catalog[u.kind].attack * combatStrength(u) * (0.25 + 0.75 * u.org)
 }
 
 /** Puissance défensive brute d'une unité. */
 function guard(ctx: SimContext, u: UnitState): number {
-  return ctx.catalog[u.kind].defense * u.strength * (0.25 + 0.75 * u.org)
+  return ctx.catalog[u.kind].defense * combatStrength(u) * (0.25 + 0.75 * u.org)
 }
 
 /**

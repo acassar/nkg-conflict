@@ -42,6 +42,8 @@ import {
   REST_KM,
 } from '@/sim/systems/fatigue'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
+import { DESTROYED_BELOW, EQUIPMENT_WEIGHT } from '@/sim/units/equipment'
+import { REINFORCE_PER_DAY } from '@/sim/economy/rules'
 import {
   CORPS_DIVISIONS,
   DIVISION_MANEUVER,
@@ -104,6 +106,14 @@ export function signedPct(factor: number): string {
 const pct = (v: number): string => `${Math.round(v * 100)} %`
 const days = (perHour: number): number => Math.round(1 / perHour / 24)
 
+/** « infanterie 35 %, blindés 75 %… » : poids du matériel dans la force, par type de combat. */
+function equipmentWeights(): string {
+  const kinds: UnitKind[] = ['inf', 'tdf', 'mech', 'tank', 'art']
+  return kinds
+    .map((k) => `${MODERN_CATALOG[k].name.toLowerCase()} ${pct(EQUIPMENT_WEIGHT[k])}`)
+    .join(', ')
+}
+
 /** « Infanterie 1, Blindés 1,5… » pour les types de combat. */
 function kindList(values: Record<UnitKind, number>): string {
   const kinds: UnitKind[] = ['inf', 'tdf', 'mech', 'tank', 'art']
@@ -121,10 +131,11 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: 'Combat',
     paragraphs: [
       `Deux unités ennemies à moins de ${CONTACT_KM} km sont au contact : chaque heure, chacune frappe, parmi les ennemis au contact, celui qui a reçu le moins de tirs dans l'heure, puis le plus proche ; l'artillerie frappe aussi à distance. Les pertes dépendent du rapport entre la puissance de feu du tireur et la défense de la cible (plafonné à 4 contre 1).`,
-      "Puissance de feu = valeur d'attaque du type (ou de défense s'il n'attaque pas) × effectifs × organisation × ravitaillement × commandement × posture × munitions × terrain selon le type × rapport de force entre types × fatigue. Défense = valeur de défense × effectifs × organisation × ravitaillement × commandement × terrain (commun et selon le type) × retranchement × fortifications × posture × flanc × fatigue.",
+      "Puissance de feu = valeur d'attaque du type (ou de défense s'il n'attaque pas) × force (effectifs et matériel) × organisation × ravitaillement × commandement × posture × munitions × terrain selon le type × rapport de force entre types × fatigue. Défense = valeur de défense × force × organisation × ravitaillement × commandement × terrain (commun et selon le type) × retranchement × fortifications × posture × flanc × fatigue.",
       `Organisation : elle compte pour 25 % à 100 % de la valeur (×${(0.25).toLocaleString('fr-FR')} à vide). Sous ${pct(ROUT_ORG)} (seuil selon la posture), l'unité décroche et recule jusqu'à retrouver ${pct(RALLY_ORG)}.`,
       `Munitions : chaque tir en consomme, selon le type (voir Types d'unités) ; stock vide, puissance de feu ${signedPct(NO_MUNITIONS_FACTOR)}.`,
       'Fleuve : une attaque à travers un fleuve donne +40 % de défense à la cible.',
+      `Effectifs et matériel : chaque unité a deux jauges, les hommes et le matériel (chars, pièces, véhicules, armes). Sa force vaut effectifs^(1 − p) × matériel^p, où p est le poids du matériel : ${equipmentWeights()}. Les pertes touchent les deux jauges, davantage le matériel pour les blindés et l'artillerie, davantage les hommes pour l'infanterie. Hors combat et ravitaillée, une unité reprend chaque jour jusqu'à ${pct(REINFORCE_PER_DAY)} d'effectifs (payés en main-d'œuvre) et ${pct(REINFORCE_PER_DAY)} de matériel (payé en production, que l'aide étrangère alimente), chacun de son côté. Sous ${pct(DESTROYED_BELOW)} de force, l'unité est détruite.`,
     ],
   },
   {
@@ -252,7 +263,14 @@ export const HELP_SECTIONS: HelpSection[] = [
 
 /** Explication courte de chaque modificateur de l'écran de bataille, et sa section d'aide. */
 export const MODIFIER_HELP: Record<ModifierKey, { text: string; section: HelpSectionId }> = {
-  strength: { text: "Effectifs restants de l'unité (100 % = au complet).", section: 'combat' },
+  strength: {
+    text: "Effectifs restants (hommes) ; leur poids dans la force dépend du type d'unité.",
+    section: 'combat',
+  },
+  equipment: {
+    text: 'Matériel restant (chars, pièces, véhicules) ; pèse surtout pour les blindés et l’artillerie.',
+    section: 'combat',
+  },
   org: {
     text: `Organisation : compte de 25 % à 100 % de la valeur ; sous le seuil de la posture, l'unité décroche.`,
     section: 'combat',

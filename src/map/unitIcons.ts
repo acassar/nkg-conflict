@@ -190,6 +190,7 @@ export function formationIcon(
   const avg = (f: (u: UnitSnapshot) => number): number =>
     units.reduce((s, u) => s + f(u), 0) / Math.max(1, n)
   const strength = avg((u) => u.strength)
+  const equipment = avg((u) => u.equipment)
   const org = avg((u) => u.org)
   const unsupplied = units.some((u) => !u.supplied)
   const engaged = units.some((u) => u.engaged)
@@ -199,6 +200,7 @@ export function formationIcon(
     color.join(','),
     symbol,
     bucket(strength),
+    bucket(equipment),
     bucket(org),
     selected ? 's' : '',
     unsupplied ? 'x' : '',
@@ -234,12 +236,13 @@ export function formationIcon(
     ctx.setLineDash([])
     const gauge = (row: number, value: number, fill: string): void => {
       ctx.fillStyle = 'rgba(0,0,0,0.6)'
-      ctx.fillRect(x, row, w, 3)
+      ctx.fillRect(x, row, w, 2)
       ctx.fillStyle = fill
-      ctx.fillRect(x, row, (w * bucket(value)) / 10, 3)
+      ctx.fillRect(x, row, (w * bucket(value)) / 10, 2)
     }
     gauge(y + h + 2, strength, '#4ade80')
-    gauge(y + h + 6, org, '#7dd3fc')
+    gauge(y + h + 5, equipment, '#fbbf24')
+    gauge(y + h + 8, org, '#7dd3fc')
     if (engaged) {
       ctx.fillStyle = '#f97316'
       ctx.beginPath()
@@ -260,7 +263,7 @@ export function formationIcon(
 }
 
 /**
- * Icône d'une unité : cadre aux couleurs du camp, symbole, et deux jauges (effectifs, organisation).
+ * Icône d'une unité : cadre aux couleurs du camp, symbole, et trois jauges (effectifs, matériel, organisation).
  * Bordure jaune = sélectionnée, bordure rouge = hors ravitaillement, icône pâle = en déroute.
  */
 export function unitIcon(
@@ -272,6 +275,7 @@ export function unitIcon(
     u.owner,
     u.kind,
     bucket(u.strength),
+    bucket(u.equipment),
     bucket(u.org),
     selected ? 's' : '',
     u.supplied ? '' : 'x',
@@ -296,15 +300,16 @@ export function unitIcon(
     if (!u.supplied && !selected) ctx.setLineDash([4, 3])
     ctx.strokeRect(x, y, w, h)
     ctx.setLineDash([])
-    // Jauges : effectifs (vert) et organisation (bleu clair).
     const gauge = (row: number, value: number, fill: string): void => {
       ctx.fillStyle = 'rgba(0,0,0,0.6)'
-      ctx.fillRect(x, row, w, 3)
+      ctx.fillRect(x, row, w, 2)
       ctx.fillStyle = fill
-      ctx.fillRect(x, row, (w * bucket(value)) / 10, 3)
+      ctx.fillRect(x, row, (w * bucket(value)) / 10, 2)
     }
+    // Jauges : effectifs (vert), matériel (ambre), organisation (bleu clair).
     gauge(y + h + 2, u.strength, '#4ade80')
-    gauge(y + h + 6, u.org, '#7dd3fc')
+    gauge(y + h + 5, u.equipment, '#fbbf24')
+    gauge(y + h + 8, u.org, '#7dd3fc')
     if (u.engaged) {
       ctx.fillStyle = '#f97316'
       ctx.beginPath()

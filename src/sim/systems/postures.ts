@@ -1,3 +1,4 @@
+import { combatStrength } from '../units/equipment'
 import { runtimeOf, type SimContext } from '../context'
 import type { UnitState } from '../core/types'
 import { isLineUnit } from '../units/catalog'
@@ -6,7 +7,7 @@ import { WarIndex } from './spatial'
 import { isHalted } from './restraint'
 
 /** Puissance d'une unité pour juger si un ennemi est plus faible. */
-const power = (u: UnitState): number => u.strength * (0.25 + 0.75 * u.org)
+const power = (u: UnitState): number => combatStrength(u) * (0.25 + 0.75 * u.org)
 
 /** Ordres que les réflexes peuvent remplacer : une unité qui exécute un ordre du joueur n'est pas dérangée. */
 const idle = (u: UnitState): boolean =>
@@ -35,7 +36,7 @@ export function updatePostureReflexes(ctx: SimContext): void {
     const routed = runtimeOf(ctx, enemy.id).routed
     let attack = false
     if (p === 'balanced') attack = routed
-    else if (p === 'offensive') attack = routed || enemy.org < 0.5 || enemy.strength < 0.6
+    else if (p === 'offensive') attack = routed || enemy.org < 0.5 || combatStrength(enemy) < 0.6
     else attack = routed || power(enemy) < power(u)
     if (!attack) continue
     if (p === 'maxDamage' && routed) {

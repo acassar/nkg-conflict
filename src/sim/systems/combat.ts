@@ -1,3 +1,10 @@
+import {
+  applyLosses,
+  combatStrength,
+  DESTROYED_BELOW,
+  equipmentOf,
+  strengthFactors,
+} from '../units/equipment'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import {
   isOffensiveOrder,
@@ -120,7 +127,16 @@ export function combatModifiers(
 ): { attack: Modifier[]; defense: Modifier[] } {
   const posture = postureOf(u.posture)
   const shared: Modifier[] = [
-    { key: 'strength', label: 'Effectifs', value: u.strength },
+    {
+      key: 'strength',
+      label: `Effectifs (${Math.round(u.strength * 100)} %)`,
+      value: strengthFactors(u).men,
+    },
+    {
+      key: 'equipment',
+      label: `Matériel (${Math.round(equipmentOf(u) * 100)} %)`,
+      value: strengthFactors(u).gear,
+    },
     { key: 'org', label: 'Organisation', value: 0.25 + 0.75 * u.org },
     { key: 'supply', label: 'Ravitaillement', value: supplyFactor(ctx, u) },
     { key: 'command', label: 'Commandement', value: commandFactor(ctx, u) },
@@ -222,7 +238,7 @@ export function firePower(ctx: SimContext, u: UnitState): number {
   const base = isOffensive(u) ? type.attack : type.defense
   return (
     base *
-    u.strength *
+    combatStrength(u) *
     (0.25 + 0.75 * u.org) *
     supplyFactor(ctx, u) *
     commandFactor(ctx, u) *
@@ -236,7 +252,7 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
   const type = ctx.catalog[u.kind]
   return (
     type.defense *
-    u.strength *
+    combatStrength(u) *
     (0.25 + 0.75 * u.org) *
     supplyFactor(ctx, u) *
     commandFactor(ctx, u) *
@@ -272,8 +288,9 @@ function hit(
   }
   const ratio = Math.min(4, fire / Math.max(0.05, defense))
   const roll = ctx.rng.range(0.8, 1.2)
-  const lost = Math.min(target.strength, STRENGTH_LOSS * ratio * roll * factor * losses)
-  target.strength -= lost
+  // Pertes réparties entre hommes et matériel selon le type (units/equipment.ts).
+  const lost = Math.min(combatStrength(target), STRENGTH_LOSS * ratio * roll * factor * losses)
+  applyLosses(target, lost)
   ctx.losses.set(target.owner, (ctx.losses.get(target.owner) ?? 0) + lost)
   // Prise de flanc : le moral cède plus vite.
   const orgLoss = ORG_LOSS * ratio * roll * factor * flankOrgLossFactor(ctx, target)
@@ -300,7 +317,7 @@ export function updateCombat(ctx: SimContext): void {
       !rt.supplied ||
       rt.routed ||
       u.hoursOutOfSupply > 0 ||
-      u.strength < 0.05 ||
+      combatStrength(u) < DESTROYED_BELOW ||
       fatigueOf(u) > 0
     ) {
       active.push(u)
@@ -360,7 +377,7 @@ export function updateCombat(ctx: SimContext): void {
     updateFatigue(u, rt, isOffensive(u), index)
     if (!rt.supplied) {
       u.hoursOutOfSupply++
-      if (u.hoursOutOfSupply > 72) u.strength = Math.max(0, u.strength - 0.002)
+      if (u.hoursOutOfSupply > 72) applyLosses(u, 0.002)
     } else {
       u.hoursOutOfSupply = 0
     }
@@ -374,7 +391,7 @@ export function updateCombat(ctx: SimContext): void {
       u.order = { kind: 'hold' }
       u.path = []
     }
-    if (u.strength < 0.05) {
+    if (combatStrength(u) < DESTROYED_BELOW) {
       ctx.units.delete(u.id)
       ctx.runtime.delete(u.id)
       for (const a of ctx.armies.values()) a.unitIds = a.unitIds.filter((id) => id !== u.id)

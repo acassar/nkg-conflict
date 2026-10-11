@@ -1,3 +1,4 @@
+import { combatStrength } from '../units/equipment'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
@@ -6,7 +7,7 @@ import { WarIndex } from './spatial'
 const POCKET_GUARD_KM = 15
 
 function zocKm(ctx: SimContext, u: UnitState): number {
-  return ctx.catalog[u.kind].zocKm * (0.5 + 0.5 * u.strength)
+  return ctx.catalog[u.kind].zocKm * (0.5 + 0.5 * combatStrength(u))
 }
 
 /**

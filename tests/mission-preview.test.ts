@@ -135,9 +135,9 @@ describe("onglet « Composition » d'une armée", () => {
   it('compte les unités par type avec leur force moyenne', async () => {
     const { armyComposition, strengthTone } = await import('@/composables/composition')
     const rows = armyComposition([
-      { kind: 'inf', strength: 1, org: 0.8 },
-      { kind: 'inf', strength: 0.6, org: 0.4 },
-      { kind: 'tank', strength: 0.4, org: 1 },
+      { kind: 'inf', strength: 1, equipment: 0.9, org: 0.8 },
+      { kind: 'inf', strength: 0.6, equipment: 0.5, org: 0.4 },
+      { kind: 'tank', strength: 0.4, equipment: 0.3, org: 1 },
     ])
     expect(rows.map((r) => [r.kind, r.count])).toEqual([
       ['inf', 2],
@@ -145,6 +145,7 @@ describe("onglet « Composition » d'une armée", () => {
     ])
     expect(rows[0]?.strength).toBeCloseTo(0.8)
     expect(rows[0]?.org).toBeCloseTo(0.6)
+    expect(rows[0]?.equipment).toBeCloseTo(0.7)
     expect(strengthTone(0.8)).toBe('ok')
     expect(strengthTone(0.6)).toBe('warn')
     expect(strengthTone(0.4)).toBe('bad')

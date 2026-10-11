@@ -1,3 +1,4 @@
+import { combatStrength } from '../units/equipment'
 import { countryName, runtimeOf, sideIndex, type SimContext } from '../context'
 import type { CountryId, LonLat, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
@@ -137,7 +138,7 @@ function armyPostureOf(ctx: SimContext, country: CountryId): string {
 /** Préfère les unités puissantes, en forme et proches de l'objectif. */
 function score(u: UnitState, lon: number, lat: number): number {
   const punch = u.kind === 'tank' ? 3 : u.kind === 'mech' ? 2 : 1
-  return punch * u.strength * u.org - distanceKm(u.lon, u.lat, lon, lat) / 100
+  return punch * combatStrength(u) * u.org - distanceKm(u.lon, u.lat, lon, lat) / 100
 }
 
 function closest(units: UnitState[], lon: number, lat: number, maxKm: number): UnitState | null {

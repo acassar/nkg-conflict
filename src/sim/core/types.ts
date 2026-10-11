@@ -84,6 +84,11 @@ export interface UnitState {
   relief?: boolean
   /** Division de la brigade (voir systems/formations.ts) ; absente pour la logistique et les QG. */
   divisionId?: number
+  /**
+   * Matériel, 0 à 1 (`strength` = effectifs). Absent : égal aux effectifs (unité neuve ou ancienne
+   * sauvegarde). Voir units/equipment.ts.
+   */
+  equipment?: number
 }
 
 /** Postures de combat, de la plus prudente à la plus agressive. */
@@ -117,6 +122,8 @@ export interface UnitSnapshot {
   relief: boolean
   /** Division de la brigade, ou null (logistique, QG, unité hors armée). */
   divisionId: number | null
+  /** Matériel, 0 à 1 (`strength` : effectifs). */
+  equipment: number
 }
 
 /** Unité dans le rapport de bataille. */
@@ -126,6 +133,8 @@ export interface BattleUnit {
   owner: CountryId
   kind: UnitKind
   strength: number
+  /** Matériel, 0 à 1. */
+  equipment: number
   org: number
   posture: Posture
   firePower: number
@@ -148,6 +157,7 @@ export interface BattleUnit {
 /** Nature d'un modificateur de combat : sert à retrouver son explication dans l'aide en jeu. */
 export type ModifierKey =
   | 'strength'
+  | 'equipment'
   | 'org'
   | 'supply'
   | 'command'

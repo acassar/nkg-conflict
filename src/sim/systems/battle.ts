@@ -1,3 +1,4 @@
+import { equipmentOf } from '../units/equipment'
 import { runtimeOf, type SimContext } from '../context'
 import type { BattleReport, BattleUnit, UnitState } from '../core/types'
 import { combatModifiers, defenseValue, firePower, riverBetween } from './combat'
@@ -45,6 +46,7 @@ export function battleReport(ctx: SimContext, ids: number[], player: string): Ba
       owner: u.owner,
       kind: u.kind,
       strength: u.strength,
+      equipment: equipmentOf(u),
       org: u.org,
       posture: u.posture ?? 'balanced',
       firePower: firePower(ctx, u),

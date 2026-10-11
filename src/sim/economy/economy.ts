@@ -51,6 +51,7 @@ import {
   newBudget,
   placeInitialFactories,
   priceFactories,
+  recordHistory,
   syncFactories,
   TREASURY_START_DAYS,
   normalizeAllocation,
@@ -398,6 +399,7 @@ export function updateEconomy(
       manpower,
       reinforcements: 0,
     }
+    recordHistory(eco, production, manpower)
     // Chantiers ouverts selon la capacité des usines civiles (pas seulement les points employés).
     const capacity = Math.max(construction, budget?.day.civPoints ?? 0)
     eco.daily.constructionUsed = advanceConstruction(ctx, eco, construction, capacity)

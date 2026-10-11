@@ -8,7 +8,14 @@ import {
   ScatterplotLayer,
   TextLayer,
 } from '@deck.gl/layers'
-import type { ArmyState, CityState, LonLat, SimSnapshot, UnitSnapshot } from '@/sim/core/types'
+import type {
+  ArmyState,
+  CityState,
+  FactorySite,
+  LonLat,
+  SimSnapshot,
+  UnitSnapshot,
+} from '@/sim/core/types'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { FORT_RADIUS_KM, formationSlots } from '@/sim/economy/rules'
 import { fortBonusLabel } from '@/sim/economy/forts'
@@ -84,6 +91,10 @@ export interface LayerInput {
   production: Map<string, number> | null
   /** Construire « quoi, puis où » : villes conseillées pour le bâtiment choisi, dans l'ordre. */
   buildAdvice?: Array<{ city: string; lon: number; lat: number }> | null
+  /** Vue « Production » : usines du joueur à leur emplacement. */
+  factories?: FactorySite[] | null
+  /** Emplacement choisi pour une nouvelle usine, en attente de validation. */
+  factorySpot?: LonLat | null
   /**
    * Mode « Logistique » : état du ravitaillement (calque en tuiles et vue du Worker).
    * Affiche aussi la portée des sources, des unités logistiques et des QG du joueur.
@@ -454,6 +465,50 @@ export function buildLayers(input: LayerInput): Layer[] {
           getText: [...busy.entries()].join(),
           getColor: [...busy.entries()].join(),
         },
+      }),
+    )
+  }
+
+  // Usines du joueur : carré bleu acier (civile) ou brun rouge (militaire), pâle si endommagée.
+  if (input.factories?.length) {
+    const sites = input.factories
+    layers.push(
+      new ScatterplotLayer<FactorySite>({
+        id: 'factories',
+        data: sites,
+        getPosition: (f) => [f.lon, f.lat],
+        filled: true,
+        getFillColor: (f) =>
+          f.kind === 'mil'
+            ? [153, 27, 27, Math.round(110 + 145 * f.condition)]
+            : [51, 85, 130, Math.round(110 + 145 * f.condition)],
+        stroked: true,
+        getLineColor: [255, 255, 255, 220],
+        getLineWidth: 1.2,
+        lineWidthUnits: 'pixels',
+        radiusUnits: 'pixels',
+        getRadius: 4.5,
+        updateTriggers: {
+          getFillColor: sites.map((f) => f.condition).join(),
+        },
+      }),
+    )
+  }
+  if (input.factorySpot) {
+    layers.push(
+      new ScatterplotLayer<LonLat>({
+        id: 'factory-spot',
+        data: [input.factorySpot],
+        getPosition: (p) => p,
+        filled: true,
+        getFillColor: [249, 115, 22, 70],
+        stroked: true,
+        getLineColor: [249, 115, 22, 255],
+        getLineWidth: 3,
+        lineWidthUnits: 'pixels',
+        radiusUnits: 'pixels',
+        getRadius: 12,
+        updateTriggers: { getPosition: input.factorySpot.join() },
       }),
     )
   }

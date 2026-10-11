@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
 import {
@@ -8,9 +8,19 @@ import {
   FORMATIONS_PER_BARRACKS,
   WAR_ECONOMY,
 } from '@/sim/economy/rules'
-import type { WarEconomyLevel } from '@/sim/core/types'
+import type { BudgetSector, WarEconomyLevel } from '@/sim/core/types'
 import { productionQueue, warEconomyEffects } from '@/composables/productionQueue'
-import { budgetView, money } from '@/composables/budget'
+import {
+  budgetForecast,
+  budgetView,
+  currentAllocation,
+  historySeries,
+  money,
+  nearestOwnCity,
+  rebalance,
+  sparkPoints,
+  type Allocation,
+} from '@/composables/budget'
 import { useProductionStats } from '@/composables/production'
 import { useSustainability } from '@/composables/sustainability'
 import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
@@ -86,6 +96,39 @@ const freeBarracks = computed(() =>
 
 const WAR_LEVELS: WarEconomyLevel[] = [0, 1, 2]
 const budget = computed(() => budgetView(economy.value))
+// Curseurs du budget : brouillon local pendant le glissement, envoyé au relâcher.
+const draft = ref<Allocation | null>(null)
+const allocation = computed(() => draft.value ?? currentAllocation(economy.value))
+const shownShare = (sector: BudgetSector): number => allocation.value?.[sector] ?? 0
+const forecast = computed(() =>
+  allocation.value ? budgetForecast(economy.value, allocation.value) : null,
+)
+const history = computed(() => historySeries(economy.value))
+const SPARK_W = 120
+const SPARK_H = 22
+function slide(sector: BudgetSector, pct: number): void {
+  const a = allocation.value
+  if (a) draft.value = rebalance(a, sector, pct / 100)
+}
+function commitDraft(): void {
+  if (draft.value) void game.setBudgetAllocation({ ...draft.value })
+}
+function toggleAuto(auto: boolean): void {
+  draft.value = null
+  void game.setBudgetAllocation(auto ? null : { ...(currentAllocation(economy.value) ?? {}) })
+}
+// Le brouillon disparaît quand la simulation a repris la répartition choisie.
+watch(
+  () => economy.value?.budget?.allocation,
+  () => (draft.value = null),
+)
+/** Emplacement libre choisi pour une usine : ville la plus proche. */
+const spot = computed(() => {
+  const at = game.factorySpot
+  const me = game.snapshot?.playerCountry
+  if (!at || !me || !game.snapshot) return null
+  return nearestOwnCity(game.snapshot.cities, me, at[0], at[1])
+})
 const warLevel = computed<WarEconomyLevel>(() => economy.value?.warEconomy ?? 0)
 const warEffects = computed(() => warEconomyEffects(warLevel.value))
 const signed = (v: number): string => `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`
@@ -265,6 +308,16 @@ const warTitle = (level: WarEconomyLevel): string => {
           <p v-if="buildChoice.advice.length === 0" class="meta">
             Aucune de vos villes n'a de place pour ce bâtiment.
           </p>
+          <p v-if="buildChoice.kind === 'civ' || buildChoice.kind === 'mil'" class="meta">
+            Une usine se pose aussi n'importe où sur votre territoire : cliquez sur la carte.
+          </p>
+          <div v-if="game.factorySpot && spot" class="picked" data-testid="build-spot">
+            <span
+              >Emplacement choisi :
+              <b>{{ spot.km < 3 ? 'à' : `${Math.round(spot.km)} km de` }} {{ spot.name }}</b></span
+            >
+            <button @click="game.queueFactory()">Construire ici</button>
+          </div>
           <div v-if="pickedCity" class="picked" data-testid="build-picked">
             <span
               >Ville choisie : <b>{{ pickedCity.name }}</b>
@@ -302,7 +355,7 @@ const warTitle = (level: WarEconomyLevel): string => {
         </ul>
       </div>
 
-      <!-- Budget national : PIB, budget du jour et son emploi par secteur. -->
+      <!-- Budget national : PIB, répartition par curseurs, effets attendus, évolution. -->
       <section v-if="budget" class="budget" data-testid="budget">
         <p class="label">
           Budget
@@ -310,29 +363,97 @@ const warTitle = (level: WarEconomyLevel): string => {
             >{{ money(budget.budget) }}/j · PIB {{ money(budget.gdpB * 1000) }}/an</span
           >
         </p>
+        <label class="auto-alloc">
+          <input
+            type="checkbox"
+            data-testid="budget-auto"
+            :checked="budget.auto"
+            @change="toggleAuto(($event.target as HTMLInputElement).checked)"
+          />
+          Répartition automatique
+          <span class="meta">(usines à plein régime, 5 % de recherche, le reste en réserve)</span>
+        </label>
         <ul class="sectors">
           <li v-for="line in budget.lines" :key="line.sector" :data-sector="line.sector">
             <div class="row">
               <span>{{ line.name }}</span>
               <span class="num"
-                >{{ money(line.amount) }} · {{ Math.round(line.share * 100) }} %</span
+                >{{ money(shownShare(line.sector) * budget.budget) }} ·
+                {{ Math.round(shownShare(line.sector) * 100) }} %</span
               >
             </div>
-            <div class="bar"><div :style="{ width: `${Math.round(line.share * 100)}%` }" /></div>
+            <input
+              v-if="!budget.auto"
+              class="slider"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              :aria-label="`Part du budget : ${line.name}`"
+              :data-testid="`budget-slider-${line.sector}`"
+              :value="Math.round(shownShare(line.sector) * 100)"
+              @input="slide(line.sector, ($event.target as HTMLInputElement).valueAsNumber)"
+              @change="commitDraft"
+            />
+            <div v-else class="bar">
+              <div :style="{ width: `${Math.round(line.share * 100)}%` }" />
+            </div>
             <p class="meta">{{ line.note }}</p>
           </li>
         </ul>
+        <ul v-if="forecast" class="effects" data-testid="budget-forecast">
+          <li>
+            Usines militaires : {{ Math.round(forecast.milUse * 100) }} % payées par la défense ·
+            production ≈ {{ round(forecast.production) }}/j, munitions ≈
+            {{ round(forecast.munitions) }}/j
+          </li>
+          <li v-if="forecast.hasChantiers">
+            Usines civiles : {{ Math.round(forecast.civUse * 100) }} % payées · construction ≈
+            {{ round(forecast.construction) }} pts/j
+          </li>
+          <li v-else>Aucun chantier : l'argent de la construction va à la réserve</li>
+          <li>Recherche : +{{ money(forecast.research) }}/j</li>
+          <li :class="{ warn: forecast.reserve < 0 }">
+            Réserve : {{ forecast.reserve >= 0 ? '+' : '−'
+            }}{{ money(Math.abs(forecast.reserve)) }}/j<template
+              v-if="forecast.reserveDays !== null"
+            >
+              (vide dans {{ forecast.reserveDays }} j, puis les usines ralentissent)</template
+            >
+          </li>
+        </ul>
+        <div
+          v-if="history[0] && history[0].values.length > 1"
+          class="history"
+          data-testid="budget-history"
+        >
+          <div v-for="h in history" :key="h.key" class="spark">
+            <span class="meta">{{ h.name }}</span>
+            <svg
+              :viewBox="`0 0 ${SPARK_W} ${SPARK_H}`"
+              :width="SPARK_W"
+              :height="SPARK_H"
+              aria-hidden="true"
+            >
+              <polyline :points="sparkPoints(h.values, SPARK_W, SPARK_H)" />
+            </svg>
+            <span class="num" :class="{ warn: (h.change ?? 0) < -0.05 }">{{
+              h.change === null
+                ? ''
+                : `${h.change >= 0 ? '+' : '−'}${Math.round(Math.abs(h.change) * 100)} %`
+            }}</span>
+          </div>
+          <p class="meta">Évolution sur {{ history[0].values.length }} jours.</p>
+        </div>
         <p class="meta">
-          {{ budget.auto ? 'Répartition automatique : ' : '' }}usines
-          {{ budget.factories.mil }} militaires et {{ budget.factories.civ }} civiles<template
-            v-if="budget.factories.offMap"
-          >
-            (dont {{ budget.factories.offMap }} hors carte)</template
+          Usines : {{ budget.factories.mil }} militaires (rouge sur la carte) et
+          {{ budget.factories.civ }} civiles (bleu)<template v-if="budget.factories.offMap">
+            , dont {{ budget.factories.offMap }} hors carte</template
           ><template v-if="budget.factories.damaged">
             , {{ budget.factories.damaged }} endommagée(s)</template
           ><template v-if="budget.mobilizationPct < -0.05">
-            ; mobilisation : {{ budget.mobilizationPct.toFixed(1).replace('.', ',') }} %
-            d'activité</template
+            ; mobilisation :
+            {{ budget.mobilizationPct.toFixed(1).replace('.', ',') }} % d'activité</template
           >.
         </p>
       </section>
@@ -578,6 +699,35 @@ li.waiting {
 }
 .num {
   font-variant-numeric: tabular-nums;
+}
+.auto-alloc {
+  display: block;
+  margin: 2px 0 6px;
+  font-size: 12px;
+}
+.slider {
+  width: 100%;
+  margin: 2px 0 0;
+  accent-color: #f59e0b;
+}
+.history {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0;
+}
+.spark {
+  display: grid;
+  grid-template-columns: 90px 120px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+.spark polyline {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 1.5;
+}
+.warn {
+  color: #f59e0b;
 }
 .build {
   margin-bottom: 10px;

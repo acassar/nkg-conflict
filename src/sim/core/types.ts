@@ -428,6 +428,8 @@ export interface BudgetState {
   factoryDayCost: number
   /** Dernier jour, pour l'affichage. */
   last?: BudgetDay
+  /** Évolution sur les derniers jours (au plus BUDGET_HISTORY_DAYS) : PIB (M$/j), production, main-d'œuvre. */
+  history?: Array<[number, number, number]>
 }
 
 export interface BudgetDay {
@@ -439,6 +441,8 @@ export interface BudgetDay {
   allocated: Record<BudgetSector, number>
   /** Montants dépensés en défense et en construction (M$), réserve comprise. */
   spent: { defense: number; construction: number }
+  /** Coût des usines à plein régime (M$) : militaires, et civiles pour ce que les chantiers absorbent. */
+  need: { defense: number; construction: number }
   /** Usines tenues (sites en état pondéré, plus hors carte) et part employée faute d'argent. */
   factories: Record<FactoryKind, number>
   use: Record<FactoryKind, number>

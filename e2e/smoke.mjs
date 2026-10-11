@@ -315,7 +315,26 @@ try {
   step('budget national', { secteurs: sectors })
   if (sectors !== 4 || !/usines militaires à \d+ %/.test(budgetText))
     report.errors.push(`bloc budget incomplet (${sectors} secteurs) : ${budgetText.slice(0, 120)}`)
+  // Curseurs : répartition manuelle, défense portée à 80 %, puis retour à l'automatique.
+  await page.getByTestId('budget-auto').uncheck()
+  await page.getByTestId('budget-slider-defense').waitFor()
+  await page.getByTestId('budget-slider-defense').evaluate((el) => {
+    el.value = '80'
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+    el.dispatchEvent(new Event('change', { bubbles: true }))
+  })
+  await page.waitForTimeout(500)
+  const alloc = await page.evaluate(() => window.__nkg.snapshot.economy.budget?.allocation ?? null)
+  const forecast = await page.getByTestId('budget-forecast').innerText()
+  step('curseurs du budget', { allocation: alloc })
+  if (!alloc || Math.abs(alloc.defense - 0.8) > 0.011)
+    report.errors.push(`curseur de la défense non appliqué (${JSON.stringify(alloc)})`)
+  if (!/Réserve/.test(forecast)) report.errors.push(`effets attendus absents (${forecast})`)
   await shot('02b0-budget')
+  await page.getByTestId('budget-auto').check()
+  await page.waitForTimeout(400)
+  if (await page.evaluate(() => !!window.__nkg.snapshot.economy.budget?.allocation))
+    report.errors.push('retour à la répartition automatique non appliqué')
   await page.evaluate(() => {
     window.__nkg.queueConstruction('Lviv', 'depot')
     window.__nkg.queueConstruction('Odessa', 'depot')
@@ -358,6 +377,30 @@ try {
   if (!/km du front/.test(firstAdvice)) report.errors.push('conseil de construction sans raison')
   if (builtAfter !== builtBefore + 1) report.errors.push('chantier conseillé non lancé')
   await shot('02b3-construire-ou')
+  // Usine posée librement : clic sur le territoire (hors ville), puis « Construire ici ».
+  await page.getByTestId('build-kind-mil').click()
+  await page.waitForTimeout(300)
+  const spotPx = await page.evaluate(() => {
+    const p = window.__nkgMap.project([29.0, 49.6])
+    return [p.x, p.y]
+  })
+  await page.mouse.click(spotPx[0], spotPx[1])
+  const spotShown = await page
+    .getByTestId('build-spot')
+    .waitFor({ timeout: 3000 })
+    .then(() => true)
+    .catch(() => false)
+  if (spotShown) {
+    await page.getByTestId('build-spot').getByRole('button', { name: 'Construire ici' }).click()
+    await page.waitForTimeout(500)
+  }
+  const placed = await page.evaluate(
+    () => window.__nkg.snapshot.economy.construction.find((q) => q.at)?.at ?? null,
+  )
+  step('usine posée librement', { pixel: spotPx, emplacement: placed })
+  if (!placed || Math.abs(placed[0] - 29) > 0.3 || Math.abs(placed[1] - 49.6) > 0.3)
+    report.errors.push(`usine non posée à l'emplacement cliqué (${JSON.stringify(placed)})`)
+  await shot('02b4-usine-libre')
   await page.getByTestId('build-choice').getByRole('button', { name: 'Fermer' }).click()
   // Fiche de la ville : plus de recrutement par ville, un renvoi vers les renforts des armées.
   await page.evaluate(() => window.__nkg.selectCity('Kyiv'))

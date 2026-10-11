@@ -46,6 +46,9 @@ export const GDP_DRIFT_DAYS = 180
 export const MUNITIONS_CAP_DAYS = 15
 export const MUNITIONS_CAP_MIN = 2000
 
+/** Jours gardés pour l'évolution du PIB, de la production et de la main-d'œuvre. */
+export const BUDGET_HISTORY_DAYS = 90
+
 export const SECTORS: BudgetSector[] = ['defense', 'construction', 'research', 'reserve']
 
 export const SECTOR_NAMES: Record<BudgetSector, string> = {
@@ -399,6 +402,7 @@ export function computeBudget(eco: EconomyState, input: BudgetInput): BudgetResu
       budget,
       allocated,
       spent: { defense, construction },
+      need: { defense: defenseNeed, construction: constructionNeed },
       factories,
       use: { mil: milUse, civ: civUse },
       civPoints,
@@ -419,6 +423,19 @@ export function applyBudget(eco: EconomyState, r: BudgetResult): void {
   }
   const target = Math.max(0.5, 1 - MOBILIZATION_DRAG * r.day.mobilized)
   b.gdpIndex += (target - b.gdpIndex) / GDP_DRIFT_DAYS
+}
+
+/** Ajoute la journée à l'évolution (PIB, production et main-d'œuvre du jour). */
+export function recordHistory(eco: EconomyState, production: number, manpower: number): void {
+  const b = eco.budget
+  if (!b?.last) return
+  const h = (b.history ??= [])
+  h.push([
+    Math.round(b.last.gdp * 10) / 10,
+    Math.round(production * 10) / 10,
+    Math.round(manpower * 100) / 100,
+  ])
+  if (h.length > BUDGET_HISTORY_DAYS) h.splice(0, h.length - BUDGET_HISTORY_DAYS)
 }
 
 /** Plafond du stock de munitions d'un pays, d'après ses usines militaires. */

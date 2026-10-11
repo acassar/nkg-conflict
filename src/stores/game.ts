@@ -9,6 +9,7 @@ import type {
   AdvanceGoal,
   LineMissionKind,
   BattleReport,
+  BudgetSector,
   BuildingKind,
   CountryId,
   GridSnapshot,
@@ -907,8 +908,37 @@ export const useGameStore = defineStore('game', () => {
    * (calculées par le Worker), cerclées sur la carte. Null : aucun choix en cours.
    */
   const buildChoice = ref<{ kind: BuildingKind; advice: BuildAdvice[] } | null>(null)
+  /** Usine : emplacement libre cliqué sur la carte (territoire du joueur), en attente de validation. */
+  const factorySpot = ref<LonLat | null>(null)
+
+  /** Clic sur la carte pendant le choix d'une usine : retient l'emplacement s'il est à vous. */
+  function pickFactorySpot(point: LonLat): boolean {
+    const kind = buildChoice.value?.kind
+    if (panelTab.value !== 'production' || (kind !== 'civ' && kind !== 'mil')) return false
+    if (ownerAt(point[0], point[1]) !== snapshot.value?.playerCountry) return false
+    factorySpot.value = point
+    return true
+  }
+
+  async function queueFactory(): Promise<void> {
+    const kind = buildChoice.value?.kind
+    const at = factorySpot.value
+    if (!at || (kind !== 'civ' && kind !== 'mil')) return
+    const error = await sim.queueFactory(kind, at[0], at[1])
+    report(error)
+    if (!error) factorySpot.value = null
+    await refreshBuildAdvice()
+  }
+
+  /** Répartition du budget (parts par secteur), ou `null` pour revenir à la répartition automatique. */
+  async function setBudgetAllocation(
+    allocation: Partial<Record<BudgetSector, number>> | null,
+  ): Promise<void> {
+    await sim.setBudgetAllocation(allocation)
+  }
 
   async function chooseBuilding(kind: BuildingKind | null): Promise<void> {
+    factorySpot.value = null
     if (kind === null || buildChoice.value?.kind === kind) {
       buildChoice.value = null
       return
@@ -1200,6 +1230,10 @@ export const useGameStore = defineStore('game', () => {
     queueConstruction,
     buildChoice,
     chooseBuilding,
+    factorySpot,
+    pickFactorySpot,
+    queueFactory,
+    setBudgetAllocation,
     refreshBuildAdvice,
     queueArmyRecruit,
     cancelConstruction,

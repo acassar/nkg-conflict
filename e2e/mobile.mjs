@@ -438,7 +438,20 @@ try {
     !!budgetBox && budgetBox.x >= 0 && budgetBox.x + budgetBox.width <= 390,
     'bloc budget hors de l’écran',
   )
+  // Curseurs au doigt : répartition manuelle, curseur dans l'écran, puis retour à l'automatique.
+  await page.getByTestId('budget-auto').tap()
+  const slider = page.getByTestId('budget-slider-defense')
+  await slider.waitFor()
+  await slider.scrollIntoViewIfNeeded()
+  const sliderBox = await slider.boundingBox()
+  step('curseurs du budget (mobile)', { boite: sliderBox })
+  check(
+    !!sliderBox && sliderBox.x >= 0 && sliderBox.x + sliderBox.width <= 390,
+    'curseur du budget hors de l’écran',
+  )
   await shot('m06a2-budget')
+  await page.getByTestId('budget-auto').tap()
+  await page.waitForTimeout(300)
   // Construire « quoi, puis où » au doigt : usine civile, conseils dans l'écran.
   await page.getByTestId('build-kind-civ').scrollIntoViewIfNeeded()
   await page.getByTestId('build-kind-civ').tap()

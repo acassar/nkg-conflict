@@ -16,7 +16,16 @@ import {
 } from '@/sim/economy/budget'
 import { BUILDINGS, MUNITIONS_PER_MIL } from '@/sim/economy/rules'
 import { parseSave, serializeSave } from '@/sim/core/save'
-import { budgetView, money } from '@/composables/budget'
+import {
+  budgetForecast,
+  budgetView,
+  currentAllocation,
+  historySeries,
+  money,
+  nearestOwnCity,
+  rebalance,
+  sparkPoints,
+} from '@/composables/budget'
 import type { EconomyState } from '@/sim/core/types'
 import type { TheaterData } from '@/sim/theater/grid'
 
@@ -170,5 +179,60 @@ describe('budget national', () => {
     expect(money(42.4)).toBe('42 M$')
     expect(money(1234)).toBe('1,2 Md$')
     expect(budgetView(null)).toBeNull()
+  })
+
+  it('un curseur garde la somme à 100 % en répartissant le reste au prorata', () => {
+    const a = { defense: 0.5, construction: 0.2, research: 0.1, reserve: 0.2 }
+    const b = rebalance(a, 'defense', 0.8)
+    expect(b.defense).toBe(0.8)
+    expect(b.construction).toBeCloseTo(0.08)
+    expect(b.reserve).toBeCloseTo(0.08)
+    expect(Object.values(b).reduce((x, y) => x + y, 0)).toBeCloseTo(1)
+    const c = rebalance({ defense: 1, construction: 0, research: 0, reserve: 0 }, 'defense', 0.4)
+    expect(c.research).toBeCloseTo(0.2)
+  })
+
+  it('annonce les effets d’une répartition : usines payées, réserve qui baisse', () => {
+    const sim = newGame()
+    sim.step(24)
+    const eco = ecoOf(sim)
+    const auto = currentAllocation(eco)
+    if (!auto) throw new Error('répartition absente')
+    const ok = budgetForecast(eco, auto)
+    expect(ok?.milUse).toBeCloseTo(1)
+    expect(ok?.reserve).toBeGreaterThan(0)
+    expect(ok?.reserveDays).toBeNull()
+    // Défense à 10 %, le reste en recherche : la réserve comble le manque et baisse.
+    const poor = budgetForecast(eco, { defense: 0.1, construction: 0, research: 0.9, reserve: 0 })
+    expect(poor?.milUse).toBeLessThan(0.5)
+    expect(poor?.reserve).toBeLessThan(0)
+    expect(poor?.reserveDays).toBeGreaterThan(0)
+    // Production attendue proche de celle du jour (sans l'aide reçue).
+    expect(ok?.production).toBeCloseTo(
+      ((eco.budget?.last?.need.defense ?? 0) / (eco.budget?.factoryDayCost ?? 1)) * 3,
+    )
+  })
+
+  it('garde l’évolution du PIB, de la production et de la main-d’œuvre', () => {
+    const sim = newGame()
+    sim.step(24 * 5)
+    const series = historySeries(ecoOf(sim))
+    expect(series.map((h) => h.key)).toEqual(['gdp', 'production', 'manpower'])
+    expect(series[0]?.values).toHaveLength(5)
+    expect(series[0]?.change).not.toBeNull()
+    expect(sparkPoints([1, 2, 3], 100, 20).split(' ')).toHaveLength(3)
+    expect(sparkPoints([1], 100, 20)).toBe('')
+  })
+
+  it('situe un emplacement d’usine par la ville la plus proche', () => {
+    const cities = [
+      { name: 'Kyiv', lon: 30.52, lat: 50.45, owner: 'UKR' },
+      { name: 'Moscow', lon: 37.62, lat: 55.75, owner: 'RUS' },
+    ]
+    const near = nearestOwnCity(cities, 'UKR', 30.0, 50.4)
+    expect(near?.name).toBe('Kyiv')
+    expect(near?.km).toBeGreaterThan(30)
+    expect(near?.km).toBeLessThan(45)
+    expect(nearestOwnCity(cities, 'POL', 30, 50)).toBeNull()
   })
 })

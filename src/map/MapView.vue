@@ -343,6 +343,9 @@ function refresh(): void {
       production:
         game.panelTab === 'production' ? (productionStats.value?.busyByCity ?? null) : null,
       buildAdvice: game.panelTab === 'production' ? (game.buildChoice?.advice ?? null) : null,
+      factories:
+        game.panelTab === 'production' ? (snapshot.value?.economy?.factories ?? null) : null,
+      factorySpot: game.panelTab === 'production' ? game.factorySpot : null,
     }),
   })
 }
@@ -389,6 +392,8 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
     else if (city.owner) game.selectCountry(city.owner)
     return
   }
+  // Choix d'une usine en cours : un clic sur votre territoire choisit son emplacement.
+  if (point && game.pickFactorySpot(point)) return
   if (!additive) {
     // Clic sur un territoire : sans unités sélectionnées, ouvre la fiche du pays.
     const hadSelection = game.selection.length > 0

@@ -23,6 +23,8 @@ import { isTouch, layout } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
 import { useBattles } from '@/composables/battles'
 import { glErrorText } from './webgl'
+import { mapCursor } from './cursors'
+import { transportRoutes, type TransportRoute } from './transports'
 
 const container = ref<HTMLDivElement | null>(null)
 const game = useGameStore()
@@ -158,6 +160,8 @@ const zoom = ref(4)
  */
 const viewBounds = shallowRef<[number, number, number, number] | null>(null)
 let overlay: MapboxOverlay | null = null
+/** Carte en cours de glissement (curseur « main fermée »). */
+let dragging = false
 const protocol = new Protocol()
 
 // Territoire en tuiles : recréé quand une grille complète arrive, puis mis à jour cellule par cellule.
@@ -314,6 +318,13 @@ function previewShapes(): MissionPreviewShapes | null {
   return null
 }
 
+/** Trajets des transports en cours, quand le joueur les affiche (bouton « En route »). */
+function transportsShown(): TransportRoute[] | null {
+  const s = snapshot.value
+  if (!game.showTransports || !s) return null
+  return transportRoutes(s.transport.inTransit, s.tick)
+}
+
 function refresh(): void {
   syncTerritory()
   const m = mode.value
@@ -339,6 +350,7 @@ function refresh(): void {
       zoom: zoom.value,
       selectedCity: selectedCity.value?.name ?? null,
       battles: battles.value,
+      transports: transportsShown(),
       logistics: logistics(),
       production:
         game.panelTab === 'production' ? (productionStats.value?.busyByCity ?? null) : null,
@@ -590,9 +602,22 @@ function createMap(camera?: { center: LonLat; zoom: number }): boolean {
     onClick,
     // Au doigt, une cible de quelques pixels est difficile à toucher.
     pickingRadius: isTouch.value ? 12 : 4,
-    getCursor: ({ isHovering }) =>
-      mode.value.kind !== 'select' ? 'crosshair' : isHovering ? 'pointer' : 'grab',
+    // Appelé à chaque image : le curseur suit l'action en cours (voir cursors.ts).
+    getCursor: ({ isHovering }) => {
+      const kind = game.buildChoice?.kind
+      const cursor = mapCursor({
+        mode: mode.value,
+        hovering: isHovering,
+        dragging,
+        placing: game.panelTab === 'production' && (kind === 'civ' || kind === 'mil'),
+      })
+      const target = map?.getCanvasContainer()
+      if (target && target.style.cursor !== cursor) target.style.cursor = cursor
+      return cursor
+    },
   })
+  m.on('dragstart', () => (dragging = true))
+  m.on('dragend', () => (dragging = false))
   m.addControl(overlay)
   // Accès à la carte pour les tests de fumée (projection d'une position en pixels).
   ;(window as unknown as { __nkgMap: unknown }).__nkgMap = m
@@ -668,7 +693,10 @@ onMounted(() => {
 })
 
 watch(focus, (f) => {
-  if (f && map) map.flyTo({ center: [f.at[0], f.at[1]], zoom: f.zoom, duration: 1200 })
+  if (!f || !map) return
+  if (f.bounds)
+    map.fitBounds([f.bounds[0], f.bounds[1]], { padding: 120, maxZoom: 7, duration: 1200 })
+  else map.flyTo({ center: [f.at[0], f.at[1]], zoom: f.zoom, duration: 1200 })
 })
 
 watch(
@@ -689,6 +717,7 @@ watch(
     () => game.aimPoint,
     () => game.missionPreview,
     () => game.buildChoice,
+    () => game.showTransports,
   ],
   refresh,
   {

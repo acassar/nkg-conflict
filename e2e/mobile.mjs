@@ -244,7 +244,8 @@ try {
   // Sélection par zone : un rectangle sur toute la carte visible.
   await page.getByTestId('lasso-button').tap()
   await page.getByTestId('lasso-layer').waitFor()
-  await page.mouse.move(10, 110)
+  // Départ sous le bandeau de consigne et sous les alertes, qui passent désormais dessous.
+  await page.mouse.move(10, 150)
   await page.mouse.down()
   await page.mouse.move(200, 400, { steps: 5 })
   await page.mouse.move(385, 700, { steps: 5 })

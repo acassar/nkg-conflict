@@ -652,6 +652,10 @@ export interface TransportSnapshot {
     kind: UnitKind
     mode: TransportMode
     dest: string
+    /** Point de départ et ville d'arrivée : trajet tracé en ligne droite sur la carte. */
+    from: LonLat
+    to: LonLat
+    departTick: number
     arriveTick: number
   }>
 }

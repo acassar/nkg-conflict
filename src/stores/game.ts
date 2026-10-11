@@ -186,8 +186,18 @@ export const useGameStore = defineStore('game', () => {
   const dismissedAlerts = ref<Set<string>>(new Set())
   /** Liste des alertes repliée (seul le compteur reste affiché). */
   const alertsFolded = ref(false)
-  /** Demande de recentrage de la carte (début de partie). */
-  const focus = ref<{ at: LonLat; zoom: number; nonce: number } | null>(null)
+  /**
+   * Demande de recentrage de la carte (début de partie, alerte) ; avec `bounds`, la carte cadre ce
+   * rectangle (trajet d'un transport) au lieu de prendre `zoom`.
+   */
+  const focus = ref<{
+    at: LonLat
+    zoom: number
+    nonce: number
+    bounds?: [LonLat, LonLat]
+  } | null>(null)
+  /** Transports stratégiques en cours affichés : trajets sur la carte et liste détaillée. */
+  const showTransports = ref(false)
   /** Recentrer la carte dès l'arrivée du prochain état (nouvelle partie ou chargement). */
   let focusPending = false
 
@@ -366,6 +376,16 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /** Centre la carte sur une alerte ; sélectionne les unités du joueur concernées. */
+  /** Cadre la carte sur le trajet d'un transport (départ et arrivée). */
+  function focusRoute(from: LonLat, to: LonLat): void {
+    focus.value = {
+      at: [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2],
+      zoom: 5,
+      nonce: Date.now(),
+      bounds: [from, to],
+    }
+  }
+
   function focusAlert(a: PlayerAlert): void {
     focus.value = { at: [a.at[0], a.at[1]], zoom: 7.5, nonce: Date.now() }
     if (a.kind !== 'breach') {
@@ -1212,6 +1232,8 @@ export const useGameStore = defineStore('game', () => {
     alertsFolded,
     dismissAlert,
     focusAlert,
+    focusRoute,
+    showTransports,
     selection,
     selectedUnits,
     armies,

@@ -45,6 +45,7 @@ import {
 import type { Stance } from '@/stores/game'
 import type { SupplyPocket, SupplyView } from '@/sim/systems/supplyView'
 import { AIR_COLORS, AIR_ZONE_KM } from '@/sim/systems/air'
+import { TRANSPORT_COLORS, type TransportRoute } from './transports'
 
 export interface MissionPreviewShapes {
   posts: LonLat[]
@@ -110,6 +111,8 @@ export interface LayerInput {
   logistics: { tiles: TerritoryTile[]; roads: TerritoryTile[]; view: SupplyView | null } | null
   /** Batailles en cours (icône cliquable). */
   battles: Array<{ key: string; ids: number[]; at: LonLat; mine: boolean }>
+  /** Transports stratégiques du joueur affichés (bouton « En route ») : trajets et position. */
+  transports?: TransportRoute[] | null
 }
 
 /** Icône de bataille : deux sabres croisés sur un disque. */
@@ -648,6 +651,67 @@ export function buildLayers(input: LayerInput): Layer[] {
       lineWidthMinPixels: 1.5,
     }),
   )
+
+  // Transports stratégiques en cours : partie faite en trait plein, reste en trait pâle, arrivée
+  // cerclée, convoi à sa position actuelle avec le nombre d'unités.
+  const transports = input.transports ?? []
+  if (transports.length > 0) {
+    const rgb = (r: TransportRoute): Rgb => TRANSPORT_COLORS[r.mode]
+    layers.push(
+      new LineLayer<TransportRoute>({
+        id: 'transport-left',
+        data: transports,
+        getSourcePosition: (r) => r.at,
+        getTargetPosition: (r) => r.to,
+        getColor: (r) => [...rgb(r), 110],
+        getWidth: 3,
+        widthUnits: 'pixels',
+      }),
+      new LineLayer<TransportRoute>({
+        id: 'transport-done',
+        data: transports,
+        getSourcePosition: (r) => r.from,
+        getTargetPosition: (r) => r.at,
+        getColor: (r) => [...rgb(r), 240],
+        getWidth: 4,
+        widthUnits: 'pixels',
+      }),
+      new ScatterplotLayer<TransportRoute>({
+        id: 'transport-dest',
+        data: transports,
+        getPosition: (r) => r.to,
+        getFillColor: (r) => [...rgb(r), 60],
+        getLineColor: (r) => [...rgb(r), 255],
+        stroked: true,
+        lineWidthUnits: 'pixels',
+        getLineWidth: 2,
+        radiusUnits: 'pixels',
+        getRadius: 9,
+      }),
+      new ScatterplotLayer<TransportRoute>({
+        id: 'transport-convoy',
+        data: transports,
+        getPosition: (r) => r.at,
+        getFillColor: (r) => [...rgb(r), 255],
+        getLineColor: [20, 24, 31, 255],
+        stroked: true,
+        lineWidthUnits: 'pixels',
+        getLineWidth: 2,
+        radiusUnits: 'pixels',
+        getRadius: 10,
+      }),
+      new TextLayer<TransportRoute>({
+        id: 'transport-count',
+        data: transports,
+        getPosition: (r) => r.at,
+        getText: (r) => String(r.count),
+        getColor: [20, 24, 31, 255],
+        getSize: 12,
+        fontWeight: 700,
+        fontFamily: 'system-ui, sans-serif',
+      }),
+    )
+  }
 
   // Chemins et objectifs des unités sélectionnées.
   layers.push(

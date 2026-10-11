@@ -1175,6 +1175,11 @@ try {
     const p = window.__nkgMap.project([-0.58, 44.84])
     return [p.x, p.y]
   })
+  // Curseur de la carte selon l'action : croix pour désigner la ville d'arrivée.
+  await page.mouse.move(bordeaux[0], bordeaux[1])
+  await page.waitForTimeout(200)
+  const aimCursor = await page.evaluate(() => window.__nkgMap.getCanvasContainer().style.cursor)
+  if (aimCursor !== 'crosshair') report.errors.push(`curseur du transport : « ${aimCursor} »`)
   await page.mouse.click(bordeaux[0], bordeaux[1])
   await page.waitForTimeout(800)
   const transit = await page.evaluate(() => window.__nkg.snapshot.transport.inTransit)
@@ -1194,7 +1199,21 @@ try {
     .catch(() => {})
   if (!(await page.getByTestId('in-transit').isVisible()))
     report.errors.push('transport : liste « En route » absente du tiroir Forces')
+  // Rappel sur la carte : bouton avec le nombre d'unités en route, qui affiche trajets et liste.
+  const transportButton = page.getByTestId('transport-button')
+  if (!(await transportButton.isVisible()))
+    report.errors.push('transport : bouton « En route » absent de la carte')
+  else {
+    const label = (await transportButton.innerText()).trim()
+    if (label !== String(eastIds.length)) report.errors.push(`transport : bouton « ${label} »`)
+    await transportButton.click()
+    await page.waitForTimeout(300)
+    const rows = await page.getByTestId('transport-panel').locator('li').count()
+    step('rappel des transports', { bouton: label, lignes: rows })
+    if (rows !== eastIds.length) report.errors.push(`transport : ${rows} ligne(s) dans la liste`)
+  }
   await shot('06c-transport')
+  if (await transportButton.isVisible()) await transportButton.click()
   await page.evaluate(() => window.__nkg.selectUnits([], false))
 
   // Aviation provisoire : zone d'appui au sol posée au-dessus de Lyon depuis le tiroir Forces.

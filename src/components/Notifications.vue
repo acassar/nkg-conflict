@@ -4,6 +4,9 @@ import { useGameStore } from '@/stores/game'
 import { isMobile } from '@/composables/layout'
 import type { AlertKind, PlayerAlert } from '@/sim/core/types'
 
+/** Un bandeau (consigne d'un ordre, message) occupe le haut de l'écran : on passe dessous. */
+const props = defineProps<{ belowBanner?: boolean }>()
+
 const game = useGameStore()
 /** Grand écran : à droite, à côté de l'inspecteur, pour laisser libres le rail et son tiroir. */
 const placement = computed(() =>
@@ -39,7 +42,7 @@ const daysLeft = (expires: number): number =>
 </script>
 
 <template>
-  <div class="notifications" :style="placement">
+  <div class="notifications" :class="{ 'below-banner': props.belowBanner }" :style="placement">
     <div
       v-for="o in offers"
       :key="`o${o.id}`"
@@ -159,6 +162,9 @@ const daysLeft = (expires: number): number =>
     left: 8px;
     width: min(360px, calc(100% - 16px));
   }
+  .notifications.below-banner {
+    top: calc(104px + env(safe-area-inset-top));
+  }
 }
 .offer,
 .toast {
@@ -223,6 +229,9 @@ button.ok {
     transform: translateX(-50%);
     width: min(440px, calc(100vw - 760px));
     min-width: 300px;
+  }
+  .below-banner .alerts {
+    top: 100px;
   }
 }
 .alerts-head {

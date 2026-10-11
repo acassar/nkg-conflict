@@ -9,6 +9,7 @@ import StartScreen from '@/components/StartScreen.vue'
 import Notifications from '@/components/Notifications.vue'
 import LassoButton from '@/components/LassoButton.vue'
 import MapViewButton from '@/components/MapViewButton.vue'
+import TransportButton from '@/components/TransportButton.vue'
 import BattleDialog from '@/components/BattleDialog.vue'
 import RulesHelp from '@/components/RulesHelp.vue'
 import ResourceDialog from '@/components/ResourceDialog.vue'
@@ -36,6 +37,11 @@ const aiming = computed(() => {
     (m.kind === 'target' && m.armyId !== undefined)
   )
 })
+
+/** Bandeau affiché en haut de l'écran (consigne ou message) : les alertes passent dessous. */
+const topBanner = computed(() =>
+  game.modeHint || game.lasso ? !(aiming.value && !isMobile.value) : !!game.notice,
+)
 
 // Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, L = carte logistique, P = filtre
 // « Pays », Échap = annuler.
@@ -102,9 +108,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </p>
     <GameFrame :key="layout" />
     <EventLog v-if="!isMobile && !game.panelTab" />
-    <Notifications />
+    <Notifications :below-banner="topBanner" />
     <LassoButton />
     <MapViewButton />
+    <TransportButton />
     <BattleDialog />
     <RulesHelp />
     <ResourceDialog />
@@ -133,7 +140,8 @@ body,
   top: 60px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20;
+  /* Au-dessus des notifications et des alertes (z-index 25), qui se décalent dessous. */
+  z-index: 26;
   margin: 0;
   padding: 6px 12px;
   background: #facc15;

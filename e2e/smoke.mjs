@@ -307,6 +307,15 @@ try {
   const effects = await page.getByTestId('war-economy-effects').innerText()
   if (!/\+30 %/.test(effects))
     report.errors.push(`effets de l'économie de guerre absents (${effects})`)
+  // Budget national : quatre secteurs, la défense fait tourner les usines militaires.
+  const budget = page.getByTestId('budget')
+  await budget.scrollIntoViewIfNeeded()
+  const sectors = await budget.locator('[data-sector]').count()
+  const budgetText = await budget.innerText()
+  step('budget national', { secteurs: sectors })
+  if (sectors !== 4 || !/usines militaires à \d+ %/.test(budgetText))
+    report.errors.push(`bloc budget incomplet (${sectors} secteurs) : ${budgetText.slice(0, 120)}`)
+  await shot('02b0-budget')
   await page.evaluate(() => {
     window.__nkg.queueConstruction('Lviv', 'depot')
     window.__nkg.queueConstruction('Odessa', 'depot')

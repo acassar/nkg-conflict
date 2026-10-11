@@ -387,6 +387,65 @@ export interface ConstructionItem {
   /** Points de construction déjà investis. */
   progress: number
   cost: number
+  /** Usine : emplacement choisi (sinon près de la ville). */
+  at?: LonLat
+}
+
+export type FactoryKind = 'civ' | 'mil'
+
+/** Usine : un site sur la carte, qui passe à l'occupant (endommagé) quand sa cellule est prise. */
+export interface FactorySite {
+  id: number
+  kind: FactoryKind
+  lon: number
+  lat: number
+  /** Ville de rattachement (affichage et plafond par ville), absente pour une usine isolée. */
+  city?: string
+  /** État de 0 à 1 : une usine prise est endommagée, puis réparée peu à peu. */
+  condition: number
+}
+
+/** Secteurs du budget national. */
+export type BudgetSector = 'defense' | 'construction' | 'research' | 'reserve'
+
+/** Budget national (voir economy/budget.ts). Montants en millions de dollars. */
+export interface BudgetState {
+  /** PIB annuel de départ, en milliards de dollars. */
+  gdpB: number
+  /** Part du PIB située sur la carte (le reste ne se perd pas avec le territoire). */
+  gdpOnMap: number
+  /** Indice d'activité (1 au départ) : la mobilisation le fait baisser lentement. */
+  gdpIndex: number
+  /** Répartition choisie (parts dont la somme vaut 1) ; absente = répartition automatique. */
+  allocation?: Record<BudgetSector, number>
+  /** Réserve de l'État, qui couvre les manques de la défense et de la construction. */
+  treasury: number
+  /** Points de recherche cumulés (employés en phase F2). */
+  research: number
+  /** Usines hors carte (industrie du pays hors du théâtre), jamais prises. */
+  offMap: Record<FactoryKind, number>
+  /** Prix d'une journée d'usine à plein régime (M$), fixé au départ d'après le PIB. */
+  factoryDayCost: number
+  /** Dernier jour, pour l'affichage. */
+  last?: BudgetDay
+}
+
+export interface BudgetDay {
+  /** PIB du jour (M$), territoire et mobilisation compris. */
+  gdp: number
+  /** Budget prélevé du jour (M$). */
+  budget: number
+  /** Montants alloués par secteur (M$). */
+  allocated: Record<BudgetSector, number>
+  /** Montants dépensés en défense et en construction (M$), réserve comprise. */
+  spent: { defense: number; construction: number }
+  /** Usines tenues (sites en état pondéré, plus hors carte) et part employée faute d'argent. */
+  factories: Record<FactoryKind, number>
+  use: Record<FactoryKind, number>
+  /** Points de construction des usines civiles à plein régime (fixe le nombre de chantiers). */
+  civPoints: number
+  /** Part des hommes mobilisés dans la population active (pèse sur l'indice d'activité). */
+  mobilized: number
 }
 
 export interface RecruitItem {
@@ -413,6 +472,12 @@ export interface EconomyState {
   unitCounters: Record<UnitKind, number>
   /** Part de l'industrie tournée vers l'armée (voir `WAR_ECONOMY`). */
   warEconomy: WarEconomyLevel
+  /** Budget national ; absent pour les pays hors carte à apports fixes (donneurs du théâtre). */
+  budget?: BudgetState
+  /** Usines du pays (sites sur la carte). */
+  factories: FactorySite[]
+  /** Plafond du stock de munitions, proportionnel à l'industrie militaire. */
+  munitionsCap?: number
   /** Flux du dernier jour, pour l'affichage. */
   daily: {
     construction: number
@@ -425,8 +490,6 @@ export interface EconomyState {
     productionUsed?: number
     /** Points de construction employés la veille. */
     constructionUsed?: number
-    /** Production venue des points de construction inutilisés la veille (déjà comptée dans `production`). */
-    productionFromConstruction?: number
     /** Munitions tirées la veille. */
     munitionsSpent?: number
   }
@@ -470,6 +533,19 @@ export interface ScenarioEconomy {
   munitionsPerDay: number
   manpowerPerDay: number
   constructionPerDay?: number
+  /**
+   * Budget national : PIB annuel (milliards de dollars). Absent = apports fixes ci-dessus (pays hors
+   * carte qui ne font qu'aider). Les revenus viennent alors des usines (voir economy/budget.ts).
+   */
+  gdpB?: number
+  /** Part du PIB située sur la carte (défaut 1 ; Russie du théâtre : une partie seulement). */
+  gdpOnMap?: number
+  /** Usines hors carte (théâtre), jamais prises. */
+  offMapFactories?: { civ: number; mil: number }
+  /** Usines de départ posées autour des grandes villes (sinon d'après la population de chaque ville). */
+  factories?: { civ: number; mil: number }
+  /** Population en millions, quand le pays n'en a pas (théâtre) : poids de la mobilisation sur le PIB. */
+  popM?: number
 }
 
 export interface GridSnapshot {

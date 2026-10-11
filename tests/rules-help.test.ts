@@ -30,6 +30,9 @@ describe('aide en jeu', () => {
     expect(text('command')).toContain('+15 %')
     expect(text('supply')).toContain('−40 %')
     expect(text('forts')).toContain('15 km')
+    expect(text('budget')).toContain('12 % du PIB')
+    expect(text('budget')).toContain('+50 % en guerre totale')
+    expect(text('budget')).toContain('150 jours environ')
     const terrain = HELP_SECTIONS.find((s) => s.id === 'terrain')?.table?.rows ?? []
     expect(terrain.find((r) => r[0] === 'Ville')?.[1]).toBe('+50 %')
     const postures = HELP_SECTIONS.find((s) => s.id === 'postures')?.table?.rows ?? []

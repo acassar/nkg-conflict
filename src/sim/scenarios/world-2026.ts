@@ -1,5 +1,6 @@
 import type { CountryDef, CountryId, ScenarioDef, ScenarioEconomy } from '../core/types'
 import { forceSizeOf } from '../politics/mobilization'
+import { CONSTRUCTION_PER_CIV, PRODUCTION_PER_MIL } from '../economy/rules'
 
 export interface WorldCountryRow {
   code: CountryId
@@ -334,22 +335,31 @@ const AIDS_2026: Array<{ from: CountryId; to: CountryId; level: 1 | 2 | 3 }> = [
 ]
 
 /**
- * Économie nationale d'un pays (modèle « national ») : stocks de départ et revenus quotidiens du pays
- * entier, d'après son PIB (industrie) et sa population (main-d'œuvre). La militarisation oriente une
- * plus grande part de l'industrie vers l'armée. Valeurs de jeu, à équilibrer.
+ * Économie d'un pays : stocks de départ, budget tiré du PIB et industrie de départ (usines posées
+ * autour des grandes villes, nombre d'après la racine du PIB). La militarisation oriente une plus
+ * grande part de l'industrie vers l'armée. La main-d'œuvre vient de la population. Valeurs de jeu.
  */
 function economyOf(row: WorldCountryRow, militarization: number): ScenarioEconomy {
   const popM = row.pop / 1e6
   const root = Math.sqrt(Math.max(0, row.gdpB))
   const military = 0.5 + 0.5 * militarization
+  // Points de jour visés par l'industrie de départ (production, construction).
+  const production = (3 + 2.5 * root) * military
+  const construction = 4 + 3 * root
   return {
     production: Math.round(300 + 20 * root),
     munitions: Math.round(300 + 15 * root),
     manpower: Math.round(10 + 0.6 * popM),
-    productionPerDay: Math.round((3 + 2.5 * root) * military),
-    munitionsPerDay: Math.round((3 + 2.5 * root) * military),
-    constructionPerDay: Math.round(4 + 3 * root),
+    // Revenus portés par les usines (voir `factories`) : seuls ceux de main-d'œuvre servent.
+    productionPerDay: 0,
+    munitionsPerDay: 0,
     manpowerPerDay: Math.round((0.2 + 0.06 * popM) * 10) / 10,
+    gdpB: Math.max(1, row.gdpB),
+    factories: {
+      civ: Math.max(1, Math.round(construction / CONSTRUCTION_PER_CIV)),
+      // Une part des usines civiles travaillait déjà pour l'armée (ancienne conversion de 30 %).
+      mil: Math.max(1, Math.round((production + 0.3 * construction) / PRODUCTION_PER_MIL)),
+    },
   }
 }
 

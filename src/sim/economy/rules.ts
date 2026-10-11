@@ -14,8 +14,8 @@ export interface BuildingType {
 }
 
 /**
- * Bâtiments de l'époque moderne. Valeurs provisoires (la refonte de l'économie viendra en phase F) :
- * une usine se construit en plusieurs mois et un chantier n'absorbe que coût / durée minimale par jour,
+ * Bâtiments de l'époque moderne. Les usines sont des sites sur la carte (voir budget.ts) ; les autres
+ * bâtiments appartiennent aux villes. Une usine se construit en plusieurs mois et un chantier n'absorbe que coût / durée minimale par jour,
  * soit 10 points pour une usine ; une usine civile rembourse son coût en 600 jours environ.
  */
 export const BUILDINGS: Record<BuildingKind, BuildingType> = {
@@ -69,6 +69,7 @@ export const PRODUCTION_PER_MIL = 3
 export const MUNITIONS_PER_MIL = 4
 /** Main-d'œuvre quotidienne (en milliers) par million d'habitants des villes tenues. */
 export const MANPOWER_PER_MILLION = 0.15
+/** Plafond du stock de munitions des pays à apports fixes (les autres : voir budget.ts). */
 export const MUNITIONS_CAP = 3000
 export const FORT_BONUS_PER_LEVEL = 0.15
 export const FORT_RADIUS_KM = 15
@@ -117,11 +118,10 @@ export function formationSlots(barracks: number): number {
   return barracks * FORMATIONS_PER_BARRACKS
 }
 
-/** Points de construction inutilisés du jour : cette part devient de la production militaire. */
-export const CONSTRUCTION_SPILLOVER = 0.3
-
 export interface WarEconomyRule {
   name: string
+  /** Multiplicateur de la part du PIB prélevée pour le budget. */
+  levy: number
   /** Multiplicateurs de la production militaire (et des munitions) et des points de construction. */
   production: number
   construction: number
@@ -130,11 +130,22 @@ export interface WarEconomyRule {
   warSupportPerDay: number
 }
 
-/** Économie de guerre : une part de l'industrie civile passe à l'armée, au prix de l'usure politique. */
+/**
+ * Économie de guerre : l'État prélève davantage, les usines militaires tournent plus (équipes en plus)
+ * et les usines civiles moins, au prix de l'usure politique.
+ */
 export const WAR_ECONOMY: Record<WarEconomyLevel, WarEconomyRule> = {
-  0: { name: 'Paix', production: 1, construction: 1, stabilityPerDay: 0, warSupportPerDay: 0 },
+  0: {
+    name: 'Paix',
+    levy: 1,
+    production: 1,
+    construction: 1,
+    stabilityPerDay: 0,
+    warSupportPerDay: 0,
+  },
   1: {
     name: 'Mobilisation partielle',
+    levy: 1.25,
     production: 1.3,
     construction: 0.7,
     stabilityPerDay: 0.0005,
@@ -142,6 +153,7 @@ export const WAR_ECONOMY: Record<WarEconomyLevel, WarEconomyRule> = {
   },
   2: {
     name: 'Guerre totale',
+    levy: 1.5,
     production: 1.6,
     construction: 0.4,
     stabilityPerDay: 0.0015,
@@ -160,7 +172,6 @@ export function emptyBuildings(): Buildings {
   return { civ: 0, mil: 0, barracks: 0, depot: 0, fort: 0 }
 }
 
-/** Bâtiments de départ d'une ville selon sa population (industrie concentrée dans les grandes villes). */
 /** Modèle national : l'industrie existante est comptée au niveau du pays ; les villes n'ont que des casernes. */
 export function initialNationalBuildings(pop: number, capital: boolean): Buildings {
   const b = emptyBuildings()
@@ -170,8 +181,14 @@ export function initialNationalBuildings(pop: number, capital: boolean): Buildin
 
 export function initialBuildings(pop: number, capital: boolean): Buildings {
   const b = emptyBuildings()
-  b.civ = Math.min(6, Math.max(1, Math.round(pop / 350_000)))
-  b.mil = Math.min(5, Math.round(pop / 500_000))
   b.barracks = (pop >= 700_000 ? 1 : 0) + (capital ? 1 : 0)
   return b
+}
+
+/** Usines de départ autour d'une ville du théâtre, selon sa population (industrie des grandes villes). */
+export function initialCityFactories(pop: number): { civ: number; mil: number } {
+  return {
+    civ: Math.min(6, Math.max(1, Math.round(pop / 350_000))),
+    mil: Math.min(5, Math.round(pop / 500_000)),
+  }
 }

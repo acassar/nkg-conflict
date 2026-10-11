@@ -429,6 +429,16 @@ try {
   )
   check(headAfter !== headBefore, 'chantier non descendu dans la file')
   await shot('m06a-file-production')
+  // Budget national : bloc lisible dans la largeur de l'écran.
+  const budget = page.getByTestId('budget')
+  await budget.scrollIntoViewIfNeeded()
+  const budgetBox = await budget.boundingBox()
+  step('budget (mobile)', { boite: budgetBox })
+  check(
+    !!budgetBox && budgetBox.x >= 0 && budgetBox.x + budgetBox.width <= 390,
+    'bloc budget hors de l’écran',
+  )
+  await shot('m06a2-budget')
   // Construire « quoi, puis où » au doigt : usine civile, conseils dans l'écran.
   await page.getByTestId('build-kind-civ').scrollIntoViewIfNeeded()
   await page.getByTestId('build-kind-civ').tap()

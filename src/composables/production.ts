@@ -19,7 +19,9 @@ export function useProductionStats() {
     const activeIds = new Set(active.map((q) => q.id))
     const busyByCity = new Map<string, number>()
     for (const q of active) busyByCity.set(q.city, (busyByCity.get(q.city) ?? 0) + 1)
-    const slots = constructionSlots(eco.daily.construction)
+    const slots = constructionSlots(
+      Math.max(eco.daily.construction, eco.budget?.last?.civPoints ?? 0),
+    )
     return {
       construction: {
         active: Math.min(eco.construction.length, slots),

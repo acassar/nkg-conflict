@@ -89,7 +89,10 @@ export function productionQueue(
   ]
 }
 
-/** Effets d'un cran d'économie de guerre, en lignes courtes pour le sélecteur. */
+/**
+ * Effets d'un cran d'économie de guerre, en lignes courtes pour le sélecteur. Production, munitions
+ * et construction désignent le régime des usines militaires et civiles.
+ */
 export function warEconomyEffects(level: WarEconomyLevel): string[] {
   const r = WAR_ECONOMY[level]
   const signed = (v: number): string =>
@@ -103,5 +106,6 @@ export function warEconomyEffects(level: WarEconomyLevel): string[] {
     `Production et munitions : ${signed(r.production)}`,
     `Construction : ${signed(r.construction)}`,
     `Usure de la stabilité : ${wear(r.stabilityPerDay)}, du soutien à la guerre : ${wear(r.warSupportPerDay)}`,
+    `Budget prélevé sur le PIB : ${signed(r.levy)}`,
   ]
 }

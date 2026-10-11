@@ -2,7 +2,21 @@ import type { ModifierKey } from '@/sim/core/types'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import { Terrain, TERRAIN_RULES } from '@/sim/theater/grid'
 import {
+  AUTO_RESEARCH_SHARE,
+  BUDGET_LEVY,
+  CAPTURED_CONDITION,
+  MOBILIZATION_DRAG,
+  MUNITIONS_CAP_DAYS,
+  MUNITIONS_CAP_MIN,
+  REPAIR_PER_DAY,
+  START_INDUSTRY_BUDGET_SHARE,
+} from '@/sim/economy/budget'
+import {
   BUILDINGS,
+  CONSTRUCTION_PER_CIV,
+  MUNITIONS_PER_MIL,
+  PRODUCTION_PER_MIL,
+  WAR_ECONOMY,
   FORT_BONUS_PER_LEVEL,
   FORT_RADIUS_KM,
   NO_MUNITIONS_FACTOR,
@@ -89,6 +103,7 @@ export type HelpSectionId =
   | 'flanks'
   | 'fatigue'
   | 'sustain'
+  | 'budget'
 
 export interface HelpSection {
   id: HelpSectionId
@@ -257,6 +272,17 @@ export const HELP_SECTIONS: HelpSection[] = [
     paragraphs: [
       "La jauge « Armée » (barre du haut, tiroir Production) dit si l'économie peut maintenir l'armée actuelle au rythme actuel des pertes. Chaque jour, elle compare en moyenne glissante sur une semaine les besoins (renforts pour combler les pertes des unités en vie, au prix des renforts ; unités détruites, au prix d'une unité neuve ; munitions tirées) aux revenus (production, munitions, main-d'œuvre, aide étrangère comprise). Le ravitaillement ne coûte rien dans les règles actuelles.",
       `Quand une ressource est en déficit, ses stocks donnent le nombre de jours tenables ; la plus courte est le facteur limitant. Au-delà de ${SUSTAIN_MAX_DAYS} jours, ou sans déficit, l'armée est durable (le multiplicateur indique la couverture de la ressource la plus tendue). En orange sous ${SUSTAIN_WARNING_DAYS} jours, en rouge sous ${SUSTAIN_CRITICAL_DAYS}. Les nouvelles formations n'entrent pas dans les besoins : elles agrandissent l'armée.`,
+    ],
+  },
+  {
+    id: 'budget',
+    title: 'Budget national et usines',
+    paragraphs: [
+      `Le PIB fournit chaque jour un budget : ${pct(BUDGET_LEVY)} du PIB du territoire tenu (un territoire occupé rapporte une part du sien à l'occupant), ${signedPct(WAR_ECONOMY[1].levy)} en mobilisation partielle et ${signedPct(WAR_ECONOMY[2].levy)} en guerre totale, réduit par l'instabilité et les sanctions. Il se répartit entre défense, construction, recherche et réserve.`,
+      `Les usines sont des sites sur la carte. Une journée d'usine militaire à plein régime donne ${PRODUCTION_PER_MIL} de production et ${MUNITIONS_PER_MIL} munitions, une journée d'usine civile ${CONSTRUCTION_PER_CIV} points de construction ; elles coûtent chacune le même prix, fixé au départ pour chaque pays (l'industrie de départ à plein régime absorbe ${pct(START_INDUSTRY_BUDGET_SHARE)} du budget de paix). L'argent sans usines reste inemployé, des usines sans argent s'arrêtent.`,
+      `Répartition automatique : la défense fait tourner les usines militaires, la construction paie ce que les chantiers en cours absorbent, ${pct(AUTO_RESEARCH_SHARE)} vont à la recherche, le reste à la réserve. La réserve couvre les manques de la défense, puis de la construction.`,
+      `Une usine dont la cellule passe à l'ennemi lui revient, endommagée (${pct(CAPTURED_CONDITION)} de son rendement), puis se répare en ${Math.round((1 - CAPTURED_CONDITION) / REPAIR_PER_DAY)} jours environ. Plafond du stock de munitions : ${MUNITIONS_CAP_DAYS} jours de production des usines militaires, ${MUNITIONS_CAP_MIN} au moins.`,
+      `La mobilisation retire des hommes à l'économie : chaque point de population active sous les drapeaux coûte environ ${MOBILIZATION_DRAG} points de PIB, atteints en quelques mois.`,
     ],
   },
 ]

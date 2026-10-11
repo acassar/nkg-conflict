@@ -7,6 +7,8 @@ import { Random } from './core/random'
 import { encodeRle, SAVE_VERSION, type SaveFile } from './core/save'
 import type {
   AdvanceGoal,
+  BudgetSector,
+  FactoryKind,
   LineMissionKind,
   ArmyState,
   BattleReport,
@@ -73,7 +75,10 @@ import {
   moveQueueItem,
   initCities,
   initEconomies,
+  initFactories,
   onCityCaptured,
+  queueFactory,
+  setBudgetAllocation,
   previewIncome,
   queueConstruction,
   queueArmyRecruit,
@@ -82,6 +87,7 @@ import {
   updateSupplySources,
 } from './economy/economy'
 import { updateAiEconomy } from './economy/ai'
+import { newBudget } from './economy/budget'
 import type { RecruitOrder } from './economy/armyRecruit'
 import type { ArmyRecruitResult } from './economy/economy'
 import { SideMatrix } from './politics/matrix'
@@ -429,13 +435,25 @@ export class Simulation {
       }
     }
     ctx.economies.clear()
+    const withoutBudget = new Set<CountryId>()
     for (const e of save.economies) {
-      // Sauvegardes antérieures : ni économie de guerre ni défense territoriale.
+      // Sauvegardes antérieures : ni économie de guerre ni défense territoriale, ni budget ni usines.
       const eco = structuredClone(e)
       eco.warEconomy ??= 0
       eco.unitCounters.tdf ??= 1
+      eco.factories ??= []
+      const start = scenario.economy[e.country]
+      if (!eco.budget && start?.gdpB) {
+        eco.budget = newBudget(start.gdpB, start.gdpOnMap ?? 1, {
+          civ: start.offMapFactories?.civ ?? 0,
+          mil: start.offMapFactories?.mil ?? 0,
+        })
+        withoutBudget.add(e.country)
+      }
       ctx.economies.set(e.country, eco)
     }
+    // Usines de départ recréées sur le territoire tenu (les anciennes étaient comptées par ville).
+    if (withoutBudget.size > 0) initFactories(ctx, scenario, withoutBudget)
     const p = save.politics
     ctx.politics = {
       countries: new Map(p.countries.map((c) => [c.code, { ...c }])),
@@ -1074,6 +1092,16 @@ export class Simulation {
 
   setWarEconomy(level: WarEconomyLevel): void {
     setWarEconomy(this.ctx, this.playerCountry, level)
+  }
+
+  /** Usine posée à un emplacement choisi sur le territoire du joueur. */
+  queueFactory(kind: FactoryKind, lon: number, lat: number): string | null {
+    return queueFactory(this.ctx, this.playerCountry, kind, lon, lat)
+  }
+
+  /** Répartition du budget (parts par secteur), ou `null` pour la répartition automatique. */
+  setBudgetAllocation(allocation: Partial<Record<BudgetSector, number>> | null): void {
+    setBudgetAllocation(this.ctx, this.playerCountry, allocation)
   }
 
   /** Lève les forces du joueur sans attendre une guerre (unités, armée qui tient le front). */

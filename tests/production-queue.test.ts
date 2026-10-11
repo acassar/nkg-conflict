@@ -70,6 +70,7 @@ describe('file de production', () => {
     expect(warEconomyEffects(0)[0]).toBe('Production et munitions : inchangée')
     expect(warEconomyEffects(1)).toContain('Construction : −30 %')
     expect(warEconomyEffects(2)[2]).toMatch(/4,5 pt\/mois/)
+    expect(warEconomyEffects(2)[3]).toBe('Budget prélevé sur le PIB : +50 %')
   })
 })
 

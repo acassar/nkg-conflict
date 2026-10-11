@@ -1,9 +1,11 @@
 import { equipmentOf } from '../units/equipment'
 import { runtimeOf, sideIndex, type CityRuntime, type SimContext } from '../context'
 import type {
+  BudgetSector,
   BuildingKind,
   CountryId,
   EconomyState,
+  FactoryKind,
   LonLat,
   RecruitItem,
   ScenarioDef,
@@ -15,10 +17,10 @@ import { distanceKm } from '../theater/grid'
 import {
   BUILDINGS,
   CONSTRUCTION_PER_CIV,
-  CONSTRUCTION_SPILLOVER,
   FORT_BONUS_PER_LEVEL,
   FORT_RADIUS_KM,
   initialBuildings,
+  initialCityFactories,
   initialNationalBuildings,
   MANPOWER_PER_MILLION,
   constructionSlots,
@@ -36,6 +38,24 @@ import { unitName } from '../units/names'
 import { manpowerFactor, productionFactor } from '../politics/politics'
 import { OCCUPATION_MANPOWER, OCCUPATION_YIELD, territoryShares } from './national'
 import { armyAnchors, expandOrder, planArmyRecruit, type RecruitOrder } from './armyRecruit'
+import {
+  addFactory,
+  applyBudget,
+  BUDGET_LEVY,
+  computeBudget,
+  countCityFactories,
+  dailyGdp,
+  factorySpot,
+  mobilizedShare,
+  munitionsCap,
+  newBudget,
+  placeInitialFactories,
+  priceFactories,
+  syncFactories,
+  TREASURY_START_DAYS,
+  normalizeAllocation,
+  type BudgetResult,
+} from './budget'
 
 const UNIT_KINDS: UnitKind[] = ['inf', 'mech', 'tank', 'art', 'log', 'hq', 'tdf']
 
@@ -71,6 +91,15 @@ export function initEconomies(ctx: SimContext, scenario: ScenarioDef): void {
       recruitment: [],
       unitCounters: counters,
       warEconomy: 0,
+      ...(start?.gdpB
+        ? {
+            budget: newBudget(start.gdpB, start.gdpOnMap ?? 1, {
+              civ: start.offMapFactories?.civ ?? 0,
+              mil: start.offMapFactories?.mil ?? 0,
+            }),
+          }
+        : {}),
+      factories: [],
       daily: {
         construction: 0,
         production: 0,
@@ -81,6 +110,18 @@ export function initEconomies(ctx: SimContext, scenario: ScenarioDef): void {
       },
     })
   }
+  initFactories(ctx, scenario)
+}
+
+/** Industrie de départ des pays à budget : usines posées sur la carte, plafond de munitions. */
+export function initFactories(ctx: SimContext, scenario: ScenarioDef, only?: Set<CountryId>): void {
+  for (const eco of ctx.economies.values()) {
+    if (!eco.budget || (only && !only.has(eco.country))) continue
+    placeInitialFactories(ctx, eco, scenario.economy[eco.country]?.factories, initialCityFactories)
+    priceFactories(ctx, scenario, eco)
+    eco.munitionsCap = munitionsCap(eco, MUNITIONS_PER_MIL)
+  }
+  countCityFactories(ctx)
 }
 
 /** Villes par camp, recalculées au plus une fois par tick (des centaines de pays × des centaines de villes). */
@@ -175,14 +216,12 @@ export function useMunitions(ctx: SimContext, owner: CountryId, shots = 1): numb
 
 /**
  * Une ville change de camp : le défenseur détruit ce qu'il peut avant de partir.
- * Usines réduites de moitié, fortifications et dépôt détruits, casernes conservées.
- * Les constructions et formations en cours dans la ville sont perdues.
+ * Fortifications et dépôt détruits, casernes conservées ; les usines suivent leur propre cellule
+ * (voir `syncFactories`). Les constructions et formations en cours dans la ville sont perdues.
  */
 export function onCityCaptured(ctx: SimContext, city: CityRuntime, previousOwner: number): void {
   invalidateCityIndex(ctx)
   const b = city.buildings
-  b.civ = Math.floor(b.civ / 2)
-  b.mil = Math.floor(b.mil / 2)
   b.fort = 0
   b.depot = 0
   const loser = ctx.economies.get(ctx.sides[previousOwner] ?? '')
@@ -198,69 +237,125 @@ export function onCityCaptured(ctx: SimContext, city: CityRuntime, previousOwner
 
 // ---------- Journée économique ----------
 
-/** Revenus quotidiens d'un pays : bâtiments de ses villes, plus apports du scénario (voir `economyModel`). */
+/** Revenus quotidiens d'un pays (production, munitions, construction, main-d'œuvre). */
 export function dailyIncome(
   ctx: SimContext,
   scenario: ScenarioDef,
   country: CountryId,
 ): { construction: number; production: number; munitions: number; manpower: number } {
-  const offMap = scenario.economy[country]
-  let civ = 0
-  let mil = 0
-  let pop = 0
-  for (const c of citiesOf(ctx, country)) {
-    civ += c.buildings.civ
-    mil += c.buildings.mil
-    pop += c.def.pop
+  const { construction, production, munitions, manpower } = dailyAccounts(ctx, scenario, country)
+  return { construction, production, munitions, manpower }
+}
+
+/** Points de construction que les chantiers peuvent absorber dans la journée. */
+function constructionDemand(eco: EconomyState, points: number): number {
+  let demand = 0
+  for (const item of eco.construction.slice(0, constructionSlots(points))) {
+    demand += Math.min(item.cost / BUILDINGS[item.kind].minDays, item.cost - item.progress)
   }
-  // Apports hors bâtiments : fixes (modèle « villes ») ou au prorata du territoire (modèle national).
+  return demand
+}
+
+/**
+ * Revenus du jour et, pour les pays à budget, le détail du budget (sans effet sur l'état).
+ * Pays à budget : production, munitions et construction viennent des usines que le budget fait
+ * tourner (voir budget.ts). Pays à apports fixes (donneurs hors carte) : revenus du scénario.
+ */
+function dailyAccounts(
+  ctx: SimContext,
+  scenario: ScenarioDef,
+  country: CountryId,
+): {
+  construction: number
+  production: number
+  munitions: number
+  manpower: number
+  budget: BudgetResult | null
+} {
+  const eco = ctx.economies.get(country)
+  const offMap = scenario.economy[country]
+  let pop = 0
+  for (const c of citiesOf(ctx, country)) pop += c.def.pop
+  const national = scenario.economyModel === 'national'
+  // Main-d'œuvre : villes tenues, plus apports (fixes, ou au prorata du territoire au modèle national).
+  let manpower = national ? 0 : (pop / 1_000_000) * MANPOWER_PER_MILLION
   let base = {
     production: offMap?.productionPerDay ?? 0,
     munitions: offMap?.munitionsPerDay ?? 0,
     construction: offMap?.constructionPerDay ?? 0,
-    manpower: offMap?.manpowerPerDay ?? 0,
   }
-  let cityManpower = (pop / 1_000_000) * MANPOWER_PER_MILLION
-  if (scenario.economyModel === 'national') {
+  if (national) {
     const shares = territoryShares(ctx)
     const side = sideIndex(ctx, country)
     const own = shares.home[side] ?? 0
+    manpower += (offMap?.manpowerPerDay ?? 0) * own
     base = {
       production: base.production * own,
       munitions: base.munitions * own,
       construction: base.construction * own,
-      manpower: base.manpower * own,
     }
-    // Territoires occupés : une partie de leur rendement revient à l'occupant.
     for (const [orig, share] of shares.occupied.get(side) ?? []) {
       const theirs = scenario.economy[ctx.sides[orig] ?? '']
       if (!theirs) continue
+      manpower += theirs.manpowerPerDay * share * OCCUPATION_MANPOWER
       base.production += theirs.productionPerDay * share * OCCUPATION_YIELD
       base.munitions += theirs.munitionsPerDay * share * OCCUPATION_YIELD
       base.construction += (theirs.constructionPerDay ?? 0) * share * OCCUPATION_YIELD
-      base.manpower += theirs.manpowerPerDay * share * OCCUPATION_MANPOWER
     }
-    // La population des villes est déjà comptée dans celle du pays.
-    cityManpower = 0
+  } else {
+    manpower += offMap?.manpowerPerDay ?? 0
   }
   // Stabilité et sanctions pèsent sur l'industrie, le soutien à la guerre sur la conscription.
   const industry = productionFactor(ctx, country)
-  const conscription = manpowerFactor(ctx, country)
+  manpower *= manpowerFactor(ctx, country)
   // Économie de guerre : une part de l'industrie civile travaille pour l'armée.
-  const war = WAR_ECONOMY[ctx.economies.get(country)?.warEconomy ?? 0]
+  const war = WAR_ECONOMY[eco?.warEconomy ?? 0]
+  if (eco?.budget) {
+    syncFactories(ctx)
+    const popM = (ctx.countries.get(country)?.pop ?? 0) / 1e6 || (offMap?.popM ?? 0)
+    const r = computeBudget(eco, {
+      gdp: dailyGdp(ctx, scenario, eco),
+      levy: war.levy * industry,
+      milRate: war.production * industry,
+      civRate: war.construction * industry,
+      constructionDemand: (points) => constructionDemand(eco, points),
+      mobilized: mobilizedShare(ctx, eco, popM),
+      pointsPerMil: { production: PRODUCTION_PER_MIL, munitions: MUNITIONS_PER_MIL },
+      pointsPerCiv: CONSTRUCTION_PER_CIV,
+    })
+    if (r) {
+      return {
+        construction: r.construction,
+        production: r.production,
+        munitions: r.munitions,
+        manpower,
+        budget: r,
+      }
+    }
+  }
   return {
-    construction: (civ * CONSTRUCTION_PER_CIV + base.construction) * industry * war.construction,
-    production: (mil * PRODUCTION_PER_MIL + base.production) * industry * war.production,
-    munitions: (mil * MUNITIONS_PER_MIL + base.munitions) * industry * war.production,
-    manpower: (cityManpower + base.manpower) * conscription,
+    construction: base.construction * industry * war.construction,
+    production: base.production * industry * war.production,
+    munitions: base.munitions * industry * war.production,
+    manpower,
+    budget: null,
   }
 }
 
 /** Affiche dès le départ les revenus attendus, avant la première journée économique. */
 export function previewIncome(ctx: SimContext, scenario: ScenarioDef): void {
   for (const eco of ctx.economies.values()) {
-    eco.daily = { ...eco.daily, ...dailyIncome(ctx, scenario, eco.country) }
+    startTreasury(ctx, scenario, eco)
+    const { budget, ...income } = dailyAccounts(ctx, scenario, eco.country)
+    eco.daily = { ...eco.daily, ...income }
+    if (eco.budget && budget) eco.budget.last = budget.day
   }
+}
+
+/** Réserve de départ : quelques semaines de budget. */
+function startTreasury(ctx: SimContext, scenario: ScenarioDef, eco: EconomyState): void {
+  if (!eco.budget || eco.budget.treasury >= 0) return
+  eco.budget.treasury = TREASURY_START_DAYS * dailyGdp(ctx, scenario, eco) * BUDGET_LEVY
 }
 
 export type Income = ReturnType<typeof dailyIncome>
@@ -275,16 +370,25 @@ export function updateEconomy(
   transfers?: (incomes: Map<CountryId, Income>) => void,
 ): void {
   const incomes = new Map<CountryId, Income>()
+  const budgets = new Map<CountryId, BudgetResult>()
   for (const eco of ctx.economies.values()) {
-    incomes.set(eco.country, dailyIncome(ctx, scenario, eco.country))
+    startTreasury(ctx, scenario, eco)
+    const { budget, ...income } = dailyAccounts(ctx, scenario, eco.country)
+    incomes.set(eco.country, income)
+    if (budget) budgets.set(eco.country, budget)
   }
   transfers?.(incomes)
   for (const eco of ctx.economies.values()) {
     const income = incomes.get(eco.country)
     if (!income) continue
+    const budget = budgets.get(eco.country)
+    if (budget) {
+      applyBudget(eco, budget)
+      eco.munitionsCap = munitionsCap(eco, MUNITIONS_PER_MIL)
+    }
     const { construction, production, munitions, manpower } = income
     eco.production += production
-    eco.munitions = Math.min(MUNITIONS_CAP, eco.munitions + munitions)
+    eco.munitions = Math.min(eco.munitionsCap ?? MUNITIONS_CAP, eco.munitions + munitions)
     eco.manpower += manpower
     eco.daily = {
       construction,
@@ -294,17 +398,13 @@ export function updateEconomy(
       manpower,
       reinforcements: 0,
     }
-    eco.daily.constructionUsed = advanceConstruction(ctx, eco, construction)
-    // Les points de construction inutilisés deviennent de la production : l'industrie civile
-    // travaille pour l'armée quand elle ne bâtit pas.
-    const spill = Math.max(0, construction - eco.daily.constructionUsed) * CONSTRUCTION_SPILLOVER
-    eco.production += spill
-    eco.daily.production += spill
-    eco.daily.productionFromConstruction = spill
-    const afterSpill = eco.production
+    // Chantiers ouverts selon la capacité des usines civiles (pas seulement les points employés).
+    const capacity = Math.max(construction, budget?.day.civPoints ?? 0)
+    eco.daily.constructionUsed = advanceConstruction(ctx, eco, construction, capacity)
+    const afterIncome = eco.production
     reinforce(ctx, eco)
     advanceRecruitment(ctx, eco)
-    eco.daily.productionUsed = Math.max(0, afterSpill - eco.production)
+    eco.daily.productionUsed = Math.max(0, afterIncome - eco.production)
     // Les munitions consommées sont comptées sur la journée écoulée, puis remises à zéro.
     eco.daily.munitionsSpent = eco.daily.munitionsUsed
     eco.daily.munitionsUsed = 0
@@ -312,10 +412,15 @@ export function updateEconomy(
 }
 
 /** Fait avancer les chantiers ; renvoie les points employés. */
-function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number): number {
+function advanceConstruction(
+  ctx: SimContext,
+  eco: EconomyState,
+  points: number,
+  capacity = points,
+): number {
   const side = sideIndex(ctx, eco.country)
   let left = points
-  for (const item of eco.construction.slice(0, constructionSlots(points))) {
+  for (const item of eco.construction.slice(0, constructionSlots(capacity))) {
     if (left <= 0) break
     const type = BUILDINGS[item.kind]
     const step = Math.min(left, item.cost / type.minDays, item.cost - item.progress)
@@ -324,6 +429,10 @@ function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number)
     if (item.progress < item.cost - 1e-6) continue
     const city = ctx.cityStates.get(item.city)
     eco.construction = eco.construction.filter((q) => q.id !== item.id)
+    if (item.kind === 'civ' || item.kind === 'mil') {
+      completeFactory(ctx, eco, item.kind, item.city, item.at)
+      continue
+    }
     if (!city || city.owner !== side) continue
     if (city.buildings[item.kind] < type.maxPerCity) {
       city.buildings[item.kind]++
@@ -331,6 +440,33 @@ function advanceConstruction(ctx: SimContext, eco: EconomyState, points: number)
     }
   }
   return points - left
+}
+
+/** Usine achevée : un site à l'emplacement choisi, ou près de sa ville si elle est encore tenue. */
+function completeFactory(
+  ctx: SimContext,
+  eco: EconomyState,
+  kind: FactoryKind,
+  cityName: string,
+  at?: LonLat,
+): void {
+  const side = sideIndex(ctx, eco.country)
+  const city = ctx.cityStates.get(cityName)
+  const name = BUILDINGS[kind].name
+  if (at) {
+    if ((ctx.grid.owner[ctx.grid.cellAt(at[0], at[1])] ?? 0) !== side) return
+    const near =
+      city && city.owner === side && distanceKm(city.def.lon, city.def.lat, at[0], at[1]) <= 25
+    addFactory(ctx, eco, kind, at[0], at[1], near ? cityName : undefined)
+    ctx.log(`${name} achevée près de ${cityName}`, eco.country, true)
+  } else {
+    if (!city || city.owner !== side) return
+    const index = eco.factories.filter((f) => f.city === cityName).length
+    const [lon, lat] = factorySpot(ctx, side, city.def.lon, city.def.lat, index)
+    addFactory(ctx, eco, kind, lon, lat, cityName)
+    ctx.log(`${name} achevée à ${cityName}`, eco.country, true)
+  }
+  countCityFactories(ctx)
 }
 
 /**
@@ -434,6 +570,57 @@ export function queueConstruction(
   }
   eco.construction.push({ id: ctx.allocId(), city: cityName, kind, progress: 0, cost: type.cost })
   return null
+}
+
+/**
+ * Lance une usine à un emplacement choisi (cellule de terre tenue par le pays) ; elle est rattachée
+ * à la ville du pays la plus proche, pour l'affichage. Renvoie un message d'erreur, ou null.
+ */
+export function queueFactory(
+  ctx: SimContext,
+  country: CountryId,
+  kind: FactoryKind,
+  lon: number,
+  lat: number,
+): string | null {
+  const eco = ctx.economies.get(country)
+  if (!eco) return 'Pays inconnu'
+  const side = sideIndex(ctx, country)
+  const cell = ctx.grid.cellAt(lon, lat)
+  if (cell < 0 || ctx.grid.owner[cell] !== side) return 'Emplacement hors de votre territoire'
+  let best: CityRuntime | null = null
+  let bestKm = Infinity
+  for (const c of citiesOf(ctx, country)) {
+    const km = distanceKm(c.def.lon, c.def.lat, lon, lat)
+    if (km < bestKm) {
+      best = c
+      bestKm = km
+    }
+  }
+  if (!best) return 'Aucune ville tenue'
+  const type = BUILDINGS[kind]
+  eco.construction.push({
+    id: ctx.allocId(),
+    city: best.def.name,
+    kind,
+    progress: 0,
+    cost: type.cost,
+    at: [lon, lat],
+  })
+  return null
+}
+
+/** Répartition du budget choisie par le joueur, ou `null` pour la répartition automatique. */
+export function setBudgetAllocation(
+  ctx: SimContext,
+  country: CountryId,
+  allocation: Partial<Record<BudgetSector, number>> | null,
+): void {
+  const b = ctx.economies.get(country)?.budget
+  if (!b) return
+  const a = normalizeAllocation(allocation)
+  if (a) b.allocation = a
+  else delete b.allocation
 }
 
 /** Règle l'économie de guerre d'un pays (0 paix, 1 mobilisation partielle, 2 guerre totale). */

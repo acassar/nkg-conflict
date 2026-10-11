@@ -10,6 +10,7 @@ import {
 } from '@/sim/economy/rules'
 import type { WarEconomyLevel } from '@/sim/core/types'
 import { productionQueue, warEconomyEffects } from '@/composables/productionQueue'
+import { budgetView, money } from '@/composables/budget'
 import { useProductionStats } from '@/composables/production'
 import { useSustainability } from '@/composables/sustainability'
 import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
@@ -84,6 +85,7 @@ const freeBarracks = computed(() =>
 )
 
 const WAR_LEVELS: WarEconomyLevel[] = [0, 1, 2]
+const budget = computed(() => budgetView(economy.value))
 const warLevel = computed<WarEconomyLevel>(() => economy.value?.warEconomy ?? 0)
 const warEffects = computed(() => warEconomyEffects(warLevel.value))
 const signed = (v: number): string => `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`
@@ -300,6 +302,41 @@ const warTitle = (level: WarEconomyLevel): string => {
         </ul>
       </div>
 
+      <!-- Budget national : PIB, budget du jour et son emploi par secteur. -->
+      <section v-if="budget" class="budget" data-testid="budget">
+        <p class="label">
+          Budget
+          <span class="meta"
+            >{{ money(budget.budget) }}/j · PIB {{ money(budget.gdpB * 1000) }}/an</span
+          >
+        </p>
+        <ul class="sectors">
+          <li v-for="line in budget.lines" :key="line.sector" :data-sector="line.sector">
+            <div class="row">
+              <span>{{ line.name }}</span>
+              <span class="num"
+                >{{ money(line.amount) }} · {{ Math.round(line.share * 100) }} %</span
+              >
+            </div>
+            <div class="bar"><div :style="{ width: `${Math.round(line.share * 100)}%` }" /></div>
+            <p class="meta">{{ line.note }}</p>
+          </li>
+        </ul>
+        <p class="meta">
+          {{ budget.auto ? 'Répartition automatique : ' : '' }}usines
+          {{ budget.factories.mil }} militaires et {{ budget.factories.civ }} civiles<template
+            v-if="budget.factories.offMap"
+          >
+            (dont {{ budget.factories.offMap }} hors carte)</template
+          ><template v-if="budget.factories.damaged">
+            , {{ budget.factories.damaged }} endommagée(s)</template
+          ><template v-if="budget.mobilizationPct < -0.05">
+            ; mobilisation : {{ budget.mobilizationPct.toFixed(1).replace('.', ',') }} %
+            d'activité</template
+          >.
+        </p>
+      </section>
+
       <!-- Gestion automatique : constructions et renforts des armées, séparément. -->
       <div class="auto" data-testid="auto-economy">
         <p class="label">Gestion automatique</p>
@@ -421,11 +458,8 @@ const warTitle = (level: WarEconomyLevel): string => {
           Par jour : +{{ round(economy.daily.construction) }} construction, +{{
             round(economy.daily.production)
           }}
-          production<template v-if="economy.daily.productionFromConstruction"
-            >, dont {{ round(economy.daily.productionFromConstruction) }} venue des points de
-            construction inutilisés</template
-          >. Renforts versés hier : {{ Math.round(economy.daily.reinforcements * 100) }} % d'une
-          unité.
+          production. Renforts versés hier : {{ Math.round(economy.daily.reinforcements * 100) }} %
+          d'une unité.
         </p>
       </section>
     </template>
@@ -528,6 +562,22 @@ li.waiting {
 }
 .war-economy {
   margin: 6px 0 10px;
+}
+.budget {
+  margin-bottom: 10px;
+}
+.sectors {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+}
+.sectors .meta {
+  margin: 1px 0 0;
+}
+.num {
+  font-variant-numeric: tabular-nums;
 }
 .build {
   margin-bottom: 10px;

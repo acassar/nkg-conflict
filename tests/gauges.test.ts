@@ -27,6 +27,7 @@ function economy(over: Partial<EconomyState> = {}): EconomyState {
     recruitment: [],
     unitCounters: {} as EconomyState['unitCounters'],
     warEconomy: 0,
+    factories: [],
     daily: {
       construction: 60,
       production: 40,

@@ -15,6 +15,8 @@ import type {
   SimSnapshot,
   UnitKind,
   WarEconomyLevel,
+  BudgetSector,
+  FactoryKind,
   AutoEconomy,
 } from './core/types'
 import { buildScenario, SCENARIOS } from './scenarios'
@@ -248,6 +250,12 @@ const api = {
   },
   setWarEconomy(level: WarEconomyLevel): void {
     act((s) => s.setWarEconomy(level))
+  },
+  queueFactory(kind: FactoryKind, lon: number, lat: number): string | null {
+    return act((s) => s.queueFactory(kind, lon, lat)) ?? null
+  },
+  setBudgetAllocation(allocation: Partial<Record<BudgetSector, number>> | null): void {
+    act((s) => s.setBudgetAllocation(allocation))
   },
   // Diplomatie : chaque commande renvoie un message d'erreur, ou null.
   declareWar(target: CountryId): string | null {

@@ -3,10 +3,10 @@ import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { dailyIncome, onCityCaptured } from '@/sim/economy/economy'
+import { CAPTURED_CONDITION, syncFactories } from '@/sim/economy/budget'
 import {
   BUILDINGS,
   CONSTRUCTION_PER_CIV,
-  CONSTRUCTION_SPILLOVER,
   constructionSlots,
   MAX_PARALLEL_CONSTRUCTION,
   RECRUIT_COSTS,
@@ -38,6 +38,8 @@ describe('économie', () => {
   it('produit chaque jour', () => {
     const sim = newGame()
     const before = ecoOf(sim).production
+    // Les usines civiles ne travaillent (et ne coûtent) que s'il y a un chantier.
+    expect(sim.queueConstruction('Lviv', 'depot')).toBe(null)
     sim.step(24)
     expect(ecoOf(sim).production).toBeGreaterThan(before)
     expect(ecoOf(sim).daily.construction).toBeGreaterThan(0)
@@ -77,7 +79,8 @@ describe('économie', () => {
       expect(sim.queueConstruction(name, 'mil')).toBe(null)
     }
     sim.step(24)
-    const slots = constructionSlots(eco.daily.construction)
+    // Chantiers ouverts selon la capacité des usines civiles.
+    const slots = constructionSlots(eco.budget?.last?.civPoints ?? 0)
     const moving = eco.construction.filter((q) => q.progress > 0).length
     expect(moving).toBe(Math.min(slots, eco.construction.length))
   })
@@ -100,37 +103,30 @@ describe('économie', () => {
     expect(recruit && Math.abs(recruit.lat - 50.45) < 0.5).toBe(true)
   })
 
-  it('une ville prise perd la moitié de ses usines et ses fortifications', () => {
+  it('une ville prise perd ses fortifications ; ses usines passent à l’occupant, endommagées', () => {
     const sim = newGame()
     const kharkiv = city(sim, 'Kharkiv')
     kharkiv.buildings.fort = 2
-    const civ = kharkiv.buildings.civ
     onCityCaptured(sim.ctx, kharkiv, kharkiv.owner)
     expect(kharkiv.buildings.fort).toBe(0)
-    expect(kharkiv.buildings.civ).toBe(Math.floor(civ / 2))
+    // Usines de Kharkiv : leurs cellules passent à la Russie.
+    const ukr = ecoOf(sim)
+    const sites = ukr.factories.filter((f) => f.city === 'Kharkiv')
+    expect(sites.length).toBeGreaterThan(0)
+    const g = sim.ctx.grid
+    const rus = sim.sideOf('RUS')
+    for (const f of sites) g.setOwner(g.cellAt(f.lon, f.lat), rus)
+    sim.ctx.tick++
+    syncFactories(sim.ctx)
+    const ids = new Set(sites.map((f) => f.id))
+    expect(ukr.factories.some((f) => ids.has(f.id))).toBe(false)
+    const taken = sim.ctx.economies.get('RUS')?.factories.filter((f) => ids.has(f.id)) ?? []
+    expect(taken.length).toBe(sites.length)
+    expect(taken.every((f) => f.condition <= CAPTURED_CONDITION + 0.01)).toBe(true)
   })
 })
 
 describe('économie de guerre', () => {
-  it('les points de construction inutilisés deviennent de la production', () => {
-    const sim = newGame()
-    sim.step(24)
-    const eco = ecoOf(sim)
-    // Aucun chantier : tous les points du jour sont convertis.
-    expect(eco.construction.length).toBe(0)
-    expect(eco.daily.productionFromConstruction).toBeCloseTo(
-      eco.daily.construction * CONSTRUCTION_SPILLOVER,
-    )
-    // Avec des chantiers, la conversion baisse d'autant.
-    for (const name of ['Lviv', 'Kyiv', 'Odessa']) sim.queueConstruction(name, 'mil')
-    sim.step(24)
-    const used = eco.daily.constructionUsed ?? 0
-    expect(used).toBeGreaterThan(0)
-    expect(eco.daily.productionFromConstruction).toBeCloseTo(
-      (eco.daily.construction - used) * CONSTRUCTION_SPILLOVER,
-    )
-  })
-
   it('la guerre totale déplace la construction vers la production et use la population', () => {
     const peace = newGame()
     const total = newGame()
@@ -141,9 +137,13 @@ describe('économie de guerre', () => {
     const t = dailyIncome(total.ctx, ukraine2026, 'UKR')
     expect(t.production / p.production).toBeCloseTo(WAR_ECONOMY[2].production)
     expect(t.munitions / p.munitions).toBeCloseTo(WAR_ECONOMY[2].production)
-    expect(t.construction / p.construction).toBeCloseTo(WAR_ECONOMY[2].construction)
-    peace.step(24 * 10)
-    total.step(24 * 10)
+    // Capacité des usines civiles (aucun chantier : rien n'est dépensé en construction).
+    peace.step(24)
+    total.step(24)
+    const civ = (sim: Simulation): number => ecoOf(sim).budget?.last?.civPoints ?? 0
+    expect(civ(total) / civ(peace)).toBeCloseTo(WAR_ECONOMY[2].construction)
+    peace.step(24 * 9)
+    total.step(24 * 9)
     const support = (sim: Simulation): number =>
       sim.ctx.politics.countries.get('UKR')?.warSupport ?? 0
     expect(support(total)).toBeLessThan(support(peace))

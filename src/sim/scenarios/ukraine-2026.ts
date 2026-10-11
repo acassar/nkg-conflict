@@ -72,24 +72,33 @@ export const ukraine2026: ScenarioDef = {
       [34.1, 44.95],
     ],
   },
-  // Apports hors théâtre : industrie et réserves hors carte des deux pays. L'aide étrangère passe par
-  // les donneurs hors carte (voir `politics.aids`).
+  // Budget tiré du PIB (données Natural Earth, comme la carte du monde) ; usines des villes du théâtre
+  // plus usines hors carte (industrie du pays hors du théâtre, et part de l'industrie civile qui
+  // travaille pour l'armée). La Russie n'a qu'une partie de son PIB sur la carte. L'aide étrangère
+  // passe par les donneurs hors carte (voir `politics.aids`).
   economy: {
     UKR: {
       production: 1500,
       munitions: 1500,
       manpower: 60,
-      productionPerDay: 26,
-      munitionsPerDay: 12,
+      productionPerDay: 0,
+      munitionsPerDay: 0,
       manpowerPerDay: 1.2,
+      gdpB: 154,
+      popM: 44,
+      offMapFactories: { civ: 0, mil: 21 },
     },
     RUS: {
       production: 2000,
       munitions: 2000,
       manpower: 90,
-      productionPerDay: 50,
-      munitionsPerDay: 30,
+      productionPerDay: 0,
+      munitionsPerDay: 0,
       manpowerPerDay: 1.8,
+      gdpB: 1700,
+      gdpOnMap: 0.4,
+      popM: 144,
+      offMapFactories: { civ: 0, mil: 25 },
     },
     USA: flows(140, 90),
     DEU: flows(80, 45),

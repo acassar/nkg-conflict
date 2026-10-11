@@ -135,11 +135,17 @@ export function gaugeViews({ eco, sustain, history, freeBarracks }: GaugeInput):
   const industryOrigin: GaugeRow[] = [
     { label: 'Production du jour', value: `${fmt(d.production)}/j` },
   ]
-  if ((d.productionFromConstruction ?? 0) > 0.5) {
+  const bl = eco.budget?.last
+  if (bl) {
     industryOrigin.push({
-      label: 'dont points de construction inutilisés',
-      value: `${fmt(d.productionFromConstruction ?? 0)}/j`,
+      label: 'Usines militaires employées',
+      value: `${fmt(bl.factories.mil)} à ${Math.round(bl.use.mil * 100)} %`,
     })
+    if (bl.use.mil < 0.95) {
+      industryAdvice.push(
+        `Budget de la défense insuffisant : vos usines militaires ne tournent qu'à ${Math.round(bl.use.mil * 100)} % (réserve épuisée).`,
+      )
+    }
   }
   if (s && s.aid.production > 0.5) {
     industryOrigin.push({ label: 'dont aide reçue (7 j)', value: `${fmt(s.aid.production)}/j` })
@@ -154,7 +160,8 @@ export function gaugeViews({ eco, sustain, history, freeBarracks }: GaugeInput):
   // ---------- Munitions ----------
   const munTrend = trendPerDay(history, 'munitions')
   const munDays = daysLeft(eco.munitions, munTrend)
-  const nearCap = eco.munitions >= MUNITIONS_NEAR_CAP * MUNITIONS_CAP
+  const munCap = eco.munitionsCap ?? MUNITIONS_CAP
+  const nearCap = eco.munitions >= MUNITIONS_NEAR_CAP * munCap
   let munLevel = depletion(munDays)
   if (eco.munitions < LOW_MUNITIONS) munLevel = 'critical'
   else if (nearCap && munLevel === 'ok') munLevel = 'warning'
@@ -164,7 +171,7 @@ export function gaugeViews({ eco, sustain, history, freeBarracks }: GaugeInput):
   }
   if (nearCap) {
     munAdvice.push(
-      `Plafond de ${fmt(MUNITIONS_CAP)} presque atteint : les munitions produites au-delà sont perdues ; c'est le moment de les tirer.`,
+      `Plafond de ${fmt(munCap)} presque atteint : les munitions produites au-delà sont perdues ; c'est le moment de les tirer.`,
     )
   }
   munAdvice.push(
@@ -178,7 +185,7 @@ export function gaugeViews({ eco, sustain, history, freeBarracks }: GaugeInput):
   if (s && s.aid.munitions > 0.5) {
     munOrigin.push({ label: 'dont aide reçue (7 j)', value: `${fmt(s.aid.munitions)}/j` })
   }
-  munOrigin.push({ label: 'Plafond du stock', value: fmt(MUNITIONS_CAP) })
+  munOrigin.push({ label: 'Plafond du stock (usines militaires)', value: fmt(munCap) })
   const munUses: GaugeRow[] = [{ label: 'Tirées hier', value: `${fmt(d.munitionsSpent ?? 0)}/j` }]
   if (s) munUses.push({ label: 'Tirs moyens (7 j)', value: `${fmt(s.need.munitions)}/j` })
 

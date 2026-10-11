@@ -59,8 +59,17 @@ export interface Aid {
   equipment: number
   /** Unités livrées depuis le début. */
   unitsDelivered: number
-  /** Dernière journée : munitions, production, construction et matériel transférés. */
-  lastDay: { munitions: number; production: number; construction: number; equipment: number }
+  /**
+   * Dernière journée : munitions, production, construction et matériel transférés, et argent (M$)
+   * versé à la réserve du receveur (donneurs à budget ; absent des anciennes sauvegardes).
+   */
+  lastDay: {
+    munitions: number
+    production: number
+    construction: number
+    equipment: number
+    money?: number
+  }
 }
 
 /** Demande d'aide d'une IA au joueur, en attente de réponse. */

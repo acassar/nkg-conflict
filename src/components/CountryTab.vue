@@ -3,7 +3,8 @@ import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
 import type { Stance } from '@/stores/game'
 import { stanceColor } from '@/map/territoryImage'
-import { AID_LEVEL_NAMES, AID_SHARE } from '@/sim/politics/aidLevels'
+import { AID_LEVEL_NAMES, AID_MONEY_SHARE, AID_SHARE } from '@/sim/politics/aidLevels'
+import { money } from '@/composables/budget'
 import type { AidLevel } from '@/sim/politics/types'
 
 const game = useGameStore()
@@ -127,13 +128,27 @@ const myAidTo = computed(() => game.aids.find((a) => a.from === me.value && a.to
 const myAidFrom = computed(() => game.aids.find((a) => a.from === code.value && a.to === me.value))
 const fmt = (v: number): string => Math.round(v).toLocaleString('fr-FR')
 const flow = (a: {
-  lastDay: { munitions: number; production: number; construction: number; equipment: number }
+  lastDay: {
+    munitions: number
+    production: number
+    construction: number
+    equipment: number
+    money?: number
+  }
 }): string => {
   const d = a.lastDay
-  if (d.munitions + d.production + d.construction + d.equipment === 0) {
+  const cash = d.money ?? 0
+  if (d.munitions + d.production + d.construction + d.equipment + cash === 0) {
     return 'Premier versement à la fin de la journée'
   }
-  return `Par jour : ${fmt(d.munitions)} munitions · ${fmt(d.production)} production · ${fmt(d.equipment)} matériel · ${fmt(d.construction)} construction`
+  const parts = [
+    `${fmt(d.munitions)} munitions`,
+    `${fmt(d.production)} production`,
+    `${fmt(d.equipment)} matériel`,
+  ]
+  if (cash > 0) parts.push(`${money(cash)} d'argent`)
+  if (d.construction > 0) parts.push(`${fmt(d.construction)} construction`)
+  return `Par jour : ${parts.join(' · ')}`
 }
 
 const name = (c: string): string => game.countryByCode.get(c)?.name ?? c
@@ -375,7 +390,7 @@ function confirmWar(): void {
           <button
             v-for="l in LEVELS"
             :key="l"
-            :title="`Prélève ${Math.round(AID_SHARE[l] * 100)} % de vos revenus militaires et civils chaque jour`"
+            :title="`Prélève chaque jour ${Math.round(AID_SHARE[l] * 100)} % de votre production militaire et de vos munitions, et ${Math.round(AID_MONEY_SHARE[l] * 100)} % de votre budget en argent`"
             @click="game.grantAid(country.id, l)"
           >
             {{ LEVEL_NAMES[l] }}

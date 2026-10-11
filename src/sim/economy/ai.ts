@@ -1,12 +1,13 @@
 import { sideIndex, type CityRuntime, type SimContext } from '../context'
 import { frontCells } from '../systems/armies'
-import type { BuildingKind, CountryId, UnitKind } from '../core/types'
+import type { BuildingKind, CountryId, EconomyState, UnitKind } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { citiesOf, queueConstruction, queueRecruit, setWarEconomy } from './economy'
-import { BUILDINGS, RECRUIT_COSTS, formationSlots } from './rules'
+import { BUILDINGS, RECRUIT_COSTS, constructionSlots, formationSlots } from './rules'
 import { BRIGADE_SPLIT } from '../units/catalog'
 import { relation } from '../politics/politics'
 import { territoryShares } from './national'
+import { FACTORY_RESERVE_DAYS } from './budget'
 
 /** Parties de l'économie confiées à l'IA : tout pour un pays IA, au choix pour le joueur. */
 export interface AiEconomyParts {
@@ -40,6 +41,20 @@ const TENSION_RELATION = -50
 const TOTAL_WAR_HOME_SHARE = 0.9
 /** Réserve d'hommes (milliers) au-delà de laquelle l'IA forme de la défense territoriale quand la production manque. */
 const TDF_MANPOWER = 30
+
+export { FACTORY_RESERVE_DAYS }
+/** Part des usines militaires payée au-dessous de laquelle l'argent manque déjà. */
+const FUNDED_USE = 0.95
+
+/**
+ * L'IA peut-elle financer une usine de plus ? Pays à budget : il faut que les usines militaires
+ * tournent à plein et que la réserve dépasse quelques semaines de budget. Pays sans budget : oui.
+ */
+export function canFundFactory(eco: EconomyState): boolean {
+  const b = eco.budget
+  if (!b?.last) return !b
+  return b.last.use.mil >= FUNDED_USE && b.treasury >= FACTORY_RESERVE_DAYS * b.last.budget
+}
 
 /** Distance d'une ville au front (échantillon de cellules de front), Infinity sans front. */
 function distanceToFront(city: CityRuntime, front: Array<[number, number]>): number {
@@ -80,7 +95,9 @@ function peaceTarget(ctx: SimContext, country: CountryId): number {
 
 /**
  * Économie de l'IA, une fois par jour :
- * - deux chantiers au plus : fortifications dans les villes du front, sinon usines loin du front ;
+ * - chantiers : fortifications dans les villes du front, sinon usines loin du front quand le budget
+ *   peut les faire tourner (militaires en guerre ; voir `canFundFactory`) ; deux chantiers au plus,
+ *   ou autant que les usines civiles en mènent de front quand l'argent dort ;
  * - autant de formations que de casernes, dans la caserne la plus proche du front ;
  *   en paix, seulement pour entretenir l'effectif visé (relevé en cas de tension) ;
  * - les nouvelles unités rejoignent l'armée qui tient tout le front.
@@ -113,8 +130,12 @@ export function updateAiEconomy(
     }
   }
 
-  // Constructions.
-  if (parts.build && eco.construction.length < 2) {
+  // Constructions : deux chantiers, davantage quand l'argent dort (autant que les usines civiles
+  // peuvent en mener de front).
+  const funded = canFundFactory(eco)
+  const civPoints = eco.budget?.last?.civPoints ?? 0
+  const sites = funded && eco.budget ? Math.max(2, constructionSlots(civPoints)) : 2
+  if (parts.build && eco.construction.length < sites) {
     const frontCity = cities
       .filter((x) => x.front < FRONT_CITY_KM && x.c.buildings.fort < BUILDINGS.fort.maxPerCity)
       .sort((a, b) => b.c.def.pop - a.c.def.pop)[0]
@@ -122,11 +143,17 @@ export function updateAiEconomy(
       eco.construction.some((q) => q.kind === kind && q.city === city)
     if (frontCity && !already('fort', frontCity.c.def.name)) {
       queueConstruction(ctx, country, frontCity.c.def.name, 'fort')
-    } else {
-      const rear = [...cities].sort((a, b) => b.front - a.front)[0]
-      if (rear) {
-        const kind: BuildingKind = rear.c.buildings.mil <= rear.c.buildings.civ ? 'mil' : 'civ'
-        if (!already(kind, rear.c.def.name)) queueConstruction(ctx, country, rear.c.def.name, kind)
+    } else if (funded) {
+      // Les trois villes les plus loin du front, la première qui n'a pas déjà ce chantier.
+      const rears = [...cities].sort((a, b) => b.front - a.front).slice(0, 3)
+      for (const rear of rears) {
+        // En guerre, l'argent en trop va aux usines militaires ; en paix, on alterne.
+        const kind: BuildingKind =
+          ctx.matrix.atWar[side] === 1 || rear.c.buildings.mil <= rear.c.buildings.civ
+            ? 'mil'
+            : 'civ'
+        if (already(kind, rear.c.def.name)) continue
+        if (queueConstruction(ctx, country, rear.c.def.name, kind) === null) break
       }
     }
   }

@@ -1,14 +1,15 @@
 import { countryName, sideIndex, type SimContext } from '../context'
 import type { CountryId, EconomyState, UnitKind, UnitState } from '../core/types'
+import type { BudgetResult } from '../economy/budget'
 import { citiesOf } from '../economy/economy'
 import { RECRUIT_COSTS } from '../economy/rules'
 import { unitName } from '../units/names'
 import { BRIGADE_SPLIT } from '../units/catalog'
 import { addRelation, enemiesInWar, isAtWarWith, relation, sameAlliance } from './politics'
 import type { Aid, AidLevel } from './types'
-import { AID_LEVEL_NAMES, AID_SHARE } from './aidLevels'
+import { AID_CAP, AID_LEVEL_NAMES, AID_MONEY_SHARE, AID_SHARE } from './aidLevels'
 
-export { AID_LEVEL_NAMES, AID_SHARE }
+export { AID_CAP, AID_LEVEL_NAMES, AID_MONEY_SHARE, AID_SHARE }
 
 /** Moitié de la production envoyée part en matériel, livré sous forme d'unités équipées. */
 const EQUIPMENT_SHARE = 0.5
@@ -52,7 +53,7 @@ function createAid(ctx: SimContext, from: CountryId, to: CountryId, level: AidLe
     startTick: ctx.tick,
     equipment: 0,
     unitsDelivered: 0,
-    lastDay: { munitions: 0, production: 0, construction: 0, equipment: 0 },
+    lastDay: { munitions: 0, production: 0, construction: 0, equipment: 0, money: 0 },
   }
   ctx.politics.aids.push(aid)
   return aid
@@ -177,11 +178,19 @@ export function answerAidRequest(
 // ---------- Effets quotidiens ----------
 
 /**
- * Détourne vers chaque receveur une part des revenus du jour de son donneur :
- * munitions, production (la moitié en matériel) et points de construction.
+ * Aide du jour, versée avant l'emploi des revenus :
+ * - matériel : une part de la production militaire et des munitions du donneur (la moitié de la
+ *   production part en matériel, livré en unités équipées) ;
+ * - donneur à budget : de l'argent, une part de son budget du jour plafonnée d'après le budget du
+ *   receveur, versé à la réserve du receveur (qui couvre ses manques et finance de nouvelles usines) ;
+ * - donneur à apports fixes (hors carte, sans budget) : aussi des points de construction.
  * Les aides devenues impossibles (guerre entre les deux pays) prennent fin.
  */
-export function applyAidFlows(ctx: SimContext, incomes: Map<CountryId, DailyIncome>): void {
+export function applyAidFlows(
+  ctx: SimContext,
+  incomes: Map<CountryId, DailyIncome>,
+  budgets: Map<CountryId, BudgetResult> = new Map(),
+): void {
   const pol = ctx.politics
   for (const aid of [...pol.aids]) {
     if (isAtWarWith(ctx, aid.from, aid.to)) {
@@ -199,7 +208,8 @@ export function applyAidFlows(ctx: SimContext, incomes: Map<CountryId, DailyInco
     const s = AID_SHARE[aid.level]
     const munitions = Math.max(0, give.munitions * s)
     const production = Math.max(0, give.production * s)
-    const construction = Math.max(0, give.construction * s)
+    const donor = budgets.get(aid.from)
+    const construction = donor ? 0 : Math.max(0, give.construction * s)
     give.munitions -= munitions
     give.production -= production
     give.construction -= construction
@@ -208,8 +218,41 @@ export function applyAidFlows(ctx: SimContext, incomes: Map<CountryId, DailyInco
     get.production += production - equipment
     get.construction += construction
     aid.equipment += equipment
-    aid.lastDay = { munitions, production: production - equipment, construction, equipment }
+    const money = donor ? transferMoney(ctx, aid.from, aid.level, donor, budgets.get(aid.to)) : 0
+    aid.lastDay = { munitions, production: production - equipment, construction, equipment, money }
   }
+}
+
+/**
+ * Argent versé par un donneur à budget : une part de son budget du jour (AID_MONEY_SHARE), sans
+ * dépasser une part du budget du receveur (AID_CAP) ni ce que le donneur a en caisse. Rien pour un
+ * receveur sans budget. Renvoie le montant (M$).
+ */
+function transferMoney(
+  ctx: SimContext,
+  from: CountryId,
+  level: Aid['level'],
+  donor: BudgetResult,
+  recipient: BudgetResult | undefined,
+): number {
+  if (!recipient) return 0
+  const cash = Math.max(0, ctx.economies.get(from)?.budget?.treasury ?? 0) + donor.treasury
+  const money = Math.max(
+    0,
+    Math.min(
+      donor.day.budget * AID_MONEY_SHARE[level],
+      recipient.day.budget * AID_CAP[level],
+      cash,
+    ),
+  )
+  if (money <= 0) return 0
+  donor.treasury -= money
+  recipient.treasury += money
+  const out = (donor.day.aid ??= { in: 0, out: 0 })
+  out.out += money
+  const got = (recipient.day.aid ??= { in: 0, out: 0 })
+  got.in += money
+  return money
 }
 
 /** Livre le matériel accumulé : une unité équipée apparaît chez le receveur, qui fournit les hommes. */
@@ -271,6 +314,18 @@ export function aidRelationsMonthly(ctx: SimContext): void {
 
 // ---------- IA ----------
 
+/** Réserve sous laquelle un donneur en guerre réduit son aide, en jours de budget. */
+const DONOR_RESERVE_DAYS = 10
+
+/** Un donneur en guerre manque de munitions, ou sa réserve d'argent s'épuise. */
+function donorShort(ctx: SimContext, code: CountryId): boolean {
+  const eco = ctx.economies.get(code)
+  if (!eco) return false
+  if (eco.munitions < 300) return true
+  const b = eco.budget
+  return !!b?.last && b.treasury < DONOR_RESERVE_DAYS * b.last.budget
+}
+
 /**
  * Diplomatie de l'aide, une fois par mois :
  * - un pays IA en guerre sollicite les pays les mieux disposés et les plus riches (le joueur reçoit une demande) ;
@@ -289,7 +344,7 @@ export function updateAidAi(ctx: SimContext, aiCountries: CountryId[], player: C
       revokeAid(ctx, aid.id, aid.from, 'relations dégradées')
     } else if (!atWar(ctx, aid.to) && !sameAlliance(ctx, aid.from, aid.to)) {
       if (ctx.rng.next() < 0.3) revokeAid(ctx, aid.id, aid.from, 'la guerre est finie')
-    } else if (atWar(ctx, aid.from) && (ctx.economies.get(aid.from)?.munitions ?? 0) < 300) {
+    } else if (atWar(ctx, aid.from) && donorShort(ctx, aid.from)) {
       if (aid.level > 1) setAidLevel(ctx, aid.id, aid.from, (aid.level - 1) as AidLevel)
       else revokeAid(ctx, aid.id, aid.from, 'ses propres besoins passent avant')
     }

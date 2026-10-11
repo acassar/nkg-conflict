@@ -1157,6 +1157,21 @@ try {
   }
   await shot('07b-coalition')
 
+  // Aide en argent : la France aide l'Espagne ; le bloc Budget montre l'argent versé chaque jour.
+  await page.evaluate(() => window.__nkg.grantAid('ESP', 2))
+  await page.evaluate(() => window.__nkg.step(24))
+  await page.waitForTimeout(800)
+  await page.getByTestId('rail-production').click()
+  const aidLine = page.getByTestId('budget-aid')
+  await aidLine.waitFor({ timeout: 10_000 }).catch(() => {})
+  const aidText = (await aidLine.count()) ? await aidLine.innerText() : ''
+  step('aide en argent', { budget: aidText })
+  if (!/versée −[\d,  ]+ (M|Md)\$\/j/.test(aidText))
+    report.errors.push(`aide en argent absente du budget (${aidText})`)
+  await aidLine.scrollIntoViewIfNeeded().catch(() => {})
+  await shot('07c-aide-argent')
+  await page.getByTestId('rail-production').click()
+
   // WebGL indisponible : la page affiche un message clair avec « Réessayer ».
   const noGl = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await noGl.addInitScript(() => {

@@ -96,6 +96,15 @@ const freeBarracks = computed(() =>
 
 const WAR_LEVELS: WarEconomyLevel[] = [0, 1, 2]
 const budget = computed(() => budgetView(economy.value))
+/** Aide en argent du dernier jour : reçue et versée. */
+const aidText = computed(() => {
+  const a = budget.value?.aid
+  if (!a) return ''
+  const parts: string[] = []
+  if (a.in > 0) parts.push(`reçue +${money(a.in)}/j`)
+  if (a.out > 0) parts.push(`versée −${money(a.out)}/j`)
+  return parts.join(' · ')
+})
 // Curseurs du budget : brouillon local pendant le glissement, envoyé au relâcher.
 const draft = ref<Allocation | null>(null)
 const allocation = computed(() => draft.value ?? currentAllocation(economy.value))
@@ -420,6 +429,9 @@ const warTitle = (level: WarEconomyLevel): string => {
             >
               (vide dans {{ forecast.reserveDays }} j, puis les usines ralentissent)</template
             >
+          </li>
+          <li v-if="budget.aid.in > 0 || budget.aid.out > 0" data-testid="budget-aid">
+            Aide étrangère en argent : {{ aidText }} (comptée dans la réserve)
           </li>
         </ul>
         <div

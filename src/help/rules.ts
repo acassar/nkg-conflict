@@ -1,4 +1,5 @@
 import type { ModifierKey } from '@/sim/core/types'
+import { AID_CAP, AID_MONEY_SHARE } from '@/sim/politics/aidLevels'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import { Terrain, TERRAIN_RULES } from '@/sim/theater/grid'
 import {
@@ -10,6 +11,7 @@ import {
   MUNITIONS_CAP_MIN,
   REPAIR_PER_DAY,
   START_INDUSTRY_BUDGET_SHARE,
+  FACTORY_RESERVE_DAYS,
 } from '@/sim/economy/budget'
 import {
   BUILDINGS,
@@ -283,6 +285,8 @@ export const HELP_SECTIONS: HelpSection[] = [
       `Répartition automatique : la défense fait tourner les usines militaires, la construction paie ce que les chantiers en cours absorbent, ${pct(AUTO_RESEARCH_SHARE)} vont à la recherche, le reste à la réserve. La réserve couvre les manques de la défense, puis de la construction.`,
       `Une usine dont la cellule passe à l'ennemi lui revient, endommagée (${pct(CAPTURED_CONDITION)} de son rendement), puis se répare en ${Math.round((1 - CAPTURED_CONDITION) / REPAIR_PER_DAY)} jours environ. Plafond du stock de munitions : ${MUNITIONS_CAP_DAYS} jours de production des usines militaires, ${MUNITIONS_CAP_MIN} au moins.`,
       `La mobilisation retire des hommes à l'économie : chaque point de population active sous les drapeaux coûte environ ${MOBILIZATION_DRAG} points de PIB, atteints en quelques mois.`,
+      `Aide étrangère en argent : un donneur à budget verse chaque jour ${pct(AID_MONEY_SHARE[1])}, ${pct(AID_MONEY_SHARE[2])} ou ${pct(AID_MONEY_SHARE[3])} de son budget selon le niveau d'aide, sans dépasser ${pct(AID_CAP[1])}, ${pct(AID_CAP[2])} ou ${pct(AID_CAP[3])} du budget du receveur ; l'argent va à la réserve du receveur.`,
+      `L'IA (et la gestion automatique des constructions) ne lance une usine que si ses usines militaires sont payées et que sa réserve dépasse ${FACTORY_RESERVE_DAYS} jours de budget ; elle mène alors autant de chantiers que ses usines civiles le permettent.`,
     ],
   },
 ]

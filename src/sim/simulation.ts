@@ -594,7 +594,7 @@ export class Simulation {
 
   private daily(): void {
     const ctx = this.ctx
-    updateEconomy(ctx, this.scenario, (incomes) => applyAidFlows(ctx, incomes))
+    updateEconomy(ctx, this.scenario, (incomes, budgets) => applyAidFlows(ctx, incomes, budgets))
     deliverEquipment(ctx)
     updateSustainability(ctx)
     const managed = this.mobilizedAi()

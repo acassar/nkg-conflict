@@ -46,6 +46,12 @@ export const GDP_DRIFT_DAYS = 180
 export const MUNITIONS_CAP_DAYS = 15
 export const MUNITIONS_CAP_MIN = 2000
 
+/**
+ * Réserve (en jours de budget) au-delà de laquelle l'IA lance une usine : l'argent dort, ou l'aide
+ * étrangère l'a regarnie. En dessous, elle ne bâtit que des fortifications.
+ */
+export const FACTORY_RESERVE_DAYS = 20
+
 /** Jours gardés pour l'évolution du PIB, de la production et de la main-d'œuvre. */
 export const BUDGET_HISTORY_DAYS = 90
 
@@ -415,7 +421,7 @@ export function computeBudget(eco: EconomyState, input: BudgetInput): BudgetResu
 export function applyBudget(eco: EconomyState, r: BudgetResult): void {
   const b = eco.budget
   if (!b) return
-  b.treasury = Math.max(0, b.treasury) + r.treasury
+  b.treasury = Math.max(0, Math.max(0, b.treasury) + r.treasury)
   b.research += r.research
   b.last = r.day
   for (const f of eco.factories) {

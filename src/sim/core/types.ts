@@ -450,6 +450,8 @@ export interface BudgetDay {
   civPoints: number
   /** Part des hommes mobilisés dans la population active (pèse sur l'indice d'activité). */
   mobilized: number
+  /** Aide étrangère en argent (M$) : reçue (versée à la réserve) et versée à d'autres pays. */
+  aid?: { in: number; out: number }
 }
 
 export interface RecruitItem {

@@ -3,6 +3,7 @@ import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { dailyIncome } from '@/sim/economy/economy'
+import { canFundFactory, FACTORY_RESERVE_DAYS, updateAiEconomy } from '@/sim/economy/ai'
 import {
   applyBudget,
   computeBudget,
@@ -79,6 +80,47 @@ describe('budget national', () => {
     expect(dailyIncome(sim.ctx, ukraine2026, 'UKR').production).toBeCloseTo(full.production)
     sim.setBudgetAllocation(null)
     expect(eco.budget?.allocation).toBeUndefined()
+  })
+
+  it("l'IA ne lance une usine que si le budget peut la faire tourner", () => {
+    const sim = newGame()
+    sim.step(24)
+    const eco = ecoOf(sim, 'RUS')
+    const b = eco.budget
+    if (!b?.last) throw new Error('budget absent')
+    const factories = (): number =>
+      eco.construction.filter((q) => q.kind === 'mil' || q.kind === 'civ').length
+    // Réserve vide : fortifications seulement.
+    b.treasury = 0
+    eco.construction = []
+    expect(canFundFactory(eco)).toBe(false)
+    updateAiEconomy(sim.ctx, 'RUS', { warEconomy: false, build: true, recruit: false })
+    updateAiEconomy(sim.ctx, 'RUS', { warEconomy: false, build: true, recruit: false })
+    expect(factories()).toBe(0)
+    // Argent qui dort, usines militaires payées : une usine militaire (pays en guerre).
+    b.treasury = (FACTORY_RESERVE_DAYS + 1) * b.last.budget
+    b.last.use.mil = 1
+    expect(canFundFactory(eco)).toBe(true)
+    eco.construction = eco.construction.slice(0, 1)
+    updateAiEconomy(sim.ctx, 'RUS', { warEconomy: false, build: true, recruit: false })
+    expect(eco.construction.some((q) => q.kind === 'mil')).toBe(true)
+    // Usines militaires sous-payées : plus d'usine, même avec de l'argent en réserve.
+    b.last.use.mil = 0.5
+    expect(canFundFactory(eco)).toBe(false)
+  })
+
+  it("l'aide en argent compte dans la réserve annoncée", () => {
+    const sim = newGame()
+    sim.step(24)
+    const eco = ecoOf(sim)
+    const last = eco.budget?.last
+    if (!last) throw new Error('budget absent')
+    const a = currentAllocation(eco)
+    if (!a) throw new Error('répartition absente')
+    const before = budgetForecast(eco, a)?.reserve ?? 0
+    last.aid = { in: 50, out: 10 }
+    expect((budgetForecast(eco, a)?.reserve ?? 0) - before).toBeCloseTo(40)
+    expect(budgetView(eco)?.aid).toEqual({ in: 50, out: 10 })
   })
 
   it('normalise une répartition choisie', () => {

@@ -24,6 +24,8 @@ export interface BudgetView {
   factories: { civ: number; mil: number; offMap: number; damaged: number }
   /** Effet de la mobilisation sur l'activité, en points de PIB (négatif). */
   mobilizationPct: number
+  /** Aide étrangère en argent du dernier jour (M$) : reçue et versée. */
+  aid: { in: number; out: number }
 }
 
 const pct = (v: number): string => `${Math.round(v * 100)} %`
@@ -67,6 +69,7 @@ export function budgetView(eco: EconomyState | null | undefined): BudgetView | n
       damaged: eco.factories.filter((f) => f.condition < 1).length,
     },
     mobilizationPct: -(1 - b.gdpIndex) * 100,
+    aid: { in: last.aid?.in ?? 0, out: last.aid?.out ?? 0 },
   }
 }
 
@@ -128,7 +131,10 @@ export function budgetForecast(
   const milDays = b.factoryDayCost > 0 ? last.need.defense / b.factoryDayCost : 0
   const civAbsorb = b.factoryDayCost > 0 ? last.need.construction / b.factoryDayCost : 0
   const extra = (m: number, need: number): number => m - need
+  // L'aide en argent (reçue moins versée) va à la réserve.
   const balance =
+    (last.aid?.in ?? 0) -
+    (last.aid?.out ?? 0) +
     money('reserve') +
     extra(money('defense'), last.need.defense) +
     extra(money('construction'), last.need.construction)

@@ -6,7 +6,7 @@ import { buildScenario } from '@/sim/scenarios'
 import { loadTheater } from '@/sim/theater/load'
 import type { TheaterData } from '@/sim/theater/grid'
 import { relation } from '@/sim/politics/politics'
-import { aidBetween, revokeAid } from '@/sim/politics/aid'
+import { AID_CAP, aidBetween, revokeAid } from '@/sim/politics/aid'
 import { parseSave, serializeSave } from '@/sim/core/save'
 
 let theater: TheaterData
@@ -44,6 +44,34 @@ describe('aide étrangère', () => {
     // Ce que perd le donneur correspond à ce qu'il envoie (production et matériel).
     const lost = usa(without) - usa(withAid)
     expect(lost).toBeCloseTo((sent?.production ?? 0) + (sent?.equipment ?? 0), 0)
+  })
+
+  it("un donneur à budget verse aussi de l'argent à la réserve du receveur, plafonné", () => {
+    const withAid = newWorld('FRA', 3)
+    const without = newWorld('FRA', 3)
+    for (const a of [...without.ctx.politics.aids]) {
+      if (a.to === 'UKR') revokeAid(without.ctx, a.id, a.from)
+    }
+    withAid.step(24)
+    without.step(24)
+    const sent = aidBetween(withAid.ctx, 'USA', 'UKR')?.lastDay
+    const ukr = withAid.ctx.economies.get('UKR')?.budget
+    const money = sent?.money ?? 0
+    expect(money).toBeGreaterThan(0)
+    // Plafond : une part du budget du receveur (aide « soutenue »).
+    expect(money).toBeLessThanOrEqual((ukr?.last?.budget ?? 0) * AID_CAP[2] + 1e-6)
+    // Plus de points de construction pour un donneur à budget.
+    expect(sent?.construction).toBe(0)
+    // Le receveur l'inscrit au budget et sa réserve grossit d'autant.
+    expect(ukr?.last?.aid?.in).toBeGreaterThanOrEqual(money)
+    const treasury = (s: Simulation, c: string): number =>
+      s.ctx.economies.get(c)?.budget?.treasury ?? 0
+    expect(treasury(withAid, 'UKR') - treasury(without, 'UKR')).toBeCloseTo(
+      ukr?.last?.aid?.in ?? 0,
+      0,
+    )
+    expect(withAid.ctx.economies.get('USA')?.budget?.last?.aid?.out).toBeGreaterThanOrEqual(money)
+    expect(treasury(withAid, 'USA')).toBeLessThan(treasury(without, 'USA'))
   })
 
   it('le joueur accorde, ajuste puis révoque une aide', () => {

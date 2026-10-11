@@ -4,6 +4,7 @@ import type { CountryId, LonLat } from '../core/types'
 import { decodeRle } from '../theater/grid'
 import { WAR_ECONOMY } from '../economy/rules'
 import { mobilize } from './mobilization'
+import { BRIGADE_SPLIT } from '../units/catalog'
 import type { CountryPolitics, PeaceKind, PoliticsSnapshot, War } from './types'
 
 export const RELATION_MIN = -100
@@ -278,6 +279,13 @@ export function withdrawFromClosedTerritory(ctx: SimContext): void {
       // Chemin tracé pendant la guerre à travers un territoire désormais fermé : recalculé.
       if (u.path.some((p) => !enterable(p))) {
         const t = u.order.target
+        // But désormais fermé (offensive vers l'ancien ennemi) : l'ordre tombe, sans recherche de
+        // chemin vouée à l'échec (coûteuse sur la carte du monde, avec des centaines de brigades).
+        if (t && !enterable(t)) {
+          u.order = { kind: 'hold' }
+          u.path = []
+          continue
+        }
         u.path = t ? (ctx.pathfinder.find([u.lon, u.lat], t, { side, enemyCost: 2 }) ?? []) : []
         if (u.path.some((p) => !enterable(p))) u.path = []
       }
@@ -451,7 +459,8 @@ export function updatePoliticsDaily(ctx: SimContext, dailyLosses: Map<CountryId,
     const atWar = ctx.matrix.atWar[sideIndex(ctx, p.code)] === 1
     if (atWar) {
       // Usure : un peu chaque jour, davantage avec les pertes (en fractions d'unité).
-      const losses = dailyLosses.get(p.code) ?? 0
+      // Pertes du jour en brigades, ramenées à l'ancienne échelle d'unité (BRIGADE_SPLIT brigades).
+      const losses = (dailyLosses.get(p.code) ?? 0) / BRIGADE_SPLIT
       p.warSupport = Math.max(0, p.warSupport - 0.0008 - 0.01 * losses)
       p.stability = Math.max(0, p.stability - 0.0005 - 0.003 * losses)
     } else {

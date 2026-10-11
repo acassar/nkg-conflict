@@ -1,4 +1,5 @@
 import type { BuildingKind, Buildings, UnitKind, WarEconomyLevel } from '../core/types'
+import { BRIGADE_SPLIT } from '../units/catalog'
 
 export interface BuildingType {
   kind: BuildingKind
@@ -40,7 +41,7 @@ export const BUILDINGS: Record<BuildingKind, BuildingType> = {
     cost: 600,
     minDays: 60,
     maxPerCity: 3,
-    description: 'Forme une unité à la fois et la déploie dans la ville',
+    description: `Forme ${BRIGADE_SPLIT} brigades à la fois et les déploie dans la ville`,
   },
   depot: {
     kind: 'depot',
@@ -93,15 +94,27 @@ export interface RecruitCost {
   days: number
 }
 
+/**
+ * Coût d'une unité. Brigades : le tiers de l'ancienne unité (BRIGADE_SPLIT), même durée de formation,
+ * une caserne en formant BRIGADE_SPLIT à la fois.
+ */
 export const RECRUIT_COSTS: Record<UnitKind, RecruitCost> = {
-  inf: { production: 300, manpower: 5, days: 10 },
-  mech: { production: 600, manpower: 5, days: 14 },
-  tank: { production: 900, manpower: 4, days: 18 },
-  art: { production: 500, manpower: 3, days: 12 },
+  inf: { production: 100, manpower: 5 / 3, days: 10 },
+  mech: { production: 200, manpower: 5 / 3, days: 14 },
+  tank: { production: 300, manpower: 4 / 3, days: 18 },
+  art: { production: 500 / 3, manpower: 1, days: 12 },
   log: { production: 300, manpower: 2, days: 8 },
   hq: { production: 400, manpower: 1, days: 8 },
   // Défense territoriale : peu de matériel, beaucoup d'hommes ; tient les secteurs calmes.
-  tdf: { production: 100, manpower: 6, days: 7 },
+  tdf: { production: 100 / 3, manpower: 2, days: 7 },
+}
+
+/** Formations menées en même temps par une caserne. */
+export const FORMATIONS_PER_BARRACKS = BRIGADE_SPLIT
+
+/** Formations menées en même temps par `barracks` casernes. */
+export function formationSlots(barracks: number): number {
+  return barracks * FORMATIONS_PER_BARRACKS
 }
 
 /** Points de construction inutilisés du jour : cette part devient de la production militaire. */

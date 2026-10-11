@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { BRIGADE_SPLIT } from '@/sim/units/catalog'
 import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
@@ -21,8 +22,8 @@ const theater = theaterJson as unknown as TheaterData
 const situation = (over: Partial<ArmySituation>): ArmySituation => ({
   ratio: 1,
   org: 0.9,
-  lineUnits: 18,
-  density: 1,
+  lineUnits: 18 * BRIGADE_SPLIT,
+  density: BRIGADE_SPLIT,
   calmShare: 0.1,
   contact: true,
   ...over,
@@ -48,9 +49,9 @@ describe('IA des armées : posture et mission selon la situation', () => {
   it('mission selon la force, la densité et le terrain', () => {
     expect(chooseMission(situation({ ratio: 3 }), true)).toBe('breach')
     expect(chooseMission(situation({ ratio: 3 }), false)).toBe('hold')
-    expect(chooseMission(situation({ ratio: 3, lineUnits: 4 }), true)).toBe('hold')
-    expect(chooseMission(situation({ ratio: 0.4, density: 2 }), true)).toBe('depth')
-    expect(chooseMission(situation({ density: 0.3 }), true)).toBe('keyPoints')
+    expect(chooseMission(situation({ ratio: 3, lineUnits: 4 * BRIGADE_SPLIT }), true)).toBe('hold')
+    expect(chooseMission(situation({ ratio: 0.4, density: 2 * BRIGADE_SPLIT }), true)).toBe('depth')
+    expect(chooseMission(situation({ density: 0.3 * BRIGADE_SPLIT }), true)).toBe('keyPoints')
     expect(chooseMission(situation({ ratio: 0.6, calmShare: 0.5 }), true)).toBe('keyPoints')
     expect(chooseMission(situation({ ratio: 1 }), true)).toBe('hold')
   })

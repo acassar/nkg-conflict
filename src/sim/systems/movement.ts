@@ -6,6 +6,7 @@ import { WarIndex } from './spatial'
 import { postureOf } from '../units/postures'
 import { layObstacles } from './obstacles'
 import { fuelSpeedFactor, kindTerrainSpeed } from '../units/kinds'
+import { BRIGADE_SPLIT } from '../units/catalog'
 
 const ENTRENCH_PER_HOUR = 0.01
 
@@ -40,8 +41,11 @@ export function planPath(ctx: SimContext, u: UnitState, target: LonLat): void {
     ) ?? []
 }
 
-/** Chemins calculés au plus par tick pour les postes de front : évite les à-coups sur les grands fronts. */
-const QUEUED_PATHS_PER_TICK = 3
+/**
+ * Chemins calculés au plus par tick pour les postes de front : évite les à-coups sur les grands fronts.
+ * Trois par tick à l'ancienne échelle d'unité, autant de fois plus à l'échelle de la brigade.
+ */
+const QUEUED_PATHS_PER_TICK = 3 * BRIGADE_SPLIT
 /** Exploration maximale pour rejoindre un poste : le chemin partiel est complété aux tours suivants. */
 const FRONT_MAX_EXPANDED = 20_000
 /** Heuristique plus gourmande pour ces trajets : le chemin exact compte moins que sa rapidité. */

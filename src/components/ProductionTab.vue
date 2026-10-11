@@ -2,7 +2,12 @@
 import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
-import { BUILDING_KINDS, BUILDINGS, WAR_ECONOMY } from '@/sim/economy/rules'
+import {
+  BUILDING_KINDS,
+  BUILDINGS,
+  FORMATIONS_PER_BARRACKS,
+  WAR_ECONOMY,
+} from '@/sim/economy/rules'
 import type { WarEconomyLevel } from '@/sim/core/types'
 import { productionQueue, warEconomyEffects } from '@/composables/productionQueue'
 import { useProductionStats } from '@/composables/production'
@@ -185,7 +190,9 @@ const warTitle = (level: WarEconomyLevel): string => {
           <span class="gauge"
             ><i :style="{ width: ratio(stats.recruitment.active, stats.recruitment.max) }"
           /></span>
-          <span class="meta">occupées par une formation</span>
+          <span class="meta"
+            >places de formation occupées ({{ FORMATIONS_PER_BARRACKS }} par caserne)</span
+          >
         </div>
         <div class="cap">
           <span class="cap-label">Production</span>
@@ -204,7 +211,7 @@ const warTitle = (level: WarEconomyLevel): string => {
         </p>
         <div v-else-if="freeBarracks > 0" class="free-tip" data-testid="free-barracks">
           <span
-            >{{ freeBarracks }} caserne{{ freeBarracks > 1 ? 's' : '' }} libre{{
+            >{{ freeBarracks }} place{{ freeBarracks > 1 ? 's' : '' }} de formation libre{{
               freeBarracks > 1 ? 's' : ''
             }}<template v-if="stats.production.stock > 300">
               et {{ round(stats.production.stock) }} de production en stock</template

@@ -63,7 +63,8 @@ describe('ordres visant une unité', () => {
     sim.pursueUnit([mine[0]?.id ?? -1], target.id)
     sim.ctx.units.delete(target.id)
     sim.step(6)
-    expect(mine[0]?.order.kind).toBe('hold')
+    // La poursuite s'arrête (l'unité peut ensuite recevoir une riposte de son armée).
+    expect(mine[0]?.order.kind).not.toBe('pursue')
   })
 
   it('assaut ponctuel : attaque de la position de la cible', () => {

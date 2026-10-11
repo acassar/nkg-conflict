@@ -2,6 +2,7 @@ import { sideIndex, type SimContext } from '../context'
 import type { ArmyState, CountryDef, LonLat, UnitKind, UnitState } from '../core/types'
 import { assignFront, frontCells } from '../systems/armies'
 import { unitName } from '../units/names'
+import { BRIGADE_SPLIT } from '../units/catalog'
 
 /** Unité à lever : position et effectifs facultatifs (déploiement automatique sinon). */
 interface UnitSpec {
@@ -12,17 +13,23 @@ interface UnitSpec {
   strength?: number
 }
 
-/** Répartition des unités levées à la mobilisation (parts, arrondies). */
+/**
+ * Répartition des unités levées à la mobilisation (parts, arrondies). À l'échelle de la brigade,
+ * logistique et QG pèsent BRIGADE_SPLIT fois moins (ils ne sont pas scindés).
+ */
 const COMPOSITION: Array<[UnitKind, number]> = [
-  ['inf', 0.4],
-  ['mech', 0.2],
-  ['tank', 0.12],
-  ['art', 0.12],
-  ['log', 0.08],
-  ['hq', 0.08],
+  ['inf', 0.45],
+  ['mech', 0.22],
+  ['tank', 0.14],
+  ['art', 0.13],
+  ['log', 0.03],
+  ['hq', 0.03],
 ]
 
-/** Ordre de bataille d'un pays de `size` unités : au moins un QG, une logistique au-delà de 6 unités. */
+/**
+ * Ordre de bataille d'un pays de `size` unités : au moins un QG, une logistique au-delà de
+ * 6 × BRIGADE_SPLIT unités.
+ */
 export function forceComposition(size: number): Record<UnitKind, number> {
   const out: Record<UnitKind, number> = { inf: 0, mech: 0, tank: 0, art: 0, log: 0, hq: 0, tdf: 0 }
   let left = size
@@ -36,7 +43,7 @@ export function forceComposition(size: number): Record<UnitKind, number> {
     out.hq = 1
     out.inf = Math.max(0, out.inf - 1)
   }
-  if (out.log === 0 && size > 6) {
+  if (out.log === 0 && size > 6 * BRIGADE_SPLIT) {
     out.log = 1
     out.inf = Math.max(0, out.inf - 1)
   }
@@ -197,14 +204,20 @@ export function mobilize(
   }
 }
 
-/** Taille des forces d'un pays selon son PIB et sa population, corrigée par un facteur de militarisation. */
+/**
+ * Taille des forces d'un pays, en unités (brigades pour l'essentiel), selon son PIB et sa population,
+ * corrigée par un facteur de militarisation : BRIGADE_SPLIT fois l'ancienne formule (3 à 45 unités).
+ */
 export function forceSizeOf(
   gdpBillions: number,
   popMillions: number,
   militarization = 1,
-  cap = 45,
+  cap = 45 * BRIGADE_SPLIT,
 ): number {
   const base =
     3 + 0.6 * Math.sqrt(Math.max(0, gdpBillions)) + 0.4 * Math.sqrt(Math.max(0, popMillions))
-  return Math.max(3, Math.min(cap, Math.round(base * militarization)))
+  return Math.max(
+    3 * BRIGADE_SPLIT,
+    Math.min(cap, Math.round(base * militarization * BRIGADE_SPLIT)),
+  )
 }

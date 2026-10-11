@@ -2,7 +2,7 @@ import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, Posture, UnitState } from '../core/types'
 import { distanceKm, terrainRule } from '../theater/grid'
 import { fortFactorAt } from '../economy/economy'
-import { isLineUnit } from '../units/catalog'
+import { BRIGADE_SPLIT, isLineUnit } from '../units/catalog'
 import { enemyShare } from './flanks'
 
 /**
@@ -67,7 +67,7 @@ export function pursuitLimitKm(
 ): number {
   const base = PURSUIT_KM[posture ?? 'balanced']
   const supply = supplied ? 1 : 0.5
-  const help = support >= 2 ? 1 : support === 1 ? 0.75 : 0.5
+  const help = support >= 2 ? 1 : support >= 1 ? 0.75 : 0.5
   return base * supply * help
 }
 
@@ -121,13 +121,16 @@ function friendsOf(ctx: SimContext, side: number, lines: Map<number, UnitState[]
   return out
 }
 
-/** Nombre de voisines à moins de SUPPORT_KM. */
+/**
+ * Voisines à moins de SUPPORT_KM, comptées en unités de l'ancienne échelle (une brigade pèse
+ * 1 / BRIGADE_SPLIT) : trois brigades isolées restent « seules », comme l'ancienne unité.
+ */
 function supportOf(u: UnitState, friends: UnitState[]): number {
   let n = 0
   const dLat = SUPPORT_KM / 111
   for (const f of friends) {
     if (f === u || Math.abs(f.lat - u.lat) > dLat) continue
-    if (distanceKm(u.lon, u.lat, f.lon, f.lat) <= SUPPORT_KM) n++
+    if (distanceKm(u.lon, u.lat, f.lon, f.lat) <= SUPPORT_KM) n += 1 / BRIGADE_SPLIT
   }
   return n
 }
@@ -135,7 +138,7 @@ function supportOf(u: UnitState, friends: UnitState[]): number {
 /** Motif d'arrêt d'une unité qui attaque, ou null si elle peut continuer. */
 export function overreach(ctx: SimContext, u: UnitState, support: number): HaltReason | null {
   const supplied = runtimeOf(ctx, u.id).supplied
-  if (support === 0 && enemyShare(ctx, u) >= DEEP_SHARE) return 'alone'
+  if (support < 1 && enemyShare(ctx, u) >= DEEP_SHARE) return 'alone'
   if (!supplied && u.hoursOutOfSupply >= UNSUPPLIED_HOURS && support < 2) return 'unsupplied'
   if (u.order.kind === 'pursue') {
     const from = u.order.from ?? [u.lon, u.lat]

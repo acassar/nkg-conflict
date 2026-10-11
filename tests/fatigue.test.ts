@@ -79,11 +79,13 @@ describe('fatigue et relève', () => {
   it('la relève prend les plus fatiguées, au plus un quart de la ligne, avec hystérésis', () => {
     const { line } = setup()
     expect(line.length).toBeGreaterThanOrEqual(8)
-    for (const [k, u] of line.entries()) u.fatigue = k < 6 ? 0.7 + k * 0.01 : 0.1
+    // La moitié de la ligne est épuisée : le quart de la ligne part au repos.
+    const tired = Math.ceil(line.length / 2)
+    for (const [k, u] of line.entries()) u.fatigue = k < tired ? 0.95 - k * 0.001 : 0.1
     const resting = selectRelief(line)
     expect(resting).toHaveLength(Math.floor(line.length / 4))
     // Les plus fatiguées d'abord.
-    expect(resting[0]!.fatigue).toBeCloseTo(0.75, 6)
+    expect(resting[0]!.fatigue).toBeCloseTo(0.95, 6)
     for (const u of resting) expect(u.relief).toBe(true)
     // Au repos, elle reste en relève tant qu'elle n'est pas redescendue sous le seuil de retour.
     const first = resting[0]!

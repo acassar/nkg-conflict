@@ -113,7 +113,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'combat',
     title: 'Combat',
     paragraphs: [
-      `Deux unités ennemies à moins de ${CONTACT_KM} km sont au contact : chaque heure, chacune frappe l'ennemi le plus proche ; l'artillerie frappe aussi à distance. Les pertes dépendent du rapport entre la puissance de feu du tireur et la défense de la cible (plafonné à 4 contre 1).`,
+      `Deux unités ennemies à moins de ${CONTACT_KM} km sont au contact : chaque heure, chacune frappe, parmi les ennemis au contact, celui qui a reçu le moins de tirs dans l'heure, puis le plus proche ; l'artillerie frappe aussi à distance. Les pertes dépendent du rapport entre la puissance de feu du tireur et la défense de la cible (plafonné à 4 contre 1).`,
       "Puissance de feu = valeur d'attaque du type (ou de défense s'il n'attaque pas) × effectifs × organisation × ravitaillement × commandement × posture × munitions × terrain selon le type × rapport de force entre types × fatigue. Défense = valeur de défense × effectifs × organisation × ravitaillement × commandement × terrain (commun et selon le type) × retranchement × fortifications × posture × flanc × fatigue.",
       `Organisation : elle compte pour 25 % à 100 % de la valeur (×${(0.25).toLocaleString('fr-FR')} à vide). Sous ${pct(ROUT_ORG)} (seuil selon la posture), l'unité décroche et recule jusqu'à retrouver ${pct(RALLY_ORG)}.`,
       `Munitions : chaque tir en consomme, selon le type (voir Types d'unités) ; stock vide, puissance de feu ${signedPct(NO_MUNITIONS_FACTOR)}.`,

@@ -15,12 +15,7 @@ import { fatigueFactor, fatigueOf, fatigueRecoveryFactor, updateFatigue } from '
 import { postureOf } from '../units/postures'
 import { assaultFireFactor, assaultLossFactor, obstaclesUnder } from './obstacles'
 import { flankDefenseFactor, flankOrgLossFactor, flankText, updateFlanks } from './flanks'
-import {
-  kindTerrainAttack,
-  kindTerrainDefense,
-  matchup,
-  MUNITIONS_PER_SHOT_BY_KIND,
-} from '../units/kinds'
+import { kindTerrainAttack, kindTerrainDefense, matchup, munitionsPerShot } from '../units/kinds'
 
 /** Distance à laquelle deux unités ennemies sont au contact et combattent. */
 export const CONTACT_KM = 10
@@ -264,7 +259,7 @@ function hit(
   let defense = defenseValue(ctx, target)
   if (isOffensive(from) && riverBetween(ctx, from, target)) defense *= 1.4
   // Chaque tir consomme des munitions, selon le type (l'artillerie bien plus que l'infanterie).
-  const ammo = useMunitions(ctx, from.owner, MUNITIONS_PER_SHOT_BY_KIND[from.kind])
+  const ammo = useMunitions(ctx, from.owner, munitionsPerShot(from.kind))
   let fire = firePower(ctx, from) * ammo
   // Rapport de force entre types (blindés à découvert, infanterie retranchée en ville, artillerie).
   const vs = matchup(from, target, terrainUnder(ctx, target))
@@ -314,12 +309,29 @@ export function updateCombat(ctx: SimContext): void {
   // Flancs : directions d'où viennent les ennemis des unités au contact, saillants.
   updateFlanks(ctx, index)
 
-  // 2. Tirs directs (chaque unité au contact frappe son adversaire le plus proche).
+  // 2. Tirs directs : chaque unité au contact frappe, parmi les ennemis au contact, celui qui a reçu
+  // le moins de tirs ce tour, puis le plus proche. Les brigades d'une même ancienne unité ne
+  // concentrent pas leurs feux sur une seule brigade adverse (l'échelle de la brigade reste neutre).
+  const fired = new Map<number, number>()
   for (const u of index.units) {
     const rt = runtimeOf(ctx, u.id)
     if (rt.engagedWith === null || rt.routed) continue
-    const target = ctx.units.get(rt.engagedWith)
-    if (target) hit(ctx, u, target, 1, true)
+    let target = ctx.units.get(rt.engagedWith)
+    if (!target) continue
+    let bestShots = fired.get(target.id) ?? 0
+    if (bestShots > 0) {
+      let bestKm = Infinity
+      index.forEachEnemy(u, CONTACT_KM, (e, km) => {
+        const shots = fired.get(e.id) ?? 0
+        if (shots < bestShots || (shots === bestShots && km < bestKm)) {
+          target = e
+          bestShots = shots
+          bestKm = km
+        }
+      })
+    }
+    fired.set(target.id, bestShots + 1)
+    hit(ctx, u, target, 1, true)
   }
 
   // 3. Artillerie : frappe l'ennemi le plus proche à portée, même sans contact direct.

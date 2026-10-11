@@ -572,7 +572,7 @@ async function createArmy(): Promise<void> {
             Renforts<span
               v-if="freeBarracks > 0"
               class="tag"
-              :title="`${freeBarracks} caserne(s) libre(s)`"
+              :title="`${freeBarracks} place(s) de formation libre(s)`"
               data-testid="free-barracks"
               >{{ freeBarracks }}</span
             >

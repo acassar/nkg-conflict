@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
-import { constructionSlots } from '@/sim/economy/rules'
+import { constructionSlots, formationSlots } from '@/sim/economy/rules'
 
 /**
  * Indicateurs de production du joueur : chantiers et formations en cours face aux capacités,
@@ -14,7 +14,7 @@ export function useProductionStats() {
     const eco = s?.economy
     if (!s || !eco) return null
     const mine = s.cities.filter((c) => c.owner === s.playerCountry)
-    const barracks = mine.reduce((n, c) => n + c.buildings.barracks, 0)
+    const barracks = formationSlots(mine.reduce((n, c) => n + c.buildings.barracks, 0))
     const active = eco.recruitment.slice(0, barracks)
     const activeIds = new Set(active.map((q) => q.id))
     const busyByCity = new Map<string, number>()

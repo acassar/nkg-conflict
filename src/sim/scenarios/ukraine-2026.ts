@@ -7,13 +7,15 @@ import type {
   UnitKind,
 } from '../core/types'
 import { unitName } from '../units/names'
+import { BRIGADE_SPLIT, isBrigade } from '../units/catalog'
 
 /** Génère un ordre de bataille numéroté, déployé automatiquement le long du front. */
+/** Forces en unités de l'ancienne échelle : chaque unité de combat donne BRIGADE_SPLIT brigades. */
 function forces(owner: CountryId, counts: Partial<Record<UnitKind, number>>): ScenarioUnit[] {
   const out: ScenarioUnit[] = []
   for (const kind of Object.keys(counts) as UnitKind[]) {
-    for (let n = 1; n <= (counts[kind] ?? 0); n++)
-      out.push({ owner, kind, name: unitName(kind, n) })
+    const total = (counts[kind] ?? 0) * (isBrigade(kind) ? BRIGADE_SPLIT : 1)
+    for (let n = 1; n <= total; n++) out.push({ owner, kind, name: unitName(kind, n) })
   }
   return out
 }

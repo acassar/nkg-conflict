@@ -455,6 +455,17 @@ try {
   // Paysage : panneau sur le côté.
   await page.setViewportSize({ width: 844, height: 390 })
   await page.waitForTimeout(1200)
+  // Changement de disposition : on attend que le panneau passe sur le côté (partie plus lourde).
+  await page
+    .waitForFunction(
+      () => {
+        const el = document.querySelector('[data-testid="command-panel"]')
+        return !!el && el.getBoundingClientRect().left > 400
+      },
+      null,
+      { timeout: 8000 },
+    )
+    .catch(() => {})
   const panel = await page.getByTestId('command-panel').boundingBox()
   step('paysage', { panneau: panel })
   check(!!panel && panel.x > 400, 'en paysage, le panneau devrait être sur le côté droit')

@@ -117,7 +117,7 @@ export function gaugeViews({ eco, sustain, history, freeBarracks }: GaugeInput):
   const industryAdvice: string[] = []
   if (freeBarracks > 0) {
     industryAdvice.push(
-      `${freeBarracks} caserne${freeBarracks > 1 ? 's' : ''} libre${freeBarracks > 1 ? 's' : ''} : commandez des renforts depuis une armée (onglet « Renforts » de sa fiche).`,
+      `${freeBarracks} place${freeBarracks > 1 ? 's' : ''} de formation libre${freeBarracks > 1 ? 's' : ''} dans les casernes : commandez des renforts depuis une armée (onglet « Renforts » de sa fiche).`,
     )
   }
   if (d.production > 0 && eco.production >= 10 * d.production && prodUsed < 0.5 * d.production) {

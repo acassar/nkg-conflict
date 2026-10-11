@@ -10,7 +10,7 @@ import {
 } from '@deck.gl/layers'
 import type { ArmyState, CityState, LonLat, SimSnapshot, UnitSnapshot } from '@/sim/core/types'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
-import { FORT_RADIUS_KM } from '@/sim/economy/rules'
+import { FORT_RADIUS_KM, formationSlots } from '@/sim/economy/rules'
 import { fortBonusLabel } from '@/sim/economy/forts'
 import { stackIcon, unitIcon } from './unitIcons'
 import { isStack, stackUnits, type MapUnit } from './clusters'
@@ -409,7 +409,8 @@ export function buildLayers(input: LayerInput): Layer[] {
       (c) =>
         c.owner === snapshot.playerCountry && (c.buildings.barracks > 0 || c.buildings.fort > 0),
     )
-    const free = (c: CityState): number => c.buildings.barracks - (busy.get(c.name) ?? 0)
+    const free = (c: CityState): number =>
+      formationSlots(c.buildings.barracks) - (busy.get(c.name) ?? 0)
     layers.push(
       new ScatterplotLayer<CityState>({
         id: 'prod-free-barracks',
@@ -431,7 +432,9 @@ export function buildLayers(input: LayerInput): Layer[] {
         getText: (c) => {
           const parts: string[] = []
           if (c.buildings.barracks > 0) {
-            parts.push(`Caserne ${busy.get(c.name) ?? 0}/${c.buildings.barracks}`)
+            parts.push(
+              `Formations ${busy.get(c.name) ?? 0}/${formationSlots(c.buildings.barracks)}`,
+            )
           }
           if (c.buildings.fort > 0) {
             parts.push(`Fort ${c.buildings.fort} (${fortBonusLabel(c.buildings.fort)})`)

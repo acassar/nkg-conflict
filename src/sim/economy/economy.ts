@@ -27,6 +27,7 @@ import {
   NO_MUNITIONS_FACTOR,
   PRODUCTION_PER_MIL,
   RECRUIT_COSTS,
+  formationSlots,
   REINFORCE_PER_DAY,
   WAR_ECONOMY,
 } from './rules'
@@ -361,8 +362,8 @@ function barracksCount(ctx: SimContext, country: CountryId): number {
 
 function advanceRecruitment(ctx: SimContext, eco: EconomyState): void {
   const side = sideIndex(ctx, eco.country)
-  // Chaque caserne forme une unité à la fois.
-  const slots = barracksCount(ctx, eco.country)
+  // Chaque caserne forme FORMATIONS_PER_BARRACKS brigades à la fois.
+  const slots = formationSlots(barracksCount(ctx, eco.country))
   for (const item of eco.recruitment.slice(0, slots)) {
     const cost = RECRUIT_COSTS[item.kind]
     const step = Math.min(eco.production, item.cost / cost.days, item.cost - item.progress)
@@ -512,7 +513,7 @@ export function barracksSites(ctx: SimContext, country: CountryId) {
       name: c.def.name,
       lon: c.def.lon,
       lat: c.def.lat,
-      barracks: c.buildings.barracks,
+      barracks: formationSlots(c.buildings.barracks),
     }))
 }
 

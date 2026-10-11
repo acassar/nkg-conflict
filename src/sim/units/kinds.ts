@@ -1,4 +1,5 @@
 import type { UnitKind, UnitState } from '../core/types'
+import { BRIGADE_SPLIT, isBrigade } from './catalog'
 import { Terrain, TERRAIN_RULES } from '../theater/grid'
 
 /**
@@ -128,7 +129,7 @@ export function matchup(
 
 // ---------- Consommation ----------
 
-/** Munitions consommées par tir, selon le type (1 = infanterie). */
+/** Munitions consommées par tir, selon le type (1 = infanterie de l'ancienne échelle). */
 export const MUNITIONS_PER_SHOT_BY_KIND: Record<UnitKind, number> = {
   inf: 1,
   mech: 1.1,
@@ -137,6 +138,11 @@ export const MUNITIONS_PER_SHOT_BY_KIND: Record<UnitKind, number> = {
   tdf: 0.75,
   log: 1,
   hq: 1,
+}
+
+/** Munitions consommées par un tir de cette unité : une brigade tire le tiers d'une ancienne unité. */
+export function munitionsPerShot(kind: UnitKind): number {
+  return MUNITIONS_PER_SHOT_BY_KIND[kind] / (isBrigade(kind) ? BRIGADE_SPLIT : 1)
 }
 
 /** Types motorisés : ils dépendent du carburant apporté par le ravitaillement. */

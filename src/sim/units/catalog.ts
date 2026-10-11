@@ -18,6 +18,19 @@ export interface UnitType {
   commandRadiusKm: number
 }
 
+/**
+ * Échelle de la brigade (choix d'Adrien, 10 oct. : scission neutre). Une unité de combat est une
+ * brigade ; chaque ancienne unité en vaut BRIGADE_SPLIT, d'un tiers d'effectifs, de coûts et de
+ * consommation. La puissance par unité vient de sa force (0 à 1) : les valeurs d'attaque et de défense
+ * restent des rapports. Logistique et QG ne sont pas des brigades et gardent leur échelle.
+ */
+export const BRIGADE_SPLIT = 3
+
+/** Unités à l'échelle de la brigade (toutes sauf la logistique et les QG). */
+export function isBrigade(kind: UnitKind): boolean {
+  return kind !== 'log' && kind !== 'hq'
+}
+
 /** Catalogue de l'époque moderne. Valeurs de départ, à équilibrer en jouant. */
 export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
   inf: {
@@ -27,7 +40,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 7,
     speedKmh: 3,
     supportRangeKm: 0,
-    zocKm: 12,
+    zocKm: 8,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -38,7 +51,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 7,
     speedKmh: 6,
     supportRangeKm: 0,
-    zocKm: 12,
+    zocKm: 8,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -49,7 +62,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 6,
     speedKmh: 6,
     supportRangeKm: 0,
-    zocKm: 12,
+    zocKm: 8,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -60,7 +73,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 2,
     speedKmh: 4,
     supportRangeKm: 30,
-    zocKm: 6,
+    zocKm: 3.5,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -82,7 +95,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 5,
     speedKmh: 3,
     supportRangeKm: 0,
-    zocKm: 10,
+    zocKm: 6,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },

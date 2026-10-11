@@ -75,7 +75,7 @@ describe('jauges de la barre du haut', () => {
     expect(views[3]!.level).toBe('unknown')
   })
 
-  it('conseils : casernes libres, stock qui dort, plafond de munitions proche', () => {
+  it('conseils : places de formation libres, stock qui dort, plafond de munitions proche', () => {
     const eco = economy({
       production: 2000,
       munitions: MUNITIONS_CAP,
@@ -83,7 +83,7 @@ describe('jauges de la barre du haut', () => {
     })
     const views = gaugeViews({ eco, sustain: null, history: [], freeBarracks: 2 })
     const industry = views.find((v) => v.id === 'industry')!
-    expect(industry.advice[0]).toMatch(/^2 casernes libres/)
+    expect(industry.advice[0]).toMatch(/^2 places de formation libres/)
     expect(industry.advice.some((a) => a.includes('qui dort'))).toBe(true)
     const mun = views.find((v) => v.id === 'munitions')!
     expect(mun.level).toBe('warning')

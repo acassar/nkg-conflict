@@ -3,7 +3,8 @@ import { frontCells } from '../systems/armies'
 import type { BuildingKind, CountryId, UnitKind } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { citiesOf, queueConstruction, queueRecruit, setWarEconomy } from './economy'
-import { BUILDINGS, RECRUIT_COSTS } from './rules'
+import { BUILDINGS, RECRUIT_COSTS, formationSlots } from './rules'
+import { BRIGADE_SPLIT } from '../units/catalog'
 import { relation } from '../politics/politics'
 import { territoryShares } from './national'
 
@@ -19,7 +20,19 @@ export interface AiEconomyParts {
 const ALL_PARTS: AiEconomyParts = { warEconomy: true, build: true, recruit: true }
 
 /** Composition visée des nouvelles unités de l'IA (cycle). */
-const RECRUIT_CYCLE: UnitKind[] = ['inf', 'mech', 'inf', 'tank', 'art', 'inf', 'mech', 'log']
+// Une logistique pour sept unités de l'ancienne échelle, soit BRIGADE_SPLIT fois plus de brigades.
+const RECRUIT_CYCLE: UnitKind[] = [
+  ...Array.from({ length: BRIGADE_SPLIT }, (): UnitKind[] => [
+    'inf',
+    'mech',
+    'inf',
+    'tank',
+    'art',
+    'inf',
+    'mech',
+  ]).flat(),
+  'log',
+]
 const FRONT_CITY_KM = 60
 /** Relations sous lesquelles un pays se sent menacé et renforce son armée en temps de paix. */
 const TENSION_RELATION = -50
@@ -125,7 +138,7 @@ export function updateAiEconomy(
     .filter((x) => x.c.buildings.barracks > 0)
     .sort((a, b) => a.front - b.front)
     .slice(0, 3)
-  const slots = barracks.reduce((n, x) => n + x.c.buildings.barracks, 0)
+  const slots = formationSlots(barracks.reduce((n, x) => n + x.c.buildings.barracks, 0))
   const army = [...ctx.armies.values()].find((a) => a.owner === country && a.wholeFront)
   // En paix, on n'entretient que l'effectif de mobilisation.
   const atWar = ctx.matrix.atWar[side] === 1
@@ -140,7 +153,7 @@ export function updateAiEconomy(
   const ordered = (): number =>
     Object.values(eco.unitCounters).reduce((n, v) => n + v, 0) + eco.recruitment.length
   let guard = 0
-  while (eco.recruitment.length < slots && guard++ < 10) {
+  while (eco.recruitment.length < slots && guard++ < 10 * BRIGADE_SPLIT) {
     let kind = RECRUIT_CYCLE[ordered() % RECRUIT_CYCLE.length]
     // Hommes en surplus et production à court : défense territoriale.
     if (kind && eco.manpower > TDF_MANPOWER && eco.production < RECRUIT_COSTS[kind].production) {

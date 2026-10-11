@@ -2,7 +2,7 @@
 import { computed, reactive, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
-import { RECRUIT_COSTS } from '@/sim/economy/rules'
+import { RECRUIT_COSTS, formationSlots } from '@/sim/economy/rules'
 import { armyAnchors, expandOrder, planArmyRecruit } from '@/sim/economy/armyRecruit'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import type { ArmyState, LonLat, UnitKind } from '@/sim/core/types'
@@ -49,7 +49,12 @@ const plan = computed(() => {
   return planArmyRecruit({
     sites: s.cities
       .filter((c) => c.owner === s.playerCountry && c.buildings.barracks > 0)
-      .map((c) => ({ name: c.name, lon: c.lon, lat: c.lat, barracks: c.buildings.barracks })),
+      .map((c) => ({
+        name: c.name,
+        lon: c.lon,
+        lat: c.lat,
+        barracks: formationSlots(c.buildings.barracks),
+      })),
     queue: eco.recruitment,
     anchors: armyAnchors(props.army, (id) => positions.get(id)),
     kinds: expandOrder(order, UNIT_KINDS),
@@ -86,8 +91,10 @@ const stockShare = computed(() => {
 })
 const costLine = (kind: UnitKind): string => {
   const c = RECRUIT_COSTS[kind]
-  return `${c.production} prod · ${c.manpower} k h. · ${c.days} j`
+  return `${round(c.production)} prod · ${men(c.manpower)} h. · ${c.days} j`
 }
+/** Hommes (la main-d'œuvre se compte en milliers). */
+const men = (k: number): string => (Math.round(k * 10) * 100).toLocaleString('fr-FR')
 const round = (v: number): string => Math.round(v).toLocaleString('fr-FR')
 const pct = (progress: number, cost: number): number => Math.min(100, (100 * progress) / cost)
 const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
@@ -103,7 +110,7 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
       <li v-for="kind in UNIT_KINDS" :key="kind">
         <span
           class="kname"
-          :title="`${RECRUIT_COSTS[kind].production} production, ${RECRUIT_COSTS[kind].manpower} k hommes, ${RECRUIT_COSTS[kind].days} jours minimum`"
+          :title="`${round(RECRUIT_COSTS[kind].production)} production, ${men(RECRUIT_COSTS[kind].manpower)} hommes, ${RECRUIT_COSTS[kind].days} jours minimum`"
           >{{ unitLabel(kind) }}<small>{{ costLine(kind) }}</small></span
         >
         <button

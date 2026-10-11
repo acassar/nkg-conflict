@@ -139,7 +139,17 @@ try {
   await page.getByTestId('player-alert').first().waitFor({ timeout: 5000 })
   await shot('01b-alerte')
   await page.getByTestId('player-alert').first().getByRole('button', { name: 'Centrer' }).click()
-  await page.waitForTimeout(1800)
+  // Vol de la caméra : jusqu'à 6 s quand la simulation charge la machine.
+  await page
+    .waitForFunction(
+      (at) => {
+        const c = window.__nkgMap.getCenter().toArray()
+        return Math.abs(c[0] - at[0]) < 0.5 && Math.abs(c[1] - at[1]) < 0.5
+      },
+      alertSetup.at,
+      { timeout: 6000 },
+    )
+    .catch(() => {})
   const alertFocus = await page.evaluate(() => ({
     selection: window.__nkg.selection.slice(),
     center: window.__nkgMap.getCenter().toArray(),

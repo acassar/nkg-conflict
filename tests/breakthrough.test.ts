@@ -5,7 +5,7 @@ import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { assignFront } from '@/sim/systems/armies'
 import { isBreach, reactionOf, reactToBreakthroughs } from '@/sim/systems/breakthrough'
 import { isLineUnit } from '@/sim/units/catalog'
-import type { TheaterData } from '@/sim/theater/grid'
+import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import type { ArmyState, UnitState } from '@/sim/core/types'
 
 const theater = theaterJson as unknown as TheaterData
@@ -40,6 +40,13 @@ function setup(): Setup {
   intruder.path = []
   for (const u of line) u.entrench = 1
   near.entrench = 0
+  // Seule percée examinée : les autres brigades russes à moins de 150 km sont retirées (à l'échelle
+  // de la brigade, certaines tiennent déjà la pointe d'un saillant au départ).
+  for (const u of [...ctx.units.values()]) {
+    if (u.owner === 'RUS' && u !== intruder && distanceKm(u.lon, u.lat, near.lon, near.lat) < 150) {
+      ctx.units.delete(u.id)
+    }
+  }
   return { sim, army, line, near, intruder }
 }
 

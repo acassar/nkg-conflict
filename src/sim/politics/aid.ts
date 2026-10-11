@@ -1,8 +1,9 @@
 import { countryName, sideIndex, type SimContext } from '../context'
-import type { CountryId, UnitKind, UnitState } from '../core/types'
+import type { CountryId, EconomyState, UnitKind, UnitState } from '../core/types'
 import { citiesOf } from '../economy/economy'
 import { RECRUIT_COSTS } from '../economy/rules'
 import { unitName } from '../units/names'
+import { BRIGADE_SPLIT } from '../units/catalog'
 import { addRelation, enemiesInWar, isAtWarWith, relation, sameAlliance } from './politics'
 import type { Aid, AidLevel } from './types'
 import { AID_LEVEL_NAMES, AID_SHARE } from './aidLevels'
@@ -217,44 +218,47 @@ export function deliverEquipment(ctx: SimContext): void {
     const eco = ctx.economies.get(aid.to)
     const pol = ctx.politics.countries.get(aid.to)
     if (!eco || !pol) continue
-    const kind = DELIVERED_KINDS[aid.unitsDelivered % DELIVERED_KINDS.length] ?? 'mech'
-    const cost = RECRUIT_COSTS[kind]
     // Pays non mobilisé : le matériel rejoint ses stocks de production.
     if (!pol.mobilized) {
       eco.production += aid.equipment
       aid.equipment = 0
       continue
     }
-    if (aid.equipment < cost.production || eco.manpower < cost.manpower) continue
-    const cities = citiesOf(ctx, aid.to)
-    const city =
-      cities.find((c) => c.def.capital && c.def.country === aid.to) ??
-      [...cities].sort((a, b) => b.def.pop - a.def.pop)[0]
-    if (!city) continue
-    aid.equipment -= cost.production
-    eco.manpower -= cost.manpower
-    aid.unitsDelivered++
-    const u: UnitState = {
-      id: ctx.allocId(),
-      name: unitName(kind, eco.unitCounters[kind]++),
-      owner: aid.to,
-      kind,
-      lon: city.def.lon,
-      lat: city.def.lat,
-      strength: 1,
-      org: 0.7,
-      entrench: 0,
-      order: { kind: 'hold' },
-      path: [],
-      armyId: null,
-      hoursOutOfSupply: 0,
-    }
-    ctx.units.set(u.id, u)
-    ctx.log(
-      `Matériel livré par ${countryName(ctx, aid.from)} à ${city.def.name} : ${u.name}`,
-      aid.to,
-    )
+    // Jusqu'à BRIGADE_SPLIT brigades par livraison, soit une unité de l'ancienne échelle.
+    for (let k = 0; k < BRIGADE_SPLIT; k++) deliverOne(ctx, aid, eco)
   }
+}
+
+/** Livre une brigade si le matériel et la main-d'œuvre suffisent. */
+function deliverOne(ctx: SimContext, aid: Aid, eco: EconomyState): void {
+  const kind = DELIVERED_KINDS[aid.unitsDelivered % DELIVERED_KINDS.length] ?? 'mech'
+  const cost = RECRUIT_COSTS[kind]
+  if (aid.equipment < cost.production || eco.manpower < cost.manpower) return
+  const cities = citiesOf(ctx, aid.to)
+  const city =
+    cities.find((c) => c.def.capital && c.def.country === aid.to) ??
+    [...cities].sort((a, b) => b.def.pop - a.def.pop)[0]
+  if (!city) return
+  aid.equipment -= cost.production
+  eco.manpower -= cost.manpower
+  aid.unitsDelivered++
+  const u: UnitState = {
+    id: ctx.allocId(),
+    name: unitName(kind, eco.unitCounters[kind]++),
+    owner: aid.to,
+    kind,
+    lon: city.def.lon,
+    lat: city.def.lat,
+    strength: 1,
+    org: 0.7,
+    entrench: 0,
+    order: { kind: 'hold' },
+    path: [],
+    armyId: null,
+    hoursOutOfSupply: 0,
+  }
+  ctx.units.set(u.id, u)
+  ctx.log(`Matériel livré par ${countryName(ctx, aid.from)} à ${city.def.name} : ${u.name}`, aid.to)
 }
 
 /** Effets diplomatiques mensuels : le receveur est reconnaissant, les ennemis du receveur s'irritent. */

@@ -11,7 +11,7 @@ import type {
 } from './core/types'
 import type { CityDef, Grid } from './theater/grid'
 import type { UnitType } from './units/catalog'
-import type { FormationState, SeaTransit, UnitKind } from './core/types'
+import type { AirZone, FormationState, SeaTransit, UnitKind } from './core/types'
 import type { Pathfinder } from './systems/pathfinding'
 import type { SideMatrix } from './politics/matrix'
 import type { PoliticsState } from './politics/types'
@@ -82,6 +82,8 @@ export interface SimContext {
   formations: Map<number, FormationState>
   /** Unités en mer (marine provisoire), hors de `units` jusqu'à leur débarquement. */
   sea: SeaTransit[]
+  /** Zones de mission aérienne de tous les pays (aviation provisoire). */
+  air: AirZone[]
   /** Prochain identifiant de formation. */
   nextFormationId: number
   /** Nouvel identifiant unique (unités, armées, files d'attente). */

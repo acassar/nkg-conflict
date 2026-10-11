@@ -10,6 +10,14 @@ import { selectionFormation } from '@/composables/composition'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { EMBARK_KM } from '@/sim/systems/naval'
 import { MODE_NAMES } from '@/sim/systems/transport'
+import {
+  AIR_COLORS,
+  AIR_MISSION_NAMES,
+  AIR_MISSIONS,
+  AIR_RANGE_KM,
+  AIR_ZONE_KM,
+  AIR_ZONES_MAX,
+} from '@/sim/systems/air'
 import { distanceKm } from '@/sim/theater/grid'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import {
@@ -37,6 +45,8 @@ const game = useGameStore()
 const naval = computed(
   () => game.snapshot?.naval ?? { capacity: 0, ports: [], atSea: [] as NavalSnapshot['atSea'] },
 )
+/** Aviation provisoire du joueur : puissance et zones de mission. */
+const air = computed(() => game.snapshot?.air ?? { power: 0, zones: [], enemyZones: [] })
 /** Transport stratégique du joueur : unités en route vers une ville. */
 const transport = computed(
   () =>
@@ -556,6 +566,34 @@ async function createArmy(): Promise<void> {
           </li>
         </ul>
       </section>
+      <details v-if="air.power > 0" class="air" data-testid="air-panel">
+        <summary>
+          Aviation · puissance {{ Math.round(air.power) }} · {{ air.zones.length }} /
+          {{ AIR_ZONES_MAX }} zones
+          <span v-if="air.enemyZones.length > 0"> · {{ air.enemyZones.length }} ennemies</span>
+        </summary>
+        <ul v-if="air.zones.length > 0">
+          <li v-for="z in air.zones" :key="z.id">
+            <span class="air-dot" :style="{ background: AIR_COLORS[z.mission] }" />
+            {{ AIR_MISSION_NAMES[z.mission] }}
+            <button class="air-remove" title="Retirer cette zone" @click="game.removeAirZone(z.id)">
+              Retirer
+            </button>
+          </li>
+        </ul>
+        <div class="air-missions">
+          <button
+            v-for="m in AIR_MISSIONS"
+            :key="m"
+            :disabled="air.zones.length >= AIR_ZONES_MAX"
+            :title="`Nouvelle zone (${AIR_ZONE_KM} km de rayon, à moins de ${AIR_RANGE_KM} km d'un aérodrome tenu) : cliquer ensuite sur son centre`"
+            :data-testid="`air-${m}`"
+            @click="game.startAirZone(m)"
+          >
+            {{ AIR_MISSION_NAMES[m] }}
+          </button>
+        </div>
+      </details>
       <section v-if="transport.inTransit.length > 0" class="at-sea" data-testid="in-transit">
         <p class="label">En route : {{ transport.inTransit.length }} unité(s)</p>
         <ul>
@@ -923,6 +961,42 @@ button.active {
   padding: 6px 10px;
   margin-bottom: 8px;
   font-size: 12px;
+}
+.air {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.air summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.air ul {
+  margin: 6px 0;
+}
+.air li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+.air-remove {
+  margin-left: auto;
+  padding: 2px 8px;
+}
+.air-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+.air-missions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
 }
 .at-sea li {
   padding: 2px 0;

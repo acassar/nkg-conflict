@@ -6,6 +6,7 @@ import type {
   EconomyState,
   FormationState,
   SeaTransit,
+  AirZone,
   GameEvent,
   GameOutcome,
   ScenarioOptions,
@@ -43,6 +44,8 @@ export interface SaveFile {
   formations?: FormationState[]
   /** Unités en mer (marine provisoire ; absentes des sauvegardes antérieures). */
   sea?: SeaTransit[]
+  /** Zones aériennes (aviation provisoire ; absentes des sauvegardes antérieures). */
+  air?: AirZone[]
   events: GameEvent[]
   outcome: GameOutcome | null
   /** Dernière offensive de l'IA militaire, par pays. */

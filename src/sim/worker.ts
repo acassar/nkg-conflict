@@ -10,6 +10,7 @@ import type {
   BuildingKind,
   CountryId,
   LonLat,
+  AirMission,
   Posture,
   ScenarioOptions,
   UnitKind,
@@ -179,6 +180,12 @@ const api = {
   },
   landUnits(ids: number[], target: LonLat): string | null {
     return act((s) => s.landUnits(ids, target)) ?? null
+  },
+  addAirZone(mission: AirMission, center: LonLat): string | null {
+    return act((s) => s.addAirZone(mission, center)) ?? null
+  },
+  removeAirZone(id: number): void {
+    act((s) => s.removeAirZone(id))
   },
   transportUnits(ids: number[], target: LonLat): string | null {
     return act((s) => s.transportUnits(ids, target)) ?? null

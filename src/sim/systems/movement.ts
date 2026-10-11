@@ -7,6 +7,7 @@ import { postureOf } from '../units/postures'
 import { layObstacles } from './obstacles'
 import { fuelSpeedFactor, kindTerrainSpeed } from '../units/kinds'
 import { BRIGADE_SPLIT } from '../units/catalog'
+import { airSpeed } from './air'
 
 const ENTRENCH_PER_HOUR = 0.01
 
@@ -21,6 +22,8 @@ function speedKmh(ctx: SimContext, u: UnitState): number {
   const owner = grid.owner[cell] ?? 0
   if (ctx.matrix.hostile(sideIndex(ctx, u.owner), owner)) v *= 0.7
   if (u.order.kind === 'retreat') v *= 1.2
+  // Interdiction aérienne ennemie (aviation provisoire).
+  v *= airSpeed(ctx, u)
   return v
 }
 

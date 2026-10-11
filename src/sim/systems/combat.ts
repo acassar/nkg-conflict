@@ -19,6 +19,7 @@ import { NO_MUNITIONS_FACTOR } from '../economy/rules'
 import { moraleFactor } from '../politics/politics'
 import { WarIndex } from './spatial'
 import { LANDING_FACTOR, landingFactor } from './naval'
+import { airDefense, airFire } from './air'
 import { fatigueFactor, fatigueOf, fatigueRecoveryFactor, updateFatigue } from './fatigue'
 import { postureOf } from '../units/postures'
 import { assaultFireFactor, assaultLossFactor, obstaclesUnder } from './obstacles'
@@ -156,6 +157,14 @@ export function combatModifiers(
       value: LANDING_FACTOR,
     })
   }
+  if (airFire(ctx, u) !== 1) {
+    const v = airFire(ctx, u)
+    shared.push({
+      key: 'air',
+      label: `Aviation (${v > 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %)`,
+      value: v,
+    })
+  }
   const eco = ctx.economies.get(u.owner)
   const ammo = eco && eco.munitions <= 0 ? NO_MUNITIONS_FACTOR : 1
   const cell = ctx.grid.cellAt(u.lon, u.lat)
@@ -253,7 +262,8 @@ export function firePower(ctx: SimContext, u: UnitState): number {
     postureOf(u.posture).attack *
     terrainAttack(ctx, u) *
     fatigueFactor(u) *
-    landingFactor(ctx, u)
+    landingFactor(ctx, u) *
+    airFire(ctx, u)
   )
 }
 
@@ -271,7 +281,8 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     postureOf(u.posture).defense *
     flankDefenseFactor(ctx, u) *
     fatigueFactor(u) *
-    landingFactor(ctx, u)
+    landingFactor(ctx, u) *
+    airDefense(ctx, u)
   )
 }
 

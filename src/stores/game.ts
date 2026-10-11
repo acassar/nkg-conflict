@@ -6,6 +6,7 @@ import { decodeRle, terrainRule } from '@/sim/theater/grid'
 import type { SupplyView } from '@/sim/systems/supplyView'
 import type { MissionPreview } from '@/sim/systems/armies'
 import type {
+  AirMission,
   AdvanceGoal,
   LineMissionKind,
   BattleReport,
@@ -23,6 +24,7 @@ import type {
   AutoEconomy,
 } from '@/sim/core/types'
 import type { PlayerOrder } from '@/sim/simulation'
+import { AIR_MISSION_NAMES } from '@/sim/systems/air'
 import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
 import { newPlayerWars } from './warBrief'
@@ -68,6 +70,8 @@ export type MapMode =
   | { kind: 'landing' }
   /** Transport stratégique des unités choisies : clic sur la ville d'arrivée. */
   | { kind: 'transport' }
+  /** Aviation provisoire : clic sur le centre d'une nouvelle zone de mission. */
+  | { kind: 'air'; mission: AirMission }
 
 export type AdvanceGoalKind = AdvanceGoal['kind']
 
@@ -487,6 +491,8 @@ export const useGameStore = defineStore('game', () => {
     if (m.kind === 'breach')
       return "Percée : cliquez sur le point visé chez l'ennemi (Échap pour annuler)"
     if (m.kind === 'landing') return 'Débarquement : cliquez sur une côte (Échap pour annuler)'
+    if (m.kind === 'air')
+      return `${AIR_MISSION_NAMES[m.mission]} : cliquez sur le centre de la zone (Échap pour annuler)`
     if (m.kind === 'transport')
       return "Transport : cliquez sur la ville d'arrivée, chez vous ou chez un ami (Échap pour annuler)"
     if (m.kind === 'offensive') {
@@ -710,6 +716,15 @@ export const useGameStore = defineStore('game', () => {
     if (selection.value.length > 0) mode.value = { kind: 'landing' }
   }
 
+  /** Aviation provisoire : le centre de la nouvelle zone se désigne d'un clic. */
+  function startAirZone(mission: AirMission): void {
+    mode.value = { kind: 'air', mission }
+  }
+
+  async function removeAirZone(id: number): Promise<void> {
+    await sim.removeAirZone(id)
+  }
+
   /** Transport stratégique (rail, mer ou air) : la ville d'arrivée se désigne d'un clic. */
   function startTransport(): void {
     if (selection.value.length > 0) mode.value = { kind: 'transport' }
@@ -851,6 +866,16 @@ export const useGameStore = defineStore('game', () => {
         report(
           await sim.landUnits(ids(), lonLat(point)),
           "Embarquement : les brigades débarqueront à l'arrivée du convoi",
+        ))()
+      cancelMode()
+      return true
+    }
+    if (m.kind === 'air') {
+      const mission = m.mission
+      void (async () =>
+        report(
+          await sim.addAirZone(mission, lonLat(point)),
+          `Zone aérienne posée : ${AIR_MISSION_NAMES[mission].toLowerCase()}`,
         ))()
       cancelMode()
       return true
@@ -1257,6 +1282,8 @@ export const useGameStore = defineStore('game', () => {
     startOrder,
     startLanding,
     startTransport,
+    startAirZone,
+    removeAirZone,
     startFront,
     startOffensive,
     startTargetOrder,

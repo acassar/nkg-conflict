@@ -13,6 +13,16 @@ import {
   SEA_KM_PER_HOUR,
 } from '@/sim/systems/naval'
 import {
+  AIR_RANGE_KM,
+  AIR_SUPPORT_BONUS,
+  AIR_ZONE_KM,
+  AIR_ZONES_MAX,
+  BOMBING_MALUS,
+  BOMBING_ORG_PER_HOUR,
+  INTERDICTION_SLOW,
+  SUPERIORITY_WEIGHT,
+} from '@/sim/systems/air'
+import {
   AIR_CAPACITY,
   AIR_KM_PER_HOUR,
   AIR_LOAD_HOURS,
@@ -132,6 +142,7 @@ export type HelpSectionId =
   | 'budget'
   | 'naval'
   | 'transport'
+  | 'air'
 
 export interface HelpSection {
   id: HelpSectionId
@@ -333,6 +344,14 @@ export const HELP_SECTIONS: HelpSection[] = [
       `Coût en production, par 1 000 km (500 km comptés au moins) : ${pct(TRANSPORT_COST.rail)} du prix d'une unité neuve par le rail, ${pct(TRANSPORT_COST.sea)} par la mer, ${pct(TRANSPORT_COST.air)} par l'air. Si la ville d'arrivée n'est plus amie à l'arrivée, l'unité revient à son point de départ, ou à défaut à la ville tenue la plus proche.`,
     ],
   },
+  {
+    id: 'air',
+    title: 'Aviation (provisoire)',
+    paragraphs: [
+      `Pas encore d'avions sur la carte : chaque pays a une puissance aérienne, égale au nombre de ses usines militaires (selon leur état, usines hors carte comprises). Il la répartit à parts égales entre ses zones de mission, ${AIR_ZONES_MAX} au plus, des cercles de ${AIR_ZONE_KM} km de rayon posés depuis le bloc « Aviation » du tiroir Forces, à moins de ${AIR_RANGE_KM} km d'un aérodrome tenu (ville d'au moins 200 000 habitants). Une zone qui n'a plus d'aérodrome à portée disparaît.`,
+      `Maîtrise du ciel en un point : puissance des zones amies qui le couvrent, divisée par celle des zones amies et ennemies ; une zone de supériorité aérienne compte ${SUPERIORITY_WEIGHT} fois. Effets au sol, proportionnels à cette maîtrise : appui au sol, jusqu'à +${pct(AIR_SUPPORT_BONUS)} de feu et de défense pour vos unités dans la zone (pleinement sans aviation ennemie) ; bombardement, jusqu'à −${pct(BOMBING_MALUS)} de feu et de défense et ${(BOMBING_ORG_PER_HOUR * 100).toFixed(1).replace('.', ',')} point d'organisation perdu par heure pour les unités ennemies ; interdiction, jusqu'à −${pct(INTERDICTION_SLOW)} de vitesse pour les unités ennemies. L'IA en guerre pose une zone de supériorité et une d'appui au sol au-dessus de ses unités au contact.`,
+    ],
+  },
 ]
 
 /** Explication courte de chaque modificateur de l'écran de bataille, et sa section d'aide. */
@@ -392,6 +411,10 @@ export const MODIFIER_HELP: Record<ModifierKey, { text: string; section: HelpSec
   flank: {
     text: `Prise de flanc : ${signedPct(FLANK_DEFENSE[1])} (deux côtés, saillant) ou ${signedPct(FLANK_DEFENSE[2])} (presque encerclée).`,
     section: 'flanks',
+  },
+  air: {
+    text: `Aviation : jusqu'à +${pct(AIR_SUPPORT_BONUS)} sous un appui au sol ami, jusqu'à −${pct(BOMBING_MALUS)} sous un bombardement ennemi, selon la maîtrise du ciel.`,
+    section: 'air',
   },
   landing: {
     text: `Débarquement récent : −${pct(1 - LANDING_FACTOR)} de feu et de défense pendant ${LANDING_HOURS} heures.`,

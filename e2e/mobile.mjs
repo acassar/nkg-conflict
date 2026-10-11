@@ -331,6 +331,19 @@ try {
     step('bataille (mobile)', { note: 'aucun combat en cours' })
   }
 
+  // Aviation provisoire : bloc repliable du tiroir Forces (sans sélection), dans la largeur de l'écran.
+  await store(() => window.__nkg.selectUnits([], false))
+  await page
+    .getByTestId('air-panel')
+    .waitFor({ timeout: 5000 })
+    .catch(() => {})
+  const airBox = await page.getByTestId('air-panel').boundingBox()
+  step('bloc Aviation (mobile)', { boite: airBox })
+  check(
+    !!airBox && airBox.x >= 0 && airBox.x + airBox.width <= 390,
+    `bloc « Aviation » absent ou hors de l'écran (${JSON.stringify(airBox)})`,
+  )
+
   // Recrutement par armée au doigt : sous-onglet de l'armée, deux infanteries, validation.
   await store(() => {
     const g = window.__nkg

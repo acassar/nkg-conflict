@@ -175,6 +175,7 @@ export type ModifierKey =
   | 'flankMorale'
   | 'fatigue'
   | 'landing'
+  | 'air'
   | 'kindTerrain'
   | 'matchup'
 
@@ -457,6 +458,26 @@ export interface BudgetDay {
   aid?: { in: number; out: number }
 }
 
+/** Mission d'une zone aérienne (aviation provisoire, voir systems/air.ts). */
+export type AirMission = 'superiority' | 'support' | 'bombing' | 'interdiction'
+
+/** Zone de mission aérienne : cercle autour de `center`, à portée d'un aérodrome tenu. */
+export interface AirZone {
+  id: number
+  owner: CountryId
+  mission: AirMission
+  center: LonLat
+}
+
+/** Aviation du joueur dans l'état publié. */
+export interface AirSnapshot {
+  /** Puissance aérienne (usines militaires) et zones du joueur. */
+  power: number
+  zones: AirZone[]
+  /** Zones des pays en guerre contre le joueur. */
+  enemyZones: AirZone[]
+}
+
 /** Mode d'un transport stratégique (voir systems/transport.ts). */
 export type TransportMode = 'rail' | 'sea' | 'air'
 
@@ -663,6 +684,8 @@ export interface SimSnapshot {
   naval: NavalSnapshot
   /** Transport stratégique du joueur : unités en route vers une ville. */
   transport: TransportSnapshot
+  /** Aviation provisoire du joueur. */
+  air: AirSnapshot
   /** Grille complète : seulement au chargement d'une partie. */
   grid: GridSnapshot | null
   /** Cellules modifiées depuis la publication précédente : [cellule, propriétaire, …]. */

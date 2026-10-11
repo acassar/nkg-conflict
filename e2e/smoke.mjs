@@ -1197,6 +1197,25 @@ try {
   await shot('06c-transport')
   await page.evaluate(() => window.__nkg.selectUnits([], false))
 
+  // Aviation provisoire : zone d'appui au sol posée au-dessus de Lyon depuis le tiroir Forces.
+  await page.getByTestId('air-panel').locator('summary').click()
+  await page.getByTestId('air-support').click()
+  const lyon = await page.evaluate(() => {
+    const p = window.__nkgMap.project([4.84, 45.76])
+    return [p.x, p.y]
+  })
+  await page.mouse.click(lyon[0], lyon[1])
+  await page.waitForTimeout(800)
+  const air = await page.evaluate(() => window.__nkg.snapshot.air)
+  step('aviation', {
+    puissance: Math.round(air.power),
+    zones: air.zones.map((z) => `${z.mission} ${z.center.map((v) => v.toFixed(1)).join(',')}`),
+  })
+  if (air.power <= 0 || air.zones.length !== 1 || air.zones[0].mission !== 'support')
+    report.errors.push(`aviation : ${JSON.stringify(air)}`)
+  await shot('06d-aviation')
+  await page.evaluate((id) => window.__nkg.removeAirZone(id), air.zones[0]?.id ?? -1)
+
   // Déclaration de guerre (France contre Belgique) : encart du tiroir Forces, puis « Avancer ».
   await page.evaluate(() => window.__nkg.declareWar('BEL'))
   await page.getByTestId('war-brief').waitFor({ timeout: 15_000 })

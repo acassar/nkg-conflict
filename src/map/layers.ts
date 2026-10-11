@@ -44,6 +44,7 @@ import {
 } from './cityLabels'
 import type { Stance } from '@/stores/game'
 import type { SupplyPocket, SupplyView } from '@/sim/systems/supplyView'
+import { AIR_COLORS, AIR_ZONE_KM } from '@/sim/systems/air'
 
 export interface MissionPreviewShapes {
   posts: LonLat[]
@@ -511,6 +512,40 @@ export function buildLayers(input: LayerInput): Layer[] {
         updateTriggers: {
           getText: [...busy.entries()].join(),
           getColor: [...busy.entries()].join(),
+        },
+      }),
+    )
+  }
+
+  // Aviation provisoire : zones de mission du joueur (couleur de la mission) et zones ennemies (grises).
+  const air = input.snapshot?.air
+  if (air && (air.zones.length > 0 || air.enemyZones.length > 0)) {
+    const rgb = (hex: string): [number, number, number] => [
+      parseInt(hex.slice(1, 3), 16),
+      parseInt(hex.slice(3, 5), 16),
+      parseInt(hex.slice(5, 7), 16),
+    ]
+    const zones = [
+      ...air.zones.map((z) => ({ z, color: rgb(AIR_COLORS[z.mission]) })),
+      ...air.enemyZones.map((z) => ({ z, color: [71, 85, 105] as [number, number, number] })),
+    ]
+    layers.push(
+      new ScatterplotLayer<(typeof zones)[number]>({
+        id: 'air-zones',
+        data: zones,
+        getPosition: (a) => a.z.center,
+        filled: true,
+        getFillColor: (a) => [...a.color, 30],
+        stroked: true,
+        getLineColor: (a) => [...a.color, 200],
+        getLineWidth: 2,
+        lineWidthUnits: 'pixels',
+        radiusUnits: 'meters',
+        getRadius: AIR_ZONE_KM * 1000,
+        updateTriggers: {
+          getPosition: zones.map((a) => a.z.id).join(),
+          getFillColor: zones.map((a) => a.z.mission).join(),
+          getLineColor: zones.map((a) => a.z.mission).join(),
         },
       }),
     )

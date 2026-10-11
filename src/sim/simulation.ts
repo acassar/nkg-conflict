@@ -10,6 +10,15 @@ import {
   updateNaval,
 } from './systems/naval'
 import { AIR_CAPACITY, inTransit, transportUnits, updateTransport } from './systems/transport'
+import {
+  addAirZone,
+  airPower,
+  airZonesOf,
+  dropAirZones,
+  removeAirZone,
+  updateAir,
+  updateAirAi,
+} from './systems/air'
 import { updateSustainability } from './economy/sustainability'
 import { TickAccumulator } from './core/loop'
 import { isSpeed, type Speed } from './core/clock'
@@ -29,6 +38,7 @@ import type {
   GameEvent,
   GameOutcome,
   LonLat,
+  AirMission,
   OrderKind,
   PlayerAlert,
   Posture,
@@ -263,6 +273,7 @@ export class Simulation {
       formations: new Map(),
       nextFormationId: 1,
       sea: [],
+      air: [],
       allocId: () => this.nextId++,
       log: (text, owner, minor) => this.log(text, owner, minor),
     }
@@ -408,6 +419,7 @@ export class Simulation {
     for (const a of save.armies) ctx.armies.set(a.id, structuredClone(a))
     for (const f of save.formations ?? []) ctx.formations.set(f.id, { ...f })
     ctx.sea = (save.sea ?? []).map((t) => structuredClone(t))
+    ctx.air = (save.air ?? []).map((z) => structuredClone(z))
     ctx.nextFormationId = Math.max(0, ...[...ctx.formations.keys()]) + 1
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
@@ -587,6 +599,7 @@ export class Simulation {
       }
       run('marine', () => updateNaval(ctx))
       run('transport', () => updateTransport(ctx))
+      run('aviation', () => updateAir(ctx))
       run('chemins', () => planQueuedPaths(ctx))
       run('mouvement', () => updateMovement(ctx))
       run('combat', () => updateCombat(ctx))
@@ -613,6 +626,9 @@ export class Simulation {
     updateSustainability(ctx)
     const managed = this.mobilizedAi()
     for (const c of managed) updateAiEconomy(ctx, c)
+    for (const c of managed) {
+      if (ctx.matrix.atWar[sideIndex(ctx, c)] === 1) updateAirAi(ctx, c)
+    }
     // Gestion automatique du joueur : seulement les parties choisies, jamais l'économie de guerre.
     const auto = this.autoEconomy
     if (!managed.includes(this.playerCountry) && (auto.build || auto.recruit)) {
@@ -676,6 +692,7 @@ export class Simulation {
     const enemies = new Set(warsOf(ctx, code).flatMap((w) => enemiesInWar(w, code)))
     capitulate(ctx, code, reason)
     dropSeaTransits(ctx, code)
+    dropAirZones(ctx, code)
     this.armylessSince.delete(code)
     if (code === this.playerCountry) {
       const winner = [...enemies][0] ?? ''
@@ -782,6 +799,15 @@ export class Simulation {
   landUnits(ids: number[], target: LonLat): string | null {
     const units = this.playerUnits(ids).filter((u) => !runtimeOf(this.ctx, u.id).routed)
     return landUnits(this.ctx, this.playerCountry, units, target)
+  }
+
+  /** Aviation provisoire : nouvelle zone de mission du joueur. */
+  addAirZone(mission: AirMission, center: LonLat): string | null {
+    return addAirZone(this.ctx, this.playerCountry, mission, center)
+  }
+
+  removeAirZone(id: number): void {
+    removeAirZone(this.ctx, this.playerCountry, id)
   }
 
   /** Transport stratégique des unités choisies vers la ville amie la plus proche du point visé. */
@@ -1367,6 +1393,15 @@ export class Simulation {
           arriveTick: t.arriveTick,
         })),
       },
+      air: {
+        power: airPower(ctx, this.playerCountry),
+        zones: airZonesOf(ctx, this.playerCountry).map((z) => structuredClone(z)),
+        enemyZones: ctx.air
+          .filter((z) =>
+            ctx.matrix.hostile(sideIndex(ctx, this.playerCountry), sideIndex(ctx, z.owner)),
+          )
+          .map((z) => structuredClone(z)),
+      },
       transport: {
         airCapacity: AIR_CAPACITY,
         inTransit: inTransit(ctx, this.playerCountry).map((t) => ({
@@ -1417,6 +1452,7 @@ export class Simulation {
       armies: [...ctx.armies.values()].map((a) => structuredClone(a)),
       formations: [...ctx.formations.values()].map((f) => ({ ...f })),
       sea: ctx.sea.map((t) => structuredClone(t)),
+      air: ctx.air.map((z) => structuredClone(z)),
       events: this.events.slice(),
       outcome: this.outcome,
       aiLastOffensiveTick: Object.fromEntries(

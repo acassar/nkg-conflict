@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CityState, GridSnapshot } from '@/sim/core/types'
 import { MAJOR_ROAD_BIT, RAIL_BIT, ROAD_BIT, Terrain, TERRAIN_RULES } from '@/sim/theater/grid'
 import { cellIndexAt, describePoint } from '@/map/cellInfo'
-import { BASE_ROAD_COLORS, roadColor, roadOpacity } from '@/map/roadsImage'
+import { BASE_ROAD_COLORS, BASE_ROAD_MAX_OPACITY, roadColor, roadOpacity } from '@/map/roadsImage'
 import { signedPct } from '@/help/rules'
 
 /** Grille de 4 × 1 cellules d'un degré : plaine + grand axe + rail, forêt, fleuve, mer. */
@@ -83,12 +83,13 @@ describe('réseau de la carte par défaut', () => {
   })
 
   it('apparaît avec le zoom, les routes après les grands axes', () => {
-    // Carte du monde (cellules de 0,1°).
-    expect(roadOpacity(2, 0.1, 'main')).toBe(0)
-    expect(roadOpacity(4, 0.1, 'main')).toBe(1)
-    expect(roadOpacity(4, 0.1, 'minor')).toBe(0)
-    expect(roadOpacity(5, 0.1, 'minor')).toBeGreaterThan(0.4)
-    expect(roadOpacity(6, 0.1, 'minor')).toBe(1)
+    // Carte du monde (cellules de 0,1°) : plus discret et plus tard qu'avant (2 pixels par cellule).
+    expect(roadOpacity(3.5, 0.1, 'main')).toBe(0)
+    expect(roadOpacity(4.5, 0.1, 'main')).toBeGreaterThan(0)
+    expect(roadOpacity(5, 0.1, 'main')).toBe(BASE_ROAD_MAX_OPACITY.main)
+    expect(roadOpacity(5, 0.1, 'minor')).toBe(0)
+    expect(roadOpacity(5.6, 0.1, 'minor')).toBeGreaterThan(0)
+    expect(roadOpacity(6, 0.1, 'minor')).toBe(BASE_ROAD_MAX_OPACITY.minor)
     // Théâtre ukrainien (0,05°) : même rendu un cran de zoom plus tard.
     expect(roadOpacity(5, 0.05, 'main')).toBeCloseTo(roadOpacity(4, 0.1, 'main'))
   })

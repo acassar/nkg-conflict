@@ -1,7 +1,8 @@
-import { COORDINATE_SYSTEM, type Layer } from '@deck.gl/core'
+import { COORDINATE_SYSTEM, type BinaryAttribute, type Layer } from '@deck.gl/core'
 import {
   BitmapLayer,
   IconLayer,
+  LineLayer,
   PathLayer,
   PolygonLayer,
   ScatterplotLayer,
@@ -14,6 +15,7 @@ import { fortBonusLabel } from '@/sim/economy/forts'
 import { stackIcon, unitIcon } from './unitIcons'
 import { isStack, stackUnits, type MapUnit } from './clusters'
 import { stanceColor, type TerritoryTile } from './territoryImage'
+import { BASE_ROAD_WIDTH, type RoadLines } from './roadsImage'
 import type { Stance } from '@/stores/game'
 import type { SupplyPocket, SupplyView } from '@/sim/systems/supplyView'
 
@@ -32,13 +34,14 @@ export interface LayerInput {
   /** Relief, forêts, marais, fleuves et villes (fixe). */
   terrain: TerritoryTile[]
   /**
-   * Réseau de transport de la carte par défaut, sous le territoire : grands axes et voies ferrées
-   * d'une part, routes de l'autre, chacun avec son opacité selon le zoom. Null en mode Logistique
-   * (qui dessine le réseau au-dessus de ses zones) ou si le joueur l'a masqué.
+   * Réseau de transport de la carte par défaut, en traits fins sous le territoire : grands axes et
+   * voies ferrées d'une part, routes de l'autre (blocs proches de la vue), chacun avec son opacité
+   * selon le zoom. Null en mode
+   * Logistique (qui dessine le réseau en cellules au-dessus de ses zones) ou si le joueur l'a masqué.
    */
   roads: {
-    main: TerritoryTile[]
-    minor: TerritoryTile[]
+    main: RoadLines[]
+    minor: RoadLines[]
     mainOpacity: number
     minorOpacity: number
   } | null
@@ -118,6 +121,27 @@ function visibleCities(snapshot: SimSnapshot, zoom: number): CityState[] {
     if (zoom >= 3.5) return c.capital && (c.pop >= 1_000_000 || atWar.has(c.owner ?? ''))
     return c.capital && atWar.has(c.owner ?? '') && c.pop >= 1_000_000
   })
+}
+
+/**
+ * Données binaires d'un réseau en segments, gardées par réseau : un même objet d'un rendu à l'autre
+ * évite à deck.gl de renvoyer les segments au GPU à chaque image.
+ */
+type RoadLineData = { length: number; attributes: Record<string, BinaryAttribute> }
+const roadLineCache = new WeakMap<RoadLines, RoadLineData>()
+function roadLineData(lines: RoadLines): RoadLineData {
+  const cached = roadLineCache.get(lines)
+  if (cached) return cached
+  const data: RoadLineData = {
+    length: lines.length,
+    attributes: {
+      getSourcePosition: { value: lines.positions, size: 2, stride: 16, offset: 0 },
+      getTargetPosition: { value: lines.positions, size: 2, stride: 16, offset: 8 },
+      getColor: { value: lines.colors, size: 4, type: 'unorm8' },
+    },
+  }
+  roadLineCache.set(lines, data)
+  return data
 }
 
 /**
@@ -229,29 +253,43 @@ export function buildLayers(input: LayerInput): Layer[] {
   const cities = visibleCities(snapshot, input.zoom)
   const layers: Layer[] = []
 
-  // Relief, réseau de transport puis territoire, en tuiles reprojetées de lon/lat vers Web Mercator.
-  // Une couche invisible (réseau de loin) n'est pas créée.
-  const roads = input.roads
-  for (const [prefix, tiles, opacity] of [
-    ['terrain', input.terrain, 1],
-    ['roads-minor', roads?.minor ?? [], roads?.minorOpacity ?? 0],
-    ['roads-main', roads?.main ?? [], roads?.mainOpacity ?? 0],
-    ['territory', input.territory, 1],
-  ] as const) {
-    if (opacity <= 0) continue
+  // Relief, réseau de transport puis territoire : relief et territoire en tuiles reprojetées de
+  // lon/lat vers Web Mercator, réseau en segments. Une couche invisible (réseau de loin) n'est pas créée.
+  const bitmaps = (prefix: string, tiles: TerritoryTile[]): void => {
     for (const t of tiles) {
       layers.push(
         new BitmapLayer({
           id: `${prefix}-${t.id}`,
           image: t.canvas,
           bounds: t.bounds,
-          opacity,
           _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT,
           textureParameters: { minFilter: 'nearest', magFilter: 'nearest' },
         }),
       )
     }
   }
+  bitmaps('terrain', input.terrain)
+  const roads = input.roads
+  if (roads) {
+    for (const [set, blocks, opacity] of [
+      ['minor', roads.minor, roads.minorOpacity],
+      ['main', roads.main, roads.mainOpacity],
+    ] as const) {
+      if (opacity <= 0) continue
+      for (const lines of blocks) {
+        layers.push(
+          new LineLayer({
+            id: `roads-${lines.id}`,
+            data: roadLineData(lines),
+            getWidth: BASE_ROAD_WIDTH[set],
+            widthUnits: 'pixels',
+            opacity,
+          }),
+        )
+      }
+    }
+  }
+  bitmaps('territory', input.territory)
 
   if (input.logistics) layers.push(...logisticsLayers(input.logistics, snapshot))
   layers.push(...fortRangeLayers(input, snapshot))

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { MapboxOverlay } from '@deck.gl/mapbox'
@@ -15,7 +15,7 @@ import { buildLayers, type MissionPreviewShapes } from './layers'
 import { breachAxis, encircleRing } from './missionPreview'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
 import { SupplyTiles } from './supplyImage'
-import { BASE_ROAD_COLORS, roadOpacity, roadTiles } from './roadsImage'
+import { roadLines, roadOpacity, roadTiles, visibleRoadLines, type RoadLines } from './roadsImage'
 import { describePoint } from './cellInfo'
 import { isTouch, layout } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
@@ -150,6 +150,11 @@ const productionStats = useProductionStats()
 const battles = useBattles()
 let map: maplibregl.Map | null = null
 const zoom = ref(4)
+/**
+ * Emprise de la vue à la fin du dernier déplacement, élargie de moitié de chaque côté (marge pour les
+ * petits déplacements) : seuls les blocs du réseau routier qui la touchent sont dessinés.
+ */
+const viewBounds = shallowRef<[number, number, number, number] | null>(null)
 let overlay: MapboxOverlay | null = null
 const protocol = new Protocol()
 
@@ -227,28 +232,28 @@ function logistics(): {
   }
 }
 
-// Réseau de transport de la carte par défaut (vue politique), sous le territoire : dessiné une fois par grille.
+// Réseau de transport de la carte par défaut (vue politique), en traits fins sous le territoire :
+// segments calculés une fois par grille.
 let baseRoadsGrid: GridSnapshot | null = null
-let baseRoads: { main: TerritoryTile[]; minor: TerritoryTile[] } = { main: [], minor: [] }
+let baseRoads: { main: RoadLines[]; minor: RoadLines[] } | null = null
 
 function politicalRoads(): {
-  main: TerritoryTile[]
-  minor: TerritoryTile[]
+  main: RoadLines[]
+  minor: RoadLines[]
   mainOpacity: number
   minorOpacity: number
 } | null {
   const g = grid.value
   if (!g || mapView.value === 'logistics' || !showRoads.value) return null
-  if (g !== baseRoadsGrid) {
-    baseRoads = {
-      main: roadTiles(g, BASE_ROAD_COLORS, 'main'),
-      minor: roadTiles(g, BASE_ROAD_COLORS, 'minor'),
-    }
+  if (g !== baseRoadsGrid || !baseRoads) {
+    baseRoads = { main: roadLines(g, 'main'), minor: roadLines(g, 'minor') }
     baseRoadsGrid = g
   }
   const cellDeg = (g.bbox[2] - g.bbox[0]) / g.width
+  const view = viewBounds.value
   return {
-    ...baseRoads,
+    main: visibleRoadLines(baseRoads.main, view),
+    minor: visibleRoadLines(baseRoads.minor, view),
     mainOpacity: roadOpacity(zoom.value, cellDeg, 'main'),
     minorOpacity: roadOpacity(zoom.value, cellDeg, 'minor'),
   }
@@ -534,6 +539,12 @@ function createMap(camera?: { center: LonLat; zoom: number }): boolean {
   m.on('zoomend', () => {
     zoom.value = m.getZoom()
   })
+  m.on('moveend', () => {
+    const b = m.getBounds()
+    const dx = (b.getEast() - b.getWest()) / 2
+    const dy = (b.getNorth() - b.getSouth()) / 2
+    viewBounds.value = [b.getWest() - dx, b.getSouth() - dy, b.getEast() + dx, b.getNorth() + dy]
+  })
   // Clic droit : déplacement direct des unités sélectionnées. Au doigt, l'appui prolongé déclenche
   // aussi « contextmenu » : il sert au bandeau de description, sans donner d'ordre.
   m.on('contextmenu', (e) => {
@@ -635,6 +646,7 @@ watch(
     selectedArmy,
     mode,
     zoom,
+    viewBounds,
     selectedCity,
     () => game.panelTab,
     mapView,

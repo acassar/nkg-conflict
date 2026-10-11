@@ -37,7 +37,8 @@ const aiming = computed(() => {
   )
 })
 
-// Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, L = carte logistique, Échap = annuler.
+// Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, L = carte logistique, P = filtre
+// « Pays », Échap = annuler.
 // ZQSD (WASD en QWERTY) et les flèches déplacent la carte (voir MapView).
 function onKey(event: KeyboardEvent): void {
   const target = event.target
@@ -59,6 +60,8 @@ function onKey(event: KeyboardEvent): void {
     game.hold()
   } else if (key === 'l') {
     game.setMapView(game.mapView === 'logistics' ? 'political' : 'logistics')
+  } else if (key === 'p') {
+    game.setMapView(game.mapView === 'countries' ? 'political' : 'countries')
   } else if (key === 'enter' && game.mode.kind === 'advance') {
     game.finishAdvanceLine()
   } else if (key === 'escape') {

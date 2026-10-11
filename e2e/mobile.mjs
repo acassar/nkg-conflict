@@ -178,6 +178,37 @@ try {
   await shot('m02b-logistique')
   await page.getByTestId('logistics-button').tap()
 
+  // Filtre « Pays » : bouton à côté de la logistique, sans chevauchement, légende à l'écran.
+  const buttons = await Promise.all(
+    ['countries-button', 'logistics-button', 'lasso-button'].map((id) =>
+      page.getByTestId(id).boundingBox(),
+    ),
+  )
+  const [countriesBox, logisticsBox] = buttons
+  check(
+    countriesBox && logisticsBox && countriesBox.x >= logisticsBox.x + logisticsBox.width,
+    'bouton « Pays » mal placé',
+  )
+  await page.getByTestId('countries-button').tap()
+  await page.getByTestId('countries-legend').waitFor()
+  const countriesLegend = await page.getByTestId('countries-legend').boundingBox()
+  step('filtre Pays', { bouton: countriesBox, legende: countriesLegend })
+  check(
+    (await page.evaluate(() => window.__nkg.mapView)) === 'countries',
+    'le bouton « Pays » n’active pas le filtre',
+  )
+  check(
+    countriesLegend && countriesLegend.x >= 0 && countriesLegend.x + countriesLegend.width <= 390,
+    'légende « Pays » hors écran',
+  )
+  await page.waitForTimeout(500)
+  await shot('m02b2-pays')
+  await page.getByTestId('countries-button').tap()
+  check(
+    (await page.evaluate(() => window.__nkg.mapView)) === 'political',
+    'le bouton « Pays » ne revient pas à la vue politique',
+  )
+
   // Appui prolongé sur la carte : bandeau de description, effacé au relâcher, sans ordre ni sélection.
   const cdp = await context.newCDPSession(page)
   const beforePress = await store(() => ({

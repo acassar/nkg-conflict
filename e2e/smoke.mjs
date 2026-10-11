@@ -925,6 +925,31 @@ try {
     report.errors.push('la touche L ne referme pas la carte logistique')
   }
 
+  // Filtre « Pays » (touche P) : une teinte par pays, frontières nettes ; P ou le bouton le referme.
+  await page.keyboard.press('p')
+  await page.getByTestId('countries-legend').waitFor({ timeout: 5000 })
+  const countriesView = await page.evaluate(() => window.__nkg.mapView)
+  step('filtre Pays', { vue: countriesView })
+  if (countriesView !== 'countries')
+    report.errors.push('la touche P n’active pas le filtre « Pays »')
+  await page.waitForTimeout(800)
+  await shot('04e-filtre-pays')
+  await page.getByTestId('countries-button').click()
+  await page.waitForTimeout(300)
+  if (
+    (await page.getByTestId('countries-legend').isVisible()) ||
+    (await page.evaluate(() => window.__nkg.mapView)) !== 'political'
+  ) {
+    report.errors.push('le bouton « Pays » ne revient pas à la vue politique')
+  }
+  await page.keyboard.press('p')
+  await page.keyboard.press('l')
+  await page.waitForTimeout(300)
+  if ((await page.evaluate(() => window.__nkg.mapView)) !== 'logistics') {
+    report.errors.push('la touche L ne passe pas du filtre « Pays » à la logistique')
+  }
+  await page.keyboard.press('l')
+
   // Théâtre Ukraine – Russie : donneurs hors carte, avec leur fiche.
   page.once('dialog', (d) => d.accept())
   await page.getByTestId('menu-button').click()

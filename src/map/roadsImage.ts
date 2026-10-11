@@ -1,6 +1,7 @@
 import type { GridSnapshot } from '@/sim/core/types'
 import { MAJOR_ROAD_BIT, RAIL_BIT, ROAD_BIT } from '@/sim/theater/grid'
 import type { TerritoryTile } from './territoryImage'
+import { LINE_BLOCK, lineBlock, type LineBlock } from './lineBlocks'
 
 const TILE = 512
 
@@ -61,32 +62,21 @@ export function roadOpacity(zoom: number, cellDeg: number, set: 'main' | 'minor'
   return BASE_ROAD_MAX_OPACITY[set] * Math.max(0, Math.min(1, (px - from) / (to - from)))
 }
 
-/** Taille des blocs de segments, en cellules : seuls les blocs proches de la vue sont dessinés. */
-export const ROAD_BLOCK = 128
-
 /**
  * Réseau en segments (carte par défaut), pour un tracé en traits fins quel que soit le zoom : un
  * segment relie les centres de cellules voisines du même ensemble (grands axes et voies ferrées, ou
  * routes), et les cellules alignées dans la même direction forment un seul segment. Une diagonale
  * n'est tracée que si aucune des deux cellules qui la bordent n'en fait partie (pas de triangles dans
- * les virages). Les segments sont rangés par blocs de `ROAD_BLOCK` cellules (selon leur cellule de
- * départ) pour ne dessiner que ceux de la vue. Données binaires pour deck.gl (LineLayer) : 4 nombres
- * par segment (lon, lat de départ puis d'arrivée) et une couleur RGBA.
+ * les virages). Les segments sont rangés par blocs de `LINE_BLOCK` cellules (selon leur cellule de
+ * départ) pour ne dessiner que ceux de la vue (voir lineBlocks).
  */
-export interface RoadLines {
-  id: string
-  /** Emprise du bloc [lon0, lat0, lon1, lat1], segments débordants compris. */
-  bounds: [number, number, number, number]
-  length: number
-  positions: Float32Array
-  colors: Uint8Array
-}
+export type RoadLines = LineBlock
 
 export function roadLines(
   grid: Pick<GridSnapshot, 'width' | 'height' | 'bbox' | 'roads'>,
   set: 'main' | 'minor',
   colors: typeof ROAD_COLORS = BASE_ROAD_COLORS,
-  block = ROAD_BLOCK,
+  block = LINE_BLOCK,
 ): RoadLines[] {
   const { width: W, height: H, bbox, roads } = grid
   if (!roads?.length) return []
@@ -144,36 +134,7 @@ export function roadLines(
       }
     }
   }
-  const out: RoadLines[] = []
-  for (const [key, b] of blocks) {
-    let [w, s, e, n] = [Infinity, Infinity, -Infinity, -Infinity]
-    for (let i = 0; i < b.pos.length; i += 2) {
-      w = Math.min(w, b.pos[i] ?? w)
-      e = Math.max(e, b.pos[i] ?? e)
-      s = Math.min(s, b.pos[i + 1] ?? s)
-      n = Math.max(n, b.pos[i + 1] ?? n)
-    }
-    out.push({
-      id: `${set}-${key}`,
-      bounds: [w, s, e, n],
-      length: b.col.length / 4,
-      positions: new Float32Array(b.pos),
-      colors: new Uint8Array(b.col),
-    })
-  }
-  return out
-}
-
-/** Blocs du réseau qui touchent l'emprise visible [lon0, lat0, lon1, lat1] (tous sans emprise). */
-export function visibleRoadLines(
-  lines: RoadLines[],
-  view: [number, number, number, number] | null,
-): RoadLines[] {
-  if (!view) return lines
-  const [w, s, e, n] = view
-  return lines.filter(
-    (l) => l.bounds[0] <= e && l.bounds[2] >= w && l.bounds[1] <= n && l.bounds[3] >= s,
-  )
+  return [...blocks].map(([key, b]) => lineBlock(`${set}-${key}`, b.pos, b.col))
 }
 
 /**

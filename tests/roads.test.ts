@@ -11,8 +11,8 @@ import {
   roadColor,
   roadLines,
   roadOpacity,
-  visibleRoadLines,
 } from '@/map/roadsImage'
+import { visibleBlocks } from '@/map/lineBlocks'
 
 const readPublic = async (p: string): Promise<ArrayBuffer> => {
   const buf = fs.readFileSync(new URL(`../public/${p}`, import.meta.url))
@@ -154,16 +154,16 @@ describe('réseau routier et ferroviaire', () => {
       [0.5, 0.5, 2.5, 0.5],
       [2.5, 0.5, 2.5, 1.5],
     ])
-    expect(Array.from(main[0]?.colors.slice(0, 4) ?? [])).toEqual(BASE_ROAD_COLORS.major)
+    expect(Array.from(main[0]?.colors?.slice(0, 4) ?? [])).toEqual(BASE_ROAD_COLORS.major)
     expect(segments(roadLines(grid, 'minor'))).toEqual([[5.5, 0.5, 4.5, 1.5]])
     // Blocs de 2 cellules : chaque segment est rangé selon sa cellule de départ.
     const small = roadLines(grid, 'main', BASE_ROAD_COLORS, 2)
     expect(small.length).toBe(2)
     expect(small[1]?.bounds).toEqual([2.5, 0.5, 2.5, 1.5])
     // Seuls les blocs qui touchent la vue sont dessinés.
-    expect(visibleRoadLines(small, [3, 0, 6, 3])).toEqual([])
-    expect(visibleRoadLines(small, [2, 1, 3, 2])).toEqual([small[1]])
-    expect(visibleRoadLines(small, null)).toBe(small)
+    expect(visibleBlocks(small, [3, 0, 6, 3])).toEqual([])
+    expect(visibleBlocks(small, [2, 1, 3, 2])).toEqual([small[1]])
+    expect(visibleBlocks(small, null)).toBe(small)
   })
 
   it('montre le réseau de la carte par défaut seulement de près, et peu opaque', () => {

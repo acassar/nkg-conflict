@@ -16,6 +16,8 @@ import { stackIcon, unitIcon } from './unitIcons'
 import { isStack, stackUnits, type MapUnit } from './clusters'
 import { stanceColor, type TerritoryTile } from './territoryImage'
 import { BASE_ROAD_WIDTH, type RoadLines } from './roadsImage'
+import type { LineBlock } from './lineBlocks'
+import { BORDER_STYLE, type BorderBlocks } from './borders'
 import type { Stance } from '@/stores/game'
 import type { SupplyPocket, SupplyView } from '@/sim/systems/supplyView'
 
@@ -45,6 +47,8 @@ export interface LayerInput {
     mainOpacity: number
     minorOpacity: number
   } | null
+  /** Frontières nationales (blocs proches de la vue), au-dessus du territoire, dans tous les modes. */
+  borders: BorderBlocks | null
   /** Position de chaque pays vis-à-vis du joueur (couleurs). */
   stances: Map<string, Stance>
   selection: Set<number>
@@ -124,23 +128,23 @@ function visibleCities(snapshot: SimSnapshot, zoom: number): CityState[] {
 }
 
 /**
- * Données binaires d'un réseau en segments, gardées par réseau : un même objet d'un rendu à l'autre
- * évite à deck.gl de renvoyer les segments au GPU à chaque image.
+ * Données binaires d'un bloc de segments, gardées par bloc : un même objet d'un rendu à l'autre évite
+ * à deck.gl de renvoyer les segments au GPU à chaque image.
  */
-type RoadLineData = { length: number; attributes: Record<string, BinaryAttribute> }
-const roadLineCache = new WeakMap<RoadLines, RoadLineData>()
-function roadLineData(lines: RoadLines): RoadLineData {
-  const cached = roadLineCache.get(lines)
+type LineData = { length: number; attributes: Record<string, BinaryAttribute> }
+const lineDataCache = new WeakMap<LineBlock, LineData>()
+function lineData(lines: LineBlock): LineData {
+  const cached = lineDataCache.get(lines)
   if (cached) return cached
-  const data: RoadLineData = {
+  const data: LineData = {
     length: lines.length,
     attributes: {
       getSourcePosition: { value: lines.positions, size: 2, stride: 16, offset: 0 },
       getTargetPosition: { value: lines.positions, size: 2, stride: 16, offset: 8 },
-      getColor: { value: lines.colors, size: 4, type: 'unorm8' },
+      ...(lines.colors ? { getColor: { value: lines.colors, size: 4, type: 'unorm8' } } : {}),
     },
   }
-  roadLineCache.set(lines, data)
+  lineDataCache.set(lines, data)
   return data
 }
 
@@ -280,7 +284,7 @@ export function buildLayers(input: LayerInput): Layer[] {
         layers.push(
           new LineLayer({
             id: `roads-${lines.id}`,
-            data: roadLineData(lines),
+            data: lineData(lines),
             getWidth: BASE_ROAD_WIDTH[set],
             widthUnits: 'pixels',
             opacity,
@@ -290,6 +294,21 @@ export function buildLayers(input: LayerInput): Layer[] {
     }
   }
   bitmaps('territory', input.territory)
+  // Frontières nationales : trait fin, plus épais entre pays en guerre.
+  for (const kind of ['peace', 'war'] as const) {
+    const style = BORDER_STYLE[kind]
+    for (const lines of input.borders?.[kind] ?? []) {
+      layers.push(
+        new LineLayer({
+          id: lines.id,
+          data: lineData(lines),
+          getColor: style.color,
+          getWidth: style.width,
+          widthUnits: 'pixels',
+        }),
+      )
+    }
+  }
 
   if (input.logistics) layers.push(...logisticsLayers(input.logistics, snapshot))
   layers.push(...fortRangeLayers(input, snapshot))

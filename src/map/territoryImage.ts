@@ -1,5 +1,6 @@
 import type { CountryDef, GridSnapshot } from '@/sim/core/types'
 import type { Stance } from '@/stores/game'
+import { countryColors, neighbours } from './borders'
 
 const WATER = 1
 const NEUTRAL = 2
@@ -18,6 +19,11 @@ export const STANCE_COLORS: Record<Exclude<Stance, 'neutral'>, Rgb> = {
 }
 const ALPHA: Record<Stance, number> = { player: 105, enemy: 105, ally: 85, war: 80, neutral: 45 }
 const FRONT_ALPHA = 235
+/** Opacité du territoire avec le filtre « Pays » (même teinte pour tous, joueur compris). */
+const COUNTRY_ALPHA = 115
+
+/** Coloration du territoire : selon la position vis-à-vis du joueur, ou une teinte par pays. */
+export type TerritoryColoring = 'stance' | 'country'
 
 export function stanceColor(stance: Stance, base: Rgb): Rgb {
   return stance === 'neutral' ? base : STANCE_COLORS[stance]
@@ -56,10 +62,11 @@ export class TerritoryTiles {
     countries: CountryDef[],
     stances: Map<string, Stance>,
     private hostile: Set<number>,
+    coloring: TerritoryColoring = 'stance',
   ) {
     // Pas de fondu sur la grille mondiale : ses bords sont les pôles.
     this.fade = grid.width < 2000
-    this.setColors(countries, stances, hostile)
+    this.setColors(countries, stances, hostile, coloring)
     const { width: W, height: H, bbox } = grid
     const [lon0, lat0, lon1, lat1] = bbox
     const dLon = (lon1 - lon0) / W
@@ -92,14 +99,27 @@ export class TerritoryTiles {
     for (const t of this.tiles) this.paintTile(t)
   }
 
-  /** Nouvelles couleurs (guerres ou alliances changées) : tout est redessiné. */
-  setColors(countries: CountryDef[], stances: Map<string, Stance>, hostile: Set<number>): void {
+  /** Nouvelles couleurs (guerres, alliances ou filtre changés) : tout est redessiné. */
+  setColors(
+    countries: CountryDef[],
+    stances: Map<string, Stance>,
+    hostile: Set<number>,
+    coloring: TerritoryColoring = 'stance',
+  ): void {
     this.hostile = hostile
     const byCode = new Map(countries.map((c) => [c.id, c]))
+    const baseOf = (code: string): Rgb => byCode.get(code)?.color ?? [150, 150, 150]
+    if (coloring === 'country') {
+      // Voisinage recalculé sur le territoire tenu : deux voisins du moment n'ont pas la même teinte.
+      const sides = this.grid.sides
+      const rgb = countryColors(neighbours(this.grid), (i) => baseOf(sides[i] ?? ''))
+      this.palette = rgb.map((c) => ({ rgb: c, alpha: COUNTRY_ALPHA }))
+      for (const t of this.tiles) this.paintTile(t)
+      return
+    }
     this.palette = this.grid.sides.map((code) => {
       const stance = stances.get(code) ?? 'neutral'
-      const base = byCode.get(code)?.color ?? [150, 150, 150]
-      return { rgb: stanceColor(stance, base), alpha: ALPHA[stance] }
+      return { rgb: stanceColor(stance, baseOf(code)), alpha: ALPHA[stance] }
     })
     for (const t of this.tiles) this.paintTile(t)
   }

@@ -14,8 +14,10 @@ import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers, type MissionPreviewShapes } from './layers'
 import { breachAxis, encircleRing } from './missionPreview'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
+import { BorderLines, type BorderBlocks } from './borders'
 import { SupplyTiles } from './supplyImage'
-import { roadLines, roadOpacity, roadTiles, visibleRoadLines, type RoadLines } from './roadsImage'
+import { roadLines, roadOpacity, roadTiles, type RoadLines } from './roadsImage'
+import { visibleBlocks } from './lineBlocks'
 import { describePoint } from './cellInfo'
 import { isTouch, layout } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
@@ -164,6 +166,8 @@ let tilesGrid: GridSnapshot | null = null
 let territory: TerritoryTile[] = []
 let terrain: TerritoryTile[] = []
 let colorKey = ''
+// Frontières nationales en traits nets, recalculées par blocs avec le territoire.
+let borders: BorderLines | null = null
 
 function syncTerritory(): void {
   const s = snapshot.value
@@ -171,28 +175,45 @@ function syncTerritory(): void {
   if (!s || !g) {
     tiles = null
     tilesGrid = null
+    borders = null
     territory = []
     terrain = []
     return
   }
   const st = stances.value
+  const coloring = mapView.value === 'countries' ? 'country' : 'stance'
+  const key = `${st.key}|${coloring}`
   if (g !== tilesGrid) {
-    tiles = new TerritoryTiles(g, s.countries, st.map, game.hostilePairs)
+    tiles = new TerritoryTiles(g, s.countries, st.map, game.hostilePairs, coloring)
+    borders = new BorderLines(g, game.hostilePairs)
     terrain = terrainTiles(g)
     tilesGrid = g
-    colorKey = st.key
+    colorKey = key
     game.takePendingCells()
   } else if (tiles) {
-    if (st.key !== colorKey) {
-      colorKey = st.key
-      game.takePendingCells()
-      tiles.setColors(s.countries, st.map, game.hostilePairs)
+    if (key !== colorKey) {
+      colorKey = key
+      const cells = game.takePendingCells()
+      tiles.setColors(s.countries, st.map, game.hostilePairs, coloring)
+      borders?.setHostile(game.hostilePairs)
+      borders?.applyCells(cells)
     } else {
       const cells = game.takePendingCells()
-      if (cells.length) tiles.applyCells(cells)
+      if (cells.length) {
+        tiles.applyCells(cells)
+        borders?.applyCells(cells)
+      }
     }
   }
   territory = tiles?.layers() ?? []
+}
+
+/** Frontières des blocs proches de la vue. */
+function borderLines(): BorderBlocks | null {
+  const all = borders?.lines()
+  if (!all) return null
+  const view = viewBounds.value
+  return { peace: visibleBlocks(all.peace, view), war: visibleBlocks(all.war, view) }
 }
 
 // Calque du mode Logistique : recréé avec la grille, redessiné seulement quand un nouvel état arrive.
@@ -252,8 +273,8 @@ function politicalRoads(): {
   const cellDeg = (g.bbox[2] - g.bbox[0]) / g.width
   const view = viewBounds.value
   return {
-    main: visibleRoadLines(baseRoads.main, view),
-    minor: visibleRoadLines(baseRoads.minor, view),
+    main: visibleBlocks(baseRoads.main, view),
+    minor: visibleBlocks(baseRoads.minor, view),
     mainOpacity: roadOpacity(zoom.value, cellDeg, 'main'),
     minorOpacity: roadOpacity(zoom.value, cellDeg, 'minor'),
   }
@@ -302,6 +323,7 @@ function refresh(): void {
       territory,
       terrain,
       roads: politicalRoads(),
+      borders: borderLines(),
       stances: stances.value.map,
       selection: new Set(selection.value),
       selectedArmy: selectedArmy.value,

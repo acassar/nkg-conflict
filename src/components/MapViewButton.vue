@@ -24,12 +24,24 @@ const legendStyle = computed(() => {
   return { left: game.panelTab ? '440px' : '98px', top: '60px' }
 })
 
+/** Bouton du filtre « Pays », juste avant celui de la logistique. */
+const countriesStyle = computed(() => {
+  if (layout.value === 'portrait') return { left: '114px', bottom: `${game.drawerHeight + 10}px` }
+  if (layout.value === 'landscape') return { left: '114px', bottom: '10px' }
+  return { right: '156px', bottom: '10px' }
+})
+
 const active = computed(() => game.mapView === 'logistics')
+const countries = computed(() => game.mapView === 'countries')
 const view = computed(() => game.supply?.view ?? null)
 const pockets = computed(() => view.value?.pockets.length ?? 0)
 
 function toggle(): void {
   game.setMapView(active.value ? 'political' : 'logistics')
+}
+
+function toggleCountries(): void {
+  game.setMapView(countries.value ? 'political' : 'countries')
 }
 </script>
 
@@ -57,6 +69,34 @@ function toggle(): void {
         <circle cx="17" cy="17.5" r="1.8" fill="currentColor" />
       </svg>
     </button>
+    <button
+      class="mode"
+      :class="{ active: countries }"
+      :style="countriesStyle"
+      :aria-pressed="countries"
+      title="Filtre « Pays » : une teinte par pays (P)"
+      aria-label="Filtre Pays"
+      data-testid="countries-button"
+      @click="toggleCountries"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path
+          d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14 M15 6v14"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+    <div v-if="countries" class="legend" :style="legendStyle" data-testid="countries-legend">
+      <strong>Pays</strong>
+      <p class="note">Une teinte par pays ; deux voisins n'ont jamais la même.</p>
+      <ul>
+        <li><span class="line border" />Frontière</li>
+        <li><span class="line border-war" />Frontière entre pays en guerre</li>
+      </ul>
+    </div>
     <div v-if="active" class="legend" :style="legendStyle" data-testid="logistics-legend">
       <strong>Logistique</strong>
       <p v-if="view && !view.atWar" class="peace">En paix : tout le territoire est ravitaillé.</p>
@@ -143,6 +183,20 @@ function toggle(): void {
 .peace {
   margin: 4px 0 0;
   color: #86efac;
+}
+.note {
+  margin: 4px 0 0;
+}
+.line {
+  flex: none;
+  width: 14px;
+  background: #e8eaed;
+}
+.line.border {
+  height: 1px;
+}
+.line.border-war {
+  height: 3px;
 }
 .sw,
 .ring {

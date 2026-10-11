@@ -79,8 +79,11 @@ const TARGET_LABELS: Record<TargetAction, string> = {
   encircle: 'Encerclement',
 }
 
-/** Mode d'affichage de la carte : politique (par défaut) ou logistique. */
-export type MapView = 'political' | 'logistics'
+/**
+ * Mode d'affichage de la carte : politique (par défaut, couleurs selon la position vis-à-vis du
+ * joueur), pays (une teinte par pays) ou logistique.
+ */
+export type MapView = 'political' | 'countries' | 'logistics'
 
 /** Vue logistique reçue du Worker, avec l'état de chaque cellule décodé (null en paix). */
 export interface SupplyMap {
@@ -272,7 +275,7 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  /** Bascule la carte entre le mode politique et le mode logistique. */
+  /** Change le mode d'affichage de la carte (politique, pays ou logistique). */
   function setMapView(next: MapView): void {
     mapView.value = next
     if (next === 'logistics') void refreshSupply(true)

@@ -5,6 +5,12 @@ import { distanceKm } from '../theater/grid'
 import { WarIndex } from './spatial'
 
 const POCKET_GUARD_KM = 15
+/** Délai après un débarquement pendant lequel l'unité prend la cellule où elle se tient. */
+export const BEACHHEAD_HOURS = 48
+
+function beachhead(ctx: SimContext, u: UnitState): boolean {
+  return u.landedAt !== undefined && ctx.tick - u.landedAt <= BEACHHEAD_HOURS
+}
 
 function zocKm(ctx: SimContext, u: UnitState): number {
   return ctx.catalog[u.kind].zocKm * (0.5 + 0.5 * combatStrength(u))
@@ -13,7 +19,9 @@ function zocKm(ctx: SimContext, u: UnitState): number {
 /**
  * Avance de la ligne de front, une heure.
  * Une cellule passe à un camp si elle est dans la zone de contrôle d'une de ses unités, hors de celle de
- * toute unité ennemie, et touche déjà son territoire : le front avance d'une cellule à la fois, au pixel près.
+ * toute unité ennemie, et touche déjà son territoire (ou celui d'un cobelligérant ou d'un pays qui lui
+ * accorde le passage) : le front avance d'une cellule à la fois, au pixel près. Une unité débarquée prend
+ * la cellule de sa plage pendant BEACHHEAD_HOURS heures, ce qui ouvre une tête de pont.
  * Les poches coupées du ravitaillement et sans défenseur s'effondrent depuis leurs bords.
  */
 export function updateTerritory(ctx: SimContext): void {
@@ -41,10 +49,15 @@ export function updateTerritory(ctx: SimContext): void {
       const owner = grid.owner[i] ?? 0
       // Seules les cellules d'un pays en guerre contre nous peuvent être prises.
       if (owner === side || !ctx.matrix.hostile(side, owner) || !grid.passable(i)) return
-      // La cellule doit toucher le territoire du camp.
+      // La cellule doit toucher le territoire du camp, ou celui d'un pays où il circule (cobelligérant,
+      // droit de passage) ; une unité tout juste débarquée prend la cellule où elle se tient (tête de pont).
       let touches = false
-      for (const n of grid.neighbors4(i, scratch)) if (grid.owner[n] === side) touches = true
-      if (!touches) return
+      for (const n of grid.neighbors4(i, scratch)) {
+        const o = grid.owner[n] ?? 0
+        if (o === side || ctx.matrix.friendly(side, o) || ctx.matrix.passage(side, o))
+          touches = true
+      }
+      if (!touches && !(beachhead(ctx, u) && i === grid.cellAt(u.lon, u.lat))) return
       // Contestée : couverte par une unité ennemie.
       if (index.forEachEnemyAt(side, grid.lonOf(i), grid.latOf(i), maxZoc, covers)) return
       flips.push([i, side])

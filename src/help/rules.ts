@@ -33,6 +33,7 @@ import {
   RAIL_LOAD_HOURS,
   TRANSPORT_COST,
 } from '@/sim/systems/transport'
+import { BEACHHEAD_HOURS } from '@/sim/systems/territory'
 import { AID_CAP, AID_MONEY_SHARE } from '@/sim/politics/aidLevels'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import { Terrain, TERRAIN_RULES } from '@/sim/theater/grid'
@@ -332,6 +333,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     paragraphs: [
       `Pas encore de navires : chaque port tenu (ville au bord de la mer) offre une capacité de transport de ${PORT_BASE_CAPACITY} brigade, plus 1 par million d'habitants (${PORT_CAPACITY_MAX} au plus). La somme des ports tenus, pris compris, fixe le nombre de brigades qu'un pays peut avoir en mer à la fois.`,
       `Débarquement : une brigade à moins de ${EMBARK_KM} km d'un port tenu embarque, quitte la carte (${EMBARK_HOURS} heures d'embarquement, puis ${SEA_KM_PER_HOUR} km par heure, ${MAX_LANDING_KM} km au plus) et débarque sur la côte choisie : à soi, à un ennemi, à un allié ou à un pays qui accorde le passage. À l'arrivée, son organisation tombe à ${pct(LANDING_ORG)} au plus, elle n'est pas retranchée et perd ${pct(1 - LANDING_FACTOR)} de feu et de défense pendant ${LANDING_HOURS} heures ; si un ennemi est à moins de ${OPPOSED_KM} km, elle perd aussi ${pct(OPPOSED_LOSS)} de ses effectifs et de son matériel. Si la côte s'est fermée entre-temps, elle rentre à son port.`,
+      `Une brigade débarquée prend, pendant ${BEACHHEAD_HOURS} heures, la cellule où elle se tient : la tête de pont s'étend ensuite comme un front. Plus généralement, une cellule ennemie se prend si elle touche votre territoire, celui d'un cobelligérant ou d'un pays qui vous accorde le passage.`,
       "Tête de pont : une unité débarquée n'est ravitaillée que si elle est reliée à son territoire, ou par un port pris : un pays en guerre qui tient au moins un de ses ports nationaux ravitaille par la mer depuis chaque port étranger qu'il tient.",
     ],
   },
@@ -342,6 +344,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       `« Transporter » puis clic sur une ville à vous, à un cobelligérant ou à un pays qui vous accorde le passage (la plus proche du clic, à moins de ${DEST_PICK_KM} km) : chaque unité choisie quitte la carte et y réapparaît à l'arrivée. Une unité au contact de l'ennemi ne part pas ; pendant le trajet, elle quitte son armée et sa division et ne peut être interceptée.`,
       `Le mode est choisi pour chaque unité, dans cet ordre. Rail : départ et arrivée reliés par un territoire ami continu ; ${RAIL_LOAD_HOURS} heures de chargement, puis ${RAIL_KM_PER_HOUR} km par heure sur la ligne droite allongée de 30 %. Mer : unité à moins de ${EMBARK_KM} km d'un port tenu et arrivée dans un port, ${MAX_LANDING_KM} km au plus ; mêmes délais et même capacité que les débarquements. Air : infanterie, défense territoriale et QG seulement, entre deux villes d'au moins ${Math.round(AIRFIELD_POP / 1000)} 000 habitants (départ à moins de ${EMBARK_KM} km), ${AIR_LOAD_HOURS} heures de préparation puis ${AIR_KM_PER_HOUR} km par heure, ${MAX_AIR_KM} km au plus et ${AIR_CAPACITY} unités en vol à la fois.`,
       `Coût en production, par 1 000 km (500 km comptés au moins) : ${pct(TRANSPORT_COST.rail)} du prix d'une unité neuve par le rail, ${pct(TRANSPORT_COST.sea)} par la mer, ${pct(TRANSPORT_COST.air)} par l'air. Si la ville d'arrivée n'est plus amie à l'arrivée, l'unité revient à son point de départ, ou à défaut à la ville tenue la plus proche.`,
+      "L'IA en guerre sans aucun front s'en sert aussi : elle appelle ses alliés, demande au besoin le passage à un voisin de son ennemi (jamais à vous), y transporte la moitié de ses unités de ligne puis attaque ; sans route terrestre, elle débarque depuis son port le plus proche de la côte ennemie.",
     ],
   },
   {

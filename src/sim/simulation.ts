@@ -88,6 +88,7 @@ import {
 } from './systems/armies'
 import { adviseBuild, type BuildAdvice } from './economy/buildAdvice'
 import { updateAi, nearestCity, newAiState, type AiState } from './systems/ai'
+import { updateExpeditionAi } from './systems/aiExpedition'
 import {
   cancelConstruction,
   setWarEconomy,
@@ -628,6 +629,13 @@ export class Simulation {
     for (const c of managed) updateAiEconomy(ctx, c)
     for (const c of managed) {
       if (ctx.matrix.atWar[sideIndex(ctx, c)] === 1) updateAirAi(ctx, c)
+    }
+    // Guerres sans frontière commune : alliés, passage, transport ou débarquement.
+    this.neighbors ??= computeNeighbors(ctx)
+    for (const c of managed) {
+      if (ctx.matrix.atWar[sideIndex(ctx, c)] === 1) {
+        updateExpeditionAi(ctx, c, this.playerCountry, this.hooks, this.neighbors)
+      }
     }
     // Gestion automatique du joueur : seulement les parties choisies, jamais l'économie de guerre.
     const auto = this.autoEconomy

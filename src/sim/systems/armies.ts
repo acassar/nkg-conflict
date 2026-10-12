@@ -12,6 +12,7 @@ import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
 import { updateFormations } from './formations'
 import { borderFrontCells, pruneBorder, updateBorderFronts } from './frontiers'
+import { assignDefendPoints } from './defendPoints'
 import { REST_KM, RELIEF_MAX_SHARE, selectRelief } from './fatigue'
 import { assaultFireFactor } from './obstacles'
 import {
@@ -450,9 +451,17 @@ function picksFavorablePosts(army: ArmyState): boolean {
   return army.posture === 'defensive' || army.posture === 'maxDefense'
 }
 
-/** L'armée tient une ligne : portion de front, tout le front ou une frontière (frontiers.ts). */
+/**
+ * L'armée a des postes à tenir : portion de front, tout le front, une frontière (frontiers.ts) ou les
+ * points de la mission « Défendre des points » (defendPoints.ts).
+ */
 export function holdsLine(army: ArmyState): boolean {
-  return !!(army.front || army.wholeFront || army.border?.length)
+  return !!(
+    army.front ||
+    army.wholeFront ||
+    army.border?.length ||
+    army.mission?.kind === 'defendPoints'
+  )
 }
 
 /**
@@ -488,6 +497,13 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   if (!holdsLine(army)) {
     army.frontLine = undefined
     delete army.keyPoints
+    return
+  }
+  // Mission « Défendre des points » : postes autour des points, pas sur une ligne.
+  if (army.mission?.kind === 'defendPoints') {
+    army.frontLine = undefined
+    delete army.keyPoints
+    assignDefendPoints(ctx, army, army.mission, teleport)
     return
   }
   const cells = lineCells(ctx, army)

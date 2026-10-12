@@ -6,7 +6,7 @@ import { loadTheater } from '@/sim/theater/load'
 import type { TheaterData } from '@/sim/theater/grid'
 import { sideIndex } from '@/sim/context'
 import { makePeace, setRelation } from '@/sim/politics/politics'
-import { borderWith, foreignNeighbors } from '@/sim/systems/frontiers'
+import { borderWith, foreignNeighbors, isCoastCell } from '@/sim/systems/frontiers'
 import { updateArmies } from '@/sim/systems/armies'
 import { distanceKm } from '@/sim/theater/grid'
 import type { ArmyState } from '@/sim/core/types'
@@ -95,7 +95,7 @@ describe('frontières tenues par une armée', () => {
     // Cellules hors frontière ignorées.
     const inland = ctx.grid.cellAt(2.35, 48.86)
     expect(foreignNeighbors(ctx.grid, fra, inland)).toEqual([])
-    expect(sim.setArmyBorder(b, { paint: [inland] })).toContain('Aucune frontière terrestre')
+    expect(sim.setArmyBorder(b, { paint: [inland] })).toContain('Aucune frontière ni côte')
     // « Prendre toute la frontière » : la première armée reprend tout.
     expect(sim.setArmyBorder(a, 'all')).toBe(null)
     expect(army(sim, a).border!.length).toBe(borderWith(ctx.grid, fra, deu).length)
@@ -150,5 +150,44 @@ describe('frontières tenues par une armée', () => {
       theater,
     )
     expect(loaded.ctx.armies.get(a)?.border).toEqual(army(sim, a).border)
+  })
+
+  it('côte en option : peinte comme une frontière, déploiement face à la mer, gardée à la guerre', () => {
+    const { sim, a } = france()
+    const ctx = sim.ctx
+    const g = ctx.grid
+    const fra = sideIndex(ctx, 'FRA')
+    // Côte bretonne autour de Brest.
+    const coast: number[] = []
+    const c0 = g.cellAt(-4.3, 48.3)
+    for (let dy = -6; dy <= 6; dy++)
+      for (let dx = -6; dx <= 6; dx++) {
+        const i = c0 + dy * g.width + dx
+        if (isCoastCell(g, fra, i)) coast.push(i)
+      }
+    expect(coast.length).toBeGreaterThan(5)
+    expect(sim.setArmyBorder(a, { paint: coast })).toBe(null)
+    const held = army(sim, a)
+    expect(held.border?.length).toBe(coast.length)
+    for (const id of held.unitIds) {
+      const o = ctx.units.get(id)!.order
+      expect(o.kind).toBe('front')
+      const t = o.target
+      if (!t) continue
+      expect(g.owner[g.cellAt(t[0], t[1])]).toBe(fra)
+      expect(distanceKm(t[0], t[1], -4.3, 48.3)).toBeLessThan(120)
+    }
+    // Ajout de la frontière allemande d'un clic : la côte reste tenue.
+    expect(sim.setArmyBorder(a, { country: 'DEU' })).toBe(null)
+    expect(coast.every((c) => held.border!.includes(c))).toBe(true)
+    // Guerre avec la Suisse : seule la frontière suisse devient le front, la côte reste tenue.
+    expect(sim.setArmyBorder(a, { country: 'CHE' })).toBe(null)
+    setRelation(ctx, 'FRA', 'CHE', -100)
+    expect(sim.declareWar('CHE')).toBe(null)
+    updateArmies(ctx)
+    expect(held.borderFront).toBe(true)
+    const [p0, p1] = held.front!
+    for (const p of [p0, p1]) expect(distanceKm(p[0], p[1], 7, 46.6)).toBeLessThan(250)
+    expect(coast.every((c) => held.border!.includes(c))).toBe(true)
   })
 })

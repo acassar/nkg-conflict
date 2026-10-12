@@ -34,12 +34,26 @@ export function isBorderCell(g: GridSnapshot, side: number, i: number): boolean 
   )
 }
 
+/** Cellule de côte du camp `side` : à lui, praticable, voisine de la mer ou d'un lac. */
+export function isCoastCell(g: GridSnapshot, side: number, i: number): boolean {
+  if (g.owner[i] !== side || !passable(g, i)) return false
+  const W = g.width
+  const x = i % W
+  const water = (n: number): boolean => g.terrain[n] === Terrain.WATER
+  return (
+    (x > 0 && water(i - 1)) ||
+    (x < W - 1 && water(i + 1)) ||
+    (i >= W && water(i - W)) ||
+    (i + W < W * g.height && water(i + W))
+  )
+}
+
 /** Rayon du pinceau, en cellules, pour un rayon donné en degrés (au moins une cellule, au plus 12). */
 export function brushCells(g: GridSnapshot, radiusDeg: number): number {
   return Math.max(1, Math.min(12, Math.round(radiusDeg / cellDeg(g))))
 }
 
-/** Cellules de frontière du camp `side` dans un carré de `radius` cellules autour d'un point. */
+/** Cellules de frontière ou de côte du camp `side` dans un disque de `radius` cellules autour d'un point. */
 export function borderCellsNear(
   g: GridSnapshot,
   side: number,
@@ -56,7 +70,7 @@ export function borderCellsNear(
       if (x < 0 || x >= g.width) continue
       if ((x - cx) ** 2 + (y - cy) ** 2 > radius * radius) continue
       const i = y * g.width + x
-      if (isBorderCell(g, side, i)) out.push(i)
+      if (isBorderCell(g, side, i) || isCoastCell(g, side, i)) out.push(i)
     }
   }
   return out
@@ -75,15 +89,20 @@ export function cellSquare(g: GridSnapshot, i: number): LonLat[] {
   ]
 }
 
-/** Pays voisins (codes) le long des cellules de frontière tenues, et longueur approchée en km. */
+/**
+ * Pays voisins (codes) le long des cellules tenues, longueur approchée en km et, dans cette longueur,
+ * celle des côtes.
+ */
 export function borderSummary(
   g: GridSnapshot,
   side: number,
   cells: ReadonlyArray<number>,
-): { neighbors: string[]; km: number } {
+): { neighbors: string[]; km: number; coastKm: number } {
   const W = g.width
   const seen = new Set<number>()
+  let coast = 0
   for (const i of cells) {
+    if (!isBorderCell(g, side, i)) coast++
     const x = i % W
     for (const n of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) {
       if (n < 0 || n >= W * g.height) continue
@@ -93,6 +112,10 @@ export function borderSummary(
   }
   const lat = cells.length ? g.bbox[1] + (Math.floor((cells[0] ?? 0) / W) + 0.5) * cellDeg(g) : 0
   // Longueur : un côté de cellule par cellule de frontière (côté moyen, l'est-ouest réduit par la latitude).
-  const km = cells.length * cellDeg(g) * 111 * (1 + Math.cos((lat * Math.PI) / 180)) * 0.5
-  return { neighbors: [...seen].map((o) => g.sides[o] ?? '').filter(Boolean), km }
+  const perCell = cellDeg(g) * 111 * (1 + Math.cos((lat * Math.PI) / 180)) * 0.5
+  return {
+    neighbors: [...seen].map((o) => g.sides[o] ?? '').filter(Boolean),
+    km: cells.length * perCell,
+    coastKm: coast * perCell,
+  }
 }

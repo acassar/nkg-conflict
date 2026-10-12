@@ -7,6 +7,7 @@ import type { SupplyView } from '@/sim/systems/supplyView'
 import type { MissionPreview } from '@/sim/systems/armies'
 import type {
   AirMission,
+  DefendPointKinds,
   AdvanceGoal,
   LineMissionKind,
   BattleReport,
@@ -52,6 +53,8 @@ export type MapMode =
    * colorée au fur et à mesure), ou on clique sur un pays voisin pour toute la frontière avec lui.
    */
   | { kind: 'border'; armyId: number }
+  /** Mission « Défendre des points » dans une zone : clic sur le centre du cercle. */
+  | { kind: 'defendZone'; armyId: number; kinds: DefendPointKinds; km: number }
   | { kind: 'offensive'; armyId: number; first: LonLat | null; unitIds?: number[] }
   /** Ordre qui vise une unité ennemie (poursuite, assaut, encerclement par la sélection ou une armée). */
   | { kind: 'target'; action: TargetAction; armyId?: number }
@@ -502,7 +505,9 @@ export const useGameStore = defineStore('game', () => {
         : 'Portion de front : cliquez sur la première extrémité'
     }
     if (m.kind === 'border')
-      return 'Frontière : glissez le long de votre frontière pour la peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
+      return 'Frontière : glissez le long de votre frontière ou de votre côte pour la peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
+    if (m.kind === 'defendZone')
+      return `Défendre des points : cliquez sur le centre de la zone (${m.km} km de rayon, Échap pour annuler)`
     if (m.kind === 'target') return `${TARGET_LABELS[m.action]} : cliquez sur une unité ennemie`
     if (m.kind === 'advance') {
       if (m.goal === 'line' && m.points.length > 0) {
@@ -777,6 +782,21 @@ export const useGameStore = defineStore('game', () => {
     cancelMode()
   }
 
+  /** Mission « Défendre des points » de tout le pays (`zone` nulle) ou d'un cercle. */
+  async function defendPointsArmy(
+    armyId: number,
+    zone: { center: LonLat; km: number } | null,
+    kinds: DefendPointKinds,
+  ): Promise<void> {
+    const z = zone ? { center: lonLat(zone.center), km: zone.km } : null
+    report(await sim.defendPointsArmy(armyId, z, { ...kinds }))
+  }
+
+  /** Zone de la mission « Défendre des points » : son centre se désigne d'un clic. */
+  function startDefendZone(armyId: number, kinds: DefendPointKinds, km: number): void {
+    mode.value = { kind: 'defendZone', armyId, kinds: { ...kinds }, km }
+  }
+
   /** « Prendre toute la frontière » : toute la frontière avec chaque voisin déjà touché, retirée aux autres armées. */
   async function takeWholeBorder(armyId: number): Promise<void> {
     report(await sim.setArmyBorder(armyId, 'all'), "L'armée tient toute la frontière")
@@ -901,6 +921,11 @@ export const useGameStore = defineStore('game', () => {
                 : await sim.encircle(ids(), enemy.id)
         report(error)
       })()
+      cancelMode()
+      return true
+    }
+    if (m.kind === 'defendZone') {
+      void defendPointsArmy(m.armyId, { center: lonLat(point), km: m.km }, m.kinds)
       cancelMode()
       return true
     }
@@ -1403,6 +1428,8 @@ export const useGameStore = defineStore('game', () => {
     clearFront,
     startBorder,
     paintBorder,
+    defendPointsArmy,
+    startDefendZone,
     takeWholeBorder,
     launchOffensive,
     cancelOffensive,

@@ -120,12 +120,13 @@ describe('aperçus pendant la visée', () => {
 })
 
 describe("cartes de mission de l'onglet Ordre", () => {
-  it('huit missions en trois groupes, action selon la mission', () => {
+  it('neuf missions en trois groupes, action selon la mission', () => {
     expect(MISSION_GROUPS.map((g) => g.label)).toEqual(['Défendre', 'Attaquer', 'Reculer'])
-    expect(MISSION_GROUPS.flatMap((g) => g.kinds)).toHaveLength(8)
+    expect(MISSION_GROUPS.flatMap((g) => g.kinds)).toHaveLength(9)
     expect(missionAction('hold', 'hold').kind).toBe('current')
     expect(missionAction('depth', 'hold')).toEqual({ kind: 'apply', label: 'Appliquer' })
     expect(missionAction('breach', 'hold').kind).toBe('aim')
+    expect(missionAction('defendPoints', 'hold').kind).toBe('aim')
     expect(isLineMission('reserve')).toBe(true)
     expect(isLineMission('retreat')).toBe(false)
   })

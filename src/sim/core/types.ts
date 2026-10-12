@@ -255,7 +255,15 @@ export interface ArmyState {
  * retraite ordonnée, encercler.
  */
 export type MissionKind =
-  'hold' | 'keyPoints' | 'depth' | 'reserve' | 'advance' | 'breach' | 'retreat' | 'encircle'
+  | 'hold'
+  | 'keyPoints'
+  | 'depth'
+  | 'reserve'
+  | 'advance'
+  | 'breach'
+  | 'retreat'
+  | 'encircle'
+  | 'defendPoints'
 
 /** Missions qui tiennent un front, sans but à atteindre : elles changent la répartition des postes. */
 export type LineMissionKind = 'hold' | 'keyPoints' | 'depth' | 'reserve'
@@ -341,7 +349,32 @@ export interface RetreatMission {
 }
 
 export type ArmyMission =
-  { kind: LineMissionKind } | AdvanceMission | BreachMission | RetreatMission
+  { kind: LineMissionKind } | AdvanceMission | BreachMission | RetreatMission | DefendPointsMission
+
+/** Types de points de la mission « Défendre des points ». */
+export interface DefendPointKinds {
+  /** Villes : la capitale d'abord, puis selon la population. */
+  cities: boolean
+  ports: boolean
+  /** Casernes, dépôts, fortifications. */
+  bases: boolean
+  /** Villes d'au moins 200 000 habitants, en attendant de vrais aérodromes (phase J). */
+  airfields: boolean
+}
+
+/**
+ * Mission « Défendre des points » (phase G2), en paix comme en guerre : les brigades de ligne se
+ * répartissent entre les points cochés du pays ou d'une zone, selon leur importance ; sert aussi de
+ * garnison. Le front ou la frontière de l'armée sont gardés pour son retour à « Tenir ».
+ */
+export interface DefendPointsMission {
+  kind: 'defendPoints'
+  /** Zone défendue (cercle), ou tout le pays (null). */
+  zone: { center: LonLat; km: number } | null
+  kinds: DefendPointKinds
+  /** Points défendus à la dernière répartition, pour l'affichage. */
+  points: Array<{ name: string; at: LonLat; weight: number; units: number }>
+}
 
 /**
  * Encerclement en deux temps : les unités gagnent d'abord leurs points d'attente sur les flancs,

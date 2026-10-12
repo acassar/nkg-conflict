@@ -817,6 +817,43 @@ export function buildLayers(input: LayerInput): Layer[] {
       }),
     )
   }
+  // Mission « Défendre des points » de l'armée sélectionnée : zone choisie, et points défendus (taille
+  // selon le nombre d'unités envoyées), en orange.
+  const defend = selectedArmy?.mission?.kind === 'defendPoints' ? selectedArmy.mission : null
+  if (defend?.zone) {
+    layers.push(
+      new ScatterplotLayer({
+        id: 'defend-zone',
+        data: [defend.zone],
+        getPosition: (z: { center: LonLat }) => z.center,
+        getRadius: (z: { km: number }) => z.km * 1000,
+        radiusUnits: 'meters',
+        filled: false,
+        stroked: true,
+        getLineColor: [251, 146, 60, 200],
+        lineWidthUnits: 'pixels',
+        getLineWidth: 2,
+      }),
+    )
+  }
+  if (defend && defend.points.length > 0) {
+    layers.push(
+      new ScatterplotLayer({
+        id: 'defend-points',
+        data: defend.points,
+        getPosition: (p: { at: LonLat }) => p.at,
+        getFillColor: (p: { units: number }) =>
+          p.units > 0 ? [251, 146, 60, 140] : [251, 146, 60, 40],
+        getLineColor: [251, 146, 60, 255],
+        stroked: true,
+        lineWidthUnits: 'pixels',
+        getLineWidth: 2,
+        radiusUnits: 'pixels',
+        getRadius: (p: { units: number }) => 5 + Math.min(6, p.units) * 1.5,
+        updateTriggers: { getFillColor: defend.points, getRadius: defend.points },
+      }),
+    )
+  }
   // Missions « Avancer » de l'armée sélectionnée et des armées des unités choisies : tracé visé en bleu
   // clair, objectif marqué.
   const missions = snapshot.armies

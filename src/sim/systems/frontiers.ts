@@ -1,6 +1,6 @@
 import { countryName, sideIndex, type SimContext } from '../context'
 import type { ArmyState, LonLat } from '../core/types'
-import type { Grid } from '../theater/grid'
+import { Terrain, type Grid } from '../theater/grid'
 import type { FrontCell } from './armies'
 
 /**
@@ -8,6 +8,8 @@ import type { FrontCell } from './armies'
  * de la frontière terrestre de son pays (peintes au glisser, ou toute la frontière avec un voisin). En
  * paix, elle s'y déploie sans franchir ; si la guerre éclate avec ce voisin, la frontière devient son
  * front (voir `updateBorderFronts`). Plusieurs armées se partagent une frontière sans chevauchement.
+ * En option, une armée peut aussi couvrir une portion de côte (peinte de la même façon) : elle s'y
+ * déploie face à la mer, contre les débarquements.
  */
 
 /** Une cellule tenue par plusieurs armées : impossible, une prise la retire aux autres. */
@@ -39,6 +41,25 @@ export function foreignNeighbors(grid: Grid, side: number, i: number): number[] 
 /** Cellule de frontière terrestre du camp : à lui, praticable, voisine d'un autre pays. */
 export function isBorderCell(grid: Grid, side: number, i: number): boolean {
   return foreignNeighbors(grid, side, i).length > 0
+}
+
+/** Cellule de côte du camp : à lui, praticable, voisine (4) d'une cellule de mer ou de lac. */
+export function isCoastCell(grid: Grid, side: number, i: number): boolean {
+  if (grid.owner[i] !== side || !grid.passable(i)) return false
+  const W = grid.width
+  const x = i % W
+  const water = (n: number): boolean => grid.terrain[n] === Terrain.WATER
+  return (
+    (x > 0 && water(i - 1)) ||
+    (x < W - 1 && water(i + 1)) ||
+    (i >= W && water(i - W)) ||
+    (i + W < grid.size && water(i + W))
+  )
+}
+
+/** Cellule qu'une armée peut tenir : frontière terrestre, ou côte (peinture seulement). */
+export function isHoldableCell(grid: Grid, side: number, i: number): boolean {
+  return isBorderCell(grid, side, i) || isCoastCell(grid, side, i)
 }
 
 /** Cellules du camp `side` sur sa frontière avec le camp `other`, balayées dans l'emprise du camp. */
@@ -80,7 +101,10 @@ export function assignBorder(
   let onBorder = false
   let blocked = false
   for (const c of cells) {
-    if (!isBorderCell(ctx.grid, side, c)) continue
+    // Côtes : seulement à la peinture ; un clic sur un voisin ne prend que la frontière terrestre.
+    const ok =
+      mode === 'paint' ? isHoldableCell(ctx.grid, side, c) : isBorderCell(ctx.grid, side, c)
+    if (!ok) continue
     onBorder = true
     if (mine.has(c)) continue
     if (mode === 'free' && heldByOthers.has(c)) blocked = true
@@ -88,7 +112,7 @@ export function assignBorder(
   }
   if (taken.size === 0) {
     if (!onBorder)
-      return 'Aucune frontière terrestre ici : glissez le long de la frontière de votre pays'
+      return 'Aucune frontière ni côte ici : glissez le long de la frontière ou de la côte de votre pays'
     return blocked
       ? "Cette frontière est déjà tenue par d'autres armées : « Prendre toute la frontière » pour la leur retirer"
       : "L'armée tient déjà cette portion de frontière"
@@ -118,28 +142,32 @@ export function borderNeighbors(ctx: SimContext, army: ArmyState): number[] {
   return [...out]
 }
 
-/** Retire les cellules qui ne sont plus une frontière du pays (territoire perdu, voisin annexé). */
+/** Retire les cellules qui ne sont plus une frontière ou une côte du pays (territoire perdu, voisin annexé). */
 export function pruneBorder(ctx: SimContext, army: ArmyState): void {
   if (!army.border) return
   const side = sideIndex(ctx, army.owner)
-  army.border = army.border.filter((c) => isBorderCell(ctx.grid, side, c))
+  army.border = army.border.filter((c) => isHoldableCell(ctx.grid, side, c))
   if (army.border.length === 0) delete army.border
 }
 
 /**
  * Cellules de la frontière tenue, prêtes pour la répartition des postes (comme `frontCells`) : direction
- * de l'arrière opposée aux voisins étrangers, position le long de l'axe principal de la portion.
+ * de l'arrière opposée aux voisins étrangers (à la mer pour une côte), position le long de l'axe
+ * principal de la portion.
  */
 export function borderFrontCells(ctx: SimContext, army: ArmyState): FrontCell[] {
   const { grid } = ctx
   const side = sideIndex(ctx, army.owner)
   const W = grid.width
   const raw: Array<{ cell: number; back: [number, number] }> = []
-  const foreign = (n: number): boolean => {
+  const land = (n: number): boolean => {
     const o = grid.owner[n] ?? 0
     return o !== 0 && o !== side && grid.passable(n)
   }
+  const sea = (n: number): boolean => grid.terrain[n] === Terrain.WATER
   for (const i of army.border ?? []) {
+    // Frontière terrestre d'abord : une cellule qui touche un voisin et la mer fait face au voisin.
+    const foreign = isBorderCell(grid, side, i) ? land : sea
     if (grid.owner[i] !== side || !grid.passable(i)) continue
     const x = i % W
     let bx = 0

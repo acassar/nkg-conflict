@@ -5,7 +5,7 @@ import { postureOf } from '../units/postures'
 
 /**
  * Obstacles (mines, barbelés, positions préparées) : posés cellule par cellule par les unités
- * retranchées d'un camp en guerre, ils freinent les assauts contre ce camp. Quand la cellule change
+ * retranchées d'un camp en guerre, ou d'une armée qui tient une frontière (même en paix), ils freinent les assauts contre ce camp. Quand la cellule change
  * de mains, l'occupant les lève peu à peu (déminage).
  */
 export interface ObstacleField {
@@ -37,7 +37,10 @@ export function obstacleRate(terrain: number | undefined): number {
 /** Une heure de retranchement : la cellule de l'unité se garnit d'obstacles de son camp. */
 export function layObstacles(ctx: SimContext, u: UnitState): void {
   const side = sideIndex(ctx, u.owner)
-  if (side <= 0 || ctx.matrix.atWar[side] !== 1) return
+  if (side <= 0) return
+  // En paix, seules les armées qui tiennent une frontière préparent le terrain.
+  if (ctx.matrix.atWar[side] !== 1 && !(u.armyId !== null && ctx.armies.get(u.armyId)?.border))
+    return
   const cell = ctx.grid.cellAt(u.lon, u.lat)
   if (ctx.grid.owner[cell] !== side) return
   const rate = obstacleRate(ctx.grid.terrain[cell]) * postureOf(u.posture).entrench

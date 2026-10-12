@@ -16,6 +16,7 @@ import { isLineUnit } from '../units/catalog'
 import {
   assignFront,
   frontCells,
+  holdsLine,
   LARGE_GRID_CELLS,
   snapToFront,
   traceFront,
@@ -300,7 +301,7 @@ export function holdMission(
   if (changed && kind !== 'hold') ctx.log(`${army.name} ${LINE_MISSION_LOG[kind]}`, army.owner)
   if (!wasAdvance) {
     // Nouvelle répartition des postes tout de suite (sinon à la répartition suivante).
-    if (changed && (army.front || army.wholeFront)) assignFront(ctx, army)
+    if (changed && holdsLine(army)) assignFront(ctx, army)
     else if (kind !== 'keyPoints') delete army.keyPoints
     return
   }
@@ -312,7 +313,7 @@ export function holdMission(
       u.path = []
     }
   }
-  if (army.front || army.wholeFront) assignFront(ctx, army)
+  if (holdsLine(army)) assignFront(ctx, army)
 }
 
 /**
@@ -336,7 +337,7 @@ function finishAdvance(ctx: SimContext, army: ArmyState, m: AdvanceMission): voi
     }
     ctx.armies.delete(army.id)
     ctx.log(`${army.name} rejoint ${parent.name}`, army.owner)
-    if (parent.front || parent.wholeFront) assignFront(ctx, parent)
+    if (holdsLine(parent)) assignFront(ctx, parent)
     return
   }
   // L'armée tient la ligne atteinte : portion de front accrochée aux extrémités du tracé si le front est
@@ -355,7 +356,7 @@ function finishAdvance(ctx: SimContext, army: ArmyState, m: AdvanceMission): voi
       snapped[k][0] !== ends[k][0] || snapped[k][1] !== ends[k][1]
     if (moved(0) && moved(1)) army.front = snapped
   }
-  if (army.front || army.wholeFront) assignFront(ctx, army)
+  if (holdsLine(army)) assignFront(ctx, army)
 }
 
 /** Point à `km` de `u` sur la droite qui mène à `to` (ou `to` lui-même s'il est plus près). */
@@ -672,7 +673,7 @@ export function startBreach(ctx: SimContext, army: ArmyState, target: LonLat): s
   }
   ctx.log(`${army.name} lance une percée (${shock.length} unités de choc)`, army.owner)
   updateBreach(ctx, army, m)
-  if (army.front || army.wholeFront) assignFront(ctx, army)
+  if (holdsLine(army)) assignFront(ctx, army)
   return null
 }
 
@@ -684,7 +685,7 @@ function finishBreach(ctx: SimContext, army: ArmyState, m: BreachMission, text: 
     const u = ctx.units.get(id)
     if (u && !u.direct) halt(u)
   }
-  if (army.front || army.wholeFront) assignFront(ctx, army)
+  if (holdsLine(army)) assignFront(ctx, army)
 }
 
 /** Une étape de la percée (toutes les 6 heures) : pointe, fin, ordres du groupe de choc. */

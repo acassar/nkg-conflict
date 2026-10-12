@@ -11,6 +11,7 @@ import { fortFactorAt } from '../economy/economy'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
 import { updateFormations } from './formations'
+import { borderFrontCells, pruneBorder, updateBorderFronts } from './frontiers'
 import { REST_KM, RELIEF_MAX_SHARE, selectRelief } from './fatigue'
 import { assaultFireFactor } from './obstacles'
 import {
@@ -449,6 +450,21 @@ function picksFavorablePosts(army: ArmyState): boolean {
   return army.posture === 'defensive' || army.posture === 'maxDefense'
 }
 
+/** L'armée tient une ligne : portion de front, tout le front ou une frontière (frontiers.ts). */
+export function holdsLine(army: ArmyState): boolean {
+  return !!(army.front || army.wholeFront || army.border?.length)
+}
+
+/**
+ * Cellules de la ligne tenue : le front (tout, ou la portion), à défaut la frontière tenue. Une frontière
+ * se tient en paix comme en guerre ; un front n'existe qu'en guerre.
+ */
+export function lineCells(ctx: SimContext, army: ArmyState): FrontCell[] {
+  if (army.front || army.wholeFront)
+    return frontCells(ctx, sideIndex(ctx, army.owner), army.wholeFront ? null : army.front)
+  return army.border?.length ? borderFrontCells(ctx, army) : []
+}
+
 /**
  * L'unité exécute un ordre direct du joueur, ou vient de le terminer à cette heure-ci : la répartition
  * automatique la laisse. Au-delà, l'ordre est oublié et l'armée la reprend.
@@ -469,12 +485,12 @@ function underDirectOrder(ctx: SimContext, u: UnitState): boolean {
  */
 export function assignFront(ctx: SimContext, army: ArmyState, teleport = false): void {
   const side = sideIndex(ctx, army.owner)
-  if (!army.front && !army.wholeFront) {
+  if (!holdsLine(army)) {
     army.frontLine = undefined
     delete army.keyPoints
     return
   }
-  const cells = frontCells(ctx, side, army.wholeFront ? null : army.front)
+  const cells = lineCells(ctx, army)
   army.frontLine = traceFront(ctx, cells)
   // Mission « Tenir les points clés » : postes concentrés sur les villes, passages de fleuve et nœuds
   // routiers, simple écran ailleurs.
@@ -673,9 +689,9 @@ export function missionPreview(
   kind: LineMissionKind,
 ): MissionPreview {
   const empty: MissionPreview = { posts: [], lines: [], points: [] }
-  if (!army.front && !army.wholeFront) return empty
+  if (!holdsLine(army)) return empty
   const side = sideIndex(ctx, army.owner)
-  const cells = frontCells(ctx, side, army.wholeFront ? null : army.front)
+  const cells = lineCells(ctx, army)
   if (cells.length === 0) return empty
   const count = army.unitIds.filter((id) => {
     const u = ctx.units.get(id)
@@ -968,6 +984,9 @@ export function updateArmies(ctx: SimContext): void {
   }
   // Divisions et corps : départs, dissolutions, recrues rangées (avant la répartition du front).
   updateFormations(ctx)
+  // Frontières tenues : cellules perdues retirées ; guerre avec un voisin, la frontière devient le front.
+  for (const army of ctx.armies.values()) if (!army.borderFront) pruneBorder(ctx, army)
+  updateBorderFronts(ctx)
   for (const army of ctx.armies.values()) {
     // Missions « Avancer » et « Retraite ordonnée » : les unités suivent leur ligne (voir missions.ts),
     // pas le front. En percée, seul le groupe de choc attaque : le reste de l'armée garde son front.
@@ -979,6 +998,6 @@ export function updateArmies(ctx: SimContext): void {
         ctx.log(`${army.name} termine son offensive`, army.owner)
       } else continue
     }
-    if (army.front || army.wholeFront) assignFront(ctx, army)
+    if (holdsLine(army)) assignFront(ctx, army)
   }
 }

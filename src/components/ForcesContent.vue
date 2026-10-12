@@ -19,6 +19,7 @@ import {
   AIR_ZONES_MAX,
 } from '@/sim/systems/air'
 import { distanceKm } from '@/sim/theater/grid'
+import { borderSummary } from '@/map/borderPaint'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import {
   MISSION_GROUPS,
@@ -178,6 +179,28 @@ function missionOf(a: ArmyState): MissionKind {
   return a.mission?.kind ?? 'hold'
 }
 
+/** L'armée tient une ligne : portion de front, tout le front ou une frontière. */
+const holdsLine = (a: ArmyState): boolean => !!(a.front || a.wholeFront || a.border?.length)
+
+/** Frontière tenue, en clair : longueur, voisins, armées qui la partagent. */
+function borderText(a: ArmyState): string {
+  const g = game.grid
+  const s = game.snapshot
+  if (!g || !s || !a.border?.length) return ''
+  const side = g.sides.indexOf(a.owner)
+  const mine = borderSummary(g, side, a.border)
+  const name = (code: string): string => s.countries.find((c) => c.id === code)?.name ?? code
+  const sharing = armies.value.filter(
+    (o) =>
+      o.id !== a.id &&
+      o.border?.length &&
+      borderSummary(g, side, o.border).neighbors.some((n) => mine.neighbors.includes(n)),
+  )
+  let text = `Frontière tenue : environ ${Math.round(mine.km / 10) * 10} km avec ${mine.neighbors.map(name).join(', ')}`
+  if (sharing.length) text += ` · partagée avec ${sharing.map((o) => o.name).join(', ')}`
+  return text
+}
+
 /** État lisible de la mission d'une armée, pour la liste et la fiche. */
 function missionStatus(a: ArmyState): string {
   if (a.encirclement) return encirclementStatus(a.encirclement)
@@ -197,7 +220,15 @@ function missionStatus(a: ArmyState): string {
   if (m?.kind === 'breach') {
     return `Percée : ${m.shockIds.length} unité(s) de choc · ${Math.round(m.progress * 100)} % de l'axe tenu`
   }
-  const where = a.wholeFront ? 'tout le front' : a.front ? 'portion de front' : 'sans front'
+  const where = a.wholeFront
+    ? 'tout le front'
+    : a.borderFront
+      ? 'frontière devenue front'
+      : a.front
+        ? 'portion de front'
+        : a.border?.length
+          ? 'frontière'
+          : 'sans front'
   let text =
     m?.kind === 'keyPoints'
       ? `Points clés : ${where}${a.keyPoints ? ` · ${a.keyPoints.length} point(s) clé(s) tenu(s)` : ''}`
@@ -755,12 +786,8 @@ async function createArmy(): Promise<void> {
               {{ MISSION_TEXT[missionView] }}
             </p>
             <template v-if="isLineMission(missionView) && !selectedArmy.encirclement">
-              <p
-                v-if="!selectedArmy.front && !selectedArmy.wholeFront"
-                class="meta warn"
-                data-testid="mission-no-front"
-              >
-                L'armée n'a pas de front : assignez-lui une portion ou tout le front.
+              <p v-if="!holdsLine(selectedArmy)" class="meta warn" data-testid="mission-no-front">
+                L'armée n'a pas de front : assignez-lui une portion, tout le front ou une frontière.
               </p>
               <div class="group">
                 <span class="label">Front tenu</span>
@@ -768,6 +795,27 @@ async function createArmy(): Promise<void> {
                 <button @click="game.setWholeFront(selectedArmy.id)">Tout le front</button>
                 <button @click="game.clearFront(selectedArmy.id)">Aucun</button>
               </div>
+              <div class="group">
+                <span class="label">Frontière tenue, en paix comme en guerre</span>
+                <button
+                  title="Glissez le long de votre frontière pour la peindre, ou cliquez sur un pays voisin : l'armée s'y déploie en défense, sans franchir ; si la guerre éclate avec ce voisin, la frontière devient son front"
+                  data-testid="border-paint"
+                  @click="game.startBorder(selectedArmy.id)"
+                >
+                  Tenir une frontière
+                </button>
+                <button
+                  :disabled="!selectedArmy.border?.length"
+                  title="Toute la frontière avec chaque voisin déjà touché, retirée aux autres armées"
+                  data-testid="border-take-all"
+                  @click="game.takeWholeBorder(selectedArmy.id)"
+                >
+                  Prendre toute la frontière
+                </button>
+              </div>
+              <p v-if="selectedArmy.border?.length" class="meta" data-testid="border-summary">
+                {{ borderText(selectedArmy) }}
+              </p>
               <div v-if="action?.kind === 'current'" class="group">
                 <span class="label">Offensive ponctuelle</span>
                 <button
@@ -823,7 +871,7 @@ async function createArmy(): Promise<void> {
               </button>
             </div>
             <div v-else-if="missionView === 'breach'" class="group" data-testid="breach-group">
-              <p v-if="!selectedArmy.front && !selectedArmy.wholeFront" class="meta warn">
+              <p v-if="!holdsLine(selectedArmy)" class="meta warn">
                 Assignez d'abord un front à l'armée, sinon les flancs restent découverts.
               </p>
               <button

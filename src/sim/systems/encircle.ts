@@ -3,7 +3,7 @@ import type { ArmyState, LonLat, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { isLineUnit } from '../units/catalog'
 import { planPath } from './movement'
-import { assignFront } from './armies'
+import { assignFront, holdsLine } from './armies'
 import { GROUP_KM, RING_MARGIN_KM, RING_MIN_KM } from './encircleRules'
 
 const KM_PER_DEG = 111.32
@@ -144,7 +144,7 @@ export function endEncirclement(ctx: SimContext, group: ArmyState, reason: strin
       `Encerclement de ${enc.targetName} terminé (${reason}) : ${group.name} reprend son front`,
       group.owner,
     )
-    if (group.front || group.wholeFront) assignFront(ctx, group)
+    if (holdsLine(group)) assignFront(ctx, group)
     return
   }
   const parent =
@@ -166,7 +166,7 @@ export function endEncirclement(ctx: SimContext, group: ArmyState, reason: strin
     `Encerclement de ${name} terminé (${reason})${parent ? ` : retour à ${parent.name}` : ''}`,
     group.owner,
   )
-  if (parent && (parent.front || parent.wholeFront)) assignFront(ctx, parent)
+  if (parent && holdsLine(parent)) assignFront(ctx, parent)
 }
 
 /** Suivi des encerclements en cours (toutes les quelques heures). */

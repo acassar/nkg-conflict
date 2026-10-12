@@ -11,7 +11,8 @@ import type { SupplyView } from '@/sim/systems/supplyView'
 import { formationMembers, isStack, type MapUnit } from './clusters'
 import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
-import { buildLayers, type MissionPreviewShapes } from './layers'
+import { buildLayers, type BorderShapes, type MissionPreviewShapes } from './layers'
+import { borderCellsNear, brushCells, cellSquare } from './borderPaint'
 import { breachAxis, encircleRing } from './missionPreview'
 import { terrainTiles, TerritoryTiles, type TerritoryTile } from './territoryImage'
 import { BorderLines, type BorderBlocks } from './borders'
@@ -148,6 +149,107 @@ function onDrawUp(e: PointerEvent): void {
   }
   const ll = unproject({ x: s.x, y: s.y })
   if (ll) game.mapClick(ll)
+}
+
+// ---------- Frontière tenue (peinture au glisser) ----------
+
+/** Mode « peindre une frontière » : un calque capte les gestes, comme pour le trait libre. */
+const painting = computed(() => mode.value.kind === 'border')
+/** Cellules peintes pendant le geste en cours (colorées au fur et à mesure). */
+const painted = shallowRef<Set<number>>(new Set())
+let paintStroke: { x: number; y: number; moved: boolean } | null = null
+/** Rayon du pinceau à l'écran, en pixels. */
+const BRUSH_PX = 14
+
+function playerSide(): number {
+  const g = grid.value
+  const s = snapshot.value
+  return g && s ? g.sides.indexOf(s.playerCountry) : -1
+}
+
+/** Ajoute au geste les cellules de frontière du joueur sous le pinceau. */
+function paintAt(p: { x: number; y: number }): void {
+  const g = grid.value
+  const at = unproject(p)
+  const edge = unproject({ x: p.x + BRUSH_PX, y: p.y })
+  if (!g || !at || !edge) return
+  const cells = borderCellsNear(g, playerSide(), at, brushCells(g, Math.abs(edge[0] - at[0])))
+  if (cells.length === 0) return
+  const next = new Set(painted.value)
+  for (const c of cells) next.add(c)
+  painted.value = next
+}
+
+function onPaintDown(e: PointerEvent): void {
+  const p = localPoint(e)
+  paintStroke = { x: p.x, y: p.y, moved: false }
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+
+function onPaintMove(e: PointerEvent): void {
+  if (!paintStroke) return
+  const p = localPoint(e)
+  if (!paintStroke.moved && Math.hypot(p.x - paintStroke.x, p.y - paintStroke.y) < 10) return
+  if (!paintStroke.moved) paintAt({ x: paintStroke.x, y: paintStroke.y })
+  paintStroke.moved = true
+  paintAt(p)
+}
+
+/**
+ * Relâcher après un glisser : la portion peinte part au Worker. Toucher bref : sur un pays voisin, toute
+ * la frontière avec lui ; sur sa propre frontière, la portion sous le doigt.
+ */
+function onPaintUp(): void {
+  const s = paintStroke
+  paintStroke = null
+  const cells = [...painted.value]
+  painted.value = new Set()
+  if (!s) return
+  if (s.moved) {
+    if (cells.length > 0) game.paintBorder(cells)
+    else game.showNotice('Glissez le long de la frontière de votre pays (Échap pour annuler)')
+    return
+  }
+  const ll = unproject({ x: s.x, y: s.y })
+  if (!ll) return
+  const g = grid.value
+  const own = g && snapshot.value && game.ownerAt(ll[0], ll[1]) === snapshot.value.playerCountry
+  if (!own) {
+    game.mapClick(ll)
+    return
+  }
+  paintAt({ x: s.x, y: s.y })
+  const tapped = [...painted.value]
+  painted.value = new Set()
+  if (tapped.length > 0) game.paintBorder(tapped)
+  else game.showNotice('Touchez la frontière, ou un pays voisin (Échap pour annuler)')
+}
+
+/** Carrés des cellules de frontière : armée sélectionnée, autres armées (pendant la peinture), geste. */
+let borderCache: { key: string; shapes: BorderShapes } | null = null
+function borderShapes(): BorderShapes | null {
+  const g = grid.value
+  const s = snapshot.value
+  if (!g || !s) return null
+  const army = selectedArmy.value
+  const others = painting.value ? s.armies.filter((a) => a.id !== army?.id && a.border?.length) : []
+  const key = [
+    army?.id,
+    army?.border?.length,
+    army?.border?.[0],
+    army?.border?.[army.border.length - 1],
+    ...others.map((a) => `${a.id}:${a.border?.length}:${a.border?.[0]}`),
+    painted.value.size,
+  ].join('|')
+  if (borderCache?.key === key) return borderCache.shapes
+  const square = (c: number): LonLat[] => cellSquare(g, c)
+  const shapes: BorderShapes = {
+    held: (army?.border ?? []).map(square),
+    others: others.flatMap((a) => (a.border ?? []).map(square)),
+    painting: [...painted.value].map(square),
+  }
+  borderCache = { key, shapes }
+  return shapes
 }
 
 const productionStats = useProductionStats()
@@ -346,6 +448,7 @@ function refresh(): void {
             ? m.points
             : [],
       pendingRetreat: m.kind === 'advance' && !!m.retreat,
+      armyBorders: borderShapes(),
       preview: previewShapes(),
       zoom: zoom.value,
       selectedCity: selectedCity.value?.name ?? null,
@@ -714,6 +817,7 @@ watch(
     supply,
     showRoads,
     freehand,
+    painted,
     () => game.aimPoint,
     () => game.missionPreview,
     () => game.buildChoice,
@@ -865,6 +969,15 @@ onBeforeUnmount(() => {
   >
     <div v-if="box" class="lasso-box" :style="boxStyle(box)" />
   </div>
+  <div
+    v-if="painting"
+    class="draw-layer"
+    data-testid="border-paint-layer"
+    @pointerdown="onPaintDown"
+    @pointermove="onPaintMove"
+    @pointerup="onPaintUp"
+    @pointercancel="onPaintUp"
+  />
   <div
     v-if="drawing"
     class="draw-layer"

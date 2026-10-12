@@ -23,6 +23,21 @@ export const MISSION_GROUPS: ReadonlyArray<{ label: string; kinds: MissionKind[]
   { label: 'Reculer', kinds: ['retreat'] },
 ]
 
+/** Missions sans objet en paix (il faut un ennemi) : cartes masquées tant que le pays n'est pas en guerre. */
+export const WAR_ONLY_MISSIONS: ReadonlyArray<MissionKind> = ['breach', 'encircle', 'retreat']
+
+/** Groupes de cartes à afficher : en paix, sans les missions de guerre (sauf celle en cours). */
+export function missionGroups(
+  atWar: boolean,
+  current: MissionKind,
+): ReadonlyArray<{ label: string; kinds: MissionKind[] }> {
+  if (atWar) return MISSION_GROUPS
+  return MISSION_GROUPS.map((g) => ({
+    label: g.label,
+    kinds: g.kinds.filter((k) => k === current || !WAR_ONLY_MISSIONS.includes(k)),
+  })).filter((g) => g.kinds.length > 0)
+}
+
 /** Ligne d'effet de chaque carte. */
 export const MISSION_SHORT: Record<MissionKind, string> = {
   hold: 'Garde la ligne actuelle',

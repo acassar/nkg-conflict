@@ -225,6 +225,10 @@ export interface ArmyState {
   border?: number[]
   /** Le front (`front`) vient de la frontière tenue, en guerre avec un voisin : rendu à la paix. */
   borderFront?: boolean
+  /** Pays en guerre à la dernière répartition : à la paix, l'armée sans frontière rentre en garnison. */
+  atWar?: boolean
+  /** Rôle donné par l'IA de paix : armée des frontières tendues, ou armée qui défend les points. */
+  aiPeace?: 'border' | 'points'
   /** Offensive planifiée : flèche d'un point à un autre. */
   offensive: {
     from: LonLat

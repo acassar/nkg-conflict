@@ -22,7 +22,7 @@ import { distanceKm } from '@/sim/theater/grid'
 import { borderSummary } from '@/map/borderPaint'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import {
-  MISSION_GROUPS,
+  missionGroups,
   MISSION_NAMES,
   MISSION_SHORT,
   MISSION_TEXT,
@@ -181,6 +181,12 @@ function missionOf(a: ArmyState): MissionKind {
   if (a.encirclement) return 'encircle'
   return a.mission?.kind ?? 'hold'
 }
+
+/** En paix, les cartes Percée, Encercler et Retraite sont masquées. */
+const atWar = computed(() => [...game.stances.map.values()].includes('enemy'))
+const visibleGroups = computed(() =>
+  missionGroups(atWar.value, selectedArmy.value ? missionOf(selectedArmy.value) : 'hold'),
+)
 
 /** L'armée tient une ligne : portion de front, tout le front ou une frontière. */
 const holdsLine = (a: ArmyState): boolean => !!(a.front || a.wholeFront || a.border?.length)
@@ -776,7 +782,7 @@ async function createArmy(): Promise<void> {
         <ArmyComposition v-else-if="armyView === 'composition'" :army="selectedArmy" />
         <template v-else>
           <div data-testid="army-mission">
-            <div v-for="g in MISSION_GROUPS" :key="g.label" class="mgroup">
+            <div v-for="g in visibleGroups" :key="g.label" class="mgroup">
               <p class="kicker">{{ g.label }}</p>
               <div class="mcards">
                 <button

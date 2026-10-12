@@ -140,6 +140,7 @@ import {
   type PoliticsHooks,
 } from './politics/politics'
 import { computeNeighbors, monthlyEvents, updateDiplomacyAi } from './politics/ai'
+import { updatePeaceAi } from './systems/peaceAi'
 import {
   askPassage,
   askToJoin,
@@ -632,6 +633,9 @@ export class Simulation {
     updateSustainability(ctx)
     const managed = this.mobilizedAi()
     for (const c of managed) updateAiEconomy(ctx, c)
+    // IA de paix : frontières tendues couvertes, points défendus ailleurs (et retour à la guerre).
+    this.neighbors ??= computeNeighbors(ctx)
+    for (const c of managed) updatePeaceAi(ctx, c, this.neighbors)
     for (const c of managed) {
       if (ctx.matrix.atWar[sideIndex(ctx, c)] === 1) updateAirAi(ctx, c)
     }

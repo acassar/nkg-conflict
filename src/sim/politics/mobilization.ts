@@ -1,7 +1,9 @@
 import { updateFormations } from '../systems/formations'
-import { sideIndex, type SimContext } from '../context'
+import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, CountryDef, LonLat, UnitKind, UnitState } from '../core/types'
-import { assignFront, frontCells } from '../systems/armies'
+import { assignFront, frontCells, LARGE_GRID_CELLS } from '../systems/armies'
+import { planPath } from '../systems/movement'
+import { distanceKm } from '../theater/grid'
 import { unitName } from '../units/names'
 import { BRIGADE_SPLIT } from '../units/catalog'
 
@@ -70,7 +72,7 @@ export function homeOf(ctx: SimContext, country: CountryDef): LonLat {
 }
 
 /** Ramène un point sur la terre ferme du camp (pion tombé en mer, ville côtière). */
-function onOwnLand(ctx: SimContext, side: number, lon: number, lat: number): LonLat | null {
+export function onOwnLand(ctx: SimContext, side: number, lon: number, lat: number): LonLat | null {
   const g = ctx.grid
   const ok = (i: number): boolean => i >= 0 && g.passable(i) && g.owner[i] === side
   if (ok(g.cellAt(lon, lat))) return [lon, lat]
@@ -90,11 +92,53 @@ function onOwnLand(ctx: SimContext, side: number, lon: number, lat: number): Lon
   return null
 }
 
+/** Rayon autour d'une ville dans lequel un pion compte comme déjà en garnison (ou recrue) là. */
+const CITY_SPOT_KM = 25
+
+/**
+ * `n`-ième place autour d'une ville, sur une petite spirale (~8 km entre pions). Le premier pion se
+ * pose à côté de la ville, pas dessus : le nom de la ville reste visible.
+ */
+export function spotNear(
+  ctx: SimContext,
+  side: number,
+  lon: number,
+  lat: number,
+  n: number,
+): LonLat | null {
+  const angle = n * 2.4
+  const r = 0.12 + 0.035 * Math.sqrt(n)
+  return onOwnLand(ctx, side, lon + r * Math.cos(angle), lat + r * Math.sin(angle) * 0.7)
+}
+
+/** Pions du pays à moins de CITY_SPOT_KM d'un point, sauf ceux de `skip`. */
+export function unitsNear(
+  ctx: SimContext,
+  country: string,
+  lon: number,
+  lat: number,
+  skip?: ReadonlySet<number>,
+): number {
+  let n = 0
+  for (const u of ctx.units.values()) {
+    if (u.owner !== country || skip?.has(u.id)) continue
+    if (distanceKm(u.lon, u.lat, lon, lat) < CITY_SPOT_KM) n++
+  }
+  return n
+}
+
 /**
  * Emplacements de garnison de `count` unités : réparties entre les villes du pays au prorata de leur
  * population (la capitale en premier), avec un léger décalage pour que les pions ne se superposent pas.
+ * `skip` : unités à placer, déjà sur la carte ; les autres pions du pays près d'une ville y comptent
+ * comme déjà en garnison (retour d'une armée à la paix).
  */
-function garrisons(ctx: SimContext, country: CountryDef, count: number): Array<LonLat | null> {
+function garrisons(
+  ctx: SimContext,
+  country: CountryDef,
+  count: number,
+  skip?: ReadonlySet<number>,
+): Array<LonLat | null> {
   const side = sideIndex(ctx, country.id)
   const cities = [...ctx.cityStates.values()]
     .filter((c) => c.owner === side)
@@ -113,8 +157,11 @@ function garrisons(ctx: SimContext, country: CountryDef, count: number): Array<L
   // Part de chaque ville (racine de la population : les petites villes ont aussi leur garnison).
   const weights = cities.map((c) => Math.sqrt(c.def.pop) * (c.def.capital ? 2 : 1))
   const total = weights.reduce((a, b) => a + b, 0)
-  const quota = weights.map((w) => (w / total) * count)
-  const placed = cities.map(() => 0)
+  const placed = cities.map((c) =>
+    skip ? unitsNear(ctx, country.id, c.def.lon, c.def.lat, skip) : 0,
+  )
+  const all = count + placed.reduce((a, b) => a + b, 0)
+  const quota = weights.map((w) => (w / total) * all)
   const out: Array<LonLat | null> = []
   for (let k = 0; k < count; k++) {
     // Ville la plus en retard sur son quota.
@@ -126,15 +173,52 @@ function garrisons(ctx: SimContext, country: CountryDef, count: number): Array<L
     placed[best] = n + 1
     const c = cities[best]
     if (!c) continue
-    // Petite spirale autour de la ville (~8 km entre pions).
-    const angle = n * 2.4
-    // Premier pion à côté de la ville, pas dessus : le nom de la ville reste visible.
-    const r = 0.12 + 0.035 * Math.sqrt(n)
-    out.push(
-      onOwnLand(ctx, side, c.def.lon + r * Math.cos(angle), c.def.lat + r * Math.sin(angle) * 0.7),
-    )
+    out.push(spotNear(ctx, side, c.def.lon, c.def.lat, n))
   }
   return out
+}
+
+/**
+ * Retour en garnison (fin d'une guerre) : les unités de l'armée rejoignent les villes de leur pays,
+ * réparties comme au départ, et s'y retranchent. Les unités sous ordre direct du joueur ou en déroute
+ * restent où elles sont. Renvoie le nombre d'unités envoyées.
+ */
+export function returnToGarrison(ctx: SimContext, army: ArmyState): number {
+  const country = ctx.countries.get(army.owner)
+  if (!country) return 0
+  const units = army.unitIds
+    .map((id) => ctx.units.get(id))
+    .filter(
+      (u): u is UnitState =>
+        !!u && (!u.direct || u.direct.doneAt !== undefined) && !runtimeOf(ctx, u.id).routed,
+    )
+  if (units.length === 0) return 0
+  const spots = garrisons(ctx, country, units.length, new Set(units.map((u) => u.id)))
+  // Les plus proches d'abord : chaque unité prend la place libre la plus proche d'elle.
+  const free = spots.map((s, k) => ({ s, k })).filter((x): x is { s: LonLat; k: number } => !!x.s)
+  let sent = 0
+  for (const u of units) {
+    let best = -1
+    let bestKm = Infinity
+    free.forEach((f, i) => {
+      const km = distanceKm(u.lon, u.lat, f.s[0], f.s[1])
+      if (km < bestKm) {
+        bestKm = km
+        best = i
+      }
+    })
+    const spot = free[best]
+    if (!spot) break
+    free.splice(best, 1)
+    delete u.direct
+    u.order = { kind: 'move', target: spot.s }
+    if (ctx.grid.size > LARGE_GRID_CELLS) {
+      u.path = []
+      runtimeOf(ctx, u.id).pathPending = true
+    } else planPath(ctx, u, spot.s)
+    sent++
+  }
+  return sent
 }
 
 /**

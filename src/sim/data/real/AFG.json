@@ -1,0 +1,28 @@
+{
+  "code": "AFG",
+  "name": "Afghanistan",
+  "iso3": "AFG",
+  "macro": {
+    "gdpB": {
+      "value": 19.662,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 43844111,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.828,
+      "year": 2021,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 165000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

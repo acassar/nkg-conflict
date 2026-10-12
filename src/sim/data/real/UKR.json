@@ -1,0 +1,1214 @@
+{
+  "code": "UKR",
+  "name": "Ukraine",
+  "iso3": "UKR",
+  "macro": {
+    "gdpB": {
+      "value": 212.927,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 38980376,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 39.561,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 298000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2026-09",
+    "armyPersonnel": {
+      "value": 450000,
+      "year": 2026,
+      "source": "IISS The Military Balance 2026 (p. 208) via Wikipédia « Ukrainian Ground Forces » (infobox)",
+      "url": "https://en.wikipedia.org/wiki/Ukrainian_Ground_Forces"
+    },
+    "recruitmentPerMonth": {
+      "value": 30000,
+      "year": 2026,
+      "source": "Ordre de grandeur : ~30 000/mois rapporté par le NYT (2024) et seuil minimal cité par K. Boudanov (août 2026), Kyiv Independent",
+      "url": "https://kyivindependent.com/budanov-says-ukraine-must-mobilize-at-least-30-000-people-per-month-warns-that-war-wont-end-soon/"
+    },
+    "armies": [
+      {
+        "name": "Forces terrestres ukrainiennes",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "4e brigade d'assaut",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade motorisée",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "14e brigade de chars",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "15e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "50e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "51e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "52e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "55e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "62e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "64e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "76e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "150e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "167e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "15e brigade de reconnaissance d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "19e brigade de missiles",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "43e brigade d'artillerie",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "107e brigade d'artillerie de roquettes",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "91e brigade de missiles antiaériens",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "12e brigade d'appui (génie)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "16e brigade d'appui (génie)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "91e brigade d'appui (génie)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "703e brigade d'appui (génie)",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "3e corps d'armée",
+            "brigades": [
+              {
+                "name": "3e brigade d'assaut",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "53e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "60e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "63e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "125e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "52e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1030e régiment de missiles antiaériens",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "117e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "120e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "9e corps d'armée",
+            "brigades": [
+              {
+                "name": "5e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "142e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "153e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "162e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "55e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "59e brigade d'assaut (rattachement temporaire)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "10e corps d'armée",
+            "brigades": [
+              {
+                "name": "12e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "14e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "43e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "115e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "116e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "48e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "11e corps d'armée",
+            "brigades": [
+              {
+                "name": "24e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "30e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "54e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "56e brigade motorisée",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "127e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "45e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "12e corps d'armée",
+            "brigades": [
+              {
+                "name": "Brigade présidentielle",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e brigade d'assaut",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "65e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "67e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "157e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "27e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1027e régiment de missiles antiaériens",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "112e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "118e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "14e corps d'armée",
+            "brigades": [
+              {
+                "name": "22e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "29e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "42e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "58e brigade motorisée",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "92e brigade d'assaut",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "50e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "105e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "119e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "15e corps d'armée",
+            "brigades": [
+              {
+                "name": "10e brigade d'assaut de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "129e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "143e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "158e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "44e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "114e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "16e corps d'armée",
+            "brigades": [
+              {
+                "name": "3e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "41e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "57e brigade motorisée",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "154e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "160e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "26e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "113e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "17e corps d'armée",
+            "brigades": [
+              {
+                "name": "110e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "118e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "128e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "128e brigade d'assaut de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "151e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "54e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "241e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "108e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "18e corps d'armée",
+            "brigades": [
+              {
+                "name": "1e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "21e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "47e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "66e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "156e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "47e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "101e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "104e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "106e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "19e corps d'armée",
+            "brigades": [
+              {
+                "name": "28e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "44e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "61e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "100e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "117e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "40e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "109e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "20e corps d'armée",
+            "brigades": [
+              {
+                "name": "17e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "23e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "31e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "33e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "141e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "60e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "260e brigade de défense territoriale",
+                "type": "defense_territoriale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "21e corps d'armée",
+            "brigades": [
+              {
+                "name": "4e brigade mécanisée lourde",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "93e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "155e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "159e brigade mécanisée",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "152e brigade de chasseurs",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "68e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Troupes d'assaut (Commandement des forces de réaction rapide interarmées)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "1e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "24e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "25e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "33e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "210e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "225e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "253e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "475e régiment d'assaut",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "Forces d'assaut aérien (DShV)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "33e régiment du génie",
+            "type": "genie",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [
+          {
+            "name": "7e corps de réaction rapide",
+            "brigades": [
+              {
+                "name": "25e brigade aéroportée",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "77e brigade aéromobile",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "78e brigade d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "79e brigade d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81e brigade aéromobile",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "147e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "8e corps d'assaut aérien",
+            "brigades": [
+              {
+                "name": "46e brigade aéromobile",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "68e brigade aéromobile",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade aéromobile",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "80e brigade d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "95e brigade d'assaut aérien",
+                "type": "aeromobile",
+                "echelon": "brigade"
+              },
+              {
+                "name": "148e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Corps de l'infanterie de marine",
+        "generated": true,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "30e corps d'infanterie de marine",
+            "brigades": [
+              {
+                "name": "34e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "36e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "37e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "38e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "39e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "40e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "42e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "406e brigade d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Garde nationale d'Ukraine",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "2e brigade de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e brigade de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "10e brigade de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "19e brigade de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "27e brigade de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "31e brigade « Dnipro » de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "16e brigade d'artillerie de la Garde nationale",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "24e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "26e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "31e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "34e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "35e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "36e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "38e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "39e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "40e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "50e régiment de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          },
+          {
+            "name": "45e régiment opérationnel de la Garde nationale",
+            "type": "garde_nationale",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [
+          {
+            "name": "1er corps Azov (Garde nationale)",
+            "brigades": [
+              {
+                "name": "Brigade Azov",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Bureviy",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Harmash",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Tchervona Kalyna",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Kara-Dah",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Lyubart",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Régiment Pilum",
+                "type": "garde_nationale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Régiment Forge",
+                "type": "garde_nationale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "425e régiment d'assaut « Skelia » (rattachement temporaire)",
+                "type": "infanterie_legere",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "2e corps Khartia (Garde nationale)",
+            "brigades": [
+              {
+                "name": "Brigade Khartia",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Spartan",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Rubizh",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Hrehit",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Poltavska",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade Slovyansk",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Régiment Lava",
+                "type": "garde_nationale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "23e régiment d'assaut (Garde nationale)",
+                "type": "garde_nationale",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Forces de défense territoriale (brigades non rattachées)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "102e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "103e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "107e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "111e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "115e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "116e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "121e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "122e brigade de défense territoriale",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Militaryland.net — pages des corps d'armée (3e, 9e–12e, 14e–21e), état août–oct. 2026",
+        "url": "https://militaryland.net/ukraine/armed-forces/"
+      },
+      {
+        "title": "Militaryland.net — Forces d'assaut aérien (7e et 8e corps)",
+        "url": "https://militaryland.net/ukraine/air-assault-forces/"
+      },
+      {
+        "title": "Militaryland.net — 30e corps d'infanterie de marine",
+        "url": "https://militaryland.net/ukraine/marine-corps/30th-marine-corps/"
+      },
+      {
+        "title": "Militaryland.net — Garde nationale (1er corps Azov, 2e corps Khartia)",
+        "url": "https://militaryland.net/ukraine/national-guard/"
+      },
+      {
+        "title": "Militaryland.net — Forces de défense territoriale",
+        "url": "https://militaryland.net/ukraine/territorial-defense-forces/"
+      },
+      {
+        "title": "Militaryland.net — Joint Rapid Response Forces Command (régiments d'assaut)",
+        "url": "https://militaryland.net/ukraine/armed-forces/joint-rapid-response-forces-command/"
+      },
+      {
+        "title": "Militaryland.net — All known Army Corps as of April 2025",
+        "url": "https://militaryland.net/news/all-known-army-corps-as-of-april-2025/"
+      },
+      {
+        "title": "Wikipédia — Ukrainian Ground Forces",
+        "url": "https://en.wikipedia.org/wiki/Ukrainian_Ground_Forces"
+      }
+    ],
+    "confidence": "haute",
+    "notes": "Structure en corps (réforme 2025) d'après Militaryland, pages mises à jour août–oct. 2026 (plus récent que 2025). Chaque unité n'apparaît qu'une fois : dans son corps de rattachement organique ; les brigades de défense territoriale sont placées dans le corps auquel elles sont temporairement rattachées ; les unités Garde nationale, marines et assaut aérien restent dans leur branche même si temporairement rattachées à un corps de l'armée de terre (ex. 40e et 36e brigades de marine, Spartan). Exclus : bataillons, régiments de systèmes sans pilote, unités de garde-frontières (Pomsta, détachements) et de police (Khyzhak, Lyut), unités d'ordre public/protection de sites de la Garde nationale, aviation légère de l'armée. Types : « mécanisée lourde » (ex-brigades de chars) = blindee ; régiments d'assaut = infanterie_legere. La liste des brigades directement subordonnées au Commandement des forces terrestres (Militaryland) peut inclure des brigades en formation. Les complétudes (strengthPct) ne sont pas connues. Effectif 450 000 = chiffre IISS 2026 cité par Wikipédia pour les forces terrestres ; recrutement mensuel = ordre de grandeur."
+  }
+}

@@ -1,0 +1,1064 @@
+{
+  "code": "USA",
+  "name": "États-Unis",
+  "iso3": "USA",
+  "macro": {
+    "gdpB": {
+      "value": 30767.075,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 341784857,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 3.117,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 1395000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2026-06",
+    "armyPersonnel": {
+      "value": 454000,
+      "year": 2026,
+      "source": "Effectif autorisé de l'US Army active FY2026 (NDAA), Military Times",
+      "url": "https://www.militarytimes.com/news/pentagon-congress/2026/01/20/us-military-to-expand-by-more-than-30000-troops-this-year/"
+    },
+    "reservists": {
+      "value": 500000,
+      "year": 2026,
+      "source": "Estimation : Army National Guard ~328 000 + Army Reserve ~172 000 (FY2025 +/- variations FY2026 citées par Military Times)",
+      "url": "https://www.militarytimes.com/news/pentagon-congress/2026/01/20/us-military-to-expand-by-more-than-30000-troops-this-year/"
+    },
+    "armies": [
+      {
+        "name": "U.S. Army Western Hemisphere Command (ex-FORSCOM)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "11th Air Defense Artillery Brigade (32nd AAMDC)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "31st Air Defense Artillery Brigade (32nd AAMDC)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11th Armored Cavalry Regiment (OPFOR, NTC Fort Irwin)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "3rd U.S. Infantry Regiment (The Old Guard)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "III Armored Corps",
+            "brigades": [
+              {
+                "name": "3rd Cavalry Regiment (Stryker BCT)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "75th Field Artillery Brigade",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "36th Engineer Brigade",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "69th Air Defense Artillery Brigade",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "1st Armored Division",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "1st Armored BCT, 1st Armored Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Armored BCT, 1st Armored Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3rd Armored BCT, 1st Armored Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 1st Armored Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 1st Armored Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "1st Cavalry Division",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "1st Armored BCT, 1st Cavalry Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Armored BCT, 1st Cavalry Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3rd Armored BCT, 1st Cavalry Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 1st Cavalry Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 1st Cavalry Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "1st Infantry Division",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "1st Armored BCT, 1st Infantry Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Armored BCT, 1st Infantry Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 1st Infantry Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 1st Infantry Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XVIII Airborne Corps",
+            "brigades": [
+              {
+                "name": "18th Field Artillery Brigade",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "20th Engineer Brigade",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "108th Air Defense Artillery Brigade",
+                "type": "defense_sol_air",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "3rd Infantry Division",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "1st Armored BCT, 3rd Infantry Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Armored BCT, 3rd Infantry Division",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 3rd Infantry Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 3rd Infantry Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "10th Mountain Division",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "1st Mobile BCT, 10th Mountain Division",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Mobile BCT, 10th Mountain Division",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3rd Mobile BCT, 10th Mountain Division",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 10th Mountain Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 10th Mountain Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "82nd Airborne Division",
+                "type": "aeroportee",
+                "brigades": [
+                  {
+                    "name": "1st BCT (Airborne), 82nd Airborne Division",
+                    "type": "aeroportee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd BCT (Airborne), 82nd Airborne Division",
+                    "type": "aeroportee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3rd BCT (Airborne), 82nd Airborne Division",
+                    "type": "aeroportee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 82nd Airborne Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 82nd Airborne Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "101st Airborne Division (Air Assault)",
+                "type": "aeromobile",
+                "brigades": [
+                  {
+                    "name": "1st BCT (Air Assault), 101st Airborne Division",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Mobile BCT (Air Assault), 101st Airborne Division",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3rd BCT (Air Assault), 101st Airborne Division",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 101st Airborne Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 101st Airborne Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "U.S. Army Special Operations Command (USASOC)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "75th Ranger Regiment",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "1st Special Forces Group (Airborne)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "3rd Special Forces Group (Airborne)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5th Special Forces Group (Airborne)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "7th Special Forces Group (Airborne)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "10th Special Forces Group (Airborne)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "160th Special Operations Aviation Regiment (Airborne)",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "U.S. Army Pacific (USARPAC)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "3rd Multi-Domain Task Force",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "38th Air Defense Artillery Brigade (94th AAMDC)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "130th Engineer Brigade",
+            "type": "genie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "I Corps",
+            "brigades": [
+              {
+                "name": "17th Field Artillery Brigade",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "555th Engineer Brigade",
+                "type": "genie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1st Multi-Domain Task Force",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "4th Infantry Division",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "1st Stryker BCT, 4th Infantry Division",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Stryker BCT, 4th Infantry Division",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3rd Stryker BCT, 4th Infantry Division",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 4th Infantry Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 4th Infantry Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "7th Infantry Division (Multi-Domain Command-Pacific)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "1st Stryker BCT, 7th Infantry Division",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Stryker BCT, 7th Infantry Division",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "11th Airborne Division",
+                "type": "aeroportee",
+                "brigades": [
+                  {
+                    "name": "1st Mobile BCT (Air Assault), 11th Airborne Division",
+                    "type": "aeromobile",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "2nd Mobile BCT (Airborne), 11th Airborne Division",
+                    "type": "aeroportee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Arctic Aviation Command, 11th Airborne Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "25th Infantry Division",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "2nd Mobile BCT, 25th Infantry Division",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "3rd Mobile BCT, 25th Infantry Division",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Division Artillery (DIVARTY), 25th Infantry Division",
+                    "type": "artillerie",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "Combat Aviation Brigade, 25th Infantry Division",
+                    "type": "aviation_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Eighth Army",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "35th Air Defense Artillery Brigade",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "2nd Infantry Division / ROK-US Combined Division",
+            "type": "artillerie",
+            "brigades": [
+              {
+                "name": "Division Artillery (DIVARTY), 2nd Infantry Division",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Combat Aviation Brigade, 2nd Infantry Division",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "210th Field Artillery Brigade",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "U.S. Army Europe and Africa (USAREUR-AF) / Seventh Army",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "173rd Airborne Brigade",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "52nd Air Defense Artillery Brigade (10th AAMDC)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2nd Multi-Domain Task Force",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "V Corps",
+            "brigades": [
+              {
+                "name": "2nd Cavalry Regiment (Stryker BCT)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "41st Field Artillery Brigade",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "12th Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Army National Guard",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "48th Infantry BCT (Georgia ARNG)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "116th Cavalry BCT (Idaho ARNG, ABCT, conversion en Mobile BCT annoncée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "278th Armored Cavalry Regiment (Tennessee ARNG, ABCT, conversion en Mobile BCT annoncée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "45th Field Artillery Brigade (Oklahoma ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "65th Field Artillery Brigade (Utah ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "115th Field Artillery Brigade (Wyoming ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "130th Field Artillery Brigade (Kansas ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "138th Field Artillery Brigade (Kentucky ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "142nd Field Artillery Brigade (Arkansas ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "169th Field Artillery Brigade (Colorado ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "197th Field Artillery Brigade (New Hampshire ARNG)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "28th Infantry Division (Pennsylvania)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "2nd Infantry BCT, 28th ID (Pennsylvania)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "56th Mobile BCT (Pennsylvania, ex-Stryker)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "28th Expeditionary Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "29th Infantry Division (Virginia)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "116th Mobile BCT (Virginia)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "30th Armored BCT (North Carolina, conversion en Mobile BCT annoncée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "53rd Infantry BCT (Florida)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "29th Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "34th Infantry Division (Minnesota)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "1st Armored BCT, 34th ID (Minnesota)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2nd Infantry BCT, 34th ID (Iowa)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32nd Infantry BCT (Wisconsin)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "34th Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "35th Infantry Division (Kansas)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "33rd Infantry BCT (Illinois)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "39th Infantry BCT (Arkansas)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "45th Infantry BCT (Oklahoma)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "35th Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "36th Infantry Division (Texas)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "56th Infantry BCT (Texas)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "72nd Infantry BCT (Texas)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "256th Infantry BCT (Louisiana)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "155th Armored BCT (Mississippi)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "36th Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "38th Infantry Division (Indiana)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "37th Infantry BCT (Ohio)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "76th Mobile BCT (Indiana)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "38th Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "40th Infantry Division (California)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "79th Infantry BCT (California)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "29th Infantry BCT (Hawaii)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "41st Infantry BCT (Oregon)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "81st Stryker BCT (Washington, conversion en Mobile BCT d'ici 2028)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "40th Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "42nd Infantry Division (New York)",
+            "type": "infanterie_legere",
+            "brigades": [
+              {
+                "name": "27th Infantry BCT (New York)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "50th Infantry BCT (New Jersey)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "86th Infantry BCT (Mountain) (Vermont)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "42nd Combat Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "U.S. Marine Corps – forces terrestres (Fleet Marine Force)",
+        "generated": true,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "I Marine Expeditionary Force",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "1st Marine Division",
+                "type": "infanterie_marine",
+                "brigades": [
+                  {
+                    "name": "1st Marine Regiment",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "5th Marine Regiment",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "7th Marine Regiment",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "11th Marine Regiment (artillerie)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "II Marine Expeditionary Force",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "2nd Marine Division",
+                "type": "infanterie_marine",
+                "brigades": [
+                  {
+                    "name": "2nd Marine Regiment",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "6th Marine Regiment",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "10th Marine Regiment (artillerie)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "III Marine Expeditionary Force",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "3rd Marine Division",
+                "type": "infanterie_marine",
+                "brigades": [
+                  {
+                    "name": "3rd Marine Littoral Regiment (Hawaï)",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "4th Marine Regiment",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "12th Marine Littoral Regiment (Okinawa)",
+                    "type": "infanterie_marine",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": [
+          {
+            "name": "4th Marine Division (Marine Forces Reserve)",
+            "type": "infanterie_marine",
+            "brigades": [
+              {
+                "name": "23rd Marine Regiment (réserve)",
+                "type": "infanterie_marine",
+                "echelon": "regiment"
+              },
+              {
+                "name": "25th Marine Regiment (réserve)",
+                "type": "infanterie_marine",
+                "echelon": "regiment"
+              },
+              {
+                "name": "14th Marine Regiment (artillerie, réserve)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Structure of the United States Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_United_States_Army"
+      },
+      {
+        "title": "Wikipedia – III Armored Corps",
+        "url": "https://en.wikipedia.org/wiki/III_Armored_Corps"
+      },
+      {
+        "title": "Wikipedia – XVIII Airborne Corps",
+        "url": "https://en.wikipedia.org/wiki/XVIII_Airborne_Corps"
+      },
+      {
+        "title": "Wikipedia – I Corps (United States)",
+        "url": "https://en.wikipedia.org/wiki/I_Corps_(United_States)"
+      },
+      {
+        "title": "Wikipedia – V Corps (United States)",
+        "url": "https://en.wikipedia.org/wiki/V_Corps_(United_States)"
+      },
+      {
+        "title": "Wikipedia – 4th Infantry Division (United States)",
+        "url": "https://en.wikipedia.org/wiki/4th_Infantry_Division_(United_States)"
+      },
+      {
+        "title": "Wikipedia – 7th Infantry Division (United States)",
+        "url": "https://en.wikipedia.org/wiki/7th_Infantry_Division_(United_States)"
+      },
+      {
+        "title": "Wikipedia – 10th Mountain Division",
+        "url": "https://en.wikipedia.org/wiki/10th_Mountain_Division"
+      },
+      {
+        "title": "Wikipedia – 11th Airborne Division",
+        "url": "https://en.wikipedia.org/wiki/11th_Airborne_Division"
+      },
+      {
+        "title": "Wikipedia – 25th Infantry Division (United States)",
+        "url": "https://en.wikipedia.org/wiki/25th_Infantry_Division_(United_States)"
+      },
+      {
+        "title": "Wikipedia – 2nd Infantry Division (United States)",
+        "url": "https://en.wikipedia.org/wiki/2nd_Infantry_Division_(United_States)"
+      },
+      {
+        "title": "Wikipedia – 3rd Infantry Division (United States)",
+        "url": "https://en.wikipedia.org/wiki/3rd_Infantry_Division_(United_States)"
+      },
+      {
+        "title": "Wikipedia – United States Army National Guard",
+        "url": "https://en.wikipedia.org/wiki/United_States_Army_National_Guard"
+      },
+      {
+        "title": "Wikipedia – Brigade combat team",
+        "url": "https://en.wikipedia.org/wiki/Brigade_combat_team"
+      },
+      {
+        "title": "Pennsylvania National Guard – 56th SBCT devenue Mobile BCT",
+        "url": "https://www.pa.ng.mil/About-Us/News/Article/4453713/56th-stryker-brigade-combat-team-now-a-mobile-brigade-combat-team/"
+      },
+      {
+        "title": "Wikipedia – 3rd Marine Division",
+        "url": "https://en.wikipedia.org/wiki/3rd_Marine_Division"
+      },
+      {
+        "title": "Wikipedia – 4th Marine Division",
+        "url": "https://en.wikipedia.org/wiki/4th_Marine_Division_(United_States)"
+      },
+      {
+        "title": "Wikipedia – 8th Marine Regiment (dissous 2021)",
+        "url": "https://en.wikipedia.org/wiki/8th_Marine_Regiment"
+      },
+      {
+        "title": "Wikipedia – United States Marine Corps (effectifs)",
+        "url": "https://en.wikipedia.org/wiki/United_States_Marine_Corps"
+      },
+      {
+        "title": "Military Times – effectifs FY2026",
+        "url": "https://www.militarytimes.com/news/pentagon-congress/2026/01/20/us-military-to-expand-by-more-than-30000-troops-this-year/"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Armées = commandements de composante réels (USAWHC créé en 2025 par fusion FORSCOM/ARNORTH/ARSOUTH, USARPAC, Eighth Army, USAREUR-AF) + USASOC ; ARNG et USMC regroupés dans des armées générées. Rattachements des divisions aux corps d'après Wikipedia (4th ID passée au I Corps en déc. 2025). Types : ABCT=blindee, Stryker=mecanisee, Mobile BCT (ISV, transformation ATI 2025)=motorisee sauf MBCT aéroportée/aéromobile. 3rd SBCT/4th ID : conversion depuis ABCT signalée par Wikipedia, à confirmer. La 1st SBCT/4th ID est déployée en rotation en Corée (2ID n'a plus de BCT organique depuis 2024). 82nd et 101st : statut MBCT des brigades autres que 2/101 non confirmé. DIVARTY et brigades d'aviation de combat comptées comme brigades ; brigades de soutien, MP, renseignement, transmissions, SFAB et MEB (ARNG) omises. ARNG : 27 BCT (dont 2 Mobile BCT, 5 ABCT, 1 SBCT) — types réels conservés (pas 'garde_nationale') ; rattachement des BCT aux divisions ARNG (alignements) partiellement de mémoire, à vérifier ; brigades d'aviation des 28e, 35e, 38e, 40e, 42e DI non listées par la source consultée. USMC : effectif actif 168 527 (déc. 2024) / 172 300 autorisés FY2026, non inclus dans armyPersonnel ; régiments d'infanterie listés au niveau régiment (8th Marines dissous 2021, 3e et 12e Marines devenus Marine Littoral Regiments) ; bataillons LAR/reco non listés ; aviation des MAW exclue. 11th ACR inclus bien qu'étant la force d'opposition du NTC."
+  }
+}

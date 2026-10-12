@@ -1,0 +1,16 @@
+{
+  "code": "CUW",
+  "name": "Curaçao",
+  "iso3": "CUW",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 156263,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

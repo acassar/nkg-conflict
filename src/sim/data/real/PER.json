@@ -1,0 +1,28 @@
+{
+  "code": "PER",
+  "name": "Pérou",
+  "iso3": "PER",
+  "macro": {
+    "gdpB": {
+      "value": 341.025,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 34576665,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 0.812,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 158000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

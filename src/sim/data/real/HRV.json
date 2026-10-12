@@ -1,0 +1,28 @@
+{
+  "code": "HRV",
+  "name": "Croatie",
+  "iso3": "HRV",
+  "macro": {
+    "gdpB": {
+      "value": 106.055,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 3876200,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.019,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 20000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

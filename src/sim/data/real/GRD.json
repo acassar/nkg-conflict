@@ -1,0 +1,20 @@
+{
+  "code": "GRD",
+  "name": "Grenade",
+  "iso3": "GRD",
+  "macro": {
+    "gdpB": {
+      "value": 1.42,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 117303,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

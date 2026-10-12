@@ -1,0 +1,28 @@
+{
+  "code": "GHA",
+  "name": "Ghana",
+  "iso3": "GHA",
+  "macro": {
+    "gdpB": {
+      "value": 114.708,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 35064272,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 0.477,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 16000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

@@ -1,0 +1,28 @@
+{
+  "code": "EST",
+  "name": "Estonie",
+  "iso3": "EST",
+  "macro": {
+    "gdpB": {
+      "value": 47.004,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 1366475,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 3.374,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 7000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

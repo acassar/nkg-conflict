@@ -1,0 +1,28 @@
+{
+  "code": "NZL",
+  "name": "Nouvelle-Zélande",
+  "iso3": "NZL",
+  "macro": {
+    "gdpB": {
+      "value": 258.832,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 5324700,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.102,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 10000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

@@ -1,0 +1,28 @@
+{
+  "code": "ARE",
+  "name": "Émirats arabes unis",
+  "iso3": "ARE",
+  "macro": {
+    "gdpB": {
+      "value": 571.643,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 11513149,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 5.644,
+      "year": 2014,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 63000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

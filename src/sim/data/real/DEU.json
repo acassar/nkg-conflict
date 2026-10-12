@@ -1,0 +1,179 @@
+{
+  "code": "DEU",
+  "name": "Allemagne",
+  "iso3": "DEU",
+  "macro": {
+    "gdpB": {
+      "value": 5048.059,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 83491249,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.269,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 183000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025-10",
+    "armyPersonnel": {
+      "value": 63047,
+      "year": 2024,
+      "source": "Wikipedia – German Army",
+      "url": "https://en.wikipedia.org/wiki/German_Army"
+    },
+    "armies": [
+      {
+        "name": "Heer (armée de terre allemande)",
+        "generated": true,
+        "brigades": [],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1. Panzerdivision (Oldenburg)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "Panzerlehrbrigade 9",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Panzerbrigade 21",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Panzergrenadierbrigade 41",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "10. Panzerdivision (Veitshöchheim)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "Panzerbrigade 12",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Panzergrenadierbrigade 37",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Panzerbrigade 45 « Litauen » (Lituanie, montée en puissance jusqu'en 2027)",
+                "type": "blindee",
+                "echelon": "brigade",
+                "strengthPct": 40
+              },
+              {
+                "name": "Deutsch-Französische Brigade (part allemande)",
+                "type": "mecanisee",
+                "echelon": "brigade",
+                "strengthPct": 50
+              }
+            ]
+          },
+          {
+            "name": "Division Schnelle Kräfte (Stadtallendorf)",
+            "type": "aeroportee",
+            "brigades": [
+              {
+                "name": "Luftlandebrigade 1",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Gebirgsjägerbrigade 23",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Kommando Spezialkräfte (KSK)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Transporthubschrauberregiment 10",
+                "type": "aviation_legere",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Transporthubschrauberregiment 30",
+                "type": "aviation_legere",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Kampfhubschrauberregiment 36",
+                "type": "aviation_legere",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "Heimatschutzdivision (Berlin)",
+            "type": "defense_territoriale",
+            "brigades": [
+              {
+                "name": "Heimatschutzregiment 1",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Heimatschutzregiment 2",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Heimatschutzregiment 3",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Heimatschutzregiment 4",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Heimatschutzregiment 5",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Heimatschutzregiment 6",
+                "type": "defense_territoriale",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Structure of the German Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_German_Army"
+      },
+      {
+        "title": "Wikipedia – German Army",
+        "url": "https://en.wikipedia.org/wiki/German_Army"
+      }
+    ],
+    "confidence": "haute",
+    "notes": "Pas d'échelon armée/corps national (armée générée ; le corps germano-néerlandais n'est pas modélisé). Brigades néerlandaises sous commandement allemand (43e mécanisée, 13e légère, 11e aéromobile) exclues. Panzerbrigade 45 activée le 1er avril 2025, complétude estimée (cible 2027). Brigade franco-allemande binationale (part allemande 50 % estimée), aussi listée côté FRA. Régiments d'hélicoptères (Kommando Hubschrauber) et régiments de Heimatschutz (réservistes, Heimatschutzregiment 6 activé oct. 2025) en échelon régiment. Bataillons d'artillerie divisionnaires et troupes d'appui non listés comme brigades. Effectif 2024 ; réservistes non chiffrés."
+  }
+}

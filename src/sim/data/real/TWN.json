@@ -1,0 +1,298 @@
+{
+  "code": "TWN",
+  "name": "Taïwan",
+  "iso3": "TWN",
+  "macro": {
+    "gdpB": {
+      "value": 920.05,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 23299132,
+      "year": 2025,
+      "source": "Ministère de l'Intérieur taïwanais (registre, fin 2025) via Wikipédia Demographics of Taiwan"
+    },
+    "defensePctGdp": {
+      "value": 2.1,
+      "year": 2024,
+      "source": "SIPRI Fact Sheet avr. 2025 (Trends in World Military Expenditure 2024)"
+    },
+    "armedForces": {
+      "value": 182400,
+      "year": 2025,
+      "source": "IISS Military Balance via Wikipédia (actifs 170600 + paramilitaires 11800)"
+    }
+  },
+  "oob": {
+    "asOf": "2026-04",
+    "armyPersonnel": {
+      "value": 94000,
+      "year": 2024,
+      "source": "Wikipédia (infobox ROC Army, IISS Military Balance 2024)",
+      "url": "https://en.wikipedia.org/wiki/Republic_of_China_Army"
+    },
+    "armies": [
+      {
+        "name": "Armée de terre de la République de Chine",
+        "generated": true,
+        "brigades": [],
+        "corps": [
+          {
+            "name": "6e corps d'armée (3e zone opérationnelle, nord)",
+            "brigades": [
+              {
+                "name": "269e brigade interarmes (ex-mécanisée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "542e brigade interarmes (ex-blindée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "584e brigade interarmes (ex-blindée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "21e commandement d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "53e groupe du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "10e corps d'armée (5e zone opérationnelle, centre)",
+            "brigades": [
+              {
+                "name": "234e brigade interarmes (ex-mécanisée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "586e brigade interarmes (ex-blindée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "58e commandement d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "8e corps d'armée (4e zone opérationnelle, sud)",
+            "brigades": [
+              {
+                "name": "333e brigade interarmes (ex-mécanisée)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "564e brigade interarmes (ex-blindée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "43e commandement d'artillerie",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "52e groupe du génie",
+                "type": "genie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Commandement de défense de Hua-Tung (2e zone opérationnelle)",
+            "brigades": [
+              {
+                "name": "Équipe de défense de Hualien (équivalent brigade, estimé)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Commandement de zone de Taitung (équivalent brigade, estimé)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Commandement de défense de Penghu (1re zone opérationnelle)",
+            "brigades": [
+              {
+                "name": "Forces de défense de Penghu (équivalent brigade, estimé)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Commandement de défense de Kinmen",
+            "brigades": [
+              {
+                "name": "Forces de défense de Kinmen (équivalent brigade, estimé)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Commandement de défense de Matsu",
+            "brigades": [
+              {
+                "name": "Forces de défense de Matsu (équivalent brigade, estimé)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Commandement de l'aviation et des forces spéciales",
+            "brigades": [
+              {
+                "name": "601e brigade d'aviation",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "602e brigade d'aviation",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Commandement des forces spéciales (équivalent brigade)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Commandement des réserves des forces armées (brigades de réserve à encadrement d'active)",
+            "brigades": [
+              {
+                "name": "101e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "104e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "109e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "117e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "137e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "153e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "203e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "206e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "249e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "257e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "302e brigade d'infanterie (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      },
+      {
+        "name": "Corps des fusiliers marins de la République de Chine",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "66e brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "99e brigade de fusiliers marins",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Groupe blindé amphibie",
+            "type": "blindee",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Taiwan Security Monitor – Taiwanese Army Reform Update Q1 2026",
+        "url": "https://tsm.schar.gmu.edu/taiwanese-army-reform-update-q1-2026/"
+      },
+      {
+        "title": "Wikipedia – Republic of China Army",
+        "url": "https://en.wikipedia.org/wiki/Republic_of_China_Army"
+      },
+      {
+        "title": "Wikipedia – Republic of China Marine Corps",
+        "url": "https://en.wikipedia.org/wiki/Republic_of_China_Marine_Corps"
+      },
+      {
+        "title": "Heraldry of the World – Military heraldry of Taiwan",
+        "url": "https://heraldry-wiki.com/wiki/Military_heraldry_of_Taiwan"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Taïwan n'a pas d'échelon armée : armée générée ; les 3 corps et les commandements de défense régionaux traités comme corps. Les 7 brigades mécanisées/blindées ont été renommées « brigades interarmes » en janvier 2026 ; le type conserve leur ancienne spécialité (la source TSM écrit « 242e », lu comme 542e). Les commandements de défense de Hua-Tung, Penghu, Kinmen et Matsu sont organisés en bataillons/groupes ; leur regroupement en équivalents-brigades est une estimation. Groupe du génie du 10e corps non trouvé. Brigades de réserve (101, 104, 109, 117, 137, 153, 203, 206, 249, 257, 302) mobilisables, rattachement régional non précisé ; ~24 brigades supplémentaires activées seulement en guerre, non incluses. 77e brigade de fusiliers marins absente de la structure actuelle selon Wikipédia. Effectif : 94 000 (2024), fusiliers marins ~10 000 non compris."
+  }
+}

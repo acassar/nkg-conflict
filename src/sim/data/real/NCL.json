@@ -1,0 +1,16 @@
+{
+  "code": "NCL",
+  "name": "Nouvelle-Calédonie",
+  "iso3": "NCL",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 295333,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

@@ -1,0 +1,20 @@
+{
+  "code": "VUT",
+  "name": "Vanuatu",
+  "iso3": "VUT",
+  "macro": {
+    "gdpB": {
+      "value": 1.316,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 335169,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

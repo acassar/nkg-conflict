@@ -1,0 +1,16 @@
+{
+  "code": "PYF",
+  "name": "Polynésie française",
+  "iso3": "PYF",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 282465,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

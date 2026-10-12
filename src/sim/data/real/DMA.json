@@ -1,0 +1,20 @@
+{
+  "code": "DMA",
+  "name": "Dominique",
+  "iso3": "DMA",
+  "macro": {
+    "gdpB": {
+      "value": 0.744,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 65871,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

@@ -1,0 +1,292 @@
+{
+  "code": "ESP",
+  "name": "Espagne",
+  "iso3": "ESP",
+  "macro": {
+    "gdpB": {
+      "value": 1903.826,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 49355143,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.129,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 199000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2023-04",
+    "armyPersonnel": {
+      "value": 74700,
+      "year": 2022,
+      "source": "Anuario Estadístico Militar 2021 via Wikipédia « Spanish Army »",
+      "url": "https://en.wikipedia.org/wiki/Spanish_Army"
+    },
+    "reservists": {
+      "value": 8478,
+      "year": 2022,
+      "source": "Anuario Estadístico Militar 2021 via Wikipédia « Spanish Army »",
+      "url": "https://en.wikipedia.org/wiki/Spanish_Army"
+    },
+    "armies": [
+      {
+        "name": "Ejército de Tierra (Armée de terre espagnole)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "11e régiment d'artillerie de campagne",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "63e régiment d'artillerie lance-roquettes",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "4e régiment d'artillerie côtière",
+            "type": "artillerie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "71e régiment d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "73e régiment d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "74e régiment d'artillerie antiaérienne",
+            "type": "defense_sol_air",
+            "echelon": "regiment"
+          },
+          {
+            "name": "1er régiment du génie",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "11e régiment du génie",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "12e régiment du génie",
+            "type": "genie",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [
+          {
+            "name": "Commandement des Canaries (et commandements généraux)",
+            "brigades": [
+              {
+                "name": "Brigade « Canarias » XVI (Las Palmas)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "94e régiment d'artillerie antiaérienne",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Régiment d'infanterie « Palma » 47 (Baléares)",
+                "type": "infanterie_legere",
+                "echelon": "regiment"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Commandement général de Ceuta",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Régiment de cavalerie « Montesa » 3",
+                    "type": "reconnaissance",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Tercio « Duque de Alba » 2 de la Légion",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Groupe de Regulares 54",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Régiment d'artillerie mixte 30",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Régiment du génie 7",
+                    "type": "genie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Commandement général de Melilla",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Régiment de cavalerie « Alcántara » 10",
+                    "type": "reconnaissance",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Tercio « Gran Capitán » 1 de la Légion",
+                    "type": "motorisee",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Groupe de Regulares 52",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Régiment d'artillerie mixte 32",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Régiment du génie 8",
+                    "type": "genie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": [
+          {
+            "name": "Division « Castillejos » (Huesca)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "Brigade « Aragón » I (Saragosse)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade « Rey Alfonso XIII » II de la Légion (Viator)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade « Galicia » VII (Pontevedra)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade « Guzmán el Bueno » X (Cerro Muriano)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade « Extremadura » XI (Badajoz)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade « Guadarrama » XII (Madrid)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Régiment de cavalerie « España » 11",
+                "type": "reconnaissance",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "Division « San Marcial » (Burgos)",
+            "type": "aeroportee",
+            "brigades": [
+              {
+                "name": "Brigade parachutiste « Almogávares » VI (Paracuellos de Jarama)",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Forces aéromobiles de l'armée de terre (FAMET, Colmenar Viejo)",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Commandement d'opérations spéciales « Órdenes Militares » (Alicante)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Régiment de chasseurs de montagne « Galicia » 64 (Jaca)",
+                "type": "montagne",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Régiment de chasseurs de montagne « América » 66 (Berrioplano)",
+                "type": "montagne",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Infantería de Marina (Armada)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "Brigade d'infanterie de marine « Tercio de Armada » (San Fernando)",
+            "type": "infanterie_marine",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Structure of the Spanish Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_Spanish_Army"
+      },
+      {
+        "title": "Ejército de Tierra – División Castillejos",
+        "url": "https://ejercito.defensa.gob.es/en/unidades/Huesca/div_castillejos/"
+      },
+      {
+        "title": "Ejército de Tierra – División San Marcial (historial)",
+        "url": "https://ejercito.defensa.gob.es/en/unidades/Burgos/san_marcial/Historial/index.html"
+      },
+      {
+        "title": "Wikipedia – Spanish Army",
+        "url": "https://en.wikipedia.org/wiki/Spanish_Army"
+      },
+      {
+        "title": "Wikipedia – Spanish Navy Marines",
+        "url": "https://en.wikipedia.org/wiki/Spanish_Navy_Marines"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Structure d'avril 2023 (Wikipédia) recoupée avec le site officiel : depuis le 1er janvier 2023 la division Castillejos regroupe les six brigades polyvalentes (I, II, VII, X, XI, XII) ; la division San Marcial (Ordre 708/2020) regroupe la BRIPAC VI, le commandement des troupes de montagne, le MOE et les FAMET. Les types des brigades « polyvalentes » sont estimés selon leur dotation (Guadarrama XII = chars, Galicia VII et Légion II = roues/légères). Régiments de montagne 64 et 66 : noms honorifiques tirés de la mémoire, numéros d'après Wikipédia. Brigade logistique, régiments de transmissions, NRBC et renseignement non inclus. Infantería de Marina (Armada) ajoutée dans une armée générée séparée, non vérifiée dans cette recherche."
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "code": "SAU",
+  "name": "Arabie saoudite",
+  "iso3": "SAU",
+  "macro": {
+    "gdpB": {
+      "value": 1276.943,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 36973555,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 6.482,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 282000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 75000,
+      "year": 2015,
+      "source": "IISS Military Balance 2015 via Defense News (forces terrestres royales ; Garde nationale 100 000 en sus)",
+      "url": "https://www.defensenews.com/global/mideast-africa/2015/03/26/saudi-arabia-the-gulf-s-best-equipped-military/"
+    },
+    "armies": [
+      {
+        "name": "Forces terrestres royales saoudiennes (RSLF)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "4e brigade blindée",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade blindée 2 (estimée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade blindée 3 (estimée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade blindée 4 (estimée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "10e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade mécanisée",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade mécanisée 3 (estimée)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade mécanisée 4 (estimée)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade mécanisée 5 (estimée)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie légère 1 (estimée)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade d'infanterie légère 2 (estimée)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "brigade aéroportée / forces spéciales",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "régiment de la Garde royale (3 bataillons)",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "brigade d'artillerie 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade d'aviation (hélicoptères d'attaque)",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      },
+      {
+        "name": "Garde nationale saoudienne (SANG)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1re brigade d'aviation",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade d'aviation",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "3e brigade d'aviation",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "Secteur central (Riyad)",
+            "brigades": [
+              {
+                "name": "brigade mécanisée Imam Muhammad bin Saud",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée Prince Saad bin Abdul Rahman",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade mécanisée Prince Turki bin Abdulaziz",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'infanterie légère King Khalid",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Secteur oriental (Dammam)",
+            "brigades": [
+              {
+                "name": "brigade mécanisée King Abdulaziz (Hofuf)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'infanterie légère Prince Mohammad bin Abdul Rahman",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "Secteur occidental (Djeddah)",
+            "brigades": [
+              {
+                "name": "brigade d'infanterie légère King Saud (Djeddah)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'infanterie légère King Faisal (Médine)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "brigade d'infanterie légère Omar bin Khattab (Taïf)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Critical Threats — Saudi Arabia: Order of Battle for the al-Houthi Conflict (2009)",
+        "url": "https://www.criticalthreats.org/analysis/saudi-arabia-order-of-battle-for-the-al-houthi-conflict"
+      },
+      {
+        "title": "Wikipédia — Saudi Arabian National Guard",
+        "url": "https://en.wikipedia.org/wiki/Saudi_Arabian_National_Guard"
+      },
+      {
+        "title": "GlobalSecurity — Royal Saudi Land Forces",
+        "url": "https://www.globalsecurity.org/military/world/gulf/rslf.htm"
+      },
+      {
+        "title": "Defense News / IISS Military Balance 2015",
+        "url": "https://www.defensenews.com/global/mideast-africa/2015/03/26/saudi-arabia-the-gulf-s-best-equipped-military/"
+      }
+    ],
+    "confidence": "faible",
+    "notes": "Pas de division ni de corps : brigades rattachées aux armées. RSLF : aucune liste publique complète ; seules les 4e brigade blindée, 10e et 11e brigades mécanisées et la 2e brigade d'aviation sont nommées (Critical Threats 2009). Le reste est ESTIMÉ d'après la structure de type IISS (4 blindées, 5 mécanisées, 2 d'infanterie légère, 1 aéroportée, Garde royale, artillerie) — à confirmer. La Garde nationale (SANG, ≈100 000 dont prélèvements tribaux) est incluse comme armée séparée car c'est une force terrestre de combat (engagée au Yémen) ; ses brigades nommées viennent de Wikipédia (9 sur 21 annoncées ; brigades de sécurité spéciale et de déploiement rapide et bataillons tribaux Fowj exclus). Effectif armyPersonnel = RSLF seule (IISS 2015, chiffre ancien)."
+  }
+}

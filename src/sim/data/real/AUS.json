@@ -1,0 +1,137 @@
+{
+  "code": "AUS",
+  "name": "Australie",
+  "iso3": "AUS",
+  "macro": {
+    "gdpB": {
+      "value": 1839.961,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 27614411,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 1.918,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 60000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025",
+    "armyPersonnel": {
+      "value": 28524,
+      "year": 2025,
+      "source": "Wikipedia – Australian Army (infobox, non datée ; 28 387 en juin 2022)",
+      "url": "https://en.wikipedia.org/wiki/Australian_Army"
+    },
+    "reservists": {
+      "value": 15711,
+      "year": 2025,
+      "source": "Wikipedia – Australian Army (Active Reserve, infobox)",
+      "url": "https://en.wikipedia.org/wiki/Australian_Army"
+    },
+    "armies": [
+      {
+        "name": "Australian Army",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "Special Operations Command (SASR, 1st et 2nd Commando Regiments)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "17th Sustainment Brigade",
+            "type": "soutien",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1st (Australian) Division",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "1st Brigade (littorale, Darwin)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3rd Brigade (blindée/mécanisée, Townsville)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7th Brigade (motorisée, Brisbane)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "10th Brigade (feux longue portée : HIMARS, NASAMS)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "16th Aviation Brigade",
+                "type": "aviation_legere",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "2nd (Australian) Division (réserve, sécurité et réponse)",
+            "type": "garde_nationale",
+            "brigades": [
+              {
+                "name": "4th Brigade (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5th Brigade (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "9th Brigade (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "11th Brigade (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              },
+              {
+                "name": "13th Brigade (réserve)",
+                "type": "garde_nationale",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Structure of the Australian Army",
+        "url": "https://en.wikipedia.org/wiki/Structure_of_the_Australian_Army"
+      },
+      {
+        "title": "Wikipedia – Australian Army",
+        "url": "https://en.wikipedia.org/wiki/Australian_Army"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Organisation 2025 d'après Wikipedia. Pas d'échelon armée/corps (armée générée). Rattachement de la 10th Brigade et de la 16th Aviation Brigade à la 1st Division supposé ; 17th Sustainment Brigade et SOCOMD laissées au niveau armée. Brigades de réserve de la 2nd Division typées garde_nationale (transition vers un rôle de sécurité/réponse territoriale) ; unités régionales de surveillance (NORFORCE, etc.), 8th (Training) Brigade et 2nd Health Brigade omises. Le 1st Armoured Regiment est rattaché à la 9th Brigade pour expérimentation. Effectifs : chiffres de l'infobox non datés."
+  }
+}

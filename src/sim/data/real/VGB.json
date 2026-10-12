@@ -1,0 +1,16 @@
+{
+  "code": "VGB",
+  "name": "îles Vierges britanniques",
+  "iso3": "VGB",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 39732,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

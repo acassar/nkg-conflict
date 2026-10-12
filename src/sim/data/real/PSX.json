@@ -1,0 +1,24 @@
+{
+  "code": "PSX",
+  "name": "Palestine",
+  "iso3": "PSE",
+  "macro": {
+    "gdpB": {
+      "value": 13.711,
+      "year": 2024,
+      "source": "FMI WEO (avr. 2026), NGDPD (WBG) relayé par Worldometers (pas de 2025)"
+    },
+    "pop": {
+      "value": 5413596,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": {
+      "value": 0,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

@@ -1,0 +1,16 @@
+{
+  "code": "GRL",
+  "name": "Groenland",
+  "iso3": "GRL",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 56831,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

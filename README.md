@@ -152,6 +152,10 @@ VITE_PMTILES_URL=https://ton-domaine/tiles/monde.pmtiles
 
 ## Données
 
+### Données réelles des armées (phase D3)
+
+`src/sim/data/real/<CODE>.json` : un fichier par pays de la carte, pas encore utilisé par la simulation (il remplacera la formule `forceSizeOf` à l'étape « Scénarios »). Bloc `macro` : PIB 2025 (FMI WEO, avril 2026), population 2025 (Banque mondiale, d'après l'ONU WPP), dépenses militaires en % du PIB (SIPRI via Banque mondiale), effectifs des forces armées (IISS via Banque mondiale, 2020), chaque valeur avec son année et sa source. Bloc `oob` pour une trentaine de pays : armées, corps, divisions, brigades et régiments avec leur type, effectif de l'armée de terre, sources, date et niveau de confiance ; les unités estimées le disent dans leur nom. `tests/real-data.test.ts` vérifie la présence et la forme des fichiers.
+
 ### Carte du monde
 
 `src/sim/data/world/countries.json` et `public/data/world-grid.bin.gz` sont générés depuis [Natural Earth](https://www.naturalearthdata.com/) (domaine public) : pays (population, PIB), fleuves, villes de plus de 750 000 habitants et capitales, plus la ville principale des territoires séparés (îles, enclaves). Le relief et l'occupation du sol viennent de `data/world-terrain-raw.bin.gz`, produit par le workflow « Données mondiales » (`scripts/fetch-terrain-world.py`) et publié sur la branche `data-world`. Les forces de chaque pays sont estimées à partir de son PIB et de sa population.

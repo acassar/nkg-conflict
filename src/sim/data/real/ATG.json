@@ -1,0 +1,24 @@
+{
+  "code": "ATG",
+  "name": "Antigua-et-Barbuda",
+  "iso3": "ATG",
+  "macro": {
+    "gdpB": {
+      "value": 2.273,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 94209,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": {
+      "value": 0,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

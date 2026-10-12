@@ -1,0 +1,130 @@
+{
+  "code": "FIN",
+  "name": "Finlande",
+  "iso3": "FIN",
+  "macro": {
+    "gdpB": {
+      "value": 316.86,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 5646436,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.571,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 22000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2008-01",
+    "armyPersonnel": {
+      "value": 22010,
+      "year": 2024,
+      "source": "Infobox Wikipédia « Finnish Army » : 3 610 cadres + 18 400 conscrits (non daté)",
+      "url": "https://en.wikipedia.org/wiki/Finnish_Army"
+    },
+    "reservists": {
+      "value": 180000,
+      "year": 2024,
+      "source": "Infobox Wikipédia « Finnish Army » (effectif de guerre)",
+      "url": "https://en.wikipedia.org/wiki/Finnish_Army"
+    },
+    "armies": [
+      {
+        "name": "Maavoimat (Armée de terre finlandaise)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "Brigade blindée (Parola/Riihimäki)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de Pori (Säkylä/Niinisalo)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de Carélie (Valkeala)",
+            "type": "mecanisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade Jaeger (Sodankylä/Rovaniemi)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de Kainuu (Kajaani)",
+            "type": "infanterie_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Régiment de chasseurs de la Garde (Helsinki)",
+            "type": "infanterie_legere",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Régiment de chasseurs d'Utti (forces spéciales et hélicoptères)",
+            "type": "forces_speciales",
+            "echelon": "regiment"
+          },
+          {
+            "name": "Unité de missiles sol-air (estimée)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'infanterie territoriale 1 (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'infanterie territoriale 2 (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'infanterie territoriale 3 (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'infanterie territoriale 4 (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'infanterie territoriale 5 (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade d'infanterie territoriale 6 (estimée)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Finnish Army",
+        "url": "https://en.wikipedia.org/wiki/Finnish_Army"
+      }
+    ],
+    "confidence": "faible",
+    "notes": "Armée de conscription sans divisions permanentes. Les 7 unités du temps de paix (hors Académie) sont réelles ; elles forment en guerre, selon la structure du 1er janvier 2008 (seule disponible), 3 brigades de préparation, 2 brigades jaeger, 2 groupements mécanisés, 1 bataillon d'hélicoptères, 1 bataillon de jaeger spéciaux et 1 unité sol-air (~61 000 h), plus 6 brigades d'infanterie territoriales, 14 bataillons indépendants et 28 unités locales (~176 000 h). Les brigades de temps de paix servent de proxy pour les brigades opérationnelles ; les 6 brigades territoriales et l'unité sol-air sont des entrées estimées. Structure de guerre actuelle (post-OTAN 2023) non trouvée. Effectif d'active = cadres + conscrits de l'infobox."
+  }
+}

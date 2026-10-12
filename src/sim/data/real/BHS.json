@@ -1,0 +1,24 @@
+{
+  "code": "BHS",
+  "name": "Bahamas",
+  "iso3": "BHS",
+  "macro": {
+    "gdpB": {
+      "value": 16.508,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 403033,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": {
+      "value": 2000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

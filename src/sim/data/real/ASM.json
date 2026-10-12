@@ -1,0 +1,16 @@
+{
+  "code": "ASM",
+  "name": "Samoa américaines",
+  "iso3": "ASM",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 46029,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

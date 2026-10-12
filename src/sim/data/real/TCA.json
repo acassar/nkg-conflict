@@ -1,0 +1,16 @@
+{
+  "code": "TCA",
+  "name": "îles Turques-et-Caïques",
+  "iso3": "TCA",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 46855,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

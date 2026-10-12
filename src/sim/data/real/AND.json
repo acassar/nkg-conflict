@@ -1,0 +1,20 @@
+{
+  "code": "AND",
+  "name": "Andorre",
+  "iso3": "AND",
+  "macro": {
+    "gdpB": {
+      "value": 4.491,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 82904,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

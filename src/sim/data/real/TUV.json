@@ -1,0 +1,20 @@
+{
+  "code": "TUV",
+  "name": "Tuvalu",
+  "iso3": "TUV",
+  "macro": {
+    "gdpB": {
+      "value": 0.058,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 9492,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

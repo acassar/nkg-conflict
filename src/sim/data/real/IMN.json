@@ -1,0 +1,16 @@
+{
+  "code": "IMN",
+  "name": "île de Man",
+  "iso3": "IMN",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 84118,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

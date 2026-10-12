@@ -1,0 +1,477 @@
+{
+  "code": "POL",
+  "name": "Pologne",
+  "iso3": "POL",
+  "macro": {
+    "gdpB": {
+      "value": 1035.586,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 36435861,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 4.497,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 189000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025-11",
+    "armyPersonnel": {
+      "value": 110000,
+      "year": 2025,
+      "source": "Infobox Wikipédia « Polish Land Forces »",
+      "url": "https://en.wikipedia.org/wiki/Polish_Land_Forces"
+    },
+    "reservists": {
+      "value": 40000,
+      "year": 2025,
+      "source": "Wikipédia « Territorial Defence Force (Poland) » (effectif WOT)",
+      "url": "https://en.wikipedia.org/wiki/Territorial_Defence_Force_(Poland)"
+    },
+    "armies": [
+      {
+        "name": "Wojska Lądowe (Armée de terre polonaise)",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "1re brigade d'aviation de l'armée de terre (Inowrocław)",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "6e brigade aéroportée (Cracovie)",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "25e brigade de cavalerie aérienne (Tomaszów Mazowiecki)",
+            "type": "aeromobile",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e régiment de reconnaissance (Hrubieszów)",
+            "type": "reconnaissance",
+            "echelon": "regiment"
+          },
+          {
+            "name": "9e régiment de reconnaissance (Lidzbark Warmiński)",
+            "type": "reconnaissance",
+            "echelon": "regiment"
+          },
+          {
+            "name": "18e régiment de reconnaissance (Białystok)",
+            "type": "reconnaissance",
+            "echelon": "regiment"
+          },
+          {
+            "name": "2e régiment de reconnaissance radioélectronique (Przasnysz)",
+            "type": "reconnaissance",
+            "echelon": "regiment"
+          },
+          {
+            "name": "1er régiment du génie (Brzeg)",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "2e régiment du génie de Mazovie (Nowy Dwór Mazowiecki)",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "2e régiment du génie (Inowrocław)",
+            "type": "genie",
+            "echelon": "regiment"
+          },
+          {
+            "name": "5e régiment du génie (Szczecin)",
+            "type": "genie",
+            "echelon": "regiment"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1re division d'infanterie des Légions",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "1re brigade mécanisée des Légions (Karakule)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade blindée des Légions (Czerwony Bór)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade motorisée des Légions (Ełk)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade motorisée des Légions (Kolno, en formation)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade d'artillerie des Légions (Iława)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1er régiment antichar des Légions (Wielbark)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "1er régiment antiaérien des Légions (Ostrołęka)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "3e régiment du génie des Légions (Chełmno)",
+                "type": "genie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "8e division d'infanterie « Armia Krajowa » (Kielce, en formation)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "8e brigade blindée (Mielec/Kolbuszowa, en formation)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade mécanisée de Łaziska (en formation)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade mécanisée de Raducz (en formation)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade motorisée de Leszno (en formation)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ]
+          },
+          {
+            "name": "11e division de cavalerie blindée (Żagań)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "10e brigade de cavalerie blindée (Świętoszów)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "34e brigade de cavalerie blindée (Żagań)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "17e brigade mécanisée (Międzyrzecz)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "23e régiment d'artillerie (Bolesławiec)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "4e régiment antiaérien (Czerwieńsk)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "12e division mécanisée (Szczecin)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "2e brigade mécanisée des Légions (Złocieniec)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "7e brigade de défense côtière (Słupsk)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "12e brigade mécanisée (Szczecin)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "5e régiment d'artillerie (Sulechów)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "8e régiment antiaérien (Koszalin)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "16e division mécanisée (Elbląg)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "9e brigade de cavalerie blindée (Braniewo)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "15e brigade mécanisée (Giżycko)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "16e brigade motorisée (Załuski)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "20e brigade mécanisée (Bartoszyce)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade d'artillerie (Węgorzewo)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "14e régiment antichar (Suwałki, en formation)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "15e régiment antiaérien (Gołdap)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "16e régiment de sapeurs (Orzysz, en formation)",
+                "type": "genie",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "18e division mécanisée (Siedlce)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "1re brigade blindée « Varsovie » (Wesoła)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "18e brigade motorisée (Poniatowa)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "19e brigade mécanisée (Lublin)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "21e brigade de chasseurs de Podhale (Rzeszów)",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "18e brigade d'artillerie (Nowa Dęba)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "18e régiment antiaérien (Sitaniec)",
+                "type": "defense_sol_air",
+                "echelon": "regiment"
+              },
+              {
+                "name": "18e régiment de sapeurs (Nisko)",
+                "type": "genie",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Wojska Obrony Terytorialnej (Forces de défense territoriale)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "1re brigade de défense territoriale de Podlachie (Białystok)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "2e brigade de défense territoriale de Lublin (Lublin)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "3e brigade de défense territoriale des Basses-Carpates (Rzeszów)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "4e brigade de défense territoriale de Warmie-Mazurie (Olsztyn)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "5e brigade de défense territoriale de Mazovie (Ciechanów)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "6e brigade de défense territoriale de Mazovie (Radom)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "7e brigade de défense territoriale de Poméranie (Gdańsk)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "8e brigade de défense territoriale de Couïavie-Poméranie (Bydgoszcz)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "9e brigade de défense territoriale de Łódź (Łódź)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "10e brigade de défense territoriale de Sainte-Croix (Kielce)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "11e brigade de défense territoriale de Petite-Pologne (Cracovie)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "12e brigade de défense territoriale de Grande-Pologne (Poznań)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "13e brigade de défense territoriale de Silésie (Katowice)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "14e brigade de défense territoriale de Poméranie occidentale (Szczecin)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "15e brigade de défense territoriale de Lubusz (Skwierzyna)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "16e brigade de défense territoriale de Basse-Silésie (Wrocław)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "17e brigade de défense territoriale d'Opole (Opole)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "18e brigade de défense territoriale de la capitale (Varsovie)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "19e brigade de défense territoriale du Boug (Chełm)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          },
+          {
+            "name": "20e brigade de défense territoriale de Przemyśl (Przemyśl)",
+            "type": "defense_territoriale",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Polish Land Forces",
+        "url": "https://en.wikipedia.org/wiki/Polish_Land_Forces"
+      },
+      {
+        "title": "Wikipedia – Operational structure of the Polish Land Forces",
+        "url": "https://en.wikipedia.org/wiki/Operational_structure_of_the_Polish_Land_Forces"
+      },
+      {
+        "title": "Wikipedia – 1st Legions Infantry Division",
+        "url": "https://en.wikipedia.org/wiki/1st_Legions_Infantry_Division"
+      },
+      {
+        "title": "Wikipedia – 16th Mechanised Division (Poland)",
+        "url": "https://en.wikipedia.org/wiki/16th_Mechanised_Division_(Poland)"
+      },
+      {
+        "title": "Wikipedia – 18th Mechanized Division (Poland)",
+        "url": "https://en.wikipedia.org/wiki/18th_Mechanized_Division_(Poland)"
+      },
+      {
+        "title": "Wikipedia – 11th Armoured Cavalry Division",
+        "url": "https://en.wikipedia.org/wiki/11th_Armoured_Cavalry_Division"
+      },
+      {
+        "title": "Wikipedia – 12th Mechanised Division (Poland)",
+        "url": "https://en.wikipedia.org/wiki/12th_Mechanised_Division_(Poland)"
+      },
+      {
+        "title": "Wikipedia – Territorial Defence Force (Poland)",
+        "url": "https://en.wikipedia.org/wiki/Territorial_Defence_Force_(Poland)"
+      },
+      {
+        "title": "Defence24 – 8. Dywizja AK z nowym dowódcą (nov. 2025)",
+        "url": "https://defence24.pl/sily-zbrojne/8-dywizja-ak-z-nowym-dowodca"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Armée en pleine expansion (6 divisions prévues). Brigades des 1re, 16e et 18e divisions d'après les pages Wikipédia 2025 ; 11e et 12e divisions d'après des listes datées de 2020 (régiments d'artillerie possiblement transformés en brigades depuis). 8e division (Kielce) en formation : brigades listées sans numéro sur Wikipédia, rattachement incertain. Régiments logistiques, NRBC, de commandement et bataillons non inclus. Régiments antichars classés « artillerie » faute de type adapté. L'effectif de 110 000 est celui de l'infobox (année et périmètre peu clairs). Les WOT (branche distincte, ~40 000, majoritairement à temps partiel) forment une armée séparée de 20 brigades territoriales."
+  }
+}

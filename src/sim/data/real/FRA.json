@@ -1,0 +1,155 @@
+{
+  "code": "FRA",
+  "name": "France",
+  "iso3": "FRA",
+  "macro": {
+    "gdpB": {
+      "value": 3368.925,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 68720337,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.027,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 304000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025-10",
+    "armyPersonnel": {
+      "value": 110000,
+      "year": 2025,
+      "source": "Armée de Terre – présentation 2025 (militaires d'active, attribution incertaine dans le document ; 118 600 en 2020 selon Wikipedia)",
+      "url": "https://www.terre.defense.gouv.fr/sites/default/files/reserve-citoyenne/Pr%C3%A9sentation%20-%20arm%C3%A9e%20de%20Terre%202025.pdf"
+    },
+    "reservists": {
+      "value": 26000,
+      "year": 2025,
+      "source": "Armée de Terre – présentation 2025 (chiffre de réserve, attribution incertaine)",
+      "url": "https://www.terre.defense.gouv.fr/sites/default/files/reserve-citoyenne/Pr%C3%A9sentation%20-%20arm%C3%A9e%20de%20Terre%202025.pdf"
+    },
+    "armies": [
+      {
+        "name": "Armée de terre française",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "4e brigade d'aérocombat (CAPR)",
+            "type": "aviation_legere",
+            "echelon": "brigade"
+          },
+          {
+            "name": "19e brigade d'artillerie (CAPR)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade de renseignement et cyber-électronique (CAPR)",
+            "type": "reconnaissance",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade du génie (CALT)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade logistique (CALT)",
+            "type": "soutien",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Brigade des forces spéciales Terre",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [],
+        "divisions": [
+          {
+            "name": "1re division (Besançon)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "7e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "9e brigade d'infanterie de marine",
+                "type": "infanterie_marine",
+                "echelon": "brigade"
+              },
+              {
+                "name": "27e brigade d'infanterie de montagne",
+                "type": "montagne",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Brigade franco-allemande (part française)",
+                "type": "mecanisee",
+                "echelon": "brigade",
+                "strengthPct": 50
+              }
+            ]
+          },
+          {
+            "name": "3e division (Marseille)",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "2e brigade blindée",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "6e brigade légère blindée",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "11e brigade parachutiste",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Euro-SD – The new French Army command structure (avr. 2024)",
+        "url": "https://euro-sd.com/2024/04/articles/37544/the-new-french-army-command-structure/"
+      },
+      {
+        "title": "Wikipédia – Commandement des actions dans la profondeur et du renseignement",
+        "url": "https://fr.wikipedia.org/wiki/Commandement_des_actions_dans_la_profondeur_et_du_renseignement"
+      },
+      {
+        "title": "defense.gouv.fr – Commandement de l'appui et de la logistique de théâtre",
+        "url": "https://www.defense.gouv.fr/terre/unites-larmee-terre/commandements-alpha/commandement-lappui-logistique-theatre"
+      },
+      {
+        "title": "Wikipédia – Organisation de l'Armée de terre française",
+        "url": "https://fr.wikipedia.org/wiki/Organisation_de_l%27Arm%C3%A9e_de_terre_fran%C3%A7aise"
+      },
+      {
+        "title": "Wikipedia – French Army",
+        "url": "https://en.wikipedia.org/wiki/French_Army"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Modèle « Armée de terre de combat » (sept. 2024). Pas d'armée nationale (armée générée) ; le CRR-Fr (Lille) et le Commandement Terre Europe sont des QG de niveau corps non modélisés. Répartition des 6 brigades interarmes entre 1re et 3e division (lourde/médiane/légère) de mémoire, conforme aux annonces 2016-2024 mais non confirmée textuellement par les pages consultées. Brigade franco-allemande binationale : part française seulement (50 % estimé), aussi listée côté DEU. Brigades de maintenance et d'appui numérique et cyber (BANC) omises. Effectif d'active 2025 tiré d'un support officiel mal structuré."
+  }
+}

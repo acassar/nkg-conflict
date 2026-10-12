@@ -1,0 +1,20 @@
+{
+  "code": "NRU",
+  "name": "Nauru",
+  "iso3": "NRU",
+  "macro": {
+    "gdpB": {
+      "value": 0.176,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), NGDPD relayé par Worldometers"
+    },
+    "pop": {
+      "value": 12025,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": null
+  },
+  "oob": null
+}

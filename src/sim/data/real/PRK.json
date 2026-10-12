@@ -1,0 +1,1422 @@
+{
+  "code": "PRK",
+  "name": "Corée du Nord",
+  "iso3": "PRK",
+  "macro": {
+    "gdpB": null,
+    "pop": {
+      "value": 26571036,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": null,
+    "armedForces": {
+      "value": 1469000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2020",
+    "armyPersonnel": {
+      "value": 1020000,
+      "year": 2017,
+      "source": "IISS Military Balance 2017 (p. 304) via Wikipédia",
+      "url": "https://en.wikipedia.org/wiki/Korean_People%27s_Army_Ground_Force"
+    },
+    "armies": [
+      {
+        "name": "Forces terrestres de l'Armée populaire de Corée",
+        "generated": true,
+        "brigades": [
+          {
+            "name": "EMG – brigade blindée 1 (estimée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade blindée 2 (estimée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade blindée 3 (estimée)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade d'artillerie 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade d'artillerie 2 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade d'artillerie 3 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade d'artillerie 4 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade d'artillerie 5 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade d'artillerie 6 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade d'artillerie 7 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade de lance-roquettes multiples 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade de lance-roquettes multiples 2 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade de lance-roquettes multiples 3 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade de lance-roquettes multiples 4 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade de lance-roquettes multiples 5 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade de missiles sol-sol 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade de missiles sol-sol 2 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "EMG – brigade du génie de franchissement (estimée)",
+            "type": "genie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "Corps d'artillerie antiaérienne (équivalent brigade, estimé)",
+            "type": "defense_sol_air",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "Ier corps (avant, Hoeyang)",
+            "brigades": [
+              {
+                "name": "Ier c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ier c. – brigade d'infanterie 2 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ier c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ier c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ier c. – brigade d'artillerie 2 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ier c. – brigade de lance-roquettes multiples 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ier c. – brigade de tireurs d'élite / infanterie légère (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 1 (Ier c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 1 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 1 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 1 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 1 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 2 (Ier c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 2 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 2 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 2 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 2 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 3 (Ier c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 3 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 3 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 3 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 3 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 4 (Ier c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 4 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 4 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 4 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 4 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "IIe corps (avant, Pyongsan)",
+            "brigades": [
+              {
+                "name": "IIe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIe c. – brigade d'infanterie 2 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIe c. – brigade d'artillerie 2 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIe c. – brigade de lance-roquettes multiples 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIe c. – brigade de tireurs d'élite / infanterie légère (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 5 (IIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 5 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 5 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 5 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 5 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 6 (IIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 6 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 6 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 6 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 6 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 7 (IIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 7 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 7 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 7 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 7 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 8 (IIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 8 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 8 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 8 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 8 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "IVe corps (avant, Haeju)",
+            "brigades": [
+              {
+                "name": "IVe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IVe c. – brigade d'infanterie 2 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IVe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IVe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IVe c. – brigade d'artillerie 2 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IVe c. – brigade de lance-roquettes multiples 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IVe c. – brigade de tireurs d'élite / infanterie légère (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 9 (IVe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 9 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 9 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 9 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 9 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 10 (IVe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 10 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 10 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 10 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 10 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 11 (IVe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 11 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 11 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 11 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 11 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 12 (IVe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 12 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 12 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 12 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 12 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Ve corps (avant, Sepo)",
+            "brigades": [
+              {
+                "name": "Ve c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ve c. – brigade d'infanterie 2 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ve c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ve c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ve c. – brigade d'artillerie 2 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ve c. – brigade de lance-roquettes multiples 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Ve c. – brigade de tireurs d'élite / infanterie légère (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 13 (Ve c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 13 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 13 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 13 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 13 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 14 (Ve c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 14 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 14 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 14 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 14 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 15 (Ve c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 15 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 15 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 15 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 15 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 16 (Ve c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 16 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 16 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 16 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 16 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "IIIe corps (arrière, Nampo)",
+            "brigades": [
+              {
+                "name": "IIIe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIIe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IIIe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 17 (IIIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 17 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 17 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 17 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 17 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 18 (IIIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 18 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 18 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 18 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 18 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "VIIe corps (arrière, Hamhung)",
+            "brigades": [
+              {
+                "name": "VIIe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "VIIe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "VIIe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 19 (VIIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 19 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 19 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 19 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 19 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 20 (VIIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 20 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 20 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 20 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 20 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "VIIIe corps (arrière)",
+            "brigades": [
+              {
+                "name": "VIIIe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "VIIIe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "VIIIe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 21 (VIIIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 21 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 21 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 21 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 21 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "IXe corps (arrière, Chongjin)",
+            "brigades": [
+              {
+                "name": "IXe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IXe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "IXe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 22 (IXe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 22 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 22 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 22 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 22 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 23 (IXe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 23 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 23 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 23 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 23 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Xe corps (arrière, Hyesan)",
+            "brigades": [
+              {
+                "name": "Xe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Xe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "Xe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 24 (Xe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 24 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 24 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 24 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 24 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 25 (Xe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 25 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 25 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 25 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 25 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "XIIe corps (arrière)",
+            "brigades": [
+              {
+                "name": "XIIe c. – brigade d'infanterie 1 (estimée)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIIe c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIIe c. – brigade d'artillerie 1 (estimée)",
+                "type": "artillerie",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "Division d'infanterie 26 (XIIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 26 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 26 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 26 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 26 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              },
+              {
+                "name": "Division d'infanterie 27 (XIIe c., estimée)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "Div. inf. 27 – régiment d'infanterie 1 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 27 – régiment d'infanterie 2 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 27 – régiment d'infanterie 3 (estimé)",
+                    "type": "infanterie_legere",
+                    "echelon": "regiment"
+                  },
+                  {
+                    "name": "Div. inf. 27 – régiment d'artillerie (estimé)",
+                    "type": "artillerie",
+                    "echelon": "regiment"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "91e corps de défense de la capitale (commandement de défense de Pyongyang)",
+            "brigades": [
+              {
+                "name": "91e c. – brigade blindée 1 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "91e c. – brigade blindée 2 (estimée)",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          },
+          {
+            "name": "XIe corps (« Storm Corps », forces d'opérations spéciales)",
+            "brigades": [
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 1 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 2 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 3 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 4 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 5 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 6 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 7 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "XIe c. – brigade d'opérations spéciales 8 (estimée)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": []
+          }
+        ],
+        "divisions": [
+          {
+            "name": "105e division blindée de la Garde « Seoul Ryu Kyong Su »",
+            "type": "blindee",
+            "brigades": [
+              {
+                "name": "105e div. – régiment blindé 1 (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "105e div. – régiment blindé 2 (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "105e div. – régiment blindé 3 (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "105e div. – régiment d'infanterie mécanisée (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "108e division mécanisée (ex-corps mécanisé)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "108e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 1 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "108e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 2 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "108e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 3 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "108e division mécanisée (ex-corps mécanisé) – régiment blindé (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "425e division mécanisée (ex-corps mécanisé)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "425e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 1 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "425e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 2 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "425e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 3 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "425e division mécanisée (ex-corps mécanisé) – régiment blindé (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "806e division mécanisée (ex-corps mécanisé)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "806e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 1 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "806e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 2 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "806e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 3 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "806e division mécanisée (ex-corps mécanisé) – régiment blindé (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "815e division mécanisée (ex-corps mécanisé)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "815e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 1 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "815e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 2 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "815e division mécanisée (ex-corps mécanisé) – brigade/régiment mécanisé 3 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "815e division mécanisée (ex-corps mécanisé) – régiment blindé (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "Division mécanisée 5 (non identifiée, estimée)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "Division mécanisée 5 (non identifiée, estimée) – brigade/régiment mécanisé 1 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Division mécanisée 5 (non identifiée, estimée) – brigade/régiment mécanisé 2 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Division mécanisée 5 (non identifiée, estimée) – brigade/régiment mécanisé 3 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Division mécanisée 5 (non identifiée, estimée) – régiment blindé (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "Division mécanisée 6 (non identifiée, estimée)",
+            "type": "mecanisee",
+            "brigades": [
+              {
+                "name": "Division mécanisée 6 (non identifiée, estimée) – brigade/régiment mécanisé 1 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Division mécanisée 6 (non identifiée, estimée) – brigade/régiment mécanisé 2 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Division mécanisée 6 (non identifiée, estimée) – brigade/régiment mécanisé 3 (estimé)",
+                "type": "mecanisee",
+                "echelon": "regiment"
+              },
+              {
+                "name": "Division mécanisée 6 (non identifiée, estimée) – régiment blindé (estimé)",
+                "type": "blindee",
+                "echelon": "regiment"
+              }
+            ]
+          },
+          {
+            "name": "Division d'artillerie (620e corps réorganisé en 518e division, selon Wikipédia)",
+            "type": "artillerie",
+            "brigades": [
+              {
+                "name": "518e div. – régiment d'artillerie 1 (estimé)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "518e div. – régiment d'artillerie 2 (estimé)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              },
+              {
+                "name": "518e div. – régiment d'artillerie 3 (estimé)",
+                "type": "artillerie",
+                "echelon": "regiment"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Wikipedia – Korean People's Army Ground Force",
+        "url": "https://en.wikipedia.org/wiki/Korean_People%27s_Army_Ground_Force"
+      },
+      {
+        "title": "Wikipedia – Korean People's Army",
+        "url": "https://en.wikipedia.org/wiki/Korean_People%27s_Army"
+      },
+      {
+        "title": "Ministère de la Défense ROK – Defense White Paper 2020, p. 33-34",
+        "url": "https://mnd.go.kr/mnd_book/DefenseWhitePaper/2020/2020_eng_all/files/basic-html/page33.html"
+      },
+      {
+        "title": "GlobalSecurity – KPA order of battle",
+        "url": "https://www.globalsecurity.org/military/world/dprk/kpa-orbat.htm"
+      }
+    ],
+    "confidence": "faible",
+    "notes": "Aucune liste publique des brigades nord-coréennes. Corps réels : 10 corps réguliers (I, II, III, IV, V, VII, VIII, IX, X, XII ; VIII d'après GlobalSecurity), 91e corps de défense de la capitale, XIe corps « Storm Corps », 105e division blindée, 6 divisions mécanisées (dont 108e, 425e, 806e, 815e, ex-corps mécanisés renommés en divisions selon le Livre blanc 2020) et 1 division d'artillerie (Livre blanc ROK 2020). Effectifs par type repris de l'IISS 2017 (27 divisions d'infanterie, 14 brigades d'infanterie, 15 brigades blindées, 21 brigades d'artillerie, 9 brigades LRM, 2 brigades de missiles sol-sol, 1 brigade génie) et répartis par hypothèse entre corps : toutes ces entrées sont marquées « estimée », de même que la composition en régiments des divisions. Forces spéciales (~200 000 selon le Livre blanc 2020) : nombre de brigades du XIe corps et des brigades de tireurs d'élite des corps avant estimé. Corps d'artillerie antiaérienne réduit à une brigade. Environ 10 000 hommes (dont forces spéciales) déployés en Russie (Koursk) en 2024-2025, non distingués ici."
+  }
+}

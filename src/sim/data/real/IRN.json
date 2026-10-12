@@ -1,0 +1,900 @@
+{
+  "code": "IRN",
+  "name": "Iran",
+  "iso3": "IRN",
+  "macro": {
+    "gdpB": {
+      "value": 371.196,
+      "year": 2025,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD"
+    },
+    "pop": {
+      "value": 92417681,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 2.092,
+      "year": 2025,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 650000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": {
+    "asOf": "2025-08",
+    "armyPersonnel": {
+      "value": 500000,
+      "year": 2025,
+      "source": "Artesh 350 000 (CIA World Factbook 2025 via Wikipédia) + forces terrestres du CGRI ≈150 000 (Wikipédia, 2020)",
+      "url": "https://en.wikipedia.org/wiki/Islamic_Republic_of_Iran_Army_Ground_Forces"
+    },
+    "armies": [
+      {
+        "name": "Forces terrestres de l'Artesh (NEZAJA)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "37e brigade blindée (Fars)",
+            "type": "blindee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "55e brigade aéroportée (Chiraz)",
+            "type": "aeroportee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "65e brigade aéroportée de forces spéciales « NOHED » (Téhéran)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          },
+          {
+            "name": "36e brigade (Miyaneh, rattachement non confirmé)",
+            "type": "motorisee",
+            "echelon": "brigade"
+          },
+          {
+            "name": "groupe d'artillerie 1 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "groupe d'artillerie 2 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "groupe d'artillerie 3 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "groupe d'artillerie 4 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          },
+          {
+            "name": "groupe d'artillerie 5 (estimée)",
+            "type": "artillerie",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "QG régional Nord-Ouest (Ourmia)",
+            "brigades": [
+              {
+                "name": "25e brigade de forces spéciales (Tabriz)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "40e brigade d'assaut mobile (Ardabil)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "41e brigade d'assaut mobile (Ghulonji)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "216e brigade blindée (Zanjan)",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "21e division d'infanterie (Tabriz)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "121e brigade (Tabriz)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "221e brigade (Maragheh)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "321e brigade d'assaut mobile (Marand)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "16e division blindée (Qazvin)",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "116e brigade d'assaut mécanisée (Qazvin)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "316e brigade blindée (Hamedan)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "64e division d'infanterie (Ourmia)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "164e brigade d'assaut mobile (Piranshahr)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "264e brigade d'assaut mobile (Salmas)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "364e brigade d'assaut mobile (Mahabad)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Ouest (Kermanshah)",
+            "brigades": [
+              {
+                "name": "35e brigade de forces spéciales (Jeyran Belagh)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "81e division blindée (Kermanshah)",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "181e brigade blindée (Eslamabad-e Gharb)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "281e brigade blindée (Bisotun)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "71e brigade d'infanterie mécanisée (Sarpol-e Zahab)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "28e division d'infanterie (Sanandaj)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "128e brigade d'assaut mobile (Sanandaj)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "228e brigade d'assaut mobile (Saqqez)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "328e brigade d'assaut mobile (Marivan)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Sud-Ouest (Ahvaz)",
+            "brigades": [
+              {
+                "name": "45e brigade de forces spéciales (Shushtar)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "92e division blindée (Ahvaz)",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "192e brigade blindée (Ahvaz)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "292e brigade blindée (Dezful)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "392e brigade blindée (Dasht-e Azadegan)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "72e brigade (Khorramshahr)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "84e division d'infanterie (Khorramabad)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "184e brigade d'assaut mobile (Khorramabad)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Nord-Est (Mashhad)",
+            "brigades": [
+              {
+                "name": "177e brigade d'assaut mobile (Torbat-e Heydariyeh)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "230e brigade d'assaut mobile (Gorgan)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "77e division d'infanterie (Mashhad)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "277e brigade d'assaut mobile (Quchan)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "377e brigade d'assaut mobile (Mashhad)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "38e brigade blindée (Torbat-e Jam)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "30e division d'infanterie (Birjand)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "130e brigade (Bojnourd)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "58e division d'assaut mobile (Shahroud)",
+                "type": "motorisee",
+                "brigades": [
+                  {
+                    "name": "158e brigade d'assaut mobile (Shahroud)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "258e brigade d'assaut mobile (Chehel Dokhtar)",
+                    "type": "motorisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Sud-Est (Kerman)",
+            "brigades": [],
+            "divisions": [
+              {
+                "name": "88e division blindée (Zahedan)",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "188e brigade blindée (Zahedan)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "288e brigade blindée (Khash)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "388e brigade d'assaut mécanisée (Iranshahr)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": [
+          {
+            "name": "23e division d'assaut mobile / commando (Robat Karim)",
+            "type": "forces_speciales",
+            "brigades": [
+              {
+                "name": "123e brigade d'assaut mobile (Robat Karim)",
+                "type": "motorisee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "223e brigade de forces spéciales (Robat Karim)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Forces terrestres du Corps des gardiens de la révolution islamique (NEZSA)",
+        "generated": false,
+        "brigades": [
+          {
+            "name": "Unité Saberin (forces spéciales)",
+            "type": "forces_speciales",
+            "echelon": "brigade"
+          }
+        ],
+        "corps": [
+          {
+            "name": "QG régional Hamzeh Seyyed ol Shohada (Nord-Ouest)",
+            "brigades": [
+              {
+                "name": "2e brigade Abu Abdollah ol Hossein (Ourmia)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "3e division de forces spéciales Hamzeh Seyyed ol Shohada (Ourmia)",
+                "type": "forces_speciales",
+                "brigades": [
+                  {
+                    "name": "brigade (3e division de forces spéciales Hamzeh Seyyed ol Shohada) 1 (estimée)",
+                    "type": "forces_speciales",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (3e division de forces spéciales Hamzeh Seyyed ol Shohada) 2 (estimée)",
+                    "type": "forces_speciales",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "22e division opérationnelle Beyt ol Moghaddas (Sanandaj)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (22e division opérationnelle Beyt ol Moghaddas) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (22e division opérationnelle Beyt ol Moghaddas) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Ashoura (Nord)",
+            "brigades": [
+              {
+                "name": "brigade mécanisée Imam Zaman (Shabestar)",
+                "type": "mecanisee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "31e division mécanisée Ashoura (Tabriz)",
+                "type": "mecanisee",
+                "brigades": [
+                  {
+                    "name": "brigade (31e division mécanisée Ashoura) 1 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (31e division mécanisée Ashoura) 2 (estimée)",
+                    "type": "mecanisee",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Najaf-e Ashraf (Ouest)",
+            "brigades": [
+              {
+                "name": "4e brigade opérationnelle Ansar ol Rasoul (Javanroud)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "11e brigade Amir ol Momenin (Ilam)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "32e brigade Ansar ol Hossein (Hamedan)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "29e division opérationnelle Nabi Akram (Kermanshah)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (29e division opérationnelle Nabi Akram) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (29e division opérationnelle Nabi Akram) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Saheb ol Zaman (Centre-Nord)",
+            "brigades": [
+              {
+                "name": "12e brigade indépendante Ghaem ol Mohammad (Semnan)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "71e brigade Ruhollah (Arak)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "82e brigade Saheb ol Amr (Qazvin)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "83e brigade indépendante Imam Jafar Sadegh (Qom)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "17e division d'infanterie opérationnelle Ali ibn Abi Taleb (Qom)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (17e division d'infanterie opérationnelle Ali ibn Abi Taleb) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (17e division d'infanterie opérationnelle Ali ibn Abi Taleb) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Sarallah (Téhéran)",
+            "brigades": [
+              {
+                "name": "brigade de sécurité Al Mohammad (Téhéran)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "1re brigade Hazrat-e Zahra (Téhéran)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "20e brigade blindée indépendante Ramezan (Hassanabad)",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "10e division opérationnelle Seyyed ol Shohada (Karaj)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (10e division opérationnelle Seyyed ol Shohada) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (10e division opérationnelle Seyyed ol Shohada) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "27e division opérationnelle Mohammad Rasoul Ollah (Téhéran)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (27e division opérationnelle Mohammad Rasoul Ollah) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (27e division opérationnelle Mohammad Rasoul Ollah) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Ghadir (Caspienne)",
+            "brigades": [
+              {
+                "name": "brigade de forces spéciales Mirza Kuchek Khan (Langaroud)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade Imamat (Chalous)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "60e brigade blindée indépendante Ammar Yasser (Gonbad-e Kavous)",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "16e division opérationnelle Qods (Rasht)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (16e division opérationnelle Qods) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (16e division opérationnelle Qods) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "25e division opérationnelle Karbala (Sari)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (25e division opérationnelle Karbala) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (25e division opérationnelle Karbala) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Karbala (Sud-Ouest)",
+            "brigades": [
+              {
+                "name": "1re brigade blindée indépendante Hazrat-e Hojjat (Ahvaz)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade d'infanterie Hazrat-e Mehdi (Dezful)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "15e brigade de forces spéciales Imam Hassan Mojtaba (Behbahan)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "48e brigade indépendante Fath (Yasouj)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "57e brigade indépendante Abol Fazl (Khorramabad)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "7e division opérationnelle Vali-ye Asr (Dezful)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (7e division opérationnelle Vali-ye Asr) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (7e division opérationnelle Vali-ye Asr) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Seyyed ol Shohada (Centre)",
+            "brigades": [
+              {
+                "name": "18e brigade indépendante Al Ghadir (Yazd)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "44e brigade Ghamar Bani Hashem (Shahr-e Kord)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "8e division blindée Najaf-e Ashraf (Najafabad)",
+                "type": "blindee",
+                "brigades": [
+                  {
+                    "name": "brigade (8e division blindée Najaf-e Ashraf) 1 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (8e division blindée Najaf-e Ashraf) 2 (estimée)",
+                    "type": "blindee",
+                    "echelon": "brigade"
+                  }
+                ]
+              },
+              {
+                "name": "14e division Imam Hossein (Ispahan)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (14e division Imam Hossein) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (14e division Imam Hossein) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Samen ol Aemeh (Nord-Est)",
+            "brigades": [
+              {
+                "name": "2e brigade d'infanterie Javad ol Aemeh (Bojnourd)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "3e brigade d'infanterie Ansar ol Reza (Birjand)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "21e brigade blindée indépendante Imam Reza (Neyshabour)",
+                "type": "blindee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "5e division opérationnelle Nasr (Mashhad)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (5e division opérationnelle Nasr) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (5e division opérationnelle Nasr) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Madinah ol Munawarah (Sud)",
+            "brigades": [
+              {
+                "name": "2e brigade de forces spéciales Imam Sajjad (Kazeroun)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              },
+              {
+                "name": "14e brigade d'infanterie Imam Sadegh (Bouchehr)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "33e brigade aéroportée Al Mehdi (Jahrom)",
+                "type": "aeroportee",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "19e division opérationnelle Fajr (Chiraz)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (19e division opérationnelle Fajr) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (19e division opérationnelle Fajr) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "QG régional Quds (Sud-Est)",
+            "brigades": [
+              {
+                "name": "1re brigade d'infanterie indépendante Seyyed ol Shohada (Bam)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "2e brigade d'infanterie indépendante Saheb ol Zaman (Sirjan)",
+                "type": "infanterie_legere",
+                "echelon": "brigade"
+              },
+              {
+                "name": "38e brigade blindée indépendante Zolfaghar (Kerman)",
+                "type": "blindee",
+                "echelon": "brigade"
+              },
+              {
+                "name": "110e brigade de forces spéciales indépendante Salman Farsi (Zahedan)",
+                "type": "forces_speciales",
+                "echelon": "brigade"
+              }
+            ],
+            "divisions": [
+              {
+                "name": "41e division Sarallah (Kerman)",
+                "type": "infanterie_legere",
+                "brigades": [
+                  {
+                    "name": "brigade (41e division Sarallah) 1 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  },
+                  {
+                    "name": "brigade (41e division Sarallah) 2 (estimée)",
+                    "type": "infanterie_legere",
+                    "echelon": "brigade"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "divisions": []
+      }
+    ],
+    "sources": [
+      {
+        "title": "Critical Threats (AEI) — Order of Battle of the Iranian Artesh Ground Forces (13 août 2025)",
+        "url": "https://www.criticalthreats.org/analysis/order-of-battle-of-the-iranian-artesh-ground-forces"
+      },
+      {
+        "title": "Critical Threats — Iran's Reserve of Last Resort: IRGC Ground Forces Order of Battle (janv. 2020)",
+        "url": "https://www.criticalthreats.org/wp-content/uploads/2020/01/20200121-Report-Iran’s-Reserve-of-Last-Resort.pdf"
+      },
+      {
+        "title": "Wikipédia — Islamic Republic of Iran Army Ground Forces (IISS Military Balance 2026)",
+        "url": "https://en.wikipedia.org/wiki/Islamic_Republic_of_Iran_Army_Ground_Forces"
+      },
+      {
+        "title": "Wikipédia — Islamic Revolutionary Guard Corps Ground Forces",
+        "url": "https://en.wikipedia.org/wiki/Islamic_Revolutionary_Guard_Corps_Ground_Forces"
+      }
+    ],
+    "confidence": "moyenne",
+    "notes": "Deux armées : Artesh et forces terrestres du CGRI. Artesh : liste réelle des divisions et brigades d'après Critical Threats (août 2025), 5 QG régionaux traités comme corps ; 23e division et brigades de Fars/Téhéran rattachées directement. Les brigades « d'assaut mobile » sont classées motorisées. Les 5 groupes d'artillerie (IISS 2026) sont estimés. CGRI : divisions et brigades d'après Critical Threats (2020, liste reconnue incomplète) ; les brigades internes des divisions CGRI ne sont pas connues et sont ESTIMÉES à 2 par division ; type non précisé dans la source = infanterie légère. Effectif : Artesh 350 000 (dont nombreux conscrits) + CGRI ≈150 000. Basij, aviation de l'armée et unités de missiles exclus. État antérieur aux frappes de juin 2025 sur l'Iran (impact sur les forces terrestres non pris en compte)."
+  }
+}

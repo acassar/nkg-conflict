@@ -1,0 +1,28 @@
+{
+  "code": "ERI",
+  "name": "Érythrée",
+  "iso3": "ERI",
+  "macro": {
+    "gdpB": {
+      "value": 1.982,
+      "year": 2019,
+      "source": "FMI WEO (avr. 2026), API DataMapper NGDPD (dernière année dispo.)"
+    },
+    "pop": {
+      "value": 3607003,
+      "year": 2025,
+      "source": "Banque mondiale SP.POP.TOTL (ONU WPP)"
+    },
+    "defensePctGdp": {
+      "value": 20.866,
+      "year": 2003,
+      "source": "SIPRI via Banque mondiale MS.MIL.XPND.GD.ZS"
+    },
+    "armedForces": {
+      "value": 202000,
+      "year": 2020,
+      "source": "IISS via Banque mondiale MS.MIL.TOTL.P1"
+    }
+  },
+  "oob": null
+}

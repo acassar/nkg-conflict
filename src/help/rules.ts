@@ -136,6 +136,7 @@ export type HelpSectionId =
   | 'forts'
   | 'supply'
   | 'command'
+  | 'borders'
   | 'postures'
   | 'flanks'
   | 'fatigue'
@@ -247,7 +248,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'obstacles',
     title: 'Obstacles',
     paragraphs: [
-      `Mines, barbelés, positions préparées : une unité à l'arrêt et retranchée, dans un pays en guerre, en pose sur sa cellule. Un champ complet demande ${days(OBSTACLES_PER_HOUR)} jours en terrain découvert, ${days(OBSTACLES_PER_HOUR * 2)} en ville, ${days(OBSTACLES_PER_HOUR * 1.5)} en forêt (plus vite en posture défensive).`,
+      `Mines, barbelés, positions préparées : une unité à l'arrêt et retranchée, dans un pays en guerre ou dans une armée qui tient une frontière (même en paix), en pose sur sa cellule. Un champ complet demande ${days(OBSTACLES_PER_HOUR)} jours en terrain découvert, ${days(OBSTACLES_PER_HOUR * 2)} en ville, ${days(OBSTACLES_PER_HOUR * 1.5)} en forêt (plus vite en posture défensive).`,
       `Face à un champ complet, l'assaut perd ${pct(OBSTACLE_FIRE_MALUS)} de puissance de feu et l'attaquant subit ${pct(OBSTACLE_LOSS_BONUS)} de pertes en plus (tir direct seulement, l'artillerie n'est pas concernée). Les obstacles ne protègent que le camp qui les a posés ; l'occupant d'une cellule lève ceux de l'adversaire en ${Math.round(1 / DEMINING_PER_DAY)} jours environ.`,
     ],
   },
@@ -273,6 +274,15 @@ export const HELP_SECTIONS: HelpSection[] = [
     paragraphs: [
       `Une unité à moins de ${hqKm} km d'un quartier général de son pays (qui n'est pas en déroute) est commandée : feu et défense ${signedPct(COMMAND_FACTOR)}, et elle récupère plus vite son organisation hors combat.`,
       `Divisions et corps : les brigades de chaque armée sont regroupées automatiquement en divisions (${DIVISION_MANEUVER} brigades de manœuvre et ${DIVISION_SUPPORT} d'artillerie au plus), les divisions en corps (${CORPS_DIVISIONS} au plus). Une recrue rejoint la division incomplète la plus proche (${JOIN_KM} km au plus), sinon une nouvelle division est formée. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
+    ],
+  },
+  {
+    id: 'borders',
+    title: 'Frontières tenues',
+    paragraphs: [
+      "« Tenir une frontière » (fiche de l'armée) : glissez le long de votre frontière terrestre pour la peindre, ou cliquez sur un pays voisin pour toute la frontière avec lui. L'armée s'y déploie sans franchir, en posture défensive en paix, se retranche et pose des obstacles même en paix ; les missions de ligne s'y appliquent.",
+      "Si la guerre éclate avec ce voisin, la frontière devient le front de l'armée, sans redéploiement ; à la paix, elle retrouve sa frontière.",
+      "Plusieurs armées se partagent une frontière sans chevauchement : un clic sur un voisin ne prend que les portions libres, une portion peinte est prise à l'armée qui la tenait, « Prendre toute la frontière » la retire aux autres armées.",
     ],
   },
   {

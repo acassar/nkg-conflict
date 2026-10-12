@@ -1235,6 +1235,94 @@ try {
   await shot('06d-aviation')
   await page.evaluate((id) => window.__nkg.removeAirZone(id), air.zones[0]?.id ?? -1)
 
+  // Frontière tenue (phase G2) : une armée de l'Est peint la frontière du Rhin au glisser (portion
+  // colorée pendant le geste) ; une seconde clique sur l'Allemagne (portions libres), puis prend toute la
+  // frontière, retirée à la première.
+  const borderArmies = await page.evaluate(async () => {
+    const g = window.__nkg
+    const east = g.snapshot.units
+      .filter((u) => u.owner === 'FRA' && u.lon > 3 && u.lat > 42)
+      .sort((p, q) => q.lon - p.lon)
+    g.selectUnits(
+      east.slice(0, 3).map((u) => u.id),
+      false,
+    )
+    await g.createArmyFromSelection('Armée du Rhin')
+    const a = g.selectedArmyId
+    g.selectUnits(
+      east.slice(3, 6).map((u) => u.id),
+      false,
+    )
+    await g.createArmyFromSelection('Armée des Vosges')
+    const b = g.selectedArmyId
+    g.selectUnits([], false)
+    g.selectArmy(a)
+    return { a, b }
+  })
+  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [7.8, 48.3], zoom: 6.5 }))
+  await page.getByTestId('army-sheet').waitFor()
+  await page.getByTestId('border-paint').click()
+  await page.getByTestId('border-paint-layer').waitFor()
+  const rhine = await page.evaluate(() =>
+    [
+      [7.56, 47.62],
+      [7.55, 47.9],
+      [7.6, 48.15],
+      [7.76, 48.45],
+      [7.95, 48.72],
+      [8.15, 48.92],
+    ].map((p) => {
+      const q = window.__nkgMap.project(p)
+      return [q.x, q.y]
+    }),
+  )
+  await page.mouse.move(rhine[0][0], rhine[0][1])
+  await page.mouse.down()
+  for (const [x, y] of rhine.slice(1)) await page.mouse.move(x, y, { steps: 8 })
+  await shot('06e-frontiere-peinture')
+  await page.mouse.up()
+  await page.waitForTimeout(800)
+  const painted = await page.evaluate(
+    (id) => window.__nkg.snapshot.armies.find((x) => x.id === id)?.border?.length ?? 0,
+    borderArmies.a,
+  )
+  const summary = (await page.getByTestId('border-summary').textContent())?.trim() ?? ''
+  await shot('06f-frontiere-tenue')
+  await page.evaluate((id) => window.__nkg.selectArmy(id), borderArmies.b)
+  await page.getByTestId('border-paint').click()
+  const germany = await page.evaluate(() => {
+    const q = window.__nkgMap.project([9.0, 48.6])
+    return [q.x, q.y]
+  })
+  await page.mouse.click(germany[0], germany[1])
+  await page.waitForTimeout(800)
+  await page.getByTestId('border-take-all').click()
+  await page.waitForTimeout(800)
+  const shared = await page.evaluate(({ a, b }) => {
+    const armies = window.__nkg.snapshot.armies
+    const cells = (id) => armies.find((x) => x.id === id)?.border ?? []
+    const mine = new Set(cells(b))
+    return {
+      a: cells(a).length,
+      b: mine.size,
+      overlap: cells(a).filter((c) => mine.has(c)).length,
+    }
+  }, borderArmies)
+  step('frontière tenue', {
+    armees: borderArmies,
+    peinte: painted,
+    fiche: summary,
+    partage: shared,
+  })
+  if (borderArmies.a === borderArmies.b) report.errors.push('frontière : seconde armée non créée')
+  if (painted === 0) report.errors.push('frontière : aucune cellule peinte le long du Rhin')
+  if (!/Allemagne/.test(summary)) report.errors.push(`frontière : fiche « ${summary} »`)
+  if (shared.b <= painted || shared.overlap > 0 || shared.a >= painted)
+    report.errors.push(`frontière : partage incorrect ${JSON.stringify(shared)}`)
+  for (const id of [borderArmies.a, borderArmies.b])
+    await page.evaluate((x) => window.__nkg.clearFront(x), id)
+  await page.evaluate(() => window.__nkg.selectArmy(null))
+
   // Déclaration de guerre (France contre Belgique) : encart du tiroir Forces, puis « Avancer ».
   await page.evaluate(() => window.__nkg.declareWar('BEL'))
   await page.getByTestId('war-brief').waitFor({ timeout: 15_000 })

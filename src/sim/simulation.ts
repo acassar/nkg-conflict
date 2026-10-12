@@ -78,8 +78,10 @@ import {
 } from './systems/missions'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
+import { assignBorder, borderNeighbors, borderWith, updateBorderFronts } from './systems/frontiers'
 import {
   assignFront,
+  holdsLine,
   launchOffensive,
   missionPreview,
   snapToFront,
@@ -779,7 +781,7 @@ export class Simulation {
       if (u) u.posture = posture
     }
     // En défensive ou défense max, l'armée choisit d'autres postes : répartition refaite tout de suite.
-    if (army.front || army.wholeFront) assignFront(this.ctx, army)
+    if (holdsLine(army)) assignFront(this.ctx, army)
   }
 
   /** Annule les ordres des unités : elles s'arrêtent ; celles d'une armée reprennent leur poste. */
@@ -1054,6 +1056,9 @@ export class Simulation {
     const army = this.playerArmy(id)
     // Changer de front, c'est revenir à la mission « Tenir ».
     holdMission(this.ctx, army)
+    // Un front (ou « Aucun ») remplace la frontière tenue.
+    delete army.border
+    delete army.borderFront
     army.wholeFront = front === 'whole'
     // Une portion tracée s'accroche au front réel.
     army.front =
@@ -1061,6 +1066,61 @@ export class Simulation {
         ? null
         : snapToFront(this.ctx, sideIndex(this.ctx, army.owner), front)
     assignFront(this.ctx, army)
+  }
+
+  /**
+   * Frontière tenue par une armée (phase G2) : cellules peintes au glisser (`paint`, prises aux autres
+   * armées), frontière avec un pays voisin (`country`, cellules libres seulement), ou « Prendre toute la
+   * frontière » (`all` : toute la frontière avec chaque voisin déjà touché, retirée aux autres armées).
+   * Renvoie un message d'erreur pour l'interface, ou null.
+   */
+  setArmyBorder(
+    id: number,
+    choice: { paint: number[] } | { country: CountryId } | 'all',
+  ): string | null {
+    const ctx = this.ctx
+    const army = this.playerArmy(id)
+    if (army.encirclement) return "Un groupe d'encerclement ne peut pas tenir de frontière"
+    const side = sideIndex(ctx, army.owner)
+    let result: ReturnType<typeof assignBorder>
+    if (choice === 'all') {
+      const neighbors = borderNeighbors(ctx, army)
+      if (neighbors.length === 0) return "L'armée ne tient encore aucune frontière"
+      result = assignBorder(
+        ctx,
+        army,
+        neighbors.flatMap((o) => borderWith(ctx.grid, side, o)),
+        'all',
+      )
+    } else if ('country' in choice) {
+      const other = sideIndex(ctx, choice.country)
+      if (other === side) return 'Cliquez sur un pays voisin, pas sur le vôtre'
+      const cells = other > 0 ? borderWith(ctx.grid, side, other) : []
+      if (cells.length === 0)
+        return `Pas de frontière terrestre avec ${countryName(ctx, choice.country)}`
+      result = assignBorder(ctx, army, cells, 'free')
+    } else {
+      result = assignBorder(ctx, army, choice.paint, 'paint')
+    }
+    if (typeof result === 'string') return result
+    // Tenir une frontière remplace le front ; une mission de ligne reste, les autres s'arrêtent.
+    const kind = army.mission?.kind
+    if (kind === 'advance' || kind === 'breach' || kind === 'retreat') holdMission(ctx, army)
+    army.front = null
+    army.wholeFront = false
+    delete army.borderFront
+    // En paix, l'armée s'y déploie en posture défensive : retranchement et obstacles.
+    if (ctx.matrix.atWar[side] !== 1 && army.posture !== 'maxDefense') {
+      army.posture = 'defensive'
+      for (const uid of army.unitIds) {
+        const u = ctx.units.get(uid)
+        if (u) u.posture = 'defensive'
+      }
+    }
+    // En guerre avec un voisin, la frontière devient aussitôt le front.
+    updateBorderFronts(ctx)
+    for (const a of [army, ...result.losers]) assignFront(ctx, a)
+    return null
   }
 
   /** Planifie une offensive ; `unitIds` limite les unités engagées (le reste de l'armée tient le front). */
@@ -1106,7 +1166,7 @@ export class Simulation {
       army.unitIds.push(u.id)
     }
     this.removeEmptyArmies()
-    if (army.front || army.wholeFront) assignFront(this.ctx, army)
+    if (holdsLine(army)) assignFront(this.ctx, army)
   }
 
   private removeEmptyArmies(): void {

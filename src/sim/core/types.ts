@@ -218,6 +218,13 @@ export interface ArmyState {
   front: [LonLat, LonLat] | null
   /** Tient tout le front du camp (prioritaire sur `front` s'il est vrai). */
   wholeFront: boolean
+  /**
+   * Frontière terrestre tenue, en paix comme en guerre (cellules du pays, triées ; voir
+   * systems/frontiers.ts). Utilisée quand l'armée n'a ni portion de front ni tout le front.
+   */
+  border?: number[]
+  /** Le front (`front`) vient de la frontière tenue, en guerre avec un voisin : rendu à la paix. */
+  borderFront?: boolean
   /** Offensive planifiée : flèche d'un point à un autre. */
   offensive: {
     from: LonLat

@@ -55,6 +55,13 @@ export interface MissionPreviewShapes {
   ring: LonLat[] | null
 }
 
+/** Frontières tenues, en carrés de cellules : armée sélectionnée, autres armées, geste en cours. */
+export interface BorderShapes {
+  held: LonLat[][]
+  others: LonLat[][]
+  painting: LonLat[][]
+}
+
 export interface LayerInput {
   snapshot: SimSnapshot | null
   /** Territoire en tuiles (seules les tuiles modifiées changent de canvas). */
@@ -84,6 +91,8 @@ export interface LayerInput {
   /** Trait en cours de tracé (mission « Avancer », ou ligne de repli si `pendingRetreat`). */
   pendingLine: LonLat[]
   pendingRetreat?: boolean
+  /** Frontières tenues (phase G2) : portion de l'armée sélectionnée, des autres pendant la peinture. */
+  armyBorders?: BorderShapes | null
   /**
    * Aperçu de la mission choisie dans la fiche de l'armée, avant validation : postes des unités de ligne,
    * lignes en retrait (seconde ligne, réserve), points clés ; pendant la visée, axe de percée ou anneau
@@ -725,6 +734,27 @@ export function buildLayers(input: LayerInput): Layer[] {
     }),
   )
 
+  // Frontière tenue par l'armée sélectionnée (jaune), par ses autres armées pendant la peinture (gris),
+  // et portion en cours de peinture : cellules colorées, pas un simple trait.
+  const borderSets = input.armyBorders
+  if (borderSets) {
+    for (const [id, data, color] of [
+      ['army-border-others', borderSets.others, [148, 163, 184, 120]],
+      ['army-border', borderSets.held, [250, 204, 21, 140]],
+      ['army-border-paint', borderSets.painting, [250, 204, 21, 220]],
+    ] as const) {
+      if (data.length === 0) continue
+      layers.push(
+        new PolygonLayer({
+          id,
+          data,
+          getPolygon: (p: LonLat[]) => p,
+          getFillColor: [...color],
+          stroked: false,
+        }),
+      )
+    }
+  }
   // Front et offensive de l'armée sélectionnée.
   // Front tenu par l'armée sélectionnée : le tracé réel, à défaut les deux extrémités.
   const frontLines = selectedArmy?.frontLine?.length

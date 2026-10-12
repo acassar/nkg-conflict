@@ -47,6 +47,11 @@ export type MapMode =
   | { kind: 'select' }
   | { kind: 'order'; order: Exclude<PlayerOrder, 'hold'> }
   | { kind: 'front'; armyId: number; first: LonLat | null }
+  /**
+   * Frontière tenue par une armée : on glisse le long de la frontière pour la peindre (portion prise,
+   * colorée au fur et à mesure), ou on clique sur un pays voisin pour toute la frontière avec lui.
+   */
+  | { kind: 'border'; armyId: number }
   | { kind: 'offensive'; armyId: number; first: LonLat | null; unitIds?: number[] }
   /** Ordre qui vise une unité ennemie (poursuite, assaut, encerclement par la sélection ou une armée). */
   | { kind: 'target'; action: TargetAction; armyId?: number }
@@ -496,6 +501,8 @@ export const useGameStore = defineStore('game', () => {
         ? 'Portion de front : cliquez sur la seconde extrémité'
         : 'Portion de front : cliquez sur la première extrémité'
     }
+    if (m.kind === 'border')
+      return 'Frontière : glissez le long de votre frontière pour la peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
     if (m.kind === 'target') return `${TARGET_LABELS[m.action]} : cliquez sur une unité ennemie`
     if (m.kind === 'advance') {
       if (m.goal === 'line' && m.points.length > 0) {
@@ -754,6 +761,27 @@ export const useGameStore = defineStore('game', () => {
     mode.value = { kind: 'front', armyId, first: null }
   }
 
+  function startBorder(armyId: number): void {
+    mode.value = { kind: 'border', armyId }
+  }
+
+  /** Cellules de frontière peintes d'un geste (ou d'un toucher) : ajoutées à l'armée, prises aux autres. */
+  function paintBorder(cells: number[]): void {
+    const m = mode.value
+    if (m.kind !== 'border') return
+    void (async () =>
+      report(
+        await sim.setArmyBorder(m.armyId, { paint: [...cells] }),
+        "Frontière assignée : l'armée s'y déploie",
+      ))()
+    cancelMode()
+  }
+
+  /** « Prendre toute la frontière » : toute la frontière avec chaque voisin déjà touché, retirée aux autres armées. */
+  async function takeWholeBorder(armyId: number): Promise<void> {
+    report(await sim.setArmyBorder(armyId, 'all'), "L'armée tient toute la frontière")
+  }
+
   /** Planification d'une offensive : avec `withSelection`, seules les unités choisies de l'armée y vont. */
   function startOffensive(armyId: number, withSelection = false): void {
     const army = armies.value.find((a) => a.id === armyId)
@@ -873,6 +901,22 @@ export const useGameStore = defineStore('game', () => {
                 : await sim.encircle(ids(), enemy.id)
         report(error)
       })()
+      cancelMode()
+      return true
+    }
+    if (m.kind === 'border') {
+      const country = ownerAt(point[0], point[1])
+      if (!country) {
+        showNotice(
+          'Cliquez sur un pays voisin, ou glissez le long de la frontière (Échap pour annuler)',
+        )
+        return true
+      }
+      void (async () =>
+        report(
+          await sim.setArmyBorder(m.armyId, { country }),
+          "Frontière assignée : l'armée s'y déploie",
+        ))()
       cancelMode()
       return true
     }
@@ -1259,6 +1303,7 @@ export const useGameStore = defineStore('game', () => {
     supply,
     setMapView,
     notice,
+    showNotice,
     toasts,
     dismissToast,
     economy,
@@ -1356,6 +1401,9 @@ export const useGameStore = defineStore('game', () => {
     endEncirclement,
     setWholeFront,
     clearFront,
+    startBorder,
+    paintBorder,
+    takeWholeBorder,
     launchOffensive,
     cancelOffensive,
     togglePause,

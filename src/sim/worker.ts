@@ -232,6 +232,12 @@ const api = {
   setArmyFront(id: number, front: [LonLat, LonLat] | 'whole' | null): void {
     act((s) => s.setArmyFront(id, front))
   },
+  setArmyBorder(
+    id: number,
+    choice: { paint: number[] } | { country: CountryId } | 'all',
+  ): string | null | undefined {
+    return act((s) => s.setArmyBorder(id, choice))
+  },
   planOffensive(id: number, from: LonLat, to: LonLat, unitIds?: number[]): void {
     act((s) => s.planOffensive(id, from, to, unitIds))
   },

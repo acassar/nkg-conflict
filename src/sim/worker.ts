@@ -9,6 +9,7 @@ import type {
   BattleReport,
   BuildingKind,
   CountryId,
+  DefendPointKinds,
   LonLat,
   AirMission,
   Posture,
@@ -237,6 +238,13 @@ const api = {
     choice: { paint: number[] } | { country: CountryId } | 'all',
   ): string | null | undefined {
     return act((s) => s.setArmyBorder(id, choice))
+  },
+  defendPointsArmy(
+    id: number,
+    zone: { center: LonLat; km: number } | null,
+    kinds: DefendPointKinds,
+  ): string | null | undefined {
+    return act((s) => s.defendPointsArmy(id, zone, kinds))
   },
   planOffensive(id: number, from: LonLat, to: LonLat, unitIds?: number[]): void {
     act((s) => s.planOffensive(id, from, to, unitIds))

@@ -207,7 +207,10 @@ function onPaintUp(): void {
   if (!s) return
   if (s.moved) {
     if (cells.length > 0) game.paintBorder(cells)
-    else game.showNotice('Glissez le long de la frontière de votre pays (Échap pour annuler)')
+    else
+      game.showNotice(
+        'Glissez le long de la frontière ou de la côte de votre pays (Échap pour annuler)',
+      )
     return
   }
   const ll = unproject({ x: s.x, y: s.y })
@@ -222,7 +225,7 @@ function onPaintUp(): void {
   const tapped = [...painted.value]
   painted.value = new Set()
   if (tapped.length > 0) game.paintBorder(tapped)
-  else game.showNotice('Touchez la frontière, ou un pays voisin (Échap pour annuler)')
+  else game.showNotice('Touchez la frontière ou la côte, ou un pays voisin (Échap pour annuler)')
 }
 
 /** Carrés des cellules de frontière : armée sélectionnée, autres armées (pendant la peinture), geste. */

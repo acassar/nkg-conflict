@@ -283,6 +283,8 @@ export const HELP_SECTIONS: HelpSection[] = [
       "« Tenir une frontière » (fiche de l'armée) : glissez le long de votre frontière terrestre pour la peindre, ou cliquez sur un pays voisin pour toute la frontière avec lui. L'armée s'y déploie sans franchir, en posture défensive en paix, se retranche et pose des obstacles même en paix ; les missions de ligne s'y appliquent.",
       "Si la guerre éclate avec ce voisin, la frontière devient le front de l'armée, sans redéploiement ; à la paix, elle retrouve sa frontière.",
       "Plusieurs armées se partagent une frontière sans chevauchement : un clic sur un voisin ne prend que les portions libres, une portion peinte est prise à l'armée qui la tenait, « Prendre toute la frontière » la retire aux autres armées.",
+      "Côtes en option : la peinture prend aussi la côte de votre pays (un clic sur un voisin ne prend que la frontière terrestre). L'armée s'y déploie face à la mer, contre les débarquements ; la guerre ne change rien à la côte tenue.",
+      "« Défendre des points » (mission de l'armée, groupe Défendre) : cochez villes, ports, bases (caserne, dépôt, fortification) ou aérodromes, pour tout le pays ou une zone de 100 à 400 km choisie d'un clic. Chaque point reçoit au moins une brigade de ligne, dans l'ordre d'importance (capitale d'abord, puis villes selon la population, un port ou une base ajoutant du poids), le reste au prorata ; l'appui rejoint le point le plus proche. Pas de riposte aux percées pendant cette mission.",
     ],
   },
   {

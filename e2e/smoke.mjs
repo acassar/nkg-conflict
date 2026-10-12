@@ -632,6 +632,28 @@ try {
     await shot(name)
   }
 
+  // Mission « Défendre des points » : villes cochées par défaut, tout le pays, puis retour à « Tenir ».
+  await page.getByTestId('mission-defendPoints').click()
+  await page.getByTestId('defend-points-group').waitFor()
+  await page.getByTestId('defend-country').click()
+  await page.waitForTimeout(600)
+  const defended = await page.evaluate((id) => {
+    const m = window.__nkg.armies.find((x) => x.id === id)?.mission
+    return {
+      mission: m?.kind ?? 'hold',
+      points: m?.kind === 'defendPoints' ? m.points.length : 0,
+      tenus: m?.kind === 'defendPoints' ? m.points.filter((p) => p.units > 0).length : 0,
+    }
+  }, missionArmy)
+  step('mission défendre des points', defended)
+  if (defended.mission !== 'defendPoints' || defended.tenus === 0) {
+    report.errors.push(`mission « Défendre des points » non appliquée (${defended.mission})`)
+  }
+  await shot('02g3e-defendre-points')
+  await page.getByTestId('mission-hold').click()
+  await page.getByTestId('mission-apply').click()
+  await page.waitForTimeout(500)
+
   // Mission « Percée sur un axe » : point visé sur l'unité ennemie la plus proche de l'armée.
   await page.getByTestId('mission-breach').click()
   await page.getByTestId('breach-target').click()

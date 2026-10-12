@@ -35,6 +35,8 @@ import type {
   CityState,
   CountryDef,
   CountryId,
+  DefendPointKinds,
+  DefendPointsMission,
   GameEvent,
   GameOutcome,
   LonLat,
@@ -78,6 +80,7 @@ import {
 } from './systems/missions'
 import { updateCombat, updateCommand } from './systems/combat'
 import { updateTerritory } from './systems/territory'
+import { defendPoints } from './systems/defendPoints'
 import { assignBorder, borderNeighbors, borderWith, updateBorderFronts } from './systems/frontiers'
 import {
   assignFront,
@@ -1105,7 +1108,8 @@ export class Simulation {
     if (typeof result === 'string') return result
     // Tenir une frontière remplace le front ; une mission de ligne reste, les autres s'arrêtent.
     const kind = army.mission?.kind
-    if (kind === 'advance' || kind === 'breach' || kind === 'retreat') holdMission(ctx, army)
+    if (kind === 'advance' || kind === 'breach' || kind === 'retreat' || kind === 'defendPoints')
+      holdMission(ctx, army)
     army.front = null
     army.wholeFront = false
     delete army.borderFront
@@ -1120,6 +1124,39 @@ export class Simulation {
     // En guerre avec un voisin, la frontière devient aussitôt le front.
     updateBorderFronts(ctx)
     for (const a of [army, ...result.losers]) assignFront(ctx, a)
+    return null
+  }
+
+  /**
+   * Mission « Défendre des points » : les brigades de ligne se répartissent entre les points cochés du
+   * pays (`zone` nulle) ou d'un cercle. Le front ou la frontière restent pour le retour à « Tenir ».
+   */
+  defendPointsArmy(
+    id: number,
+    zone: DefendPointsMission['zone'],
+    kinds: DefendPointKinds,
+  ): string | null {
+    const ctx = this.ctx
+    const army = this.playerArmy(id)
+    if (army.encirclement) return "Un groupe d'encerclement ne peut pas changer de mission"
+    if (!Object.values(kinds).some(Boolean)) return 'Cochez au moins un type de point'
+    if (defendPoints(ctx, army, zone, kinds).length === 0)
+      return zone ? 'Aucun point de ce type dans la zone' : 'Aucun point de ce type dans le pays'
+    const kind = army.mission?.kind
+    if (kind === 'advance' || kind === 'breach' || kind === 'retreat') holdMission(ctx, army)
+    army.offensive = null
+    const mission: DefendPointsMission = {
+      kind: 'defendPoints',
+      zone,
+      kinds: { ...kinds },
+      points: [],
+    }
+    army.mission = mission
+    assignFront(ctx, army)
+    ctx.log(
+      `${army.name} défend ${mission.points.length} point(s)${zone ? ' dans une zone' : ''}`,
+      army.owner,
+    )
     return null
   }
 

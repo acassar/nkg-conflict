@@ -30,6 +30,7 @@ import {
   missionAction,
 } from '@/composables/missions'
 import type {
+  DefendPointKinds,
   ArmyState,
   Encirclement,
   MissionKind,
@@ -172,6 +173,8 @@ const MISSION_HELP: Record<MissionKind, string> = {
   retreat:
     "L'armée se replie jusqu'à un trait ou une frontière par bonds alternés, un échelon couvrant l'autre, puis tient la ligne atteinte",
   encircle: "L'armée détache un groupe autour d'une cible ennemie et garde son front avec le reste",
+  defendPoints:
+    "L'armée répartit ses brigades entre les villes, ports, bases et aérodromes du pays ou d'une zone, selon leur importance",
 }
 
 function missionOf(a: ArmyState): MissionKind {
@@ -196,7 +199,13 @@ function borderText(a: ArmyState): string {
       o.border?.length &&
       borderSummary(g, side, o.border).neighbors.some((n) => mine.neighbors.includes(n)),
   )
-  let text = `Frontière tenue : environ ${Math.round(mine.km / 10) * 10} km avec ${mine.neighbors.map(name).join(', ')}`
+  const km = (v: number): number => Math.round(v / 10) * 10
+  const land = mine.km - mine.coastKm
+  const parts: string[] = []
+  if (land > 0 && mine.neighbors.length)
+    parts.push(`environ ${km(land)} km avec ${mine.neighbors.map(name).join(', ')}`)
+  if (mine.coastKm > 0) parts.push(`environ ${km(mine.coastKm)} km de côte`)
+  let text = `Frontière tenue : ${parts.join(' et ')}`
   if (sharing.length) text += ` · partagée avec ${sharing.map((o) => o.name).join(', ')}`
   return text
 }
@@ -216,6 +225,10 @@ function missionStatus(a: ArmyState): string {
   }
   if (m?.kind === 'retreat') {
     return `Retraite : ${m.label} · ${Math.round(m.progress * 100)} % des unités sur la ligne`
+  }
+  if (m?.kind === 'defendPoints') {
+    const units = m.points.reduce((s, p) => s + p.units, 0)
+    return `Défendre des points : ${m.points.length} point(s)${m.zone ? ` dans ${m.zone.km} km` : ' du pays'} · ${units} brigade(s)`
   }
   if (m?.kind === 'breach') {
     return `Percée : ${m.shockIds.length} unité(s) de choc · ${Math.round(m.progress * 100)} % de l'axe tenu`
@@ -250,6 +263,21 @@ const freeBarracks = computed(() => {
   const r = prodStats.value?.recruitment
   return r ? Math.max(0, r.max - r.active) : 0
 })
+
+/** Mission « Défendre des points » : types cochés et rayon de la zone. */
+const POINT_KINDS: ReadonlyArray<{ key: keyof DefendPointKinds; label: string }> = [
+  { key: 'cities', label: 'Villes (capitale d’abord)' },
+  { key: 'ports', label: 'Ports' },
+  { key: 'bases', label: 'Bases (casernes, dépôts, fortifications)' },
+  { key: 'airfields', label: 'Aérodromes (villes de 200 000 habitants)' },
+]
+const pointKinds = ref<DefendPointKinds>({
+  cities: true,
+  ports: true,
+  bases: true,
+  airfields: true,
+})
+const zoneKm = ref(200)
 
 /** Onglet de mission affiché pour l'armée choisie (suit la mission réelle quand elle change). */
 const missionView = ref<MissionKind>('hold')
@@ -798,7 +826,7 @@ async function createArmy(): Promise<void> {
               <div class="group">
                 <span class="label">Frontière tenue, en paix comme en guerre</span>
                 <button
-                  title="Glissez le long de votre frontière pour la peindre, ou cliquez sur un pays voisin : l'armée s'y déploie en défense, sans franchir ; si la guerre éclate avec ce voisin, la frontière devient son front"
+                  title="Glissez le long de votre frontière (ou de votre côte, contre les débarquements) pour la peindre, ou cliquez sur un pays voisin : l'armée s'y déploie en défense, sans franchir ; si la guerre éclate avec ce voisin, la frontière devient son front"
                   data-testid="border-paint"
                   @click="game.startBorder(selectedArmy.id)"
                 >
@@ -869,6 +897,40 @@ async function createArmy(): Promise<void> {
               >
                 Un objectif
               </button>
+            </div>
+            <div
+              v-else-if="missionView === 'defendPoints'"
+              class="group"
+              data-testid="defend-points-group"
+            >
+              <span class="label">Points à défendre</span>
+              <label v-for="k in POINT_KINDS" :key="k.key" class="check">
+                <input
+                  v-model="pointKinds[k.key]"
+                  type="checkbox"
+                  :data-testid="`defend-kind-${k.key}`"
+                />
+                {{ k.label }}
+              </label>
+              <span class="label">Où</span>
+              <button
+                class="primary"
+                title="Tous les points cochés du pays, les plus importants d'abord"
+                data-testid="defend-country"
+                @click="game.defendPointsArmy(selectedArmy.id, null, { ...pointKinds })"
+              >
+                Tout le pays
+              </button>
+              <button
+                title="Cliquez ensuite sur le centre de la zone (cercle du rayon choisi)"
+                data-testid="defend-zone"
+                @click="game.startDefendZone(selectedArmy.id, { ...pointKinds }, zoneKm)"
+              >
+                Une zone
+              </button>
+              <select v-model.number="zoneKm" data-testid="defend-zone-km" title="Rayon de la zone">
+                <option v-for="km in [100, 200, 400]" :key="km" :value="km">{{ km }} km</option>
+              </select>
             </div>
             <div v-else-if="missionView === 'breach'" class="group" data-testid="breach-group">
               <p v-if="!holdsLine(selectedArmy)" class="meta warn">

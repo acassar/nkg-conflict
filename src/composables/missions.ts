@@ -14,10 +14,11 @@ export const MISSION_NAMES: Record<MissionKind, string> = {
   breach: 'Percée',
   retreat: 'Retraite',
   encircle: 'Encercler',
+  defendPoints: 'Défendre des points',
 }
 
 export const MISSION_GROUPS: ReadonlyArray<{ label: string; kinds: MissionKind[] }> = [
-  { label: 'Défendre', kinds: ['hold', 'keyPoints', 'depth', 'reserve'] },
+  { label: 'Défendre', kinds: ['hold', 'keyPoints', 'depth', 'reserve', 'defendPoints'] },
   { label: 'Attaquer', kinds: ['advance', 'breach', 'encircle'] },
   { label: 'Reculer', kinds: ['retreat'] },
 ]
@@ -32,6 +33,7 @@ export const MISSION_SHORT: Record<MissionKind, string> = {
   breach: 'Colonne vers un point',
   encircle: 'Détache un tiers autour d’une cible',
   retreat: 'Repli par échelons',
+  defendPoints: 'Villes, ports, bases, aérodromes',
 }
 
 /** Texte détaillé de la mission choisie. */
@@ -51,6 +53,8 @@ export const MISSION_TEXT: Record<MissionKind, string> = {
     "Un tiers des unités de ligne forme un groupe qui gagne les flancs de la cible puis ferme l'anneau ; il rejoint l'armée après le siège. L'armée garde son front avec le reste.",
   retreat:
     "Repli jusqu'à un trait ou une frontière : au contact, bonds de 20 km en deux échelons alternés, l'un tenant pendant que l'autre recule ; loin de l'ennemi, repli d'une traite. Arrivée : l'armée tient la ligne atteinte.",
+  defendPoints:
+    "Les brigades de ligne se répartissent entre les points cochés de tout le pays ou d'une zone : une par point, les plus importants d'abord (la capitale, puis selon la population, les ports, les bases et les aérodromes), le reste au prorata de leur importance. En paix comme en guerre ; sert aussi de garnison. L'armée garde son front ou sa frontière pour le retour à « Tenir ».",
 }
 
 /** Missions qui gardent le front de l'armée : appliquées d'un bouton, avec aperçu sur la carte. */

@@ -36,7 +36,7 @@ const RECRUIT_CYCLE: UnitKind[] = [
 ]
 const FRONT_CITY_KM = 60
 /** Relations sous lesquelles un pays se sent menacé et renforce son armée en temps de paix. */
-const TENSION_RELATION = -50
+export const TENSION_RELATION = -50
 /** En guerre, l'IA passe en guerre totale sous cette part de son territoire. */
 const TOTAL_WAR_HOME_SHARE = 0.9
 /** Réserve d'hommes (milliers) au-delà de laquelle l'IA forme de la défense territoriale quand la production manque. */

@@ -13,6 +13,7 @@ import { planPath } from './movement'
 import { updateFormations } from './formations'
 import { borderFrontCells, pruneBorder, updateBorderFronts } from './frontiers'
 import { assignDefendPoints } from './defendPoints'
+import { returnToGarrison } from '../politics/mobilization'
 import { REST_KM, RELIEF_MAX_SHARE, selectRelief } from './fatigue'
 import { assaultFireFactor } from './obstacles'
 import {
@@ -994,6 +995,28 @@ export function launchOffensive(ctx: SimContext, army: ArmyState): void {
 }
 
 /** Une fois que plus aucune unité n'attaque, l'offensive est terminée et l'armée revient à son front. */
+/**
+ * Fin d'une guerre : une armée sans frontière tenue ni mission propre (« Défendre des points »,
+ * « Avancer ») rentre en garnison dans les villes de son pays. Percée et retraite s'arrêtent ; les
+ * missions de ligne restent choisies pour la prochaine guerre.
+ */
+function peaceReturn(ctx: SimContext, army: ArmyState): void {
+  if (ctx.matrix.atWar[sideIndex(ctx, army.owner)] === 1) {
+    army.atWar = true
+    return
+  }
+  if (!army.atWar) return
+  delete army.atWar
+  if (army.border?.length) return
+  const kind = army.mission?.kind
+  if (kind === 'defendPoints' || kind === 'advance') return
+  if (kind === 'breach' || kind === 'retreat') delete army.mission
+  army.offensive = null
+  army.frontLine = undefined
+  delete army.keyPoints
+  if (returnToGarrison(ctx, army) > 0) ctx.log(`${army.name} rentre en garnison`, army.owner)
+}
+
 export function updateArmies(ctx: SimContext): void {
   for (const army of ctx.armies.values()) {
     army.unitIds = army.unitIds.filter((id) => ctx.units.has(id))
@@ -1003,6 +1026,7 @@ export function updateArmies(ctx: SimContext): void {
   // Frontières tenues : cellules perdues retirées ; guerre avec un voisin, la frontière devient le front.
   for (const army of ctx.armies.values()) if (!army.borderFront) pruneBorder(ctx, army)
   updateBorderFronts(ctx)
+  for (const army of ctx.armies.values()) peaceReturn(ctx, army)
   for (const army of ctx.armies.values()) {
     // Missions « Avancer » et « Retraite ordonnée » : les unités suivent leur ligne (voir missions.ts),
     // pas le front. En percée, seul le groupe de choc attaque : le reste de l'armée garde son front.

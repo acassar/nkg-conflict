@@ -36,6 +36,7 @@ import {
   WAR_ECONOMY,
 } from './rules'
 import { unitName } from '../units/names'
+import { spotNear, unitsNear } from '../politics/mobilization'
 import { manpowerFactor, productionFactor } from '../politics/politics'
 import { OCCUPATION_MANPOWER, OCCUPATION_YIELD, territoryShares } from './national'
 import { armyAnchors, expandOrder, planArmyRecruit, type RecruitOrder } from './armyRecruit'
@@ -535,13 +536,19 @@ function deployRecruit(
 ): void {
   const number = eco.unitCounters[item.kind]++
   const army = item.armyId !== null ? ctx.armies.get(item.armyId) : undefined
+  // Autour de la ville, à la place suivante de la spirale : pas d'empilement sur la ville.
+  const n = unitsNear(ctx, eco.country, city.def.lon, city.def.lat)
+  const [lon, lat] = spotNear(ctx, city.owner, city.def.lon, city.def.lat, n) ?? [
+    city.def.lon,
+    city.def.lat,
+  ]
   const u: UnitState = {
     id: ctx.allocId(),
     name: unitName(item.kind, number),
     owner: eco.country,
     kind: item.kind,
-    lon: city.def.lon,
-    lat: city.def.lat,
+    lon,
+    lat,
     strength: 1,
     org: 0.7,
     entrench: 0,

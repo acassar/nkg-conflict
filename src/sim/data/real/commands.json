@@ -1,0 +1,131 @@
+{
+  "asOf": "2026-10",
+  "notes": "Commandements réels au-dessus des corps (phase D3). Chaque commandement devient une armée de jeu ; un corps absent reste dans son armée d'origine. Recherche du 13 oct. 2026.",
+  "UKR": [
+    {
+      "name": "Forces opérationnelles et tactiques Centre",
+      "short": "OTF Centre",
+      "corps": ["3e corps d'armée", "11e corps d'armée", "19e corps d'armée"],
+      "confidence": "moyenne",
+      "note": "Groupement annoncé fin août 2026 et activé le 13 septembre 2026 sous le général de brigade Andriï Biletskyï, qui garde le commandement du 3e corps. Il couvre le nord de l'oblast de Donetsk (direction de Lyman, Sloviansk-Kramatorsk-Kostiantynivka) et reprend une partie de la zone de l'OTF Est, dissoute le 17 septembre 2026.",
+      "sources": [
+        {
+          "title": "Hromadske – Денис Прокопенко (Редіс) очолив угруповання військ «Азов» (13/09/2026)",
+          "url": "https://hromadske.ua/viyskovi/270931-denys-prokopenko-redis-ocholyv-uhrupovannia-viysk-azov"
+        },
+        {
+          "title": "MilitaryLand – Defense Forces Establish Two New Operation Task Forces in Donetsk Oblast",
+          "url": "https://militaryland.net/news/defense-forces-establish-two-new-operation-task-forces-in-donetsk-oblast/"
+        },
+        {
+          "title": "MilitaryLand – 11th Army Corps",
+          "url": "https://militaryland.net/ukraine/armed-forces/11th-army-corps/"
+        },
+        {
+          "title": "Kyiv Post – Center and Azov groupings",
+          "url": "https://www.kyivpost.com/post/84190"
+        }
+      ]
+    },
+    {
+      "name": "Forces opérationnelles et tactiques Azov",
+      "short": "OTF Azov",
+      "corps": [
+        "1er corps Azov (Garde nationale)",
+        "9e corps d'armée",
+        "7e corps de réaction rapide"
+      ],
+      "confidence": "moyenne",
+      "note": "Groupement activé le 13 septembre 2026 sous le général de brigade Denys Prokopenko (« Redis »), commandant du 1er corps Azov ; il défend le sud de l'oblast de Donetsk (Dobropillia et au sud-ouest). Hromadske n'y place qu'une partie du 7e corps, dont le reste pourrait relever de l'OTF Sud.",
+      "sources": [
+        {
+          "title": "Hromadske – Денис Прокопенко (Редіс) очолив угруповання військ «Азов» (13/09/2026)",
+          "url": "https://hromadske.ua/viyskovi/270931-denys-prokopenko-redis-ocholyv-uhrupovannia-viysk-azov"
+        },
+        {
+          "title": "Azov – Denys Prokopenko Assumes Command of Azov Grouping",
+          "url": "https://azov.army/en/news/denys-prokopenko-commander-of-azov-grouping-of-forces/"
+        },
+        {
+          "title": "MilitaryLand – Command disbands Operation Task Force East (17/09/2026)",
+          "url": "https://militaryland.net/news/command-disbands-operation-task-force-east/"
+        }
+      ]
+    },
+    {
+      "name": "Groupement de forces interarmées",
+      "short": "Forces interarmées (JFTF)",
+      "corps": [
+        "10e corps d'armée",
+        "14e corps d'armée",
+        "16e corps d'armée",
+        "2e corps Khartia (Garde nationale)"
+      ],
+      "confidence": "moyenne",
+      "note": "Créé le 20 octobre 2025 pour le front de l'oblast de Kharkiv, à la place du groupement stratégique Dnipro. Sa composition a été révélée en février 2026 avec aussi le 3e corps, depuis passé à l'OTF Centre. Le chef est aujourd'hui donné comme le général de brigade Viktor Bryhinets, Drapatyï étant devenu commandant en chef.",
+      "sources": [
+        {
+          "title": "MilitaryLand – Joint task force composition revealed (09/02/2026)",
+          "url": "https://militaryland.net/news/joint-task-force-composition-revealed/"
+        },
+        {
+          "title": "MilitaryLand – Joint Forces Task Force",
+          "url": "https://militaryland.net/ukraine/armed-forces/joint-forces-task-force/"
+        },
+        {
+          "title": "Kyiv Independent – Gen. Drapatyi to head new task force",
+          "url": "https://kyivindependent.com/general-drapatyi-to-head-new-command-structure-covering-kharkiv-oblast-amid-ongoing-reorganization/"
+        }
+      ]
+    },
+    {
+      "name": "Forces opérationnelles et tactiques Sud",
+      "short": "OTF Sud",
+      "corps": ["17e corps d'armée", "20e corps d'armée", "30e corps d'infanterie de marine"],
+      "confidence": "moyenne",
+      "note": "Formées en 2024 sur la base de l'ancien groupement Tavria et réorganisées en OTF en 2025, sous le général-major Mykhaïlo Sydorenko. Le 17e corps y est rattaché structurellement, les 20e et 30e corps temporairement (page MilitaryLand d'avril 2026).",
+      "sources": [
+        {
+          "title": "MilitaryLand – Operation Task Force South",
+          "url": "https://militaryland.net/ukraine/armed-forces/operation-task-force-south/"
+        }
+      ]
+    },
+    {
+      "name": "Forces opérationnelles et tactiques Nord",
+      "short": "OTF Nord",
+      "corps": ["12e corps d'armée"],
+      "confidence": "moyenne",
+      "note": "OTF créées en 2025 pour reprendre les missions de front du Commandement opérationnel Nord, sous le général de brigade Oleksiï Chandar. Le 12e corps (Kyiv) est le seul corps listé (page de mars 2026).",
+      "sources": [
+        {
+          "title": "MilitaryLand – Operation Task Force North",
+          "url": "https://militaryland.net/ukraine/armed-forces/operation-task-force-north/"
+        }
+      ]
+    },
+    {
+      "name": "Forces opérationnelles et tactiques Ouest",
+      "short": "OTF Ouest",
+      "corps": ["15e corps d'armée", "18e corps d'armée"],
+      "confidence": "faible",
+      "note": "OTF créées en 2025, dont le commandant n'est pas connu. La page MilitaryLand (mai 2026) y place temporairement les 14e, 15e et 18e corps. Le 14e est rangé ici sous les Forces interarmées, d'après sa propre page à jour en août 2026.",
+      "sources": [
+        {
+          "title": "MilitaryLand – Operation Task Force West",
+          "url": "https://militaryland.net/ukraine/armed-forces/operation-task-force-west/"
+        }
+      ]
+    }
+  ],
+  "UKR_unassigned": [
+    {
+      "corps": "8e corps d'assaut aérien",
+      "note": "Aucune source consultée ne le rattache à un groupement opérationnel en 2026. Sa page MilitaryLand (août 2026) ne mentionne que le Commandement des troupes d'assaut aérien."
+    },
+    {
+      "corps": "21e corps d'armée",
+      "note": "Corps récent (2026) : aucune source trouvée le 13 oct. 2026 sur son commandement ; reste dans les Forces terrestres."
+    }
+  ]
+}

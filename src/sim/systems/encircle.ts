@@ -6,6 +6,9 @@ import { planPath } from './movement'
 import { assignFront, holdsLine } from './armies'
 import { GROUP_KM, RING_MARGIN_KM, RING_MIN_KM } from './encircleRules'
 
+/** Pas (km) dont un point de l'anneau tombé en mer se rapproche de la cible. */
+const LAND_STEP_KM = 3
+
 const KM_PER_DEG = 111.32
 /** Les bras de la tenaille couvrent ±150° autour de l'arrière de la cible : le front reste tenu. */
 const ARC_DEG = 150
@@ -54,6 +57,20 @@ const pointAt = (g: Geometry, angle: number, km: number): LonLat => [
   g.cy + (Math.sin(angle) * km) / KM_PER_DEG,
 ]
 
+/**
+ * Point de l'anneau à cet angle et cette distance ; s'il tombe en mer (côte d'Azov…), rapproché de la
+ * cible jusqu'à la terre, pour que l'unité puisse l'atteindre.
+ */
+function landPointAt(ctx: SimContext, g: Geometry, angle: number, km: number): LonLat {
+  let point = pointAt(g, angle, km)
+  for (let d = km - LAND_STEP_KM; d > 0; d -= LAND_STEP_KM) {
+    const t = ctx.grid.cellAt(point[0], point[1])
+    if (t >= 0 && ctx.grid.passable(t)) break
+    point = pointAt(g, angle, d)
+  }
+  return point
+}
+
 /** Unités triées par angle autour de la cible, pour que les bras ne se croisent pas. */
 function byAngle(g: Geometry, units: UnitState[]): UnitState[] {
   const angleOf = (u: UnitState): number => {
@@ -87,7 +104,7 @@ export function stageEncirclement(
     const rel = arcAngle(g, k, ordered.length) - g.base
     const side = rel >= 0 ? 1 : -1
     const flank = g.base + side * Math.max(Math.abs(rel), (STAGING_DEG * Math.PI) / 180)
-    const point = pointAt(g, flank, g.radiusKm + STAGING_EXTRA_KM)
+    const point = landPointAt(ctx, g, flank, g.radiusKm + STAGING_EXTRA_KM)
     staging[u.id] = point
     u.order = { kind: 'move', target: point }
     planPath(ctx, u, point)
@@ -100,7 +117,7 @@ export function closeRing(ctx: SimContext, units: UnitState[], group: UnitState[
   const g = geometry(group, units)
   const ordered = byAngle(g, units)
   ordered.forEach((u, k) => {
-    const point = pointAt(g, arcAngle(g, k, ordered.length), g.radiusKm)
+    const point = landPointAt(ctx, g, arcAngle(g, k, ordered.length), g.radiusKm)
     u.order = { kind: 'attack', target: point }
     planPath(ctx, u, point)
   })

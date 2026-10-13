@@ -1,3 +1,4 @@
+import type { CountryForces } from '../scenarios/forces'
 import type { PoliticsSnapshot } from '../politics/types'
 
 /** Types partagés entre le Worker de simulation et l'interface. Données sérialisables uniquement. */
@@ -55,6 +56,11 @@ export interface UnitState {
   lat: number
   /** Effectifs, 0 à 1. */
   strength: number
+  /**
+   * Effectifs que les renforts peuvent rétablir (1 si absent) : brigade d'une armée réelle en
+   * sous-effectif chronique (scenarios/forces.ts, `fill`).
+   */
+  establishment?: number
   /** Organisation (cohésion), 0 à 1. En dessous de 0,15 l'unité décroche. */
   org: number
   /** Retranchement accumulé en tenant une position, 0 à 1. */
@@ -219,6 +225,8 @@ export interface FormationState {
   parentId: number | null
   /** Modèle de division (units/templates.ts) ; absent pour un corps. */
   template?: string
+  /** Division créée par le jeu (brigades rattachées directement à un corps ou une armée). */
+  generated?: boolean
 }
 
 export interface ArmyState {
@@ -776,8 +784,16 @@ export interface ScenarioDef {
   /** Points d'où part le ravitaillement de chaque camp (zones de 30 km). */
   supplySources: Record<CountryId, LonLat[]>
   economy: Record<CountryId, ScenarioEconomy>
-  /** Unités explicites (théâtre) ; sinon levées à la mobilisation selon `politics.forceSize`. */
+  /** Unités explicites ; sinon levées selon `forces`, à défaut selon `politics.forceSize`. */
   units: ScenarioUnit[]
+  /** Ordres de bataille de départ par pays (phase D3, scenarios/forces.ts). */
+  forces?: Record<CountryId, CountryForces>
+  /**
+   * Secteurs du front de départ (pays en guerre) : points d'ancrage de chaque armée, par pays et nom
+   * d'armée ; une armée sans secteur reste en garnison. Pays absent : toutes ses armées sur tout le
+   * front.
+   */
+  forceSectors?: Record<CountryId, Record<string, LonLat[]>>
   politics?: ScenarioPolitics
   /**
    * Origine des revenus. « cities » (défaut) : usines des villes, d'après leur population.

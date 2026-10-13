@@ -11,9 +11,10 @@ const theater = theaterJson as unknown as TheaterData
 const newGame = (): Simulation => Simulation.fromScenario(ukraine2026, theater, 7)
 
 function frontArmy(sim: Simulation): ArmyState {
-  const army = [...sim.ctx.armies.values()].find(
-    (a) => a.owner === 'UKR' && (a.front || a.wholeFront),
-  )
+  // La plus grande armée ukrainienne au front.
+  const army = [...sim.ctx.armies.values()]
+    .filter((a) => a.owner === 'UKR' && (a.front || a.wholeFront))
+    .sort((a, b) => b.unitIds.length - a.unitIds.length)[0]
   if (!army) throw new Error('aucune armée ukrainienne au front')
   return army
 }

@@ -30,7 +30,10 @@ describe('IA de paix', () => {
     expect(ctx.matrix.atWar[pol]).not.toBe(1)
     setRelation(ctx, 'POL', 'BLR', -100)
     expect(tenseNeighbors(ctx, 'POL', neighbors)).toContain('BLR')
-    const total = [...ctx.units.values()].filter((u) => u.owner === 'POL').length
+    // Armée principale (la première) : l'IA en détache la garde des frontières ; les autres armées de
+    // l'ordre de bataille restent en garnison.
+    const total =
+      [...ctx.armies.values()].find((a) => a.owner === 'POL' && a.wholeFront)?.unitIds.length ?? 0
     ctx.tick = 0
     updatePeaceAi(ctx, 'POL', neighbors)
     const armies = () => [...ctx.armies.values()].filter((a) => a.owner === 'POL')

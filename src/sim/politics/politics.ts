@@ -452,13 +452,22 @@ export function improveRelations(ctx: SimContext, from: CountryId, to: CountryId
 
 // ---------- Évolution quotidienne ----------
 
+/**
+ * Taille d'armée (unités levées) à laquelle l'usure par les pertes a été réglée : l'ancien théâtre
+ * ukrainien, une vingtaine de brigades par camp avant les ordres de bataille réels.
+ */
+export const LOSS_REF_BRIGADES = 20
+
 /** Jauges politiques, chaque jour : usure de la guerre, retour au calme en paix, sanctions. */
 export function updatePoliticsDaily(ctx: SimContext, dailyLosses: Map<CountryId, number>): void {
   for (const p of ctx.politics.countries.values()) {
     const atWar = ctx.matrix.atWar[sideIndex(ctx, p.code)] === 1
     if (atWar) {
-      // Usure : un peu chaque jour, davantage avec les pertes (en fractions de brigade).
-      const losses = dailyLosses.get(p.code) ?? 0
+      // Usure : un peu chaque jour, davantage avec les pertes (en fractions de brigade), rapportées à la
+      // taille de l'armée au-delà de LOSS_REF_BRIGADES (une brigade perdue pèse moins sur 200 que sur 20).
+      const losses =
+        ((dailyLosses.get(p.code) ?? 0) * LOSS_REF_BRIGADES) /
+        Math.max(LOSS_REF_BRIGADES, p.forceSize)
       p.warSupport = Math.max(0, p.warSupport - 0.0008 - 0.01 * losses)
       p.stability = Math.max(0, p.stability - 0.0005 - 0.003 * losses)
     } else {

@@ -20,6 +20,8 @@ import { parseSave } from '@/sim/core/save'
 import { Terrain, type TheaterData } from '@/sim/theater/grid'
 import type { UnitKind } from '@/sim/core/types'
 import realUkr from '@/sim/data/real/UKR.json'
+import { brigadeCount } from '@/sim/scenarios/forces'
+import { LOSS_REF_BRIGADES } from '@/sim/politics/politics'
 
 const theater = theaterJson as unknown as TheaterData
 
@@ -79,7 +81,7 @@ describe('modèle d’unités', () => {
     const of = (kind: UnitKind) => {
       const u = units.find((x) => x.kind === kind)
       if (!u) throw new Error(kind)
-      return { ...u, path: [], entrench: 0 }
+      return { ...u, path: [], entrench: 0, strength: 1 }
     }
     const inf = of('inf')
     const vsTank = matchup(of('tank'), inf, Terrain.PLAIN)?.factor ?? 1
@@ -114,10 +116,11 @@ describe('modèle d’unités', () => {
 
   it('une brigade a l’effectif d’une vraie brigade : coûts et forces à l’échelle réelle', () => {
     const sim = Simulation.fromScenario(ukraine2026, theater, 1)
-    const count = (owner: string, kind: string): number =>
-      [...sim.ctx.units.values()].filter((u) => u.owner === owner && u.kind === kind).length
-    expect(count('UKR', 'inf')).toBe(10)
-    expect(count('RUS', 'tank')).toBe(5)
+    // Une brigade de l'ordre de bataille réel donne une brigade en jeu.
+    const brigades = (owner: string): number =>
+      [...sim.ctx.units.values()].filter((u) => u.owner === owner && isBrigade(u.kind)).length
+    for (const owner of ['UKR', 'RUS'])
+      expect(brigades(owner)).toBe(brigadeCount(ukraine2026.forces?.[owner]?.armies ?? []))
     expect(RECRUIT_COSTS.inf.production).toBe(300)
     expect(RECRUIT_COSTS.mech.manpower).toBe(5)
     expect(formationSlots(2)).toBe(2 * FORMATIONS_PER_BARRACKS)
@@ -130,7 +133,7 @@ describe('modèle d’unités', () => {
     expect(Object.values(big).reduce((a, b) => a + b, 0)).toBe(45)
   })
 
-  it('les pertes usent le soutien à la guerre : une brigade perdue, −0,01', () => {
+  it('les pertes usent le soutien à la guerre : une brigade perdue, −0,01 pour 20 unités', () => {
     const support = (extra: number): number => {
       const sim = Simulation.fromScenario(ukraine2026, theater, 1)
       sim.step(23)
@@ -138,7 +141,14 @@ describe('modèle d’unités', () => {
       sim.step(1)
       return sim.ctx.politics.countries.get('UKR')?.warSupport ?? 0
     }
-    expect(support(0) - support(1)).toBeCloseTo(0.01, 6)
+    // Rapportée à la taille de l'armée au-delà de LOSS_REF_BRIGADES unités.
+    const size = Simulation.fromScenario(ukraine2026, theater, 1).ctx.politics.countries.get(
+      'UKR',
+    )?.forceSize
+    expect(support(0) - support(1)).toBeCloseTo(
+      (0.01 * LOSS_REF_BRIGADES) / Math.max(LOSS_REF_BRIGADES, size ?? 0),
+      6,
+    )
   })
 
   it('les sauvegardes d’avant les armées réelles ne se chargent plus, avec un message clair', () => {

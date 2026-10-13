@@ -479,18 +479,20 @@ function completeFactory(
 /**
  * Renforts : les unités ravitaillées hors combat récupèrent des hommes (payés en main-d'œuvre) et du
  * matériel (payé en production, la moitié du prix d'une unité neuve), chacun de son côté : faute de
- * production, une unité retrouve ses hommes sans son matériel, et inversement.
+ * production, une unité retrouve ses hommes sans son matériel, et inversement. Une brigade en
+ * sous-effectif chronique (`establishment`) n'est renforcée que jusqu'à son effectif de départ.
  */
 function reinforce(ctx: SimContext, eco: EconomyState): void {
   for (const u of ctx.units.values()) {
     if (u.owner !== eco.country) continue
     const gear = equipmentOf(u)
-    if (u.strength >= 1 && gear >= 1) continue
+    const full = u.establishment ?? 1
+    if (u.strength >= full && gear >= 1) continue
     const rt = runtimeOf(ctx, u.id)
     if (!rt.supplied || rt.engagedWith !== null || rt.routed) continue
     if (eco.production <= 0 && eco.manpower <= 0) break
     const cost = RECRUIT_COSTS[u.kind]
-    const menWant = Math.min(REINFORCE_PER_DAY, 1 - u.strength)
+    const menWant = Math.max(0, Math.min(REINFORCE_PER_DAY, full - u.strength))
     const gearWant = Math.min(REINFORCE_PER_DAY, 1 - gear)
     const men = menWant * cost.manpower
     const prod = gearWant * cost.production * 0.5

@@ -1,4 +1,11 @@
-import { updateFormations } from '../systems/formations'
+import { createNamedFormation, updateFormations } from '../systems/formations'
+import {
+  armyServices,
+  type CountryForces,
+  type ForceArmy,
+  type ForceDivision,
+} from '../scenarios/forces'
+import { BRIGADE_TEMPLATES } from '../units/templates'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, CountryDef, LonLat, UnitKind, UnitState } from '../core/types'
 import { assignFront, frontCells, LARGE_GRID_CELLS } from '../systems/armies'
@@ -306,4 +313,161 @@ export function forceSizeOf(
   const base =
     3 + 0.6 * Math.sqrt(Math.max(0, gdpBillions)) + 0.4 * Math.sqrt(Math.max(0, popMillions))
   return Math.max(3, Math.min(cap, Math.round(base * militarization)))
+}
+
+/** Front d'une armée au départ : tout le front, une portion, ou aucun (garnison). */
+export type ForceFront = 'whole' | [LonLat, LonLat] | null
+
+/**
+ * Lève les forces d'un ordre de bataille (scenarios/forces.ts) : une armée par armée de l'ordre de
+ * bataille, ses corps et ses divisions nommés, ses brigades avec leur modèle, un QG et sa logistique.
+ * Les unités partent en garnison ; une armée qui a un front (`frontOf`, tout le front par défaut, comme
+ * `mobilize`) s'y déploie si le pays est en guerre. Renvoie le nombre
+ * d'unités levées.
+ */
+export function mobilizeForces(
+  ctx: SimContext,
+  country: CountryDef,
+  forces: CountryForces,
+  frontOf: (army: ForceArmy) => ForceFront = () => 'whole',
+): number {
+  const pol = ctx.politics.countries.get(country.id)
+  if (pol?.mobilized) return 0
+  if (pol) pol.mobilized = true
+  const eco = ctx.economies.get(country.id)
+  const specs: Array<{ army: ArmyState; division: number | null; def: UnitSpec }> = []
+  const armies: Array<{ army: ArmyState; front: ForceFront }> = []
+  for (const fa of forces.armies) {
+    const front = frontOf(fa)
+    const army: ArmyState = {
+      id: ctx.allocId(),
+      name: fa.name,
+      owner: country.id,
+      unitIds: [],
+      front: Array.isArray(front) ? front : null,
+      wholeFront: front === 'whole',
+      offensive: null,
+    }
+    ctx.armies.set(army.id, army)
+    armies.push({ army, front })
+    let brigades = 0
+    const addDivision = (d: ForceDivision, parentId: number | null): void => {
+      const f = createNamedFormation(ctx, country.id, 'division', army.id, d.name, {
+        template: d.template,
+        parentId,
+        generated: d.generated,
+      })
+      for (const b of d.brigades) {
+        const kind = BRIGADE_TEMPLATES[b.template]?.kind ?? 'inf'
+        specs.push({ army, division: f.id, def: { kind, name: b.name, template: b.template } })
+        if (eco) eco.unitCounters[kind]++
+        brigades++
+      }
+    }
+    for (const c of fa.corps) {
+      const corps = createNamedFormation(ctx, country.id, 'corps', army.id, c.name)
+      for (const d of c.divisions) addDivision(d, corps.id)
+    }
+    for (const d of fa.divisions) addDivision(d, null)
+    const services = armyServices(brigades)
+    for (const kind of ['hq', 'log'] as const) {
+      for (let k = 0; k < services[kind]; k++) {
+        const number = eco ? eco.unitCounters[kind]++ : k + 1
+        specs.push({ army, division: null, def: { kind, name: unitName(kind, number) } })
+      }
+    }
+  }
+  const spots = garrisons(ctx, country, specs.length)
+  // Une division qui part au front part groupée : ses brigades partagent la garnison de la première,
+  // pour prendre des postes voisins en se déployant. En garnison, elles restent réparties.
+  const atWar = ctx.matrix.atWar[sideIndex(ctx, country.id)] === 1
+  const deployed = new Set(armies.filter((a) => atWar && a.front !== null).map((a) => a.army.id))
+  const divisionSpot = new Map<number, LonLat>()
+  for (const [k, { army, division, def }] of specs.entries()) {
+    let spot = spots[k]
+    if (!spot) continue
+    if (division !== null && deployed.has(army.id)) {
+      const first = divisionSpot.get(division)
+      if (first) spot = first
+      else divisionSpot.set(division, spot)
+    }
+    const fill = def.template ? (forces.fill ?? 1) : 1
+    const u: UnitState = {
+      id: ctx.allocId(),
+      name: def.name,
+      owner: country.id,
+      kind: def.kind,
+      lon: spot[0],
+      lat: spot[1],
+      // Brigades en sous-effectif quand l'armée réelle l'est (QG et logistique au complet) : il leur
+      // manque des hommes, pas du matériel, et les renforts ne comblent que les pertes.
+      strength: fill,
+      equipment: 1,
+      ...(fill < 1 ? { establishment: fill } : {}),
+      org: 1,
+      entrench: 0.5,
+      order: { kind: 'hold' },
+      path: [],
+      armyId: army.id,
+      hoursOutOfSupply: 0,
+      ...(def.template ? { template: def.template } : {}),
+      ...(division !== null ? { divisionId: division } : {}),
+    }
+    ctx.units.set(u.id, u)
+    army.unitIds.push(u.id)
+  }
+  // Armées sans unité (territoire minuscule) : retirées, avec leurs formations.
+  for (const { army } of armies) if (army.unitIds.length === 0) ctx.armies.delete(army.id)
+  updateFormations(ctx)
+  // Déploiement immédiat sur le front des armées qui en ont un ; deux fois, comme `mobilize`, pour que
+  // chaque division prenne son secteur dès le départ.
+  for (const { army, front } of armies) {
+    if (front === null || !ctx.armies.has(army.id)) continue
+    assignFront(ctx, army, true)
+    assignFront(ctx, army, true)
+  }
+  return specs.length
+}
+
+/** Demi-largeur minimale d'un secteur de départ, en km de part et d'autre de ses ancres. */
+export const SECTOR_HALF_KM = 40
+
+/**
+ * Portion de front d'un secteur de départ : du point du front le plus proche de la première ancre à
+ * celui de la dernière (dans l'ordre du front), élargie de SECTOR_HALF_KM de chaque côté. Null : pas
+ * de front.
+ */
+export function sectorFront(
+  ctx: SimContext,
+  side: number,
+  anchors: LonLat[],
+): [LonLat, LonLat] | null {
+  const cells = frontCells(ctx, side, null)
+  if (cells.length === 0 || anchors.length === 0) return null
+  const g = ctx.grid
+  const at = (k: number): LonLat => {
+    const c = cells[k]?.cell ?? 0
+    return [g.lonOf(c), g.latOf(c)]
+  }
+  let lo = cells.length
+  let hi = -1
+  for (const [lon, lat] of anchors) {
+    let best = 0
+    let bestKm = Infinity
+    for (let k = 0; k < cells.length; k++) {
+      const p = at(k)
+      const km = distanceKm(lon, lat, p[0], p[1])
+      if (km < bestKm) {
+        best = k
+        bestKm = km
+      }
+    }
+    lo = Math.min(lo, best)
+    hi = Math.max(hi, best)
+  }
+  const [loLon, loLat] = at(lo)
+  const [hiLon, hiLat] = at(hi)
+  while (lo > 0 && distanceKm(...at(lo - 1), loLon, loLat) < SECTOR_HALF_KM) lo--
+  while (hi < cells.length - 1 && distanceKm(...at(hi + 1), hiLon, hiLat) < SECTOR_HALF_KM) hi++
+  return [at(lo), at(hi)]
 }

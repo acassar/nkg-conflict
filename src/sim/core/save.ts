@@ -59,6 +59,22 @@ export interface SaveFile {
   outcome: GameOutcome | null
   /** Dernière offensive de l'IA militaire, par pays. */
   aiLastOffensiveTick: Record<string, number>
+  /**
+   * Revue des armées par l'IA (dernière revue, mémoire de chaque armée), pour rejouer la même suite ;
+   * null : jamais (−∞).
+   */
+  aiArmies?: Record<
+    string,
+    {
+      lastArmyReview: number | null
+      armies: Array<
+        [
+          number,
+          Record<'lastChange' | 'lastBreach' | 'offensiveSince' | 'offensiveEnded', number | null>,
+        ]
+      >
+    }
+  >
   /** Propriétaires de la grille, encodés par plages [valeur, longueur, …]. */
   owner: number[]
   /** Cellules reliées au ravitaillement par camp (par plages), pour reprendre la partie à l'identique. */

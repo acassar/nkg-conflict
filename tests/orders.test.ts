@@ -24,7 +24,14 @@ function setup(sim: Simulation): { target: UnitState; mine: UnitState[] } {
   }
   const target = best?.t
   if (!target) throw new Error('pas de cible')
-  const mine = [...ukr]
+  // Unités d'une même armée (celle de la plus proche) : chaque corps a la sienne.
+  const nearest = [...ukr].sort(
+    (a, b) =>
+      distanceKm(a.lon, a.lat, target.lon, target.lat) -
+      distanceKm(b.lon, b.lat, target.lon, target.lat),
+  )[0]
+  const mine = ukr
+    .filter((u) => u.armyId === nearest?.armyId)
     .sort(
       (a, b) =>
         distanceKm(a.lon, a.lat, target.lon, target.lat) -
@@ -132,7 +139,10 @@ describe('encerclement', () => {
     sim.step(6)
     expect(groupOf(sim)?.encirclement?.phase).toBe('closing')
     const points = mine.filter((u) => u.order.kind === 'attack').map((u) => u.order.target)
-    expect(points.length).toBe(mine.length)
+    // Toutes attaquent, sauf une unité mise en déroute par les combats de ces quelques heures.
+    const active = mine.filter((u) => u.order.kind !== 'retreat')
+    expect(active.length).toBeGreaterThanOrEqual(mine.length - 1)
+    expect(points.length).toBe(active.length)
     const angles = points.map((p) =>
       Math.atan2((p?.[1] ?? 0) - target.lat, (p?.[0] ?? 0) - target.lon),
     )
@@ -199,14 +209,22 @@ describe('encerclement', () => {
 })
 
 describe('ordre direct à une unité d’armée', () => {
-  /** Unité de ligne ukrainienne d'une armée, la plus éloignée des Russes (pas de combat en route). */
+  /** Unité de ligne ukrainienne d'une armée du front, la plus éloignée des Russes (pas de combat en route). */
   function quietArmyUnit(sim: Simulation): UnitState {
     const all = [...sim.ctx.units.values()]
     const rus = all.filter((u) => u.owner === 'RUS')
     const nearest = (u: UnitState): number =>
       Math.min(...rus.map((r) => distanceKm(u.lon, u.lat, r.lon, r.lat)))
     const mine = all
-      .filter((u) => u.owner === 'UKR' && u.armyId !== null && ['inf', 'mech'].includes(u.kind))
+      .filter((u) => {
+        const army = u.armyId !== null ? sim.ctx.armies.get(u.armyId) : undefined
+        // Armée déployée sur le front (pas une armée en garnison).
+        return (
+          u.owner === 'UKR' &&
+          !!(army?.front || army?.wholeFront) &&
+          ['inf', 'mech'].includes(u.kind)
+        )
+      })
       .sort((a, b) => nearest(b) - nearest(a))
     const unit = mine[0]
     if (!unit) throw new Error('pas d’unité d’armée')
@@ -216,7 +234,15 @@ describe('ordre direct à une unité d’armée', () => {
   it('le déplacement n’est pas écrasé par la répartition du front, puis l’armée reprend l’unité', () => {
     const sim = newGame()
     const u = quietArmyUnit(sim)
-    const target: LonLat = [u.lon - 1, u.lat]
+    // Cellule praticable de son camp, vers l'ouest.
+    const g = sim.ctx.grid
+    const side = sim.sideOf('UKR')
+    const target: LonLat = [1, 0.8, 0.6, 0.4]
+      .map((d): LonLat => [u.lon - d, u.lat])
+      .find(([lon, lat]) => {
+        const c = g.cellAt(lon, lat)
+        return g.passable(c) && g.owner[c] === side
+      }) ?? [u.lon - 0.2, u.lat]
     sim.orderUnits([u.id], 'move', target)
     expect(u.direct).toEqual({})
     // Pendant le trajet, la répartition du front passe et laisse l'unité à son ordre.

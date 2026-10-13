@@ -34,6 +34,7 @@ import {
   TRANSPORT_COST,
 } from '@/sim/systems/transport'
 import { BEACHHEAD_HOURS } from '@/sim/systems/territory'
+import { countryForces } from '@/sim/scenarios/forces'
 import { AID_CAP, AID_MONEY_SHARE } from '@/sim/politics/aidLevels'
 import { POSTURE_ORDER, POSTURES } from '@/sim/units/postures'
 import { Terrain, TERRAIN_RULES } from '@/sim/theater/grid'
@@ -95,7 +96,7 @@ import {
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { DESTROYED_BELOW, EQUIPMENT_WEIGHT } from '@/sim/units/equipment'
 import { REINFORCE_PER_DAY } from '@/sim/economy/rules'
-import { CORPS_DIVISIONS, JOIN_KM } from '@/sim/systems/formations'
+import { JOIN_KM } from '@/sim/systems/formations'
 import { OUT_OF_SECTOR_KM } from '@/sim/systems/armies'
 import {
   ARMOR_OPEN_FACTOR,
@@ -274,7 +275,8 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: 'Commandement',
     paragraphs: [
       `Une unité à moins de ${hqKm} km d'un quartier général de son pays (qui n'est pas en déroute) est commandée : feu et défense ${signedPct(COMMAND_FACTOR)}, et elle récupère plus vite son organisation hors combat.`,
-      `Divisions et corps : une division suit un modèle de 2 à 4 brigades (division mécanisée : deux brigades mécanisées, une blindée, une d'artillerie), et les divisions sont regroupées en corps (${CORPS_DIVISIONS} au plus). Les divisions sont organiques : une brigade garde sa division, même détachée dans une autre armée, et la division suit l'armée de la plupart de ses brigades. Une brigade nouvelle rejoint la division la plus proche (${JOIN_KM} km au plus) qui a une place pour son modèle, sinon une nouvelle division est formée autour d'elle ; une brigade détruite réduit sa division. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
+      `Divisions et corps : armées, corps, divisions et brigades viennent de l'ordre de bataille réel du pays (une trentaine de pays), sinon d'une armée générée à partir de ses effectifs réels. Une division suit un modèle de 2 à 4 brigades (division mécanisée : deux brigades mécanisées, une blindée, une d'artillerie) ; les brigades rattachées directement à un corps ou à une armée forment des divisions de jeu de 3 ou 4, et les appuis (artillerie, génie, sol-air) rejoignent les divisions de leur formation. Les divisions sont organiques : une brigade garde sa division, même détachée dans une autre armée, et la division suit l'armée de la plupart de ses brigades. Une brigade nouvelle rejoint la division la plus proche (${JOIN_KM} km au plus) qui a une place pour son modèle, sinon une nouvelle division est formée autour d'elle ; une brigade détruite réduit sa division. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
+      `Départ : chaque corps ukrainien et chaque armée russe tient sa direction réelle du front (Kharkiv, Pokrovsk, Zaporijjia…), d'après les rapports de l'automne 2026 ; les formations dispersées couvrent tout le front, celles qui sont loin (Kaliningrad, Arménie) restent en garnison. Les brigades partent à l'effectif réel de leur armée : ${pct(countryForces('UKR').fill ?? 1)} de leur effectif théorique côté ukrainien, ${pct(countryForces('RUS').fill ?? 1)} côté russe.`,
     ],
   },
   {

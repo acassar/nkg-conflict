@@ -13,16 +13,13 @@ import { DIVISION_TEMPLATES, divisionTemplateFor, slotFit, templateOf } from '..
  *
  * Une brigade nouvelle (recrue, aide, levée) est affectée à une division de son armée qui a une place
  * pour son modèle (la plus proche, à moins de JOIN_KM), sinon à une nouvelle division formée autour
- * d'elle. Une brigade détruite réduit sa division ; une division vide est dissoute, de même qu'une
- * division dont aucune brigade n'a plus d'armée, et un corps sans division.
+ * d'elle. Les corps viennent de l'ordre de bataille du scénario (scenarios/forces.ts) : plus de
+ * regroupement automatique des divisions. Une brigade détruite réduit sa division ; une division vide
+ * est dissoute, de même qu'une division dont aucune brigade n'a plus d'armée, et un corps sans division.
  */
 
-/** Divisions par corps. */
-export const CORPS_DIVISIONS = 3
 /** Distance maximale entre une brigade nouvelle et la division qu'elle rejoint. */
 export const JOIN_KM = 150
-/** Distance maximale entre une division et le corps qu'elle rejoint. */
-const CORPS_JOIN_KM = 300
 
 /** Unités regroupées en divisions : toutes les brigades (pas la logistique ni les QG). */
 export function inDivisions(kind: UnitKind): boolean {
@@ -266,17 +263,6 @@ export function updateFormations(ctx: SimContext, only?: ArmyState): void {
     if (!army || isDetachedGroup(army)) continue
     groupBrigades(ctx, army, units, divisionsOf.get(armyId) ?? [])
   }
-  const byArmy = new Map<number, FormationState[]>()
-  for (const f of ctx.formations.values()) {
-    if (f.kind !== 'division') continue
-    const list = byArmy.get(f.armyId)
-    if (list) list.push(f)
-    else byArmy.set(f.armyId, [f])
-  }
-  for (const army of ctx.armies.values()) {
-    if (isDetachedGroup(army) || (only && army.id !== only.id)) continue
-    groupDivisions(ctx, army, byArmy.get(army.id) ?? [])
-  }
 }
 
 /**
@@ -351,86 +337,20 @@ function groupBrigades(
   }
 }
 
-/** Range les divisions sans corps d'une armée : corps incomplet proche, sinon nouveaux corps. */
-function groupDivisions(ctx: SimContext, army: ArmyState, divisions: FormationState[]): void {
-  // Une armée d'une seule division n'a pas de corps.
-  if (divisions.length < 2) {
-    for (const d of divisions) d.parentId = null
-    return
-  }
-  const orphans = divisions.filter((d) => d.parentId === null)
-  if (orphans.length === 0) return
-  // Position de chaque division : centre de ses brigades.
-  const pos = new Map<number, [number, number]>()
-  const byDivision = new Map<number, UnitState[]>()
-  for (const id of army.unitIds) {
-    const u = ctx.units.get(id)
-    if (u?.divisionId === undefined) continue
-    const list = byDivision.get(u.divisionId)
-    if (list) list.push(u)
-    else byDivision.set(u.divisionId, [u])
-  }
-  // Brigades parties dans un groupe détaché : comptées aussi.
-  for (const u of ctx.units.values()) {
-    if (u.divisionId === undefined || u.armyId === army.id) continue
-    const d = ctx.formations.get(u.divisionId)
-    if (d?.armyId !== army.id) continue
-    const list = byDivision.get(d.id)
-    if (list) list.push(u)
-    else byDivision.set(d.id, [u])
-  }
-  for (const d of divisions) pos.set(d.id, centroid(byDivision.get(d.id) ?? []))
-  const corps = new Map<number, { f: FormationState; n: number; lon: number; lat: number }>()
-  for (const d of divisions) {
-    if (d.parentId === null) continue
-    const c = ctx.formations.get(d.parentId)
-    if (!c) continue
-    const p = pos.get(d.id) ?? [0, 0]
-    const e = corps.get(c.id) ?? { f: c, n: 0, lon: 0, lat: 0 }
-    e.lon = (e.lon * e.n + p[0]) / (e.n + 1)
-    e.lat = (e.lat * e.n + p[1]) / (e.n + 1)
-    e.n++
-    corps.set(c.id, e)
-  }
-  const free = new Set<FormationState>()
-  orphans.sort((a, b) => a.id - b.id)
-  for (const d of orphans) {
-    const p = pos.get(d.id) ?? [0, 0]
-    let best: { f: FormationState; n: number; lon: number; lat: number } | null = null
-    let bestKm = CORPS_JOIN_KM
-    for (const c of corps.values()) {
-      if (c.n >= CORPS_DIVISIONS) continue
-      const km = distanceKm(p[0], p[1], c.lon, c.lat)
-      if (km <= bestKm) {
-        best = c
-        bestKm = km
-      }
-    }
-    if (!best) {
-      free.add(d)
-      continue
-    }
-    d.parentId = best.f.id
-    best.n++
-  }
-  while (free.size > 0) {
-    const seed = free.values().next().value
-    if (!seed) break
-    const c = create(ctx, army.owner, 'corps', army.id)
-    const sp = pos.get(seed.id) ?? [0, 0]
-    const near = [...free]
-      .map((d) => {
-        const p = pos.get(d.id) ?? [0, 0]
-        return { d, km: distanceKm(sp[0], sp[1], p[0], p[1]) }
-      })
-      .filter((x) => x.km <= CORPS_JOIN_KM)
-      .sort((a, b) => a.km - b.km || a.d.id - b.d.id)
-      .slice(0, CORPS_DIVISIONS)
-    for (const { d } of near) {
-      d.parentId = c.id
-      free.delete(d)
-    }
-  }
+/** Formation nommée d'un ordre de bataille (scénarios) : numéro libre de son échelon, nom réel. */
+export function createNamedFormation(
+  ctx: SimContext,
+  owner: string,
+  kind: FormationKind,
+  armyId: number,
+  name: string,
+  opts: { template?: string; parentId?: number | null; generated?: boolean } = {},
+): FormationState {
+  const f = create(ctx, owner, kind, armyId, opts.template)
+  f.name = name
+  f.parentId = opts.parentId ?? null
+  if (opts.generated) f.generated = true
+  return f
 }
 
 /** Brigades d'une formation (division : les siennes ; corps : celles de ses divisions). */

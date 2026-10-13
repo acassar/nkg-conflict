@@ -1,21 +1,14 @@
-import type {
-  CountryDef,
-  CountryId,
-  ScenarioDef,
-  ScenarioEconomy,
-  ScenarioUnit,
-  UnitKind,
-} from '../core/types'
-import { unitName } from '../units/names'
+import type { CountryDef, ScenarioDef, ScenarioEconomy } from '../core/types'
+import { countryForces } from './forces'
+import { forceSectors, frontOnly, sectorForces } from './sectors'
 
-/** Génère un ordre de bataille numéroté, déployé automatiquement le long du front. */
-function forces(owner: CountryId, counts: Partial<Record<UnitKind, number>>): ScenarioUnit[] {
-  const out: ScenarioUnit[] = []
-  for (const kind of Object.keys(counts) as UnitKind[]) {
-    const total = counts[kind] ?? 0
-    for (let n = 1; n <= total; n++) out.push({ owner, kind, name: unitName(kind, n) })
-  }
-  return out
+/**
+ * Ordres de bataille réels (phase D3) : toute l'armée ukrainienne, et les armées russes qui ont un
+ * secteur sur le front ; chaque armée sur son secteur au départ.
+ */
+const FORCES = {
+  UKR: sectorForces('UKR', countryForces('UKR')),
+  RUS: frontOnly('RUS', sectorForces('RUS', countryForces('RUS'))),
 }
 
 /** Donneurs hors carte, présents par leur économie et leur diplomatie. */
@@ -42,7 +35,8 @@ const flows = (production: number, munitions: number): ScenarioEconomy => ({
 /**
  * Scénario de la tranche jouable : Ukraine – Russie, époque moderne.
  * Scénario hypothétique de jeu, sans prétention de reconstitution historique.
- * Ligne de départ : frontières de facto des données Natural Earth. Ordres de bataille fictifs.
+ * Ligne de départ : frontières de facto des données Natural Earth. Ordres de bataille réels
+ * (src/sim/data/real), limités à la carte.
  */
 export const ukraine2026: ScenarioDef = {
   id: 'ukraine-2026',
@@ -106,10 +100,9 @@ export const ukraine2026: ScenarioDef = {
     PRK: flows(30, 45),
     IRN: flows(40, 25),
   },
-  units: [
-    ...forces('UKR', { inf: 10, mech: 5, tank: 3, art: 3, log: 2, hq: 2 }),
-    ...forces('RUS', { inf: 10, mech: 6, tank: 5, art: 4, log: 2, hq: 2 }),
-  ],
+  units: [],
+  forces: FORCES,
+  forceSectors: forceSectors(FORCES),
   politics: {
     wars: [{ name: 'Guerre russo-ukrainienne', attackers: ['RUS'], defenders: ['UKR'] }],
     warSupport: { UKR: 0.7, RUS: 0.55 },

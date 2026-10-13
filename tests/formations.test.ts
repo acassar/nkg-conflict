@@ -4,16 +4,12 @@ import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { parseSave, serializeSave } from '@/sim/core/save'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
-import {
-  CORPS_DIVISIONS,
-  formationName,
-  formationUnits,
-  updateFormations,
-} from '@/sim/systems/formations'
+import { formationName, formationUnits, updateFormations } from '@/sim/systems/formations'
 import { divisionCohesion, divisionSectors } from '@/sim/systems/armies'
 import { orderOfBattle, selectionFormation } from '@/composables/composition'
 import { formationMembers, formationPawns, isStack } from '@/map/clusters'
 import { isBrigade } from '@/sim/units/catalog'
+import { isSupportTemplate } from '@/sim/scenarios/forces'
 import { DIVISION_TEMPLATES, slotFit, templateOf } from '@/sim/units/templates'
 import type { FormationState, UnitSnapshot, UnitState } from '@/sim/core/types'
 
@@ -24,30 +20,43 @@ const newGame = (): Simulation => Simulation.fromScenario(ukraine2026, theater, 
 const divisionsOf = (sim: Simulation, owner: string): FormationState[] =>
   [...sim.ctx.formations.values()].filter((f) => f.owner === owner && f.kind === 'division')
 
+/** Division dont chaque brigade occupe une place de son modèle (les divisions réelles peuvent déborder). */
+const fitsTemplate = (sim: Simulation, d: FormationState): boolean => {
+  const slots = [...(DIVISION_TEMPLATES[d.template ?? '']?.brigades ?? [])]
+  for (const u of formationUnits(sim.ctx, d.id)) {
+    const i = slots.findIndex((s) => slotFit(s, templateOf(u) ?? '') > 0)
+    if (i < 0) return false
+    slots.splice(i, 1)
+  }
+  return true
+}
+
 describe('divisions et corps', () => {
-  it('regroupe dès le départ toutes les brigades en divisions, et les divisions en corps', () => {
+  it("part de l'ordre de bataille réel : divisions, corps et divisions de jeu", () => {
     const sim = newGame()
     const ctx = sim.ctx
     for (const u of ctx.units.values()) {
       if (isBrigade(u.kind)) expect(u.divisionId).toBeDefined()
       else expect(u.divisionId).toBeUndefined()
     }
-    for (const d of divisionsOf(sim, 'UKR')) {
-      // Une division suit son modèle : chaque brigade occupe une place de son modèle ou de son rôle.
-      const slots = [...(DIVISION_TEMPLATES[d.template ?? '']?.brigades ?? [])]
-      expect(slots.length).toBeGreaterThan(0)
-      for (const u of formationUnits(ctx, d.id)) {
-        const i = slots.findIndex((s) => slotFit(s, templateOf(u) ?? '') > 0)
-        expect(i).toBeGreaterThanOrEqual(0)
-        slots.splice(i, 1)
-      }
-      expect(d.parentId).not.toBeNull()
+    const ukr = divisionsOf(sim, 'UKR')
+    expect(ukr.length).toBeGreaterThan(0)
+    for (const d of ukr) expect(formationUnits(ctx, d.id).length).toBeGreaterThan(0)
+    // Brigades rattachées directement à un corps ou à une armée : divisions de jeu à son nom.
+    const generated = ukr.filter((d) => d.generated)
+    expect(generated.length).toBeGreaterThan(0)
+    expect(generated.some((d) => d.parentId !== null)).toBe(true)
+    for (const d of generated) {
+      expect(d.name).toMatch(/division \(.+\)$/)
+      // Trois ou quatre brigades de manœuvre, plus les appuis répartis.
+      const maneuver = formationUnits(ctx, d.id).filter((u) => !isSupportTemplate(u.template ?? ''))
+      expect(maneuver.length).toBeLessThanOrEqual(4)
     }
     const corps = [...ctx.formations.values()].filter((f) => f.kind === 'corps')
+    expect(corps.length).toBeGreaterThan(0)
     for (const c of corps) {
       const n = [...ctx.formations.values()].filter((f) => f.parentId === c.id).length
       expect(n).toBeGreaterThan(0)
-      expect(n).toBeLessThanOrEqual(CORPS_DIVISIONS)
     }
     // Brigades voisines : une division part groupée sur le front.
     const spans = divisionsOf(sim, 'UKR').map((d) => {
@@ -58,7 +67,8 @@ describe('divisions et corps', () => {
       return max
     })
     spans.sort((a, b) => a - b)
-    expect(spans[Math.floor(spans.length / 2)]).toBeLessThan(80)
+    // Divisions réelles de 4 à 7 brigades, une vingtaine de km entre deux postes.
+    expect(spans[Math.floor(spans.length / 2)]).toBeLessThan(100)
   })
 
   it('nomme les formations à la française', () => {
@@ -71,7 +81,14 @@ describe('divisions et corps', () => {
   it('une recrue rejoint la division incomplète la plus proche ; une division vide est dissoute', () => {
     const sim = newGame()
     const ctx = sim.ctx
-    const [division] = divisionsOf(sim, 'UKR')
+    // Division conforme à son modèle, dont la première brigade y a une place exacte.
+    const division = divisionsOf(sim, 'UKR').find(
+      (d) =>
+        fitsTemplate(sim, d) &&
+        DIVISION_TEMPLATES[d.template ?? '']?.brigades.includes(
+          templateOf(formationUnits(ctx, d.id)[0] ?? { kind: 'inf' }) ?? '',
+        ),
+    )
     if (!division) throw new Error('aucune division')
     const members = formationUnits(ctx, division.id)
     const [lost, ...others] = members
@@ -82,8 +99,9 @@ describe('divisions et corps', () => {
       ...structuredClone(lost),
       id: ctx.allocId(),
       name: 'recrue',
-      lon: others[0]?.lon ?? lost.lon,
-      lat: others[0]?.lat ?? lost.lat,
+      // Au centre de la division.
+      lon: others.reduce((a, u) => a + u.lon, 0) / others.length,
+      lat: others.reduce((a, u) => a + u.lat, 0) / others.length,
     }
     delete recruit.divisionId
     ctx.units.set(recruit.id, recruit)

@@ -30,7 +30,9 @@ const situation = (over: Partial<ArmySituation>): ArmySituation => ({
 
 describe('IA des armées : posture et mission selon la situation', () => {
   it('posture selon le rapport de force, avec hystérésis', () => {
-    expect(choosePosture(situation({ ratio: 2.5 }), 'balanced')).toBe('offensive')
+    expect(choosePosture(situation({ ratio: AI_RATIO.offensive * 1.25 }), 'balanced')).toBe(
+      'offensive',
+    )
     expect(choosePosture(situation({ ratio: 1 }), 'balanced')).toBe('balanced')
     expect(choosePosture(situation({ ratio: 0.4 }), 'balanced')).toBe('defensive')
     expect(choosePosture(situation({ ratio: 0.2 }), 'balanced')).toBe('maxDefense')
@@ -46,9 +48,11 @@ describe('IA des armées : posture et mission selon la situation', () => {
   })
 
   it('mission selon la force, la densité et le terrain', () => {
-    expect(chooseMission(situation({ ratio: 3 }), true)).toBe('breach')
+    expect(chooseMission(situation({ ratio: AI_RATIO.breach * 1.2 }), true)).toBe('breach')
     expect(chooseMission(situation({ ratio: 3 }), false)).toBe('hold')
-    expect(chooseMission(situation({ ratio: 3, lineUnits: 4 }), true)).toBe('hold')
+    expect(chooseMission(situation({ ratio: AI_RATIO.breach * 1.2, lineUnits: 4 }), true)).toBe(
+      'hold',
+    )
     expect(chooseMission(situation({ ratio: 0.4, density: 2 }), true)).toBe('depth')
     expect(chooseMission(situation({ density: 0.3 }), true)).toBe('keyPoints')
     expect(chooseMission(situation({ ratio: 0.6, calmShare: 0.5 }), true)).toBe('keyPoints')

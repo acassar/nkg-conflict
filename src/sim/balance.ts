@@ -163,6 +163,9 @@ export function balanceMarkdown(title: string, games: BalanceGame[]): string {
     lines.push(`| ${g.seed} | ${g.days} | ${issue} | ${cells.join(' | ')} |`)
   }
   lines.push('')
+  // Performances : temps de calcul d'une journée de jeu, par graine.
+  const perDay = games.map((g) => `graine ${g.seed} ${(g.ms / Math.max(1, g.days)).toFixed(0)} ms`)
+  lines.push(`Calcul d'une journée de jeu : ${perDay.join(', ')}.`, '')
   for (const s of summarizeBalance(games)) {
     lines.push(
       `- ${s.country} : territoire ${pct(s.territory.min)} à ${pct(s.territory.max)} (moyenne ${pct(s.territory.mean)}), pertes ${s.losses.mean.toFixed(1)} brigades en moyenne`,

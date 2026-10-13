@@ -33,6 +33,7 @@ jobs:
           bash ci/checks.sh
           # Rapport d'équilibrage affiché dans le résumé de l'exécution.
           [ -f ci-out/balance/report.md ] && cat ci-out/balance/report.md >> "$GITHUB_STEP_SUMMARY" || true
+          [ -f ci-out/balance-world/report.md ] && cat ci-out/balance-world/report.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: Test de fumée dans Chromium
         run: |

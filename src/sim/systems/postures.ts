@@ -36,7 +36,10 @@ export function updatePostureReflexes(ctx: SimContext): void {
     const routed = runtimeOf(ctx, enemy.id).routed
     let attack = false
     if (p === 'balanced') attack = routed
-    else if (p === 'offensive') attack = routed || enemy.org < 0.5 || combatStrength(enemy) < 0.6
+    else if (p === 'offensive')
+      // Affaiblie par rapport à son effectif de départ : une brigade en sous-effectif chronique
+      // (Ukraine, 59 %) n'est pas une proie pour autant.
+      attack = routed || enemy.org < 0.5 || combatStrength(enemy) / (enemy.establishment ?? 1) < 0.6
     else attack = routed || power(enemy) < power(u)
     if (!attack) continue
     if (p === 'maxDamage' && routed) {

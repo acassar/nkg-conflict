@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
+import { isMobile } from '@/composables/layout'
 import {
   forcesCrumbs,
   forcesRows,
@@ -16,7 +17,9 @@ import TemplatesView from './TemplatesView.vue'
  * leurs brigades ; un fil d'Ariane (Forces › 1re armée › IIe corps) permet de remonter. Chaque ligne :
  * symbole de l'échelon, nom, jauges effectifs, matériel, organisation et situation. Ouvrir une ligne
  * sélectionne aussi la formation (fiche d'armée, ou inspecteur pour un corps ou une division) ; une
- * brigade se sélectionne seule. Onglet « Modèles » : modèles de brigade et de division.
+ * brigade se sélectionne seule. Sur téléphone, l'inspecteur remplace le tiroir : ouvrir une ligne ne
+ * fait que descendre, et « Sélectionner » choisit la formation affichée. Onglet « Modèles » : modèles
+ * de brigade et de division.
  */
 const props = defineProps<{ armyStatus: (id: number) => string }>()
 const game = useGameStore()
@@ -54,13 +57,20 @@ const color = computed(() => {
   return c ? `rgb(${c.join(',')})` : '#2563eb'
 })
 
-function open(r: ForcesRow): void {
+function select(r: ForcesRow): void {
   if (r.echelon === 'army') game.selectArmy(r.id)
   else game.selectUnits(r.unitIds, false)
+}
+function open(r: ForcesRow): void {
+  if (!isMobile.value || !r.open) select(r)
   if (r.open) path.value = openRow(path.value, r, mine.value.formations)
 }
 function goTo(p: ForcesPath): void {
   path.value = p
+  if (!isMobile.value) selectPath(p)
+}
+/** Sélectionne la formation du niveau affiché (armée, corps ou division). */
+function selectPath(p: ForcesPath): void {
   if (p.division !== undefined || p.corps !== undefined) {
     const id = p.division ?? p.corps
     const r = forcesRows(
@@ -108,6 +118,14 @@ const selected = (r: ForcesRow): boolean =>
           </button>
           <strong v-else class="crumb">{{ c.label }}</strong>
         </template>
+        <button
+          v-if="isMobile && path.army !== undefined"
+          class="select-current"
+          data-testid="forces-select-current"
+          @click="selectPath(path)"
+        >
+          Sélectionner
+        </button>
       </nav>
       <ul class="rows armies">
         <li
@@ -192,6 +210,10 @@ button.crumb {
 }
 .sep {
   opacity: 0.5;
+}
+.select-current {
+  margin-left: auto;
+  font-size: 12px;
 }
 .rows {
   list-style: none;

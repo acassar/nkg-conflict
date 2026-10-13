@@ -32,9 +32,9 @@ const HYSTERESIS = 0.1
 /** Seuils de rapport de force (puissance de l'armée / puissance ennemie au contact). */
 export const AI_RATIO = {
   /** Percée sur un axe. */
-  breach: 2.5,
+  breach: 4,
   /** Posture offensive. */
-  offensive: 2,
+  offensive: 3,
   /** Posture équilibrée. */
   balanced: 0.5,
   /** Posture défensive ; en dessous, défense max. */
@@ -232,7 +232,8 @@ export function breachTarget(
     for (const e of enemies) {
       if (distanceKm(lon, lat, e.lon, e.lat) < 30) power += defenseValue(ctx, e)
     }
-    candidates.push({ c, power: power / (1 + axisBonus(ctx, c.cell) / 5) })
+    // Seulement là où l'ennemi tient le front (voir ai.ts).
+    if (power > 0) candidates.push({ c, power: power / (1 + axisBonus(ctx, c.cell) / 5) })
   }
   candidates.sort((x, y) => x.power - y.power)
   const hostileAt = (p: LonLat): boolean => {

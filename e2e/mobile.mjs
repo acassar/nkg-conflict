@@ -345,6 +345,42 @@ try {
     `bloc « Aviation » absent ou hors de l'écran (${JSON.stringify(airBox)})`,
   )
 
+  // Vue Forces au doigt : arbre dans la largeur de l'écran ; ouvrir une ligne descend sans quitter
+  // l'arbre, « Sélectionner » montre l'échelon de la formation affichée.
+  const treeBox = await page.getByTestId('forces-tree').boundingBox()
+  const formationRow = page
+    .getByTestId('forces-tree')
+    .locator('[data-testid="forces-row-army"], [data-testid="forces-row-corps"]')
+    .first()
+  let echelonBox = null
+  if (await formationRow.count()) {
+    await formationRow.tap()
+    await page.waitForTimeout(400)
+    const row = page
+      .getByTestId('forces-tree')
+      .locator('[data-testid="forces-row-corps"], [data-testid="forces-row-division"]')
+      .first()
+    if (await row.count()) {
+      await row.tap()
+      await page.getByTestId('forces-select-current').tap()
+      await page
+        .getByTestId('selection-echelon')
+        .waitFor({ timeout: 5000 })
+        .catch(() => {})
+      echelonBox = await page.getByTestId('selection-echelon').boundingBox()
+    }
+  }
+  step('vue Forces (mobile)', { arbre: treeBox, echelon: echelonBox })
+  check(
+    !!treeBox && treeBox.x >= 0 && treeBox.x + treeBox.width <= 390,
+    `vue Forces absente ou hors de l'écran (${JSON.stringify(treeBox)})`,
+  )
+  check(
+    !!echelonBox && echelonBox.x >= 0 && echelonBox.x + echelonBox.width <= 390,
+    `échelon de la sélection absent ou hors de l'écran (${JSON.stringify(echelonBox)})`,
+  )
+  await shot('m04b2-vue-forces')
+
   // Recrutement par armée au doigt : sous-onglet de l'armée, deux infanteries, validation.
   await store(() => {
     const g = window.__nkg

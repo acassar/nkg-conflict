@@ -34,7 +34,9 @@ export const ROUT_ORG = 0.15
 /** Organisation à retrouver pour redevenir apte au combat. */
 export const RALLY_ORG = 0.5
 
-const STRENGTH_LOSS = 0.0025
+const STRENGTH_LOSS = 0.0008
+/** Bonus de défense d'une unité entièrement retranchée. */
+export const ENTRENCH_DEFENSE = 1
 const ORG_LOSS = 0.02
 const ARTILLERY_FACTOR = 0.6
 export const OUT_OF_SUPPLY_FACTOR = 0.6
@@ -191,7 +193,7 @@ export function combatModifiers(
       ...(tDefense !== 1
         ? ([{ key: 'kindTerrain', label: `${type} (${tName})`, value: tDefense }] as Modifier[])
         : []),
-      { key: 'entrench', label: 'Retranchement', value: 1 + 0.5 * u.entrench },
+      { key: 'entrench', label: 'Retranchement', value: 1 + ENTRENCH_DEFENSE * u.entrench },
       { key: 'fort', label: 'Fortifications', value: fortFactor(ctx, u) },
       { key: 'posture', label: `Posture (${posture.name})`, value: posture.defense },
       ...(own > 0
@@ -258,7 +260,7 @@ export function defenseValue(ctx: SimContext, u: UnitState): number {
     commandFactor(ctx, u) *
     terrainDefense(ctx, u) *
     fortFactor(ctx, u) *
-    (1 + 0.5 * u.entrench) *
+    (1 + ENTRENCH_DEFENSE * u.entrench) *
     postureOf(u.posture).defense *
     flankDefenseFactor(ctx, u) *
     fatigueFactor(u) *

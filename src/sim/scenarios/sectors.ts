@@ -1,11 +1,20 @@
 import type { CountryId, LonLat } from '../core/types'
-import type { CountryForces, ForceArmy } from './forces'
+import {
+  GEN_ARMY_CORPS,
+  ordinal,
+  type CountryForces,
+  type ForceArmy,
+  type ForceCorps,
+} from './forces'
 import sectorTable from '../data/real/front-sectors.json'
+import commandTable from '../data/real/commands.json'
 
 /**
  * Secteurs réels du front russo-ukrainien au départ (phase D3, étape « Scénarios ») : chaque corps
  * ukrainien et chaque armée russe dans sa direction du front, d'après les sources citées dans
- * src/sim/data/real/front-sectors.json. Une armée prend les directions de ses corps et la sienne ;
+ * src/sim/data/real/front-sectors.json. Les corps sont d'abord regroupés sous leurs commandements
+ * réels (groupByCommand) ; chaque corps part dans sa direction. Une armée prend les directions de ses
+ * corps et la sienne ;
  * sans direction connue, elle couvre tout le front (formations dispersées : VDV, infanterie navale,
  * défense territoriale) ; hors du front (Kaliningrad, Arménie, frontière nord…), elle reste en
  * garnison.
@@ -23,6 +32,26 @@ interface SectorFile {
 }
 
 const TABLE = sectorTable as unknown as SectorFile
+
+interface CommandEntry {
+  name: string
+  corps: string[]
+}
+const COMMANDS = commandTable as unknown as Record<string, unknown>
+
+/** Commandements réels d'un pays (vide s'ils ne sont pas connus). */
+function commandsOf(country: CountryId): CommandEntry[] {
+  const list = COMMANDS[country]
+  return Array.isArray(list) ? (list as CommandEntry[]) : []
+}
+
+/** Rang de la direction d'une formation le long du front (ordre du fichier, du nord au sud ; inconnue : après). */
+function frontRank(country: CountryId, name: string): number {
+  const entries = TABLE[country] as Record<string, SectorEntry> | undefined
+  const key = entries?.[name]?.sector
+  const k = key ? Object.keys(TABLE.directions).indexOf(key) : -1
+  return k < 0 ? Number.MAX_SAFE_INTEGER : k
+}
 
 /** Direction d'une formation : point du front, 'off' hors du front, null inconnue. */
 function directionOf(country: CountryId, name: string): LonLat | 'off' | null {
@@ -76,29 +105,92 @@ export function frontOnly(country: CountryId, forces: CountryForces): CountryFor
 }
 
 /**
- * Armées dont les corps tiennent des secteurs différents (Forces terrestres ukrainiennes) : chaque corps
- * qui a son secteur devient une armée en jeu, à son nom, pour partir sur sa portion de front ; le reste
- * (corps sans secteur, divisions et brigades rattachées à l'armée) garde le nom de l'armée.
+ * Commandements réels au-dessus des corps (phase D3) : chaque commandement de
+ * src/sim/data/real/commands.json devient une armée de jeu qui regroupe ses corps, dans l'ordre du front
+ * (Ukraine : forces opérationnelles et tactiques). Les corps sans commandement connu restent dans leur
+ * armée d'origine.
  */
-export function splitBySector(country: CountryId, forces: CountryForces): CountryForces {
+export function groupByCommand(country: CountryId, forces: CountryForces): CountryForces {
+  const list = commandsOf(country)
+  if (list.length === 0) return forces
+  const wanted = new Set(list.flatMap((c) => c.corps))
+  const taken = new Map<string, ForceCorps>()
+  const rest = forces.armies.map((a) => ({
+    ...a,
+    corps: a.corps.filter((c) => {
+      if (!wanted.has(c.name)) return true
+      taken.set(c.name, c)
+      return false
+    }),
+  }))
+  const commands: ForceArmy[] = list
+    .map((c) => ({
+      name: c.name,
+      corps: c.corps
+        .map((name) => taken.get(name))
+        .filter((x): x is ForceCorps => !!x)
+        .sort((a, b) => frontRank(country, a.name) - frontRank(country, b.name)),
+      divisions: [],
+    }))
+    .filter((a) => a.corps.length > 0)
+  return {
+    ...forces,
+    armies: [...commands, ...rest.filter((a) => a.corps.length > 0 || a.divisions.length > 0)],
+  }
+}
+
+/**
+ * Armées de plus de GEN_ARMY_CORPS corps sans échelon armée réel (armée de terre entière d'un pays,
+ * corps ukrainiens sans commandement connu) : réparties en armées de jeu de taille voisine (à valider),
+ * corps dans l'ordre du front s'il est connu. Les commandements réels gardent tous leurs corps.
+ */
+export function splitLargeArmies(country: CountryId, forces: CountryForces): CountryForces {
+  const real = new Set(commandsOf(country).map((c) => c.name))
   const armies: ForceArmy[] = []
   for (const a of forces.armies) {
-    const placed = a.corps.filter((c) => directionOf(country, c.name) !== null)
-    const keys = new Set(placed.map((c) => JSON.stringify(directionOf(country, c.name))))
-    if (keys.size < 2) {
+    if (real.has(a.name) || a.corps.length <= GEN_ARMY_CORPS) {
       armies.push(a)
       continue
     }
-    for (const c of placed) armies.push({ name: c.name, corps: [c], divisions: [] })
-    const rest = a.corps.filter((c) => !placed.includes(c))
-    if (rest.length > 0 || a.divisions.length > 0) {
-      armies.push({ name: a.name, corps: rest, divisions: a.divisions })
+    const corps = [...a.corps].sort(
+      (x, y) => frontRank(country, x.name) - frontRank(country, y.name),
+    )
+    const n = Math.ceil(corps.length / GEN_ARMY_CORPS)
+    const size = Math.ceil(corps.length / n)
+    for (let k = 0; k < n; k++) {
+      armies.push({
+        name: `${ordinal(k + 1)} armée (${a.name})`,
+        corps: corps.slice(k * size, (k + 1) * size),
+        divisions: [],
+      })
     }
+    // Divisions rattachées directement à l'armée : elles gardent son nom.
+    if (a.divisions.length > 0) armies.push({ name: a.name, corps: [], divisions: a.divisions })
   }
   return { ...forces, armies }
 }
 
-/** Forces d'un pays, découpées par secteur s'il en a (sinon inchangées). */
+/** Direction de départ de chaque corps des pays couverts (placement initial de ses brigades). */
+function withCorpsSectors(country: CountryId, forces: CountryForces): CountryForces {
+  return {
+    ...forces,
+    armies: forces.armies.map((a) => ({
+      ...a,
+      corps: a.corps.map((c) => {
+        const p = directionOf(country, c.name)
+        return Array.isArray(p) ? { ...c, sector: p } : c
+      }),
+    })),
+  }
+}
+
+/**
+ * Forces d'un pays au départ : corps regroupés sous leurs commandements réels, directions des corps
+ * (pays aux secteurs connus), puis armées trop grandes réparties.
+ */
 export function sectorForces(country: CountryId, forces: CountryForces): CountryForces {
-  return SECTOR_COUNTRIES.includes(country) ? splitBySector(country, forces) : forces
+  const placed = SECTOR_COUNTRIES.includes(country)
+    ? withCorpsSectors(country, groupByCommand(country, forces))
+    : groupByCommand(country, forces)
+  return splitLargeArmies(country, placed)
 }

@@ -18,7 +18,8 @@ import TemplatesView from './TemplatesView.vue'
  * symbole de l'échelon, nom, jauges effectifs, matériel, organisation et situation. Ouvrir une ligne
  * sélectionne aussi la formation (fiche d'armée, ou inspecteur pour un corps ou une division) ; une
  * brigade se sélectionne seule. Sur téléphone, l'inspecteur remplace le tiroir : ouvrir une ligne ne
- * fait que descendre, et « Sélectionner » choisit la formation affichée. Onglet « Modèles » : modèles
+ * fait que descendre, et « Sélectionner » choisit la formation affichée. La vue suit la sélection faite
+ * ailleurs (carte, alertes, touche U). Onglet « Modèles » : modèles
  * de brigade et de division.
  */
 const props = defineProps<{ armyStatus: (id: number) => string }>()
@@ -86,6 +87,36 @@ const cssPct = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) 
 const pct = (v: number): string => `${Math.round(v * 100)} %`
 const selected = (r: ForcesRow): boolean =>
   r.unitIds.length > 0 && r.unitIds.every((id) => game.selection.includes(id))
+/**
+ * La vue suit la sélection faite ailleurs (carte, alertes, touche U) : elle ouvre le niveau où
+ * l'entité sélectionnée est une ligne (surlignée), sauf si cette ligne est déjà affichée ou si
+ * l'entité est le niveau ouvert (ouverture d'une ligne de la vue).
+ */
+watch(
+  () => game.selection.join(','),
+  () => {
+    const info = game.selectionInfo
+    if (!info?.echelon || !info.army) return
+    if (rows.value.some(selected)) return
+    const p = path.value
+    const army = info.army.id
+    if (info.echelon === 'army') {
+      if (p.army !== army) path.value = {}
+    } else if (info.echelon === 'corps' && info.corps) {
+      if (p.corps !== info.corps.id) path.value = { army }
+    } else if (info.echelon === 'division' && info.division) {
+      if (p.division !== info.division.id) {
+        path.value = info.corps ? { army, corps: info.corps.id } : { army }
+      }
+    } else if (info.echelon === 'brigade') {
+      const d = info.division
+      path.value = d
+        ? { army, ...(d.parentId !== null ? { corps: d.parentId } : {}), division: d.id }
+        : { army }
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

@@ -20,7 +20,7 @@ import { SupplyTiles } from './supplyImage'
 import { roadLines, roadOpacity, roadTiles, type RoadLines } from './roadsImage'
 import { visibleBlocks } from './lineBlocks'
 import { describePoint } from './cellInfo'
-import { isTouch, layout } from '@/composables/layout'
+import { isMobile, isTouch, layout } from '@/composables/layout'
 import { useProductionStats } from '@/composables/production'
 import { useBattles } from '@/composables/battles'
 import { glErrorText } from './webgl'
@@ -504,6 +504,8 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
         mine.map((u) => u.id),
         additive,
       )
+      // La vue Forces montre l'entité choisie (sur téléphone, l'inspecteur remplace le tiroir).
+      if (!isMobile.value) game.openDomain('forces')
     } else if (units[0]) {
       // Pion d'un autre pays : ouvre la fiche de ce pays.
       if (!additive) game.clearSelection()
@@ -525,6 +527,8 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
     // Clic sur un territoire : sans unités sélectionnées, ouvre la fiche du pays.
     const hadSelection = game.selection.length > 0
     game.clearSelection()
+    // La sélection se ferme avec ce qui la montrait (vue Forces).
+    if (hadSelection) game.closeDomain('forces')
     if (!hadSelection && point) {
       const code = game.ownerAt(point[0], point[1])
       if (code) game.selectCountry(code)

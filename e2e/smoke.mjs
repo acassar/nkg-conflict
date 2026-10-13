@@ -269,6 +269,74 @@ try {
     report.errors.push('cadre : le tiroir Forces ne se referme pas')
   }
   step('armée sélectionnée', await state())
+
+  // Clic sur un pion de division ukrainien : la vue Forces s'ouvre sur la division, surlignée ;
+  // un clic sur la carte hors des pions ferme la sélection et la vue Forces.
+  const camera = await page.evaluate(() => {
+    const c = window.__nkgMap.getCenter()
+    return { center: [c.lng, c.lat], zoom: window.__nkgMap.getZoom() }
+  })
+  const pawn = await page.evaluate(() => {
+    const s = window.__nkg.snapshot
+    const groups = new Map()
+    for (const u of s.units) {
+      if (u.owner !== 'UKR' || u.divisionId === null) continue
+      const list = groups.get(u.divisionId) ?? []
+      list.push(u)
+      groups.set(u.divisionId, list)
+    }
+    // Division groupée (toutes ses brigades à moins de 10 km de leur centre) : un seul pion.
+    const mean = (list) => [
+      list.reduce((t, u) => t + u.lon, 0) / list.length,
+      list.reduce((t, u) => t + u.lat, 0) / list.length,
+    ]
+    const tight = [...groups.values()].find((list) => {
+      const [x, y] = mean(list)
+      return list.length > 1 && list.every((u) => Math.hypot(u.lon - x, u.lat - y) * 111 < 10)
+    })
+    const [lon, lat] = mean(tight ?? [...groups.values()][0])
+    window.__nkgMap.jumpTo({ center: [lon, lat], zoom: 10 })
+    return { lon, lat }
+  })
+  await page.waitForTimeout(800)
+  const pawnAt = await page.evaluate(
+    ([lon, lat]) => {
+      const p = window.__nkgMap.project([lon, lat])
+      return [p.x, p.y]
+    },
+    [pawn.lon, pawn.lat],
+  )
+  await page.mouse.click(pawnAt[0], pawnAt[1])
+  await page.waitForTimeout(500)
+  const followed = {
+    drawer: await page.getByTestId('drawer-forces').isVisible(),
+    activeRows: await page.locator('[data-testid="forces-tree"] li.active').count(),
+    selection: await page.evaluate(() => window.__nkg.selection.length),
+  }
+  const empty = await page.evaluate(() => {
+    window.__nkgMap.jumpTo({ center: [24.5, 48.3], zoom: 7 })
+    const p = window.__nkgMap.project([24.5, 48.3])
+    return [p.x, p.y]
+  })
+  await page.waitForTimeout(500)
+  await page.mouse.click(empty[0], empty[1])
+  await page.waitForTimeout(500)
+  const closed = {
+    drawer: await page.getByTestId('drawer-forces').isVisible(),
+    selection: await page.evaluate(() => window.__nkg.selection.length),
+  }
+  await page.evaluate((v) => window.__nkgMap.jumpTo(v), camera)
+  await page.evaluate(() => window.__nkg.selectCountry(null))
+  await page.waitForTimeout(300)
+  step('sélection suivie dans la vue Forces', { followed, closed })
+  if (!followed.drawer || followed.activeRows < 1 || followed.selection < 1) {
+    report.errors.push(
+      `sélection : vue Forces non ouverte sur l'entité (${JSON.stringify(followed)})`,
+    )
+  }
+  if (closed.drawer || closed.selection !== 0) {
+    report.errors.push(`sélection : clic hors des pions sans effet (${JSON.stringify(closed)})`)
+  }
   await shot('02-armee-selectionnee')
 
   // Ordre de mouvement à une unité via la carte : clic droit au centre de l'écran.

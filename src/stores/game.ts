@@ -664,6 +664,11 @@ export const useGameStore = defineStore('game', () => {
     sheet.value = 'domain'
   }
 
+  /** Referme le tiroir s'il montre ce domaine. */
+  function closeDomain(domain: Domain): void {
+    if (panelTab.value === domain) panelTab.value = null
+  }
+
   /** Inspecteur affiché : la dernière sélection, si elle désigne encore quelque chose. */
   const inspector = computed(() =>
     inspectorView(inspect.value, {
@@ -1363,6 +1368,7 @@ export const useGameStore = defineStore('game', () => {
     inspector,
     sheet,
     openDomain,
+    closeDomain,
     showInspector,
     warBrief,
     advanceToBorder,

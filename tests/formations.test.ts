@@ -7,7 +7,13 @@ import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import { formationName, formationUnits, updateFormations } from '@/sim/systems/formations'
 import { divisionCohesion, divisionSectors } from '@/sim/systems/armies'
 import { orderOfBattle, selectionFormation } from '@/composables/composition'
-import { formationMembers, formationPawns, isStack } from '@/map/clusters'
+import {
+  brigadeSpots,
+  formationMembers,
+  formationPawns,
+  isStack,
+  selectedSectors,
+} from '@/map/clusters'
 import { isBrigade } from '@/sim/units/catalog'
 import { isSupportTemplate } from '@/sim/scenarios/forces'
 import { DIVISION_TEMPLATES, slotFit, templateOf } from '@/sim/units/templates'
@@ -248,18 +254,62 @@ describe('affichage et ordre de bataille', () => {
   ]
   const byId = new Map(formations.map((f) => [f.id, f]))
 
-  it('un pion par corps de loin, par division à zoom moyen, par brigade de près', () => {
+  it('un pion par corps de loin, par division de près, les brigades à la sélection', () => {
     const far = formationPawns(units, byId, 4)
     expect(far).toHaveLength(1)
     expect(isStack(far[0]!) && far[0].formation?.kind).toBe('corps')
-    const mid = formationPawns(units, byId, 6)
-    expect(mid.map((m) => (isStack(m) ? m.formation?.name : 'brigade'))).toEqual([
-      '1re division',
-      '2e division',
-    ])
-    expect(formationPawns(units, byId, 9).every((m) => !isStack(m))).toBe(true)
+    const names = (list: ReturnType<typeof formationPawns>): unknown[] =>
+      list.map((m) => (isStack(m) ? m.formation?.name : 'brigade'))
+    expect(names(formationPawns(units, byId, 6))).toEqual(['1re division', '2e division'])
+    // De près aussi : un pion par division ; une brigade partie au loin a le sien.
+    expect(names(formationPawns(units, byId, 9))).toEqual(['1re division', '2e division'])
+    const away = units.map((u) => (u.id === 1 ? { ...u, lon: 28 } : u))
+    expect(names(formationPawns(away, byId, 9))).toEqual(['brigade', '1re division', '2e division'])
+    // Rien de choisi : pas de brigades affichées ; une brigade choisie : toute sa division, reliée au pion.
+    const pawns = formationPawns(units, byId, 6)
+    expect(brigadeSpots(pawns, 6, new Set())).toEqual([])
+    const spots = brigadeSpots(pawns, 6, new Set([2]))
+    expect(spots.map((x) => x.unit.id)).toEqual([1, 2, 3])
+    for (const x of spots) expect(x.from[0]).toBeCloseTo(30.2)
+    // De loin, les brigades cachées sous le pion sont placées en couronne autour de lui.
+    const ring = brigadeSpots(formationPawns(units, byId, 4), 4, new Set([1]))
+    expect(ring).toHaveLength(6)
+    expect(new Set(ring.map((x) => x.at.join())).size).toBe(6)
     expect(formationMembers(units, formations, 1).map((u) => u.id)).toEqual([1, 2, 3, 4, 5, 6])
     expect(formationMembers(units, formations, 3).map((u) => u.id)).toEqual([4, 5, 6])
+  })
+
+  it("un pion d'armée de très loin, et le secteur des formations choisies", () => {
+    const solo: FormationState = {
+      id: 4,
+      owner: 'UKR',
+      kind: 'division',
+      number: 3,
+      name: '3e division',
+      armyId: 9,
+      parentId: null,
+    }
+    const all = new Map([...byId, [4, solo]])
+    const more = [...units, unit(7, 4, 32.4), unit(8, 4, 32.6)]
+    const armies = new Map([[9, { name: '1re armée' }]])
+    const far = formationPawns(more, all, 3, undefined, armies)
+    expect(far).toHaveLength(1)
+    expect(isStack(far[0]!) && far[0].formation).toMatchObject({ kind: 'army', id: 9 })
+    expect(isStack(far[0]!) && far[0].units).toHaveLength(8)
+    // Sans armée connue, ou de plus près : corps et division.
+    expect(formationPawns(more, all, 3)).toHaveLength(2)
+    expect(formationPawns(more, all, 6, undefined, armies)).toHaveLength(3)
+
+    const withSectors = formations.map((f) => ({
+      ...f,
+      sector: [
+        [f.id, 49],
+        [f.id + 1, 49],
+      ] as Array<[number, number]>,
+    }))
+    expect(selectedSectors(units, withSectors, new Set([1])).map((x) => x.id)).toEqual([2])
+    expect(selectedSectors(units, withSectors, new Set([1, 4])).map((x) => x.id)).toEqual([1])
+    expect(selectedSectors(units, withSectors, new Set())).toEqual([])
   })
 
   it("ordre de bataille d'une armée et formation d'une sélection", () => {

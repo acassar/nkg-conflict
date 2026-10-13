@@ -60,12 +60,15 @@ import {
   NO_MUNITIONS_FACTOR,
 } from '@/sim/economy/rules'
 import {
-  CONTACT_KM,
   COMMAND_FACTOR,
-  OUT_OF_SUPPLY_FACTOR,
-  ROUT_ORG,
-  RALLY_ORG,
-} from '@/sim/systems/combat'
+  HQ_BEHIND_KM,
+  HQ_RADIUS_KM,
+  LOGISTICS_RADIUS_KM,
+  SPAN_FREE,
+  SPAN_MIN,
+  SPAN_STEP,
+} from '@/sim/systems/command'
+import { CONTACT_KM, OUT_OF_SUPPLY_FACTOR, ROUT_ORG, RALLY_ORG } from '@/sim/systems/combat'
 import {
   DEMINING_PER_DAY,
   OBSTACLE_FIRE_MALUS,
@@ -180,7 +183,7 @@ const battalionNames = Object.values(BATTALIONS)
   .join(', ')
 
 const logisticsKm = MODERN_CATALOG.log.supplyRadiusKm
-const hqKm = MODERN_CATALOG.hq.commandRadiusKm
+const hqKm = HQ_RADIUS_KM
 
 export const HELP_SECTIONS: HelpSection[] = [
   {
@@ -266,7 +269,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'supply',
     title: 'Ravitaillement',
     paragraphs: [
-      `Le ravitaillement part des sources (capitale, grandes villes, dépôts : ${SOURCE_RADIUS_KM} km autour) et suit le territoire tenu ; une unité logistique ravitaillée le prolonge à ${logisticsKm} km. Une unité coupée voit sa puissance de feu et sa défense réduites (${signedPct(OUT_OF_SUPPLY_FACTOR)}), ne reçoit plus de renforts et récupère moins bien son organisation ; une unité motorisée tombe aussi en panne de carburant après ${FUEL_HOURS} heures.`,
+      `Le ravitaillement part des sources (capitale, grandes villes, dépôts : ${SOURCE_RADIUS_KM} km autour) et suit le territoire tenu ; la logistique intégrée de chaque corps et de chaque armée, placée avec son QG, le prolonge à ${LOGISTICS_RADIUS_KM} km (une unité logistique ravitaillée, à ${logisticsKm} km). Une unité coupée voit sa puissance de feu et sa défense réduites (${signedPct(OUT_OF_SUPPLY_FACTOR)}), ne reçoit plus de renforts et récupère moins bien son organisation ; une unité motorisée tombe aussi en panne de carburant après ${FUEL_HOURS} heures.`,
       'Le mode Logistique (touche L) montre les zones reliées, coupées et les poches.',
     ],
   },
@@ -274,7 +277,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'command',
     title: 'Commandement',
     paragraphs: [
-      `Une unité à moins de ${hqKm} km d'un quartier général de son pays (qui n'est pas en déroute) est commandée : feu et défense ${signedPct(COMMAND_FACTOR)}, et elle récupère plus vite son organisation hors combat.`,
+      `Chaque corps et chaque armée a un QG intégré, sans pion, placé à ${HQ_BEHIND_KM} km derrière le centre de ses brigades (à l'opposé des ennemis proches). Une brigade à moins de ${hqKm} km du QG de son corps ou de son armée est commandée : feu et défense ${signedPct(COMMAND_FACTOR)}, et elle récupère plus vite son organisation hors combat. Étendue de commandement : un corps commande ses divisions, une armée ses corps et ses divisions sans corps ; jusqu'à ${SPAN_FREE} subordonnés, aucun effet, puis chaque subordonné de plus retire ${pct(SPAN_STEP)} au bonus du QG et à la récupération d'organisation (jusqu'à ${pct(1 - SPAN_MIN)} de moins). Front hiérarchique : la mission de l'armée découpe son front entre ses corps, chaque corps entre ses divisions, selon leurs brigades.`,
       `Divisions et corps : armées, corps, divisions et brigades viennent de l'ordre de bataille réel du pays (une trentaine de pays), sinon d'une armée générée à partir de ses effectifs réels. Une division suit un modèle de 2 à 4 brigades (division mécanisée : deux brigades mécanisées, une blindée, une d'artillerie) ; les brigades rattachées directement à un corps ou à une armée forment des divisions de jeu de 3 ou 4, et les appuis (artillerie, génie, sol-air) rejoignent les divisions de leur formation. Les divisions sont organiques : une brigade garde sa division, même détachée dans une autre armée, et la division suit l'armée de la plupart de ses brigades. Une brigade nouvelle rejoint la division la plus proche (${JOIN_KM} km au plus) qui a une place pour son modèle, sinon une nouvelle division est formée autour d'elle ; une brigade détruite réduit sa division. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
       `Départ : chaque corps ukrainien et chaque armée russe tient sa direction réelle du front (Kharkiv, Pokrovsk, Zaporijjia…), d'après les rapports de l'automne 2026 ; les formations dispersées couvrent tout le front, celles qui sont loin (Kaliningrad, Arménie) restent en garnison. Les brigades partent à l'effectif réel de leur armée : ${pct(countryForces('UKR').fill ?? 1)} de leur effectif théorique côté ukrainien, ${pct(countryForces('RUS').fill ?? 1)} côté russe.`,
     ],
@@ -393,7 +396,7 @@ export const MODIFIER_HELP: Record<ModifierKey, { text: string; section: HelpSec
     section: 'supply',
   },
   command: {
-    text: `À moins de ${hqKm} km d'un QG de son pays : ${signedPct(COMMAND_FACTOR)}.`,
+    text: `À moins de ${hqKm} km du QG de son corps ou de son armée : ${signedPct(COMMAND_FACTOR)}, réduit au-delà de ${SPAN_FREE} subordonnés.`,
     section: 'command',
   },
   posture: {

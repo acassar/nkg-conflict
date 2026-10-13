@@ -95,6 +95,11 @@ export interface SaveFile {
       boolean?,
     ]
   >
+  /**
+   * Commandement des unités hors valeurs par défaut : [id, bonus du QG, facteur d'étendue]
+   * (systems/command.ts), pour reprendre la partie à l'identique.
+   */
+  command?: Array<[number, number, number]>
   /** Villes : propriétaire (index de camp) et bâtiments. */
   cities: Array<{ name: string; owner: number; buildings: Buildings }>
   economies: EconomyState[]

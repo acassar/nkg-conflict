@@ -98,8 +98,11 @@ describe('encerclement', () => {
     parentId: number | null
   } => {
     const sim = newGame()
-    const { target, mine } = setup(sim)
-    const parentId = mine[0]?.armyId ?? null
+    const { target, mine: near } = setup(sim)
+    const parentId = near[0]?.armyId ?? null
+    // Une partie de l'armée seulement (sinon l'armée entière encercle elle-même).
+    const size = parentId !== null ? (sim.ctx.armies.get(parentId)?.unitIds.length ?? 0) : 0
+    const mine = near.slice(0, Math.min(near.length, size - 1))
     expect(
       sim.encircle(
         mine.map((u) => u.id),

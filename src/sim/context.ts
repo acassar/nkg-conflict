@@ -26,6 +26,10 @@ export interface UnitRuntime {
   routed: boolean
   /** À portée d'un QG de son camp : bonus de combat et récupération plus rapide. */
   commanded: boolean
+  /** Bonus de combat du commandement (1 sans QG à portée ; réduit par l'étendue de commandement). */
+  command: number
+  /** Étendue de commandement de sa chaîne (1 : sans malus ; voir systems/command.ts). */
+  span: number
   /** Riposte en cours à une percée (bloquer, couper la base ou contre-attaquer). */
   reaction?: Reaction
   /** Unité menacée : tenir retranchée ou décrocher vers la ligne suivante, avec son motif. */
@@ -119,6 +123,8 @@ export function runtimeOf(ctx: SimContext, id: number): UnitRuntime {
       supplied: true,
       routed: false,
       commanded: false,
+      command: 1,
+      span: 1,
       reaction: undefined,
       stance: undefined,
       flank: undefined,

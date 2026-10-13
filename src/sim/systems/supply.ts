@@ -2,6 +2,7 @@ import { runtimeOf, sideIndex, type SimContext } from '../context'
 import { unitType } from '../units/templates'
 import type { UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
+import { LOGISTICS_RADIUS_KM, logisticsPoints } from './command'
 
 /** Rayon de ravitaillement autour d'une source (capitale, grande ville, dépôt). */
 export const SOURCE_RADIUS_KM = 30
@@ -16,7 +17,8 @@ const queues = new WeakMap<SimContext, Int32Array>()
  * Recalcule, pour chaque camp en guerre (ou ceux que `only` retient), les cellules reliées à ses sources de ravitaillement
  * (remplissage à travers son territoire et celui de ses cobelligérants), puis l'état ravitaillé
  * de chaque unité. Un pays en paix est entièrement ravitaillé.
- * Une unité logistique elle-même ravitaillée prolonge le ravitaillement dans son rayon.
+ * Une unité logistique, ou la logistique intégrée d'un corps ou d'une armée, elle-même ravitaillée
+ * prolonge le ravitaillement dans son rayon.
  */
 export function updateSupply(ctx: SimContext, only?: (side: number) => boolean): void {
   const { grid, matrix } = ctx
@@ -102,6 +104,15 @@ export function updateSupply(ctx: SimContext, only?: (side: number) => boolean):
       const reach = ctx.supplyReach[sideIndex(ctx, u.owner)]
       return reach?.[grid.cellAt(u.lon, u.lat)] === 1
     }))
+  const logistics = new Map<string, ReturnType<typeof logisticsPoints>>()
+  const logisticsOf = (owner: string): ReturnType<typeof logisticsPoints> => {
+    let list = logistics.get(owner)
+    if (!list) {
+      list = logisticsPoints(ctx, owner)
+      logistics.set(owner, list)
+    }
+    return list
+  }
   // Camps retenus par `only`, évalués une fois par camp plutôt qu'une fois par unité.
   const retained = new Int8Array(ctx.sides.length).fill(-1)
   for (const u of ctx.units.values()) {
@@ -128,6 +139,14 @@ export function updateSupply(ctx: SimContext, only?: (side: number) => boolean):
         (d) =>
           d.owner === u.owner &&
           distanceKm(d.lon, d.lat, u.lon, u.lat) <= unitType(d).supplyRadiusKm,
+      )
+    }
+    if (!supplied && reach) {
+      // Logistique intégrée des corps et des armées, elle-même reliée (command.ts).
+      supplied = logisticsOf(u.owner).some(
+        (p) =>
+          reach[grid.cellAt(p[0], p[1])] === 1 &&
+          distanceKm(p[0], p[1], u.lon, u.lat) <= LOGISTICS_RADIUS_KM,
       )
     }
     if (rt.supplied && !supplied) ctx.log(`Ravitaillement coupé : ${u.name}`, u.owner)

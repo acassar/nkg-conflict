@@ -27,7 +27,15 @@ import {
   unitIcon,
   type GaugeShape,
 } from './unitIcons'
-import { formationPawns, isStack, stackUnits, type MapUnit } from './clusters'
+import {
+  brigadeSpots,
+  formationPawns,
+  isStack,
+  selectedSectors,
+  stackUnits,
+  type BrigadeSpot,
+  type MapUnit,
+} from './clusters'
 import { stanceColor, type TerritoryTile } from './territoryImage'
 import { BASE_ROAD_WIDTH, type RoadLines } from './roadsImage'
 import type { LineBlock } from './lineBlocks'
@@ -323,6 +331,9 @@ function pocketLabels(view: SupplyView | null): Layer[] {
     }),
   ]
 }
+
+/** Taille, en pixels, des brigades affichées autour d'une formation choisie. */
+const BRIGADE_SPOT_SIZE = 22
 
 export function buildLayers(input: LayerInput): Layer[] {
   const { snapshot, selection, selectedArmy, pendingPoint, pendingLine } = input
@@ -1070,13 +1081,36 @@ export function buildLayers(input: LayerInput): Layer[] {
   const neutral = snapshot.units.filter(
     (u) => (input.stances.get(u.owner) ?? 'neutral') === 'neutral' && !selection.has(u.id),
   )
-  // Divisions et corps : un pion par formation quand le zoom réunit ses brigades.
+  // Divisions, corps et armées : un pion par formation selon le zoom (clusters.ts).
   const formations = new Map(snapshot.formations.map((f) => [f.id, f]))
+  const armyNames = new Map(snapshot.armies.map((a) => [a.id, { name: a.name }]))
+  // Secteur de front des divisions (ou du corps) choisies.
+  const sectors = selectedSectors(snapshot.units, snapshot.formations, selection)
+  if (sectors.length > 0) {
+    layers.push(
+      new PathLayer<(typeof sectors)[number]>({
+        id: 'formation-sectors',
+        data: sectors,
+        getPath: (x) => x.sector,
+        getColor: (x) => (x.kind === 'corps' ? [250, 204, 21, 200] : [253, 224, 71, 170]),
+        getWidth: (x) => (x.kind === 'corps' ? 6 : 4),
+        widthUnits: 'pixels',
+        capRounded: true,
+        jointRounded: true,
+      }),
+    )
+  }
+  let spots: BrigadeSpot[] = []
   for (const [id, list, size, opacity] of [
     ['units-neutral', neutral, 24, 0.75],
     ['units', involved, 34, 1],
   ] as const) {
-    const pawns = stackUnits(formationPawns(list, formations, input.zoom), input.zoom, size + 4)
+    const pawns = stackUnits(
+      formationPawns(list, formations, input.zoom, undefined, armyNames),
+      input.zoom,
+      size + 4,
+    )
+    if (id === 'units') spots = brigadeSpots(pawns, input.zoom, selection)
     const pawnSize = (m: MapUnit): number =>
       isStack(m) && m.formation ? size * FORMATION_ICON_SCALE : size
     layers.push(
@@ -1124,6 +1158,29 @@ export function buildLayers(input: LayerInput): Layer[] {
         }),
       )
     }
+  }
+  // Brigades des formations choisies : petites, autour du pion et reliées à lui ; un clic en choisit une.
+  if (spots.length > 0) {
+    layers.push(
+      new PathLayer<BrigadeSpot>({
+        id: 'formation-links',
+        data: spots,
+        getPath: (x) => [x.from, x.at],
+        getColor: [255, 255, 255, 150],
+        getWidth: 1,
+        widthUnits: 'pixels',
+      }),
+      new IconLayer<BrigadeSpot>({
+        id: 'units-brigades',
+        data: spots,
+        getPosition: (x) => x.at,
+        getIcon: (x) => unitIcon(x.unit, colorOf(x.unit.owner), selection.has(x.unit.id)),
+        getSize: BRIGADE_SPOT_SIZE,
+        sizeUnits: 'pixels',
+        pickable: true,
+        updateTriggers: { getIcon: [[...selection].join()] },
+      }),
+    )
   }
   // Batailles : icône au-dessus des pions, clic pour le détail.
   layers.push(

@@ -8,7 +8,7 @@ import { Protocol } from 'pmtiles'
 import { storeToRefs } from 'pinia'
 import type { CityState, GridSnapshot, LonLat } from '@/sim/core/types'
 import type { SupplyView } from '@/sim/systems/supplyView'
-import { formationMembers, isStack, type MapUnit } from './clusters'
+import { formationMembers, isStack, type BrigadeSpot, type MapUnit } from './clusters'
 import { useGameStore } from '@/stores/game'
 import { baseStyle, neutralizeCountryFills, OFFLINE_STYLE } from './style'
 import { buildLayers, type BorderShapes, type MissionPreviewShapes } from './layers'
@@ -478,12 +478,21 @@ function onClick(info: PickingInfo, event: { srcEvent?: MouseEvent }): void {
     game.openBattle((info.object as { ids: number[] }).ids)
     return
   }
-  const item = info.layer?.id.startsWith('units') ? (info.object as MapUnit | undefined) : undefined
+  // Brigade affichée autour d'une formation choisie : elle seule.
+  const item =
+    info.layer?.id === 'units-brigades'
+      ? (info.object as BrigadeSpot | undefined)?.unit
+      : info.layer?.id.startsWith('units')
+        ? (info.object as MapUnit | undefined)
+        : undefined
   if (item) {
-    // Pion de division ou de corps : toute la formation, brigades écartées comprises.
+    // Pion de division, de corps ou d'armée : toute la formation, brigades écartées comprises.
+    const snap = game.snapshot
     const units =
-      isStack(item) && item.formation && game.snapshot
-        ? formationMembers(game.snapshot.units, game.snapshot.formations, item.formation.id)
+      isStack(item) && item.formation && snap
+        ? item.formation.kind === 'army'
+          ? snap.units.filter((u) => u.armyId === item.formation?.id)
+          : formationMembers(snap.units, snap.formations, item.formation.id)
         : isStack(item)
           ? item.units
           : [item]

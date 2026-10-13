@@ -276,7 +276,10 @@ try {
     const c = window.__nkgMap.getCenter()
     return { center: [c.lng, c.lat], zoom: window.__nkgMap.getZoom() }
   })
-  const pawn = await page.evaluate(() => {
+  // Divisions ukrainiennes groupées (brigades à moins de 10 km de leur centre), les plus isolées
+  // d'abord : on clique au centre de chacune jusqu'à toucher un pion.
+  const candidates = await page.evaluate(() => {
+    window.__nkg.clearSelection()
     const s = window.__nkg.snapshot
     const groups = new Map()
     for (const u of s.units) {
@@ -285,29 +288,33 @@ try {
       list.push(u)
       groups.set(u.divisionId, list)
     }
-    // Division groupée (toutes ses brigades à moins de 10 km de leur centre) : un seul pion.
-    const mean = (list) => [
-      list.reduce((t, u) => t + u.lon, 0) / list.length,
-      list.reduce((t, u) => t + u.lat, 0) / list.length,
-    ]
-    const tight = [...groups.values()].find((list) => {
-      const [x, y] = mean(list)
-      return list.length > 1 && list.every((u) => Math.hypot(u.lon - x, u.lat - y) * 111 < 10)
-    })
-    const [lon, lat] = mean(tight ?? [...groups.values()][0])
-    window.__nkgMap.jumpTo({ center: [lon, lat], zoom: 10 })
-    return { lon, lat }
+    const km = (u, x, y) => Math.hypot(u.lon - x, (u.lat - y) * 1.5) * 75
+    const out = []
+    for (const list of groups.values()) {
+      if (list.length < 2) continue
+      const x = list.reduce((t, u) => t + u.lon, 0) / list.length
+      const y = list.reduce((t, u) => t + u.lat, 0) / list.length
+      if (!list.every((u) => km(u, x, y) < 10)) continue
+      const others = s.units.filter((u) => !list.includes(u))
+      const gap = Math.min(...others.map((u) => km(u, x, y)))
+      out.push({ lon: x, lat: y, gap })
+    }
+    return out.sort((a, b) => b.gap - a.gap).slice(0, 8)
   })
-  await page.waitForTimeout(800)
-  const pawnAt = await page.evaluate(
-    ([lon, lat]) => {
-      const p = window.__nkgMap.project([lon, lat])
-      return [p.x, p.y]
-    },
-    [pawn.lon, pawn.lat],
-  )
-  await page.mouse.click(pawnAt[0], pawnAt[1])
-  await page.waitForTimeout(500)
+  for (const c of candidates) {
+    const pawnAt = await page.evaluate(
+      ([lon, lat]) => {
+        window.__nkgMap.jumpTo({ center: [lon, lat], zoom: 10 })
+        const p = window.__nkgMap.project([lon, lat])
+        return [p.x, p.y]
+      },
+      [c.lon, c.lat],
+    )
+    await page.waitForTimeout(600)
+    await page.mouse.click(pawnAt[0], pawnAt[1])
+    await page.waitForTimeout(400)
+    if ((await page.evaluate(() => window.__nkg.selection.length)) > 0) break
+  }
   const followed = {
     drawer: await page.getByTestId('drawer-forces').isVisible(),
     activeRows: await page.locator('[data-testid="forces-tree"] li.active').count(),

@@ -198,6 +198,37 @@ try {
     report.errors.push(`cadre : rail, tiroir ou inspecteur mal placés (${JSON.stringify(frame)})`)
   }
   await shot('02a-cadre-forces')
+  // Vue Forces hiérarchique : l'armée ouverte montre ses corps et divisions, avec le fil d'Ariane ;
+  // ouvrir une formation la sélectionne, l'inspecteur en affiche l'échelon ; onglet « Modèles ».
+  const tree = page.getByTestId('forces-tree')
+  const crumbsArmy = await tree.getByTestId('forces-crumbs').locator('.crumb').count()
+  const formationRow = tree
+    .locator('[data-testid="forces-row-corps"], [data-testid="forces-row-division"]')
+    .first()
+  const formationRows = await tree
+    .locator('[data-testid="forces-row-corps"], [data-testid="forces-row-division"]')
+    .count()
+  if (formationRows > 0) {
+    await formationRow.click()
+    await page.getByTestId('selection-echelon').waitFor({ timeout: 5000 })
+  }
+  const crumbsDeep = await tree.getByTestId('forces-crumbs').locator('.crumb').count()
+  const echelonText =
+    formationRows > 0 ? await page.getByTestId('selection-echelon').innerText() : ''
+  await shot('02a1-vue-forces-echelons')
+  await tree.getByTestId('forces-tab-templates').click()
+  const templates = await page.locator('[data-testid^="template-"]').count()
+  await shot('02a2-modeles')
+  await tree.getByTestId('forces-tab-tree').click()
+  await tree.getByTestId('forces-crumbs').locator('button.crumb').first().click()
+  step('vue Forces', { crumbsArmy, formationRows, crumbsDeep, echelonText, templates })
+  if (crumbsArmy !== 2 || formationRows < 1 || crumbsDeep < 3 || templates < 5) {
+    report.errors.push(
+      `vue Forces : fil ${crumbsArmy}→${crumbsDeep}, ${formationRows} formations, ${templates} modèles`,
+    )
+  }
+  await page.getByTestId('drawer-forces').locator('.armies li').first().click()
+  await page.getByTestId('inspector-army').waitFor()
   // Second clic sur l'entrée du rail : le tiroir se referme, l'inspecteur reste.
   await page.getByTestId('rail-forces').click()
   await page.waitForTimeout(300)
@@ -747,15 +778,17 @@ try {
   await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
 
-  // Recrutement par armée : sous-onglet « Recrutement », 3 infanteries au clic, 2 artilleries saisies.
+  // Recrutement par armée, par modèle : 3 brigades d'infanterie légère au clic, 2 d'artillerie
+  // saisies, une division entière.
   await page.getByTestId('army-view-recruit').click()
-  for (let k = 0; k < 3; k++) await page.getByTestId('recruit-add-inf').click()
-  await page.getByTestId('recruit-count-art').fill('2')
-  await page.getByTestId('recruit-count-art').press('Enter')
+  for (let k = 0; k < 3; k++) await page.getByTestId('recruit-add-infanterie_legere').click()
+  await page.getByTestId('recruit-count-artillerie').fill('2')
+  await page.getByTestId('recruit-count-artillerie').press('Enter')
+  await page.locator('[data-testid^="recruit-division-add-"]').first().click()
   await page.getByTestId('recruit-preview').waitFor()
   const sites = await page.getByTestId('recruit-sites').locator('li').count()
-  // Défense territoriale : commandée depuis l'armée, comme les autres types.
-  if ((await page.getByTestId('recruit-add-tdf').count()) !== 1) {
+  // Défense territoriale : commandée depuis l'armée, comme les autres modèles.
+  if ((await page.getByTestId('recruit-add-defense_territoriale').count()) !== 1) {
     report.errors.push('défense territoriale absente des renforts de l’armée')
   }
   const eta = await page.getByTestId('recruit-eta').textContent()

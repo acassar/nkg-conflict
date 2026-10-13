@@ -4,11 +4,14 @@ import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
 import ArmyRecruitment from './ArmyRecruitment.vue'
 import ArmyComposition from './ArmyComposition.vue'
+import ForcesTree from './ForcesTree.vue'
+import EchelonSymbol from './EchelonSymbol.vue'
 import { useProductionStats } from '@/composables/production'
 import { isTouch } from '@/composables/layout'
 import { selectionFormation } from '@/composables/composition'
 import { countSubordinates, spanText } from '@/sim/systems/command'
-import { compositionText, templateLabel } from '@/sim/units/templates'
+import { battalionsOf, compositionText, templateLabel, templateOf } from '@/sim/units/templates'
+import { BATTALIONS } from '@/sim/units/battalions'
 import { EMBARK_KM } from '@/sim/systems/naval'
 import { MODE_NAMES } from '@/sim/systems/transport'
 import {
@@ -137,6 +140,38 @@ const formationLabel = computed(() => {
   if (!f) return null
   return [f.division?.name, f.corps?.name].filter(Boolean).join(' · ')
 })
+/** Bataillons d'une brigade (composition, pour une brigade choisie seule). */
+const battalionRows = (u: UnitSnapshot) =>
+  battalionsOf(templateOf({ kind: u.kind, template: u.template ?? undefined }) ?? '').map((b) => ({
+    ...b,
+    name: BATTALIONS[b.kind].name,
+  }))
+/** Couleur du joueur, pour les symboles d'échelon. */
+const playerColor = computed(() => {
+  const s = game.snapshot
+  const c = s?.countries.find((x) => x.id === s.playerCountry)?.color
+  return c ? `rgb(${c.join(',')})` : '#2563eb'
+})
+/** En-tête de l'inspecteur : symbole de l'échelon choisi, son nom et le fil d'Ariane au-dessus. */
+const echelonHead = computed(() => {
+  const info = game.selectionInfo
+  const first = selectedUnits.value[0]
+  if (!info?.echelon || !first) return null
+  const counts = new Map<string, number>()
+  for (const u of selectedUnits.value) counts.set(u.kind, (counts.get(u.kind) ?? 0) + 1)
+  const kind = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? first.kind
+  const above = [
+    info.army?.name,
+    info.echelon !== 'corps' && info.echelon !== 'army' ? info.corps?.name : undefined,
+    info.echelon === 'brigade' ? info.division?.name : undefined,
+  ].filter((x) => x && x !== info.name)
+  return {
+    echelon: info.echelon,
+    kind: kind as typeof first.kind,
+    name: info.echelon === 'brigade' ? first.name : (info.name ?? ''),
+    crumbs: info.echelon === 'army' ? 'Armée' : above.join(' › '),
+  }
+})
 /** Étendue de commandement du corps des unités choisies (sélection d'un corps entier ou d'une partie). */
 const corpsSpan = computed(() => {
   const formations = game.snapshot?.formations ?? []
@@ -155,6 +190,13 @@ const selectionPosture = computed(() => {
   const set = new Set(selectedUnits.value.map((u) => u.posture))
   return set.size === 1 ? [...set][0] : null
 })
+/** Mission en cours d'une armée et unités au contact, pour la vue Forces. */
+const armyStatusById = (id: number): string => {
+  const a = armies.value.find((x) => x.id === id)
+  if (!a) return ''
+  const engaged = armySummary(a).engaged
+  return `${missionStatus(a)}${engaged ? ` · ${engaged} au contact` : ''}`
+}
 const armySummary = (a: { unitIds: number[] }): ReturnType<typeof summary> => {
   const ids = new Set(a.unitIds)
   return summary(game.snapshot?.units.filter((u) => ids.has(u.id)) ?? [])
@@ -440,9 +482,47 @@ async function createArmy(): Promise<void> {
             {{ selectionSummary.unsupplied }} sans ravitaillement
           </span>
         </div>
+        <div v-if="echelonHead" class="echelon-head" data-testid="selection-echelon">
+          <EchelonSymbol
+            :echelon="echelonHead.echelon"
+            :kind="echelonHead.kind"
+            :size="44"
+            :color="playerColor"
+          />
+          <div class="echelon-text">
+            <strong>{{ echelonHead.name }}</strong>
+            <span class="meta">{{ echelonHead.crumbs }}</span>
+          </div>
+        </div>
         <p v-if="formationLabel" class="formation-label" data-testid="selection-formation">
           {{ formationLabel }}
         </p>
+        <div v-if="game.selectionInfo" class="group" data-testid="echelon-up">
+          <button
+            v-if="game.selectionInfo.division && game.selectionInfo.echelon === 'brigade'"
+            title="Sélectionner toute la division de cette brigade"
+            @click="game.selectFormation('division')"
+          >
+            Sélectionner la division
+          </button>
+          <button
+            v-if="game.selectionInfo.corps && game.selectionInfo.echelon !== 'corps'"
+            title="Sélectionner tout le corps"
+            data-testid="select-corps"
+            @click="game.selectFormation('corps')"
+          >
+            Sélectionner le corps
+          </button>
+          <button
+            v-if="game.selectionInfo.army && game.selectionInfo.echelon !== 'army'"
+            title="Sélectionner l'armée et ouvrir sa fiche"
+            data-testid="select-army"
+            @click="game.selectFormation('army')"
+          >
+            Sélectionner l'armée
+          </button>
+          <span class="meta">U : échelon au-dessus</span>
+        </div>
         <p v-if="corpsSpan" class="formation-label" data-testid="selection-span">
           {{ corpsSpan }}
         </p>
@@ -563,6 +643,9 @@ async function createArmy(): Promise<void> {
               </span>
             </div>
             <div class="meta">{{ armyOf(u.armyId) }} · {{ game.terrainNameAt(u.lon, u.lat) }}</div>
+            <ul v-if="selectedUnits.length === 1" class="battalions" data-testid="unit-battalions">
+              <li v-for="b in battalionRows(u)" :key="b.kind">{{ b.count }} × {{ b.name }}</li>
+            </ul>
             <div class="status" :class="{ warn: u.routed || !u.supplied }">{{ status(u) }}</div>
           </li>
         </ul>
@@ -687,36 +770,7 @@ async function createArmy(): Promise<void> {
           </li>
         </ul>
       </section>
-      <ul class="armies">
-        <li
-          v-for="a in armies"
-          :key="a.id"
-          :class="{ active: a.id === selectedArmyId }"
-          @click="game.selectArmy(a.id)"
-        >
-          <span class="row">
-            <span class="name">{{ a.name }}</span>
-            <span class="meta">{{ a.unitIds.length }} unités</span>
-          </span>
-          <span class="row">
-            <span class="gauge" title="Effectifs moyens">
-              <i :style="{ width: cssPct(armySummary(a).strength) }" class="strength" />
-            </span>
-            <span class="gauge" title="Organisation moyenne">
-              <i :style="{ width: cssPct(armySummary(a).org) }" class="org" />
-            </span>
-          </span>
-          <span class="meta" :class="{ enc: missionOf(a) !== 'hold' }">
-            {{ missionStatus(a) }}
-            <template v-if="armySummary(a).engaged">
-              · {{ armySummary(a).engaged }} au contact</template
-            >
-          </span>
-        </li>
-      </ul>
-      <p v-if="armies.length === 0" class="empty">
-        Aucune armée : sélectionnez des unités et créez-en une depuis l'inspecteur.
-      </p>
+      <ForcesTree :army-status="armyStatusById" />
     </template>
 
     <!-- Fiche de l'armée choisie -->
@@ -1461,5 +1515,26 @@ h3 {
   margin: 4px 0 0;
   color: #9aa3af;
   font-size: 12px;
+}
+.echelon-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 2px;
+}
+.echelon-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.echelon-text .meta {
+  color: #9aa3af;
+  font-size: 12px;
+}
+.battalions {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #cbd5e1;
 }
 </style>

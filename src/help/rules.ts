@@ -48,10 +48,14 @@ import {
   REPAIR_PER_DAY,
   START_INDUSTRY_BUDGET_SHARE,
   FACTORY_RESERVE_DAYS,
+  UPKEEP_SHARE,
 } from '@/sim/economy/budget'
 import {
   BUILDINGS,
+  CONSCRIPTION_FACTOR,
+  CONSCRIPTION_PER_MILLION,
   CONSTRUCTION_PER_CIV,
+  MOBILIZABLE_SHARE,
   MUNITIONS_PER_MIL,
   PRODUCTION_PER_MIL,
   WAR_ECONOMY,
@@ -185,6 +189,12 @@ const battalionNames = Object.values(BATTALIONS)
 const logisticsKm = MODERN_CATALOG.log.supplyRadiusKm
 const hqKm = HQ_RADIUS_KM
 
+/** Conscription effective (hommes par jour et par million d'habitants) d'un niveau d'économie de guerre. */
+const conscript = (level: 0 | 1 | 2): string =>
+  (CONSCRIPTION_PER_MILLION[level] * CONSCRIPTION_FACTOR * 1000).toLocaleString('fr-FR', {
+    maximumFractionDigits: 1,
+  })
+
 export const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'combat',
@@ -279,6 +289,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     paragraphs: [
       `Chaque corps et chaque armée a un QG intégré, sans pion, placé à ${HQ_BEHIND_KM} km derrière le centre de ses brigades (à l'opposé des ennemis proches). Une brigade à moins de ${hqKm} km du QG de son corps ou de son armée est commandée : feu et défense ${signedPct(COMMAND_FACTOR)}, et elle récupère plus vite son organisation hors combat. Étendue de commandement : un corps commande ses divisions, une armée ses corps et ses divisions sans corps ; jusqu'à ${SPAN_FREE} subordonnés, aucun effet, puis chaque subordonné de plus retire ${pct(SPAN_STEP)} au bonus du QG et à la récupération d'organisation (jusqu'à ${pct(1 - SPAN_MIN)} de moins). Front hiérarchique : la mission de l'armée découpe son front entre ses corps, chaque corps entre ses divisions, selon leurs brigades.`,
       `Divisions et corps : armées, corps, divisions et brigades viennent de l'ordre de bataille réel du pays (une trentaine de pays), sinon d'une armée générée à partir de ses effectifs réels. Une division suit un modèle de 2 à 4 brigades (division mécanisée : deux brigades mécanisées, une blindée, une d'artillerie) ; les brigades rattachées directement à un corps ou à une armée forment des divisions de jeu de 3 ou 4, et les appuis (artillerie, génie, sol-air) rejoignent les divisions de leur formation. Les divisions sont organiques : une brigade garde sa division, même détachée dans une autre armée, et la division suit l'armée de la plupart de ses brigades. Une brigade nouvelle rejoint la division la plus proche (${JOIN_KM} km au plus) qui a une place pour son modèle, sinon une nouvelle division est formée autour d'elle ; une brigade détruite réduit sa division. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
+      `Vue Forces : les armées, puis d'un clic leurs corps, leurs divisions et leurs brigades, avec un fil d'Ariane pour remonter ; chaque ligne montre le symbole de l'échelon, les effectifs, le matériel, l'organisation et la situation (au contact, hors ravitaillement, en réserve). Onglet « Modèles » : modèles de brigade (bataillons, effectif, coût, vitesse, attaque, défense) et de division, en lecture seule. L'inspecteur d'une sélection montre son échelon (symbole, division, corps et armée) ; « Sélectionner la division », « le corps », « l'armée » et la touche U remontent d'un échelon.`,
       `Départ : chaque corps ukrainien et chaque armée russe tient sa direction réelle du front (Kharkiv, Pokrovsk, Zaporijjia…), d'après les rapports de l'automne 2026 ; les formations dispersées couvrent tout le front, celles qui sont loin (Kaliningrad, Arménie) restent en garnison. Les brigades partent à l'effectif réel de leur armée : ${pct(countryForces('UKR').fill ?? 1)} de leur effectif théorique côté ukrainien, ${pct(countryForces('RUS').fill ?? 1)} côté russe.`,
     ],
   },
@@ -342,6 +353,8 @@ export const HELP_SECTIONS: HelpSection[] = [
       `Les usines sont des sites sur la carte. Une journée d'usine militaire à plein régime donne ${PRODUCTION_PER_MIL} de production et ${MUNITIONS_PER_MIL} munitions, une journée d'usine civile ${CONSTRUCTION_PER_CIV} points de construction ; elles coûtent chacune le même prix, fixé au départ pour chaque pays (l'industrie de départ à plein régime absorbe ${pct(START_INDUSTRY_BUDGET_SHARE)} du budget de paix). L'argent sans usines reste inemployé, des usines sans argent s'arrêtent.`,
       `Répartition automatique : la défense fait tourner les usines militaires, la construction paie ce que les chantiers en cours absorbent, ${pct(AUTO_RESEARCH_SHARE)} vont à la recherche, le reste à la réserve. La réserve couvre les manques de la défense, puis de la construction.`,
       `Une usine dont la cellule passe à l'ennemi lui revient, endommagée (${pct(CAPTURED_CONDITION)} de son rendement), puis se répare en ${Math.round((1 - CAPTURED_CONDITION) / REPAIR_PER_DAY)} jours environ. Plafond du stock de munitions : ${MUNITIONS_CAP_DAYS} jours de production des usines militaires, ${MUNITIONS_CAP_MIN} au moins.`,
+      `PIB réel (FMI) et dépenses militaires réelles (SIPRI, en part du PIB). Entretien de l'armée : le budget reçoit en plus ${pct(UPKEEP_SHARE)} des dépenses militaires réelles du pays, et la défense paie chaque jour, avant ses usines, l'entretien de ses brigades (proportionnel à leur coût de formation et à leurs effectifs) ; le prix est fixé pour que l'armée de départ coûte exactement cette part. Une armée plus grande prend sur les usines militaires et la réserve ; un entretien payé en partie ralentit d'autant les renforts.`,
+      `Conscription : chaque jour, ${conscript(0)} hommes par million d'habitants du territoire tenu en paix, ${conscript(1)} en mobilisation partielle, ${conscript(2)} en guerre totale (rythmes réels multipliés par ${CONSCRIPTION_FACTOR.toLocaleString('fr-FR')} tant que les pertes du jeu restent plus lourdes que les pertes réelles ; réduits par un faible soutien à la guerre), puisés dans une réserve mobilisable de ${pct(MOBILIZABLE_SHARE)} de la population au départ, hommes déjà sous les drapeaux déduits ; une réserve vide arrête la conscription. Le bloc Budget du tiroir Production donne l'entretien du jour, sa part payée, la réserve mobilisable et la conscription.`,
       `La mobilisation retire des hommes à l'économie : chaque point de population active sous les drapeaux coûte environ ${MOBILIZATION_DRAG} points de PIB, atteints en quelques mois.`,
       `Aide étrangère en argent : un donneur à budget verse chaque jour ${pct(AID_MONEY_SHARE[1])}, ${pct(AID_MONEY_SHARE[2])} ou ${pct(AID_MONEY_SHARE[3])} de son budget selon le niveau d'aide, sans dépasser ${pct(AID_CAP[1])}, ${pct(AID_CAP[2])} ou ${pct(AID_CAP[3])} du budget du receveur ; l'argent va à la réserve du receveur.`,
       `L'IA (et la gestion automatique des constructions) ne lance une usine que si ses usines militaires sont payées et que sa réserve dépasse ${FACTORY_RESERVE_DAYS} jours de budget ; elle mène alors autant de chantiers que ses usines civiles le permettent.`,

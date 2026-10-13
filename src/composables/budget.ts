@@ -26,6 +26,10 @@ export interface BudgetView {
   mobilizationPct: number
   /** Aide étrangère en argent du dernier jour (M$) : reçue et versée. */
   aid: { in: number; out: number }
+  /** Entretien de l'armée du dernier jour (M$) et part payée ; null sans entretien. */
+  upkeep: { need: number; paid: number } | null
+  /** Réserve mobilisable (milliers d'hommes) et conscription du jour ; null sans plafond. */
+  manpower: { pool: number; perDay: number } | null
 }
 
 const pct = (v: number): string => `${Math.round(v * 100)} %`
@@ -43,7 +47,9 @@ export function budgetView(eco: EconomyState | null | undefined): BudgetView | n
   const last = b?.last
   if (!eco || !b || !last) return null
   const notes: Record<BudgetSector, string> = {
-    defense: `usines militaires à ${pct(last.use.mil)}`,
+    defense: last.upkeep
+      ? `entretien de l'armée payé à ${pct(last.upkeep.paid)}, usines militaires à ${pct(last.use.mil)}`
+      : `usines militaires à ${pct(last.use.mil)}`,
     construction:
       last.allocated.construction > 0 || last.use.civ > 0
         ? `usines civiles à ${pct(last.use.civ)}`
@@ -70,6 +76,11 @@ export function budgetView(eco: EconomyState | null | undefined): BudgetView | n
     },
     mobilizationPct: -(1 - b.gdpIndex) * 100,
     aid: { in: last.aid?.in ?? 0, out: last.aid?.out ?? 0 },
+    upkeep: last.upkeep ?? null,
+    manpower:
+      eco.manpowerPool !== undefined
+        ? { pool: eco.manpowerPool, perDay: eco.daily.manpower }
+        : null,
   }
 }
 
@@ -103,6 +114,8 @@ export function rebalance(a: Allocation, sector: BudgetSector, value: number): A
 export interface BudgetForecast {
   /** Part des usines militaires et civiles que l'argent du secteur fait tourner (hors réserve). */
   milUse: number
+  /** Part de l'entretien de l'armée payée (réserve comprise). */
+  upkeepPaid: number
   civUse: number
   production: number
   munitions: number
@@ -125,10 +138,13 @@ export function budgetForecast(
   if (!b || !last) return null
   const money = (s: BudgetSector): number => last.budget * a[s]
   const use = (m: number, need: number): number => (need > 0 ? Math.min(1, m / need) : 0)
-  const milUse = use(money('defense'), last.need.defense)
+  // La défense paie d'abord l'entretien de l'armée, puis les usines militaires.
+  const upkeep = last.upkeep?.need ?? 0
+  const factoryNeed = Math.max(0, last.need.defense - upkeep)
+  const milUse = use(Math.max(0, money('defense') - upkeep), factoryNeed)
   const civUse = use(money('construction'), last.need.construction)
   // Capacité à plein régime : jours d'usine payés au prix d'une journée.
-  const milDays = b.factoryDayCost > 0 ? last.need.defense / b.factoryDayCost : 0
+  const milDays = b.factoryDayCost > 0 ? factoryNeed / b.factoryDayCost : 0
   const civAbsorb = b.factoryDayCost > 0 ? last.need.construction / b.factoryDayCost : 0
   const extra = (m: number, need: number): number => m - need
   // L'aide en argent (reçue moins versée) va à la réserve.
@@ -144,6 +160,7 @@ export function budgetForecast(
   const civ = covered ? (last.need.construction > 0 ? 1 : 0) : civUse
   return {
     milUse,
+    upkeepPaid: covered || upkeep <= 0 ? 1 : Math.min(1, money('defense') / upkeep),
     civUse,
     production: milDays * PRODUCTION_PER_MIL * mil,
     munitions: milDays * MUNITIONS_PER_MIL * mil,

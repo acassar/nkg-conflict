@@ -7,6 +7,7 @@ import type {
   CountryId,
   EconomyState,
   FactoryKind,
+  FormationState,
   LonLat,
   RecruitItem,
   ScenarioDef,
@@ -23,19 +24,23 @@ import {
   initialBuildings,
   initialCityFactories,
   initialNationalBuildings,
+  CONSCRIPTION_FACTOR,
+  CONSCRIPTION_PER_MILLION,
   MANPOWER_PER_MILLION,
+  MOBILIZABLE_SHARE,
   constructionSlots,
   MUNITIONS_CAP,
   MUNITIONS_PER_MIL,
   MUNITIONS_PER_SHOT,
   NO_MUNITIONS_FACTOR,
   PRODUCTION_PER_MIL,
-  RECRUIT_COSTS,
+  recruitCostOf,
   formationSlots,
   REINFORCE_PER_DAY,
   WAR_ECONOMY,
 } from './rules'
 import { unitName } from '../units/names'
+import { createDivision } from '../systems/formations'
 import { spotNear, unitsNear } from '../politics/mobilization'
 import { manpowerFactor, productionFactor } from '../politics/politics'
 import { OCCUPATION_MANPOWER, OCCUPATION_YIELD, territoryShares } from './national'
@@ -43,19 +48,24 @@ import { armyAnchors, expandOrder, planArmyRecruit, type RecruitOrder } from './
 import {
   addFactory,
   applyBudget,
+  armyUpkeep,
   BUDGET_LEVY,
   computeBudget,
   countCityFactories,
   dailyGdp,
   factorySpot,
+  heldPopulation,
+  menUnderArms,
   mobilizedShare,
   munitionsCap,
   newBudget,
   placeInitialFactories,
   priceFactories,
+  priceUpkeep,
   recordHistory,
   syncFactories,
   TREASURY_START_DAYS,
+  upkeepFunding,
   normalizeAllocation,
   type BudgetResult,
 } from './budget'
@@ -93,13 +103,18 @@ export function initEconomies(ctx: SimContext, scenario: ScenarioDef): void {
       construction: [],
       recruitment: [],
       unitCounters: counters,
-      warEconomy: 0,
+      warEconomy: start?.warEconomy ?? 0,
       ...(start?.gdpB
         ? {
-            budget: newBudget(start.gdpB, start.gdpOnMap ?? 1, {
-              civ: start.offMapFactories?.civ ?? 0,
-              mil: start.offMapFactories?.mil ?? 0,
-            }),
+            budget: newBudget(
+              start.gdpB,
+              start.gdpOnMap ?? 1,
+              {
+                civ: start.offMapFactories?.civ ?? 0,
+                mil: start.offMapFactories?.mil ?? 0,
+              },
+              start.defensePct,
+            ),
           }
         : {}),
       factories: [],
@@ -116,6 +131,11 @@ export function initEconomies(ctx: SimContext, scenario: ScenarioDef): void {
   initFactories(ctx, scenario)
 }
 
+/** Population d'un pays (millions) : celle de la carte, sinon celle du scénario (théâtre). */
+function popMOf(ctx: SimContext, scenario: ScenarioDef, country: CountryId): number {
+  return (ctx.countries.get(country)?.pop ?? 0) / 1e6 || (scenario.economy[country]?.popM ?? 0)
+}
+
 /** Industrie de départ des pays à budget : usines posées sur la carte, plafond de munitions. */
 export function initFactories(ctx: SimContext, scenario: ScenarioDef, only?: Set<CountryId>): void {
   for (const eco of ctx.economies.values()) {
@@ -125,6 +145,27 @@ export function initFactories(ctx: SimContext, scenario: ScenarioDef, only?: Set
     eco.munitionsCap = munitionsCap(eco, MUNITIONS_PER_MIL)
   }
   countCityFactories(ctx)
+}
+
+/**
+ * Armée de départ des pays à budget, une fois levée (phase D3) : prix de son entretien (elle absorbe
+ * la part prévue des dépenses militaires réelles) et réserve mobilisable restante.
+ */
+export function initArmyEconomy(
+  ctx: SimContext,
+  scenario: ScenarioDef,
+  only?: Set<CountryId>,
+): void {
+  for (const eco of ctx.economies.values()) {
+    if (!eco.budget || (only && !only.has(eco.country))) continue
+    priceUpkeep(ctx, scenario, eco)
+    const popM = popMOf(ctx, scenario, eco.country)
+    eco.manpowerPool = Math.max(
+      0,
+      popM * 1000 * MOBILIZABLE_SHARE - menUnderArms(ctx, eco.country) - eco.manpower,
+    )
+    eco.upkeepPaid = 1
+  }
 }
 
 /** Villes par camp, recalculées au plus une fois par tick (des centaines de pays × des centaines de villes). */
@@ -284,6 +325,7 @@ function dailyAccounts(
   const national = scenario.economyModel === 'national'
   // Main-d'œuvre : villes tenues, plus apports (fixes, ou au prorata du territoire au modèle national).
   let manpower = national ? 0 : (pop / 1_000_000) * MANPOWER_PER_MILLION
+  let occupied = 0
   let base = {
     production: offMap?.productionPerDay ?? 0,
     munitions: offMap?.munitionsPerDay ?? 0,
@@ -302,7 +344,7 @@ function dailyAccounts(
     for (const [orig, share] of shares.occupied.get(side) ?? []) {
       const theirs = scenario.economy[ctx.sides[orig] ?? '']
       if (!theirs) continue
-      manpower += theirs.manpowerPerDay * share * OCCUPATION_MANPOWER
+      occupied += theirs.manpowerPerDay * share * OCCUPATION_MANPOWER
       base.production += theirs.productionPerDay * share * OCCUPATION_YIELD
       base.munitions += theirs.munitionsPerDay * share * OCCUPATION_YIELD
       base.construction += (theirs.constructionPerDay ?? 0) * share * OCCUPATION_YIELD
@@ -312,19 +354,32 @@ function dailyAccounts(
   }
   // Stabilité et sanctions pèsent sur l'industrie, le soutien à la guerre sur la conscription.
   const industry = productionFactor(ctx, country)
+  const popM = popMOf(ctx, scenario, country)
+  if (eco?.budget && eco.manpowerPool !== undefined) {
+    // Conscription réelle (phase D3) : population du territoire tenu, selon l'économie de guerre,
+    // plus la part du territoire occupé ; plafonnée par la réserve mobilisable.
+    manpower =
+      heldPopulation(ctx, eco, popM) *
+        CONSCRIPTION_PER_MILLION[eco.warEconomy] *
+        CONSCRIPTION_FACTOR +
+      occupied
+  } else manpower += occupied
   manpower *= manpowerFactor(ctx, country)
+  if (eco?.manpowerPool !== undefined) manpower = Math.min(manpower, Math.max(0, eco.manpowerPool))
   // Économie de guerre : une part de l'industrie civile travaille pour l'armée.
   const war = WAR_ECONOMY[eco?.warEconomy ?? 0]
   if (eco?.budget) {
     syncFactories(ctx)
-    const popM = (ctx.countries.get(country)?.pop ?? 0) / 1e6 || (offMap?.popM ?? 0)
+    const gdp = dailyGdp(ctx, scenario, eco)
     const r = computeBudget(eco, {
-      gdp: dailyGdp(ctx, scenario, eco),
+      gdp,
       levy: war.levy * industry,
       milRate: war.production * industry,
       civRate: war.construction * industry,
       constructionDemand: (points) => constructionDemand(eco, points),
       mobilized: mobilizedShare(ctx, eco, popM),
+      upkeep: armyUpkeep(ctx, eco),
+      upkeepFunding: upkeepFunding(eco, gdp),
       pointsPerMil: { production: PRODUCTION_PER_MIL, munitions: MUNITIONS_PER_MIL },
       pointsPerCiv: CONSTRUCTION_PER_CIV,
     })
@@ -396,6 +451,8 @@ export function updateEconomy(
     eco.production += production
     eco.munitions = Math.min(eco.munitionsCap ?? MUNITIONS_CAP, eco.munitions + munitions)
     eco.manpower += manpower
+    if (eco.manpowerPool !== undefined) eco.manpowerPool = Math.max(0, eco.manpowerPool - manpower)
+    if (budget) eco.upkeepPaid = budget.upkeepPaid
     eco.daily = {
       construction,
       production,
@@ -481,8 +538,11 @@ function completeFactory(
  * matériel (payé en production, la moitié du prix d'une unité neuve), chacun de son côté : faute de
  * production, une unité retrouve ses hommes sans son matériel, et inversement. Une brigade en
  * sous-effectif chronique (`establishment`) n'est renforcée que jusqu'à son effectif de départ.
+ * Coûts du modèle de la brigade ; un entretien de l'armée impayé ralentit les renforts d'autant.
  */
 function reinforce(ctx: SimContext, eco: EconomyState): void {
+  const pace = REINFORCE_PER_DAY * Math.max(0, Math.min(1, eco.upkeepPaid ?? 1))
+  if (pace <= 0) return
   for (const u of ctx.units.values()) {
     if (u.owner !== eco.country) continue
     const gear = equipmentOf(u)
@@ -491,9 +551,9 @@ function reinforce(ctx: SimContext, eco: EconomyState): void {
     const rt = runtimeOf(ctx, u.id)
     if (!rt.supplied || rt.engagedWith !== null || rt.routed) continue
     if (eco.production <= 0 && eco.manpower <= 0) break
-    const cost = RECRUIT_COSTS[u.kind]
-    const menWant = Math.max(0, Math.min(REINFORCE_PER_DAY, full - u.strength))
-    const gearWant = Math.min(REINFORCE_PER_DAY, 1 - gear)
+    const cost = recruitCostOf(u.kind, u.template)
+    const menWant = Math.max(0, Math.min(pace, full - u.strength))
+    const gearWant = Math.min(pace, 1 - gear)
     const men = menWant * cost.manpower
     const prod = gearWant * cost.production * 0.5
     const menShare = menWant > 0 ? Math.min(1, Math.max(0, eco.manpower) / Math.max(men, 1e-9)) : 0
@@ -517,7 +577,7 @@ function advanceRecruitment(ctx: SimContext, eco: EconomyState): void {
   // Chaque caserne forme FORMATIONS_PER_BARRACKS brigades à la fois.
   const slots = formationSlots(barracksCount(ctx, eco.country))
   for (const item of eco.recruitment.slice(0, slots)) {
-    const cost = RECRUIT_COSTS[item.kind]
+    const cost = recruitCostOf(item.kind, item.template)
     const step = Math.min(eco.production, item.cost / cost.days, item.cost - item.progress)
     if (step <= 0) break
     item.progress += step
@@ -559,10 +619,41 @@ function deployRecruit(
     armyId: army && army.owner === eco.country ? army.id : null,
     hoursOutOfSupply: 0,
     posture: army?.owner === eco.country ? army.posture : undefined,
+    ...(item.template ? { template: item.template } : {}),
   }
   ctx.units.set(u.id, u)
+  joinOrderedDivision(ctx, eco.country, item, u)
   if (u.armyId !== null) army?.unitIds.push(u.id)
   ctx.log(`Nouvelle unité à ${city.def.name} : ${u.name}`, eco.country, true)
+}
+
+/**
+ * Division d'une recrue commandée par modèle : la division choisie si elle existe encore, ou celle de
+ * sa division entière (créée à la sortie de la première brigade). Sans armée, la brigade attend d'en
+ * rejoindre une (formations.ts).
+ */
+function joinOrderedDivision(
+  ctx: SimContext,
+  country: CountryId,
+  item: RecruitItem,
+  u: UnitState,
+): void {
+  if (u.armyId === null) return
+  if (item.divisionId !== undefined) {
+    const d = ctx.formations.get(item.divisionId)
+    if (d && d.kind === 'division' && d.owner === country) u.divisionId = d.id
+    return
+  }
+  if (item.batch === undefined || !item.divisionTemplate) return
+  let d: FormationState | undefined
+  for (const f of ctx.formations.values()) {
+    if (f.batch === item.batch && f.owner === country) d = f
+  }
+  if (!d) {
+    d = createDivision(ctx, country, u.armyId, item.divisionTemplate)
+    d.batch = item.batch
+  }
+  u.divisionId = d.id
 }
 
 // ---------- Commandes ----------
@@ -694,13 +785,14 @@ export function queueRecruit(
   kind: UnitKind,
   cityName: string,
   armyId: number | null,
+  extra: Pick<RecruitItem, 'template' | 'divisionId' | 'divisionTemplate' | 'batch'> = {},
 ): string | null {
   const eco = ctx.economies.get(country)
   const city = ctx.cityStates.get(cityName)
   if (!eco || !city) return 'Ville inconnue'
   if (city.owner !== sideIndex(ctx, country)) return `${cityName} n'est pas sous votre contrôle`
   if (city.buildings.barracks <= 0) return `Pas de caserne à ${cityName}`
-  const cost = RECRUIT_COSTS[kind]
+  const cost = recruitCostOf(kind, extra.template)
   if (eco.manpower < cost.manpower) return "Pas assez de main-d'œuvre"
   eco.manpower -= cost.manpower
   eco.recruitment.push({
@@ -710,6 +802,7 @@ export function queueRecruit(
     progress: 0,
     cost: cost.production,
     armyId,
+    ...extra,
   })
   return null
 }
@@ -742,8 +835,8 @@ export function queueArmyRecruit(
   const eco = ctx.economies.get(country)
   const army = ctx.armies.get(armyId)
   if (!eco || !army || army.owner !== country) return fail('Armée inconnue')
-  const kinds = expandOrder(order, UNIT_KINDS)
-  if (kinds.length === 0) return fail('Aucune unité commandée')
+  const lines = expandOrder(order)
+  if (lines.length === 0) return fail('Aucune unité commandée')
   const sites = barracksSites(ctx, country)
   if (sites.length === 0) return fail('Aucune caserne : construisez-en une pour former des unités')
   const anchors = armyAnchors(army, (id) => {
@@ -754,13 +847,28 @@ export function queueArmyRecruit(
     sites,
     queue: eco.recruitment,
     anchors,
-    kinds,
+    lines,
     stock: eco.production,
     productionPerDay: eco.daily.production,
   })
   let launched = 0
+  // Une division entière : un numéro de commande commun à ses brigades.
+  const batches = new Map<number, number>()
   for (const item of plan.items) {
-    if (queueRecruit(ctx, country, item.kind, item.city, armyId) !== null) break
+    const line = lines[item.line]
+    if (!line) continue
+    let batch: number | undefined
+    if (line.group !== undefined) {
+      batch = batches.get(line.group) ?? ctx.allocId()
+      batches.set(line.group, batch)
+    }
+    const extra = {
+      template: line.template,
+      ...(line.divisionId !== undefined ? { divisionId: line.divisionId } : {}),
+      ...(line.divisionTemplate ? { divisionTemplate: line.divisionTemplate } : {}),
+      ...(batch !== undefined ? { batch } : {}),
+    }
+    if (queueRecruit(ctx, country, item.kind, item.city, armyId, extra) !== null) break
     launched++
   }
   if (launched === 0) return fail("Pas assez de main-d'œuvre")
@@ -784,6 +892,6 @@ export function cancelRecruit(ctx: SimContext, country: CountryId, id: number): 
   if (!eco) return
   const item = eco.recruitment.find((q) => q.id === id)
   if (!item) return
-  eco.manpower += RECRUIT_COSTS[item.kind].manpower
+  eco.manpower += recruitCostOf(item.kind, item.template).manpower
   eco.recruitment = eco.recruitment.filter((q) => q.id !== id)
 }

@@ -30,7 +30,9 @@ describe('économie nationale', () => {
     const pol = dailyIncome(ctx, sim.scenario, 'POL')
     // La France, plus riche, produit plus que la Pologne malgré peu de grandes villes.
     expect(fra.production).toBeGreaterThan(pol.production)
-    expect(fra.manpower).toBeGreaterThan(2)
+    // Conscription de paix : quelques centaines d'hommes par jour.
+    expect(fra.manpower).toBeGreaterThan(0.1)
+    expect(fra.manpower).toBeGreaterThan(pol.manpower)
 
     // La moitié sud de la France passe à l'Espagne : la France perd, l'Espagne gagne un peu.
     const esp = dailyIncome(ctx, sim.scenario, 'ESP')

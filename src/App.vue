@@ -43,7 +43,8 @@ const topBanner = computed(() =>
   game.modeHint || game.lasso ? !(aiming.value && !isMobile.value) : !!game.notice,
 )
 
-// Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, L = carte logistique, P = filtre
+// Raccourcis : espace = pause, 1 à 5 = vitesse, M/T/H/R = ordres, U = échelon au-dessus, L = carte
+// logistique, P = filtre
 // « Pays », Échap = annuler.
 // ZQSD (WASD en QWERTY) et les flèches déplacent la carte (voir MapView).
 function onKey(event: KeyboardEvent): void {
@@ -64,6 +65,8 @@ function onKey(event: KeyboardEvent): void {
     game.startOrder('retreat')
   } else if (key === 'h') {
     game.hold()
+  } else if (key === 'u') {
+    game.selectUp()
   } else if (key === 'l') {
     game.setMapView(game.mapView === 'logistics' ? 'political' : 'logistics')
   } else if (key === 'p') {

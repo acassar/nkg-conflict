@@ -103,6 +103,7 @@ import {
   moveQueueItem,
   initCities,
   initEconomies,
+  initArmyEconomy,
   initFactories,
   onCityCaptured,
   queueFactory,
@@ -436,6 +437,7 @@ export class Simulation {
         else mobilize(ctx, country, sim.hooks.armyName(country.id))
       }
     }
+    initArmyEconomy(ctx, scenario)
     previewIncome(ctx, scenario)
     sim.afterLoad()
     return sim
@@ -527,16 +529,24 @@ export class Simulation {
       eco.factories ??= []
       const start = scenario.economy[e.country]
       if (!eco.budget && start?.gdpB) {
-        eco.budget = newBudget(start.gdpB, start.gdpOnMap ?? 1, {
-          civ: start.offMapFactories?.civ ?? 0,
-          mil: start.offMapFactories?.mil ?? 0,
-        })
+        eco.budget = newBudget(
+          start.gdpB,
+          start.gdpOnMap ?? 1,
+          {
+            civ: start.offMapFactories?.civ ?? 0,
+            mil: start.offMapFactories?.mil ?? 0,
+          },
+          start.defensePct,
+        )
         withoutBudget.add(e.country)
       }
       ctx.economies.set(e.country, eco)
     }
     // Usines de départ recréées sur le territoire tenu (les anciennes étaient comptées par ville).
-    if (withoutBudget.size > 0) initFactories(ctx, scenario, withoutBudget)
+    if (withoutBudget.size > 0) {
+      initFactories(ctx, scenario, withoutBudget)
+      initArmyEconomy(ctx, scenario, withoutBudget)
+    }
     const p = save.politics
     ctx.politics = {
       countries: new Map(p.countries.map((c) => [c.code, { ...c }])),

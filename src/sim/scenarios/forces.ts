@@ -44,6 +44,8 @@ export interface RawCountry {
   gdpB: number | null
   pop: number | null
   armedForces: number | null
+  /** Dépenses militaires en % du PIB (SIPRI), quand elles sont connues. */
+  defensePct?: number | null
   oob?: {
     asOf: string
     confidence: string

@@ -1,5 +1,11 @@
 import type { EconomyState } from '@/sim/core/types'
-import { BUILDINGS, RECRUIT_COSTS, WAR_ECONOMY } from '@/sim/economy/rules'
+import {
+  BUILDINGS,
+  CONSCRIPTION_FACTOR,
+  CONSCRIPTION_PER_MILLION,
+  RECRUIT_COSTS,
+  WAR_ECONOMY,
+} from '@/sim/economy/rules'
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import type { WarEconomyLevel } from '@/sim/core/types'
 
@@ -107,5 +113,6 @@ export function warEconomyEffects(level: WarEconomyLevel): string[] {
     `Construction : ${signed(r.construction)}`,
     `Usure de la stabilité : ${wear(r.stabilityPerDay)}, du soutien à la guerre : ${wear(r.warSupportPerDay)}`,
     `Budget prélevé sur le PIB : ${signed(r.levy)}`,
+    `Conscription : ${(CONSCRIPTION_PER_MILLION[level] * CONSCRIPTION_FACTOR * 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} hommes par jour et par million d'habitants`,
   ]
 }

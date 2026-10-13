@@ -29,6 +29,7 @@ import { AIR_MISSION_NAMES } from '@/sim/systems/air'
 import type { AidLevel, PeaceKind } from '@/sim/politics/types'
 import type { ScenarioInfo } from '@/sim/scenarios'
 import { newPlayerWars } from './warBrief'
+import { selectionEchelon } from '@/composables/composition'
 import { inspectorView, type Domain, type InspectKind } from './frame'
 import { pushSample, type GaugeId, type ResourceSample } from '@/composables/gauges'
 import type { SimApi } from '@/sim/worker'
@@ -692,6 +693,51 @@ export const useGameStore = defineStore('game', () => {
     if (selection.value.length > 0) showInspector('units')
   }
 
+  /** Échelon de la sélection (brigade, division, corps, armée) et formations au-dessus. */
+  const selectionInfo = computed(() => {
+    const s = snapshot.value
+    if (!s) return null
+    const ids = new Set(selection.value)
+    const units = s.units.filter((u) => u.owner === s.playerCountry)
+    return selectionEchelon(
+      units.filter((u) => ids.has(u.id)),
+      units,
+      s.formations,
+      s.armies.filter((a) => a.owner === s.playerCountry),
+    )
+  })
+
+  /** Sélectionne toute la division, tout le corps ou toute l'armée de la sélection. */
+  function selectFormation(level: 'division' | 'corps' | 'army'): void {
+    const s = snapshot.value
+    const info = selectionInfo.value
+    if (!s || !info) return
+    if (level === 'army') {
+      if (info.army) selectArmy(info.army.id)
+      return
+    }
+    const f = level === 'division' ? info.division : info.corps
+    if (!f) return
+    const divisions = new Set(
+      s.formations.filter((x) => x.id === f.id || x.parentId === f.id).map((x) => x.id),
+    )
+    selectUnits(
+      s.units.filter((u) => u.divisionId !== null && divisions.has(u.divisionId)).map((u) => u.id),
+      false,
+    )
+  }
+
+  /** Remonte d'un échelon (touche U) : brigade → division → corps → armée. */
+  function selectUp(): void {
+    const info = selectionInfo.value
+    if (!info) return
+    const e = info.echelon
+    if (e === 'army') return
+    if (e === 'brigade' && info.division) selectFormation('division')
+    else if ((e === 'brigade' || e === 'division') && info.corps) selectFormation('corps')
+    else if (info.army) selectFormation('army')
+  }
+
   function clearSelection(): void {
     selection.value = []
     hideInspector('units', 'army')
@@ -1352,6 +1398,9 @@ export const useGameStore = defineStore('game', () => {
     quitToMenu,
     selectUnit,
     selectUnits,
+    selectionInfo,
+    selectFormation,
+    selectUp,
     terrainNameAt,
     ownerAt,
     clearSelection,

@@ -1,45 +1,76 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
-import { RECRUIT_COSTS, formationSlots } from '@/sim/economy/rules'
+import { formationSlots, recruitCostOf } from '@/sim/economy/rules'
 import { armyAnchors, expandOrder, planArmyRecruit } from '@/sim/economy/armyRecruit'
-import { MODERN_CATALOG } from '@/sim/units/catalog'
-import type { ArmyState, LonLat, UnitKind } from '@/sim/core/types'
+import { BRIGADE_TEMPLATES, DIVISION_TEMPLATES } from '@/sim/units/templates'
+import type { ArmyState, LonLat, RecruitItem } from '@/sim/core/types'
 import { useProductionStats } from '@/composables/production'
 
 /**
- * Onglet « Renforts » d'une armée, seul point d'entrée du recrutement : commande par type d'unité,
- * coût total face au stock, hommes, délai d'arrivée au front, part lancée plus tard si la production
- * manque, casernes utilisées, puis commandes en cours de cette armée.
+ * Onglet « Renforts » d'une armée, seul point d'entrée du recrutement (phase D3, par modèle) : brigades
+ * d'un modèle pour une division donnée (ou la plus proche qui a une place), divisions entières d'un
+ * modèle de division ; coût total face au stock, hommes, délai d'arrivée au front, part lancée plus tard
+ * si la production manque, casernes utilisées, puis commandes en cours de cette armée.
  */
 const props = defineProps<{ army: ArmyState }>()
 const game = useGameStore()
 const { economy, snapshot } = storeToRefs(game)
 const stats = useProductionStats()
 
-const UNIT_KINDS = Object.keys(RECRUIT_COSTS) as UnitKind[]
-/** Plafond d'une commande par type (saisie directe). */
+const BRIGADES = Object.values(BRIGADE_TEMPLATES)
+const DIVISIONS = Object.values(DIVISION_TEMPLATES)
+/** Plafond d'une commande par modèle (saisie directe). */
 const MAX_PER_KIND = 200
 
-const order = reactive<Record<UnitKind, number>>(
-  Object.fromEntries(UNIT_KINDS.map((k) => [k, 0])) as Record<UnitKind, number>,
-)
+const brigades = reactive<Record<string, number>>({})
+const divisions = reactive<Record<string, number>>({})
+/** Division rejointe par les brigades commandées (null : la plus proche qui a une place). */
+const target = ref<number | null>(null)
 const clear = (): void => {
-  for (const k of UNIT_KINDS) order[k] = 0
+  for (const t of BRIGADES) brigades[t.id] = 0
+  for (const d of DIVISIONS) divisions[d.id] = 0
 }
+clear()
 // Changer d'armée remet la commande à zéro.
-watch(() => props.army.id, clear)
+watch(
+  () => props.army.id,
+  () => {
+    clear()
+    target.value = null
+  },
+)
 
-const add = (kind: UnitKind, n: number): void => {
-  order[kind] = Math.max(0, Math.min(MAX_PER_KIND, order[kind] + n))
+const bump = (bag: Record<string, number>, id: string, n: number): void => {
+  bag[id] = Math.max(0, Math.min(MAX_PER_KIND, (bag[id] ?? 0) + n))
 }
-function setCount(kind: UnitKind, raw: string): void {
+function setCount(bag: Record<string, number>, id: string, raw: string): void {
   const n = Math.floor(Number(raw))
-  order[kind] = Number.isFinite(n) ? Math.max(0, Math.min(MAX_PER_KIND, n)) : 0
+  bag[id] = Number.isFinite(n) ? Math.max(0, Math.min(MAX_PER_KIND, n)) : 0
 }
 
-const total = computed(() => UNIT_KINDS.reduce((n, k) => n + order[k], 0))
+/** Divisions de l'armée, à rejoindre par les brigades commandées. */
+const armyDivisions = computed(() => {
+  const s = snapshot.value
+  if (!s) return []
+  const ids = new Set(props.army.unitIds)
+  const used = new Set(s.units.filter((u) => ids.has(u.id)).map((u) => u.divisionId))
+  return s.formations
+    .filter((f) => f.kind === 'division' && used.has(f.id))
+    .sort((a, b) => a.number - b.number)
+})
+watch(armyDivisions, (list) => {
+  if (target.value !== null && !list.some((d) => d.id === target.value)) target.value = null
+})
+
+const order = computed(() => ({
+  brigades: { ...brigades },
+  divisions: { ...divisions },
+  divisionId: target.value,
+}))
+const lines = computed(() => expandOrder(order.value))
+const total = computed(() => lines.value.length)
 
 const plan = computed(() => {
   const s = snapshot.value
@@ -57,7 +88,7 @@ const plan = computed(() => {
       })),
     queue: eco.recruitment,
     anchors: armyAnchors(props.army, (id) => positions.get(id)),
-    kinds: expandOrder(order, UNIT_KINDS),
+    lines: lines.value,
     stock: eco.production,
     productionPerDay: eco.daily.production,
   })
@@ -70,7 +101,7 @@ const manpowerShort = computed(
 
 async function submit(): Promise<void> {
   if (total.value === 0) return
-  const ok = await game.queueArmyRecruit(props.army.id, { ...order })
+  const ok = await game.queueArmyRecruit(props.army.id, order.value)
   if (ok) clear()
 }
 
@@ -89,15 +120,26 @@ const stockShare = computed(() => {
     over: p.shortfall > 0,
   }
 })
-const costLine = (kind: UnitKind): string => {
-  const c = RECRUIT_COSTS[kind]
+const brigadeCost = (id: string) => recruitCostOf(BRIGADE_TEMPLATES[id]?.kind ?? 'inf', id)
+const costLine = (id: string): string => {
+  const c = brigadeCost(id)
   return `${round(c.production)} prod · ${men(c.manpower)} h. · ${c.days} j`
+}
+const divisionLine = (id: string): string => {
+  const list = DIVISION_TEMPLATES[id]?.brigades ?? []
+  const prod = list.reduce((s, b) => s + brigadeCost(b).production, 0)
+  const man = list.reduce((s, b) => s + brigadeCost(b).manpower, 0)
+  return `${list.length} brigades · ${round(prod)} prod · ${men(man)} h.`
 }
 /** Hommes (la main-d'œuvre se compte en milliers). */
 const men = (k: number): string => (Math.round(k * 10) * 100).toLocaleString('fr-FR')
 const round = (v: number): string => Math.round(v).toLocaleString('fr-FR')
 const pct = (progress: number, cost: number): number => Math.min(100, (100 * progress) / cost)
-const unitLabel = (kind: UnitKind): string => MODERN_CATALOG[kind].name
+const itemLabel = (q: RecruitItem): string => {
+  const t = q.template ? BRIGADE_TEMPLATES[q.template]?.name : null
+  const d = q.divisionTemplate ? DIVISION_TEMPLATES[q.divisionTemplate]?.name : null
+  return [t ?? q.kind, d ? `(${d})` : null].filter(Boolean).join(' ')
+}
 const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1, d)} j` : 'sans fin')
 </script>
 
@@ -106,18 +148,24 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
     <p v-if="noBarracks" class="warn">
       Aucune caserne : construisez-en une (fiche d'une de vos villes) pour former des unités.
     </p>
+    <div class="label">Brigades par modèle</div>
+    <label class="target">
+      <span>Pour</span>
+      <select v-model="target" data-testid="recruit-division" aria-label="Division rejointe">
+        <option :value="null">la division la plus proche qui a une place</option>
+        <option v-for="d in armyDivisions" :key="d.id" :value="d.id">{{ d.name }}</option>
+      </select>
+    </label>
     <ul class="kinds">
-      <li v-for="kind in UNIT_KINDS" :key="kind">
-        <span
-          class="kname"
-          :title="`${round(RECRUIT_COSTS[kind].production)} production, ${men(RECRUIT_COSTS[kind].manpower)} hommes, ${RECRUIT_COSTS[kind].days} jours minimum`"
-          >{{ unitLabel(kind) }}<small>{{ costLine(kind) }}</small></span
+      <li v-for="t in BRIGADES" :key="t.id">
+        <span class="kname" :title="costLine(t.id)"
+          >{{ t.name }}<small>{{ costLine(t.id) }}</small></span
         >
         <button
           class="step"
-          :disabled="order[kind] === 0"
-          :aria-label="`Retirer : ${unitLabel(kind)}`"
-          @click="add(kind, -1)"
+          :disabled="!brigades[t.id]"
+          :aria-label="`Retirer : ${t.name}`"
+          @click="bump(brigades, t.id, -1)"
         >
           −
         </button>
@@ -126,16 +174,50 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
           min="0"
           :max="MAX_PER_KIND"
           inputmode="numeric"
-          :value="order[kind]"
-          :aria-label="`Nombre : ${unitLabel(kind)}`"
-          :data-testid="`recruit-count-${kind}`"
-          @change="setCount(kind, ($event.target as HTMLInputElement).value)"
+          :value="brigades[t.id]"
+          :aria-label="`Nombre : ${t.name}`"
+          :data-testid="`recruit-count-${t.id}`"
+          @change="setCount(brigades, t.id, ($event.target as HTMLInputElement).value)"
         />
         <button
           class="step"
-          :aria-label="`Ajouter : ${unitLabel(kind)}`"
-          :data-testid="`recruit-add-${kind}`"
-          @click="add(kind, 1)"
+          :aria-label="`Ajouter : ${t.name}`"
+          :data-testid="`recruit-add-${t.id}`"
+          @click="bump(brigades, t.id, 1)"
+        >
+          +
+        </button>
+      </li>
+    </ul>
+    <div class="label">Divisions entières</div>
+    <ul class="kinds">
+      <li v-for="d in DIVISIONS" :key="d.id">
+        <span class="kname" :title="divisionLine(d.id)"
+          >{{ d.name }}<small>{{ divisionLine(d.id) }}</small></span
+        >
+        <button
+          class="step"
+          :disabled="!divisions[d.id]"
+          :aria-label="`Retirer : ${d.name}`"
+          @click="bump(divisions, d.id, -1)"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          min="0"
+          :max="MAX_PER_KIND"
+          inputmode="numeric"
+          :value="divisions[d.id]"
+          :aria-label="`Nombre : ${d.name}`"
+          :data-testid="`recruit-division-count-${d.id}`"
+          @change="setCount(divisions, d.id, ($event.target as HTMLInputElement).value)"
+        />
+        <button
+          class="step"
+          :aria-label="`Ajouter : ${d.name}`"
+          :data-testid="`recruit-division-add-${d.id}`"
+          @click="bump(divisions, d.id, 1)"
         >
           +
         </button>
@@ -214,7 +296,7 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
         :class="{ waiting: !stats?.recruitment.activeIds.has(q.id) }"
       >
         <div class="row">
-          <span>{{ unitLabel(q.kind) }} · {{ q.city }}</span>
+          <span>{{ itemLabel(q) }} · {{ q.city }}</span>
           <span class="meta">{{
             stats?.recruitment.activeIds.has(q.id)
               ? `${Math.round(pct(q.progress, q.cost))} %`
@@ -235,6 +317,22 @@ const daysText = (d: number): string => (Number.isFinite(d) ? `≈ ${Math.max(1,
   list-style: none;
   margin: 0;
   padding: 0;
+}
+.target {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 4px 0 6px;
+  font-size: 12px;
+}
+.target select {
+  flex: 1;
+  min-width: 0;
+  background: #14181f;
+  color: inherit;
+  border: 1px solid #3b4250;
+  border-radius: 6px;
+  padding: 3px 4px;
 }
 .kinds li {
   display: grid;

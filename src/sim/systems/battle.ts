@@ -1,3 +1,4 @@
+import { templateOf } from '../units/templates'
 import { equipmentOf } from '../units/equipment'
 import { runtimeOf, type SimContext } from '../context'
 import type { BattleReport, BattleUnit, UnitState } from '../core/types'
@@ -45,6 +46,7 @@ export function battleReport(ctx: SimContext, ids: number[], player: string): Ba
       name: u.name,
       owner: u.owner,
       kind: u.kind,
+      template: templateOf(u),
       strength: u.strength,
       equipment: equipmentOf(u),
       org: u.org,

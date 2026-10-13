@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
 import type { BattleReport, BattleUnit } from '@/sim/core/types'
-import { MODERN_CATALOG } from '@/sim/units/catalog'
+import { templateLabel } from '@/sim/units/templates'
 import { POSTURES } from '@/sim/units/postures'
 import { isMobile } from '@/composables/layout'
 import { openHelp } from '@/composables/help'
@@ -156,7 +156,7 @@ function focus(): void {
               <div class="row">
                 <span class="uname">{{ u.name }}</span>
                 <span class="meta">
-                  {{ MODERN_CATALOG[u.kind].name }} · {{ POSTURES[u.posture].name }}
+                  {{ templateLabel(u) }} · {{ POSTURES[u.posture].name }}
                   <template v-if="u.attacking"> · attaque</template>
                   <template v-if="u.routed"> · en déroute</template>
                   <template v-if="u.obstacles >= 0.01">

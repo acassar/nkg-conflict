@@ -6,8 +6,6 @@ import { parseSave, serializeSave } from '@/sim/core/save'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import {
   CORPS_DIVISIONS,
-  DIVISION_MANEUVER,
-  DIVISION_SUPPORT,
   formationName,
   formationUnits,
   updateFormations,
@@ -16,6 +14,7 @@ import { divisionCohesion, divisionSectors } from '@/sim/systems/armies'
 import { orderOfBattle, selectionFormation } from '@/composables/composition'
 import { formationMembers, formationPawns, isStack } from '@/map/clusters'
 import { isBrigade } from '@/sim/units/catalog'
+import { DIVISION_TEMPLATES, slotFit, templateOf } from '@/sim/units/templates'
 import type { FormationState, UnitSnapshot, UnitState } from '@/sim/core/types'
 
 const theater = theaterJson as unknown as TheaterData
@@ -34,9 +33,14 @@ describe('divisions et corps', () => {
       else expect(u.divisionId).toBeUndefined()
     }
     for (const d of divisionsOf(sim, 'UKR')) {
-      const members = formationUnits(ctx, d.id)
-      expect(members.filter((u) => u.kind !== 'art').length).toBeLessThanOrEqual(DIVISION_MANEUVER)
-      expect(members.filter((u) => u.kind === 'art').length).toBeLessThanOrEqual(DIVISION_SUPPORT)
+      // Une division suit son modèle : chaque brigade occupe une place de son modèle ou de son rôle.
+      const slots = [...(DIVISION_TEMPLATES[d.template ?? '']?.brigades ?? [])]
+      expect(slots.length).toBeGreaterThan(0)
+      for (const u of formationUnits(ctx, d.id)) {
+        const i = slots.findIndex((s) => slotFit(s, templateOf(u) ?? '') > 0)
+        expect(i).toBeGreaterThanOrEqual(0)
+        slots.splice(i, 1)
+      }
       expect(d.parentId).not.toBeNull()
     }
     const corps = [...ctx.formations.values()].filter((f) => f.kind === 'corps')
@@ -92,7 +96,7 @@ describe('divisions et corps', () => {
     expect(ctx.formations.has(division.id)).toBe(false)
   })
 
-  it("une brigade qui change d'armée quitte sa division ; un groupe d'encerclement la garde", () => {
+  it("division organique : une brigade qui change d'armée la garde, la division suit la plupart de ses brigades", () => {
     const sim = newGame()
     const ctx = sim.ctx
     const [division] = divisionsOf(sim, 'UKR')
@@ -105,14 +109,27 @@ describe('divisions et corps', () => {
     expect(a.armyId).not.toBe(division.armyId)
     updateFormations(ctx)
     expect(a.divisionId).toBe(division.id)
-    // Nouvelle armée ordinaire : la brigade quitte sa division et en rejoint une de cette armée.
+    // Nouvelle armée ordinaire : la brigade garde sa division, qui reste à l'armée de la plupart de
+    // ses brigades ; quand toutes y passent, la division suit.
+    const home = division.armyId
     const other = sim.createArmy('Armée de test', [b.id])
     const army = ctx.armies.get(other)
     if (army) army.encirclement = undefined
     b.armyId = other
     updateFormations(ctx)
-    expect(b.divisionId).not.toBe(division.id)
-    expect(ctx.formations.get(b.divisionId ?? -1)?.armyId).toBe(other)
+    expect(b.divisionId).toBe(division.id)
+    expect(division.armyId).toBe(home)
+    const all = formationUnits(ctx, division.id)
+    expect(
+      sim.createArmy(
+        'Armée entière',
+        all.map((u) => u.id),
+      ),
+    ).toBeGreaterThan(0)
+    updateFormations(ctx)
+    expect(all.every((u) => u.divisionId === division.id)).toBe(true)
+    expect(division.armyId).not.toBe(home)
+    expect(division.parentId).toBeNull()
   })
 
   it('garde divisions et corps dans les sauvegardes', () => {

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
-import { SLOT_LABELS, type SaveSlot } from '@/stores/saves'
+import { isObsoleteSave, SLOT_LABELS, type SaveSlot } from '@/stores/saves'
+import { OBSOLETE_SAVE } from '@/sim/core/save'
 
 const game = useGameStore()
 
@@ -103,11 +104,14 @@ async function onFile(event: Event): Promise<void> {
                 {{ SLOT_LABELS[s.slot] }} du {{ savedAt(s.savedAt) }} ·
                 {{ scenarioName(s.scenarioId) }}
               </div>
+              <div v-if="isObsoleteSave(s)" class="meta obsolete" data-testid="obsolete-save">
+                {{ OBSOLETE_SAVE }}.
+              </div>
             </div>
             <div class="save-actions">
               <button
                 class="primary"
-                :disabled="game.loading"
+                :disabled="game.loading || isObsoleteSave(s)"
                 :data-slot="s.slot"
                 @click="game.loadLocal(s.slot)"
               >
@@ -399,6 +403,9 @@ input:not([type='checkbox']) {
 .saves .meta {
   color: #9aa3af;
   font-size: 12px;
+}
+.saves .obsolete {
+  color: #fca5a5;
 }
 .save-actions {
   display: flex;

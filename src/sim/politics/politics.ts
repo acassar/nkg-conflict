@@ -4,7 +4,6 @@ import type { CountryId, LonLat } from '../core/types'
 import { decodeRle } from '../theater/grid'
 import { WAR_ECONOMY } from '../economy/rules'
 import { mobilize } from './mobilization'
-import { BRIGADE_SPLIT } from '../units/catalog'
 import type { CountryPolitics, PeaceKind, PoliticsSnapshot, War } from './types'
 
 export const RELATION_MIN = -100
@@ -458,9 +457,8 @@ export function updatePoliticsDaily(ctx: SimContext, dailyLosses: Map<CountryId,
   for (const p of ctx.politics.countries.values()) {
     const atWar = ctx.matrix.atWar[sideIndex(ctx, p.code)] === 1
     if (atWar) {
-      // Usure : un peu chaque jour, davantage avec les pertes (en fractions d'unité).
-      // Pertes du jour en brigades, ramenées à l'ancienne échelle d'unité (BRIGADE_SPLIT brigades).
-      const losses = (dailyLosses.get(p.code) ?? 0) / BRIGADE_SPLIT
+      // Usure : un peu chaque jour, davantage avec les pertes (en fractions de brigade).
+      const losses = dailyLosses.get(p.code) ?? 0
       p.warSupport = Math.max(0, p.warSupport - 0.0008 - 0.01 * losses)
       p.stability = Math.max(0, p.stability - 0.0005 - 0.003 * losses)
     } else {

@@ -1,12 +1,16 @@
 import type { UnitKind, UnitState } from '../core/types'
-import { BRIGADE_SPLIT, isBrigade } from './catalog'
 import { Terrain, TERRAIN_RULES } from '../theater/grid'
+import { profileOf } from './templates'
 
 /**
  * Différences entre types d'unités : effets du terrain propres à chaque type, rapports de force
  * entre types et consommation (munitions par tir, dépendance au carburant).
  * Ces effets s'ajoutent aux règles communes du terrain (theater/grid) et du combat (systems/combat).
+ * Une brigade combine ceux de ses bataillons, selon la part de chaque type (units/templates.ts).
  */
+
+/** Unité dont on lit les valeurs : son rôle et son modèle de brigade. */
+type Typed = Pick<UnitState, 'kind' | 'template'>
 
 /** Effet d'un terrain sur un type : multiplicateurs de vitesse, de puissance de feu et de défense. */
 export interface KindTerrainEffect {
@@ -72,21 +76,22 @@ for (const [kind, effects] of Object.entries(KIND_TERRAIN) as [
   TABLES.set(kind, t)
 }
 
-function tables(kind: UnitKind): Tables {
-  return TABLES.get(kind) ?? NEUTRAL
+/** Tables d'effets du terrain d'une famille de bataillons (null : aucun effet propre). */
+export function kindTerrainTables(kind: UnitKind | null): Tables {
+  return (kind && TABLES.get(kind)) || NEUTRAL
 }
 
-/** Multiplicateur de vitesse d'un type sur un terrain. */
-export function kindTerrainSpeed(kind: UnitKind, terrain: number | undefined): number {
-  return tables(kind).speed[terrain ?? 0] ?? 1
+/** Multiplicateur de vitesse d'une unité sur un terrain (son bataillon le plus gêné). */
+export function kindTerrainSpeed(u: Typed, terrain: number | undefined): number {
+  return profileOf(u).terrainSpeed[terrain ?? 0] ?? 1
 }
-/** Multiplicateur de puissance de feu d'un type selon le terrain où il se trouve. */
-export function kindTerrainAttack(kind: UnitKind, terrain: number | undefined): number {
-  return tables(kind).attack[terrain ?? 0] ?? 1
+/** Multiplicateur de puissance de feu d'une unité selon le terrain où elle se trouve. */
+export function kindTerrainAttack(u: Typed, terrain: number | undefined): number {
+  return profileOf(u).terrainAttack[terrain ?? 0] ?? 1
 }
-/** Multiplicateur de défense d'un type selon le terrain où il se trouve. */
-export function kindTerrainDefense(kind: UnitKind, terrain: number | undefined): number {
-  return tables(kind).defense[terrain ?? 0] ?? 1
+/** Multiplicateur de défense d'une unité selon le terrain où elle se trouve. */
+export function kindTerrainDefense(u: Typed, terrain: number | undefined): number {
+  return profileOf(u).terrainDefense[terrain ?? 0] ?? 1
 }
 
 // ---------- Rapports de force entre types ----------
@@ -102,25 +107,34 @@ export const ARTILLERY_STATIC_FACTOR = 1.25
 /** Retranchement à partir duquel une unité immobile est à l'abri de ce bonus. */
 export const STATIC_ENTRENCH_MAX = 0.5
 
-const isFoot = (k: UnitKind): boolean => k === 'inf' || k === 'tdf'
-
-/** Rapport de force entre le type du tireur et celui de sa cible (null = aucun). */
+/**
+ * Rapport de force entre le tireur et sa cible (null = aucun), pondéré par la part de chaque type :
+ * part des chars dans l'attaque du tireur, part des fantassins dans la cible, part de l'artillerie.
+ */
 export function matchup(
   from: UnitState,
   target: UnitState,
   targetTerrain: number | undefined,
 ): { factor: number; label: string } | null {
-  if (from.kind === 'tank' && isFoot(target.kind)) {
+  const pf = profileOf(from)
+  const armorVsFoot = pf.armor * profileOf(target).foot
+  if (armorVsFoot > 0) {
     if (targetTerrain === Terrain.PLAIN) {
-      return { factor: ARMOR_OPEN_FACTOR, label: 'Blindés contre infanterie à découvert' }
+      return {
+        factor: 1 + (ARMOR_OPEN_FACTOR - 1) * armorVsFoot,
+        label: 'Blindés contre infanterie à découvert',
+      }
     }
     if (targetTerrain === Terrain.URBAN && target.entrench >= URBAN_ENTRENCH_MIN) {
-      return { factor: ARMOR_URBAN_FACTOR, label: 'Blindés contre infanterie retranchée en ville' }
+      return {
+        factor: 1 + (ARMOR_URBAN_FACTOR - 1) * armorVsFoot,
+        label: 'Blindés contre infanterie retranchée en ville',
+      }
     }
   }
-  if (from.kind === 'art' && target.path.length === 0 && target.entrench < STATIC_ENTRENCH_MAX) {
+  if (pf.artillery > 0 && target.path.length === 0 && target.entrench < STATIC_ENTRENCH_MAX) {
     return {
-      factor: ARTILLERY_STATIC_FACTOR,
+      factor: 1 + (ARTILLERY_STATIC_FACTOR - 1) * pf.artillery,
       label: 'Artillerie contre cible immobile à découvert',
     }
   }
@@ -129,30 +143,16 @@ export function matchup(
 
 // ---------- Consommation ----------
 
-/** Munitions consommées par tir, selon le type (1 = infanterie de l'ancienne échelle). */
-export const MUNITIONS_PER_SHOT_BY_KIND: Record<UnitKind, number> = {
-  inf: 1,
-  mech: 1.1,
-  tank: 1.25,
-  art: 2,
-  tdf: 0.75,
-  log: 1,
-  hq: 1,
+/** Munitions consommées par un tir de cette unité : la somme de ses bataillons (units/templates.ts). */
+export function munitionsPerShot(u: Typed): number {
+  return profileOf(u).munitions
 }
 
-/** Munitions consommées par un tir de cette unité : une brigade tire le tiers d'une ancienne unité. */
-export function munitionsPerShot(kind: UnitKind): number {
-  return MUNITIONS_PER_SHOT_BY_KIND[kind] / (isBrigade(kind) ? BRIGADE_SPLIT : 1)
+/** Une unité motorisée dépend du carburant apporté par le ravitaillement. */
+export function isMotorized(u: Typed): boolean {
+  return profileOf(u).motorized
 }
 
-/** Types motorisés : ils dépendent du carburant apporté par le ravitaillement. */
-export const MOTORIZED: ReadonlySet<UnitKind> = new Set<UnitKind>([
-  'tank',
-  'mech',
-  'art',
-  'log',
-  'hq',
-])
 /** Au-delà de ces heures sans ravitaillement, les réservoirs d'une unité motorisée sont vides. */
 export const FUEL_HOURS = 24
 /** Vitesse d'une unité motorisée sans carburant. */
@@ -160,5 +160,5 @@ export const NO_FUEL_SPEED = 0.4
 
 /** Multiplicateur de vitesse lié au carburant (1 = plein ou type non motorisé). */
 export function fuelSpeedFactor(u: UnitState): number {
-  return MOTORIZED.has(u.kind) && u.hoursOutOfSupply > FUEL_HOURS ? NO_FUEL_SPEED : 1
+  return isMotorized(u) && u.hoursOutOfSupply > FUEL_HOURS ? NO_FUEL_SPEED : 1
 }

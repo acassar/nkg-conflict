@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { BRIGADE_SPLIT } from '@/sim/units/catalog'
 import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
@@ -112,12 +111,12 @@ describe('attaque mesurée', () => {
   it('avec des voisines, l’attaque continue', () => {
     const sim = newGame()
     const ctx = sim.ctx
-    // Six brigades, soit deux unités de l'ancienne échelle : chacune a des voisines en soutien.
+    // Deux brigades : chacune a une voisine en soutien.
     const group = [...ctx.units.values()]
       .filter((x) => x.owner === 'UKR' && x.kind === 'inf')
-      .slice(0, 2 * BRIGADE_SPLIT)
+      .slice(0, 2)
     const u = group[0]
-    if (!u || group.length < 2 * BRIGADE_SPLIT) throw new Error('unités introuvables')
+    if (!u || group.length < 2) throw new Error('unités introuvables')
     const [lon, lat] = [36.9, 50.75]
     clearAround(sim, group, lon, lat)
     for (const [k, x] of group.entries()) {

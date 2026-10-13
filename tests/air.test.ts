@@ -21,21 +21,13 @@ import { combatModifiers } from '@/sim/systems/combat'
 import { parseSave, serializeSave } from '@/sim/core/save'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import type { LonLat, UnitState } from '@/sim/core/types'
+import { bringToContact } from './helpers/contact'
 
 const theater = theaterJson as unknown as TheaterData
 const newGame = (): Simulation => Simulation.fromScenario(ukraine2026, theater, 3)
 
-/** Une brigade ukrainienne au contact des Russes. */
-const frontUnit = (sim: Simulation): UnitState => {
-  const units = [...sim.ctx.units.values()]
-  const u = units.find(
-    (x) =>
-      x.owner === 'UKR' &&
-      units.some((e) => e.owner === 'RUS' && distanceKm(x.lon, x.lat, e.lon, e.lat) < 15),
-  )
-  if (!u) throw new Error('aucune unité au contact')
-  return u
-}
+/** Une brigade ukrainienne au contact des Russes : la plus proche, avancée à 6 km de son vis-à-vis. */
+const frontUnit = (sim: Simulation): UnitState => bringToContact(sim)
 const at = (u: UnitState): LonLat => [u.lon, u.lat]
 
 describe('aviation provisoire', () => {
@@ -92,7 +84,8 @@ describe('aviation provisoire', () => {
 
   it("l'IA pose supériorité et appui au-dessus de ses unités au contact", () => {
     const sim = newGame()
-    sim.step(24)
+    bringToContact(sim)
+    sim.step(1)
     updateAirAi(sim.ctx, 'RUS')
     const zones = airZonesOf(sim.ctx, 'RUS')
     expect(zones.map((z) => z.mission).sort()).toEqual(['superiority', 'support'])

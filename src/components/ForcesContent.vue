@@ -7,7 +7,7 @@ import ArmyComposition from './ArmyComposition.vue'
 import { useProductionStats } from '@/composables/production'
 import { isTouch } from '@/composables/layout'
 import { selectionFormation } from '@/composables/composition'
-import { MODERN_CATALOG } from '@/sim/units/catalog'
+import { compositionText, templateLabel } from '@/sim/units/templates'
 import { EMBARK_KM } from '@/sim/systems/naval'
 import { MODE_NAMES } from '@/sim/systems/transport'
 import {
@@ -526,7 +526,9 @@ async function createArmy(): Promise<void> {
           <li v-for="u in selectedUnits" :key="u.id">
             <div class="row">
               <span class="name">{{ u.name }}</span>
-              <span class="meta">{{ MODERN_CATALOG[u.kind].name }}</span>
+              <span class="meta" data-testid="unit-template" :title="compositionText(u)">{{
+                templateLabel(u)
+              }}</span>
             </div>
             <div class="row">
               <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">

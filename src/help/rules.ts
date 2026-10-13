@@ -95,12 +95,7 @@ import {
 import { MODERN_CATALOG } from '@/sim/units/catalog'
 import { DESTROYED_BELOW, EQUIPMENT_WEIGHT } from '@/sim/units/equipment'
 import { REINFORCE_PER_DAY } from '@/sim/economy/rules'
-import {
-  CORPS_DIVISIONS,
-  DIVISION_MANEUVER,
-  DIVISION_SUPPORT,
-  JOIN_KM,
-} from '@/sim/systems/formations'
+import { CORPS_DIVISIONS, JOIN_KM } from '@/sim/systems/formations'
 import { OUT_OF_SECTOR_KM } from '@/sim/systems/armies'
 import {
   ARMOR_OPEN_FACTOR,
@@ -108,12 +103,13 @@ import {
   ARTILLERY_STATIC_FACTOR,
   FUEL_HOURS,
   KIND_TERRAIN,
-  MUNITIONS_PER_SHOT_BY_KIND,
   NO_FUEL_SPEED,
   STATIC_ENTRENCH_MAX,
   URBAN_ENTRENCH_MIN,
 } from '@/sim/units/kinds'
 import type { UnitKind } from '@/sim/core/types'
+import { BATTALIONS } from '@/sim/units/battalions'
+import { profileOf, REFERENCE_BATTALIONS } from '@/sim/units/templates'
 import {
   SUSTAIN_CRITICAL_DAYS,
   SUSTAIN_MAX_DAYS,
@@ -170,13 +166,17 @@ function equipmentWeights(): string {
     .join(', ')
 }
 
-/** « Infanterie 1, Blindés 1,5… » pour les types de combat. */
-function kindList(values: Record<UnitKind, number>): string {
+/** « Infanterie 1, Blindés 1,3… » pour les brigades des modèles par défaut. */
+function kindList(value: (kind: UnitKind) => number): string {
   const kinds: UnitKind[] = ['inf', 'tdf', 'mech', 'tank', 'art']
-  return kinds
-    .map((k) => `${MODERN_CATALOG[k].name.toLowerCase()} ${values[k].toLocaleString('fr-FR')}`)
-    .join(', ')
+  const fmt = (v: number): string => v.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
+  return kinds.map((k) => `${MODERN_CATALOG[k].name.toLowerCase()} ${fmt(value(k))}`).join(', ')
 }
+
+/** « infanterie légère, infanterie motorisée… » : les types de bataillon. */
+const battalionNames = Object.values(BATTALIONS)
+  .map((b) => b.name.toLowerCase())
+  .join(', ')
 
 const logisticsKm = MODERN_CATALOG.log.supplyRadiusKm
 const hqKm = MODERN_CATALOG.hq.commandRadiusKm
@@ -220,9 +220,10 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'kinds',
     title: "Types d'unités",
     paragraphs: [
-      "Chaque type réagit au terrain à sa façon, en plus des effets communs : le tableau donne les écarts de vitesse, de puissance de feu et de défense (terrain de la cellule où se trouve l'unité).",
-      `Rapports de force : blindés contre infanterie ou défense territoriale en plaine ${signedPct(ARMOR_OPEN_FACTOR)} de feu ; contre la même infanterie en ville, retranchée à ${pct(URBAN_ENTRENCH_MIN)} ou plus, ${signedPct(ARMOR_URBAN_FACTOR)} ; artillerie contre une unité immobile retranchée à moins de ${pct(STATIC_ENTRENCH_MAX)} ${signedPct(ARTILLERY_STATIC_FACTOR)}.`,
-      `Munitions par tir : ${kindList(MUNITIONS_PER_SHOT_BY_KIND)} (infanterie = 1). Carburant : blindés, mécanisée, artillerie, logistique et QG sont motorisés ; coupés du ravitaillement plus de ${FUEL_HOURS} heures, leurs réservoirs sont vides et leur vitesse tombe à ${pct(NO_FUEL_SPEED)}. L'infanterie à pied n'en dépend pas.`,
+      `Une brigade est interarmes : elle suit un modèle (brigade mécanisée, blindée, motorisée…), liste de bataillons de types différents (${battalionNames}). Ses valeurs en découlent : attaque et défense sommées (divisées par ${REFERENCE_BATTALIONS}, le nombre de bataillons de ligne d'une brigade de référence), vitesse de son bataillon le plus lent, poids du matériel, effets du terrain, rapports de force et munitions selon la part de chaque type. Une brigade blindée compte des fantassins, une brigade mécanisée des chars.`,
+      "Chaque type de bataillon réagit au terrain à sa façon, en plus des effets communs : le tableau donne les écarts de vitesse, de puissance de feu et de défense (terrain de la cellule où se trouve l'unité) ; une brigade prend la moyenne de ses bataillons, et pour la vitesse celle du plus gêné.",
+      `Rapports de force : chars contre fantassins en plaine ${signedPct(ARMOR_OPEN_FACTOR)} de feu ; contre les mêmes fantassins en ville, retranchés à ${pct(URBAN_ENTRENCH_MIN)} ou plus, ${signedPct(ARMOR_URBAN_FACTOR)} ; artillerie contre une unité immobile retranchée à moins de ${pct(STATIC_ENTRENCH_MAX)} ${signedPct(ARTILLERY_STATIC_FACTOR)}. Ces effets valent en plein pour une brigade toute de chars contre une brigade toute de fantassins, et au prorata sinon (part des chars dans l'attaque du tireur, part des fantassins dans la cible, part de l'artillerie).`,
+      `Munitions par tir : ${kindList((k) => profileOf({ kind: k }).munitions)} (infanterie = 1). Carburant : une brigade dont la majorité des bataillons roulent est motorisée (blindée, mécanisée, motorisée, artillerie), comme la logistique et les QG ; coupés du ravitaillement plus de ${FUEL_HOURS} heures, leurs réservoirs sont vides et leur vitesse tombe à ${pct(NO_FUEL_SPEED)}. L'infanterie à pied n'en dépend pas.`,
     ],
     table: {
       head: ['Type', 'Terrain', 'Vitesse', 'Feu', 'Défense'],
@@ -273,7 +274,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: 'Commandement',
     paragraphs: [
       `Une unité à moins de ${hqKm} km d'un quartier général de son pays (qui n'est pas en déroute) est commandée : feu et défense ${signedPct(COMMAND_FACTOR)}, et elle récupère plus vite son organisation hors combat.`,
-      `Divisions et corps : les brigades de chaque armée sont regroupées automatiquement en divisions (${DIVISION_MANEUVER} brigades de manœuvre et ${DIVISION_SUPPORT} d'artillerie au plus), les divisions en corps (${CORPS_DIVISIONS} au plus). Une recrue rejoint la division incomplète la plus proche (${JOIN_KM} km au plus), sinon une nouvelle division est formée. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
+      `Divisions et corps : une division suit un modèle de 2 à 4 brigades (division mécanisée : deux brigades mécanisées, une blindée, une d'artillerie), et les divisions sont regroupées en corps (${CORPS_DIVISIONS} au plus). Les divisions sont organiques : une brigade garde sa division, même détachée dans une autre armée, et la division suit l'armée de la plupart de ses brigades. Une brigade nouvelle rejoint la division la plus proche (${JOIN_KM} km au plus) qui a une place pour son modèle, sinon une nouvelle division est formée autour d'elle ; une brigade détruite réduit sa division. Le combat reste à la brigade : une formation sert à l'affichage (un pion quand le zoom réunit ses brigades), à la sélection et aux ordres, et ses brigades préfèrent des postes voisins sur le front (un poste hors de leur secteur compte ${OUT_OF_SECTOR_KM} km de plus).`,
     ],
   },
   {

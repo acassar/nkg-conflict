@@ -87,6 +87,11 @@ export interface UnitState {
   /** Division de la brigade (voir systems/formations.ts) ; absente pour la logistique et les QG. */
   divisionId?: number
   /**
+   * Modèle de brigade (units/templates.ts) ; absent : le modèle par défaut de son rôle (`kind`), ou
+   * aucun pour la logistique et les QG.
+   */
+  template?: string
+  /**
    * Matériel, 0 à 1 (`strength` = effectifs). Absent : égal aux effectifs (unité neuve ou ancienne
    * sauvegarde). Voir units/equipment.ts.
    */
@@ -124,6 +129,8 @@ export interface UnitSnapshot {
   relief: boolean
   /** Division de la brigade, ou null (logistique, QG, unité hors armée). */
   divisionId: number | null
+  /** Modèle de brigade, ou null (logistique, QG). */
+  template: string | null
   /** Matériel, 0 à 1 (`strength` : effectifs). */
   equipment: number
 }
@@ -134,6 +141,8 @@ export interface BattleUnit {
   name: string
   owner: CountryId
   kind: UnitKind
+  /** Modèle de brigade, ou null (logistique, QG). */
+  template: string | null
   strength: number
   /** Matériel, 0 à 1. */
   equipment: number
@@ -193,7 +202,8 @@ export interface BattleReport {
 export type FormationKind = 'division' | 'corps'
 
 /**
- * Division ou corps : groupe nommé et durable sous une armée (voir systems/formations.ts). Sert à
+ * Division ou corps : groupe nommé et durable sous une armée (voir systems/formations.ts). Une division
+ * est organique : ses brigades la gardent, même détachées dans une autre armée. Sert à
  * l'affichage selon le zoom, à la sélection et au secteur commun dans la répartition du front ; la
  * simulation reste à la brigade. Les brigades portent `divisionId`, les divisions `parentId` (corps).
  */
@@ -207,6 +217,8 @@ export interface FormationState {
   armyId: number
   /** Corps d'une division (null pour un corps, ou une division sans corps). */
   parentId: number | null
+  /** Modèle de division (units/templates.ts) ; absent pour un corps. */
+  template?: string
 }
 
 export interface ArmyState {
@@ -745,6 +757,8 @@ export interface ScenarioUnit {
   owner: CountryId
   kind: UnitKind
   name: string
+  /** Modèle de brigade (absent : celui de son rôle). */
+  template?: string
   /** Position fixe ; absente = déploiement automatique le long du front. */
   lon?: number
   lat?: number

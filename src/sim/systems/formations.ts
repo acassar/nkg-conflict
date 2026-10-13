@@ -2,38 +2,27 @@ import type { SimContext } from '../context'
 import type { ArmyState, FormationKind, FormationState, UnitKind, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
 import { isBrigade } from '../units/catalog'
+import { DIVISION_TEMPLATES, divisionTemplateFor, slotFit, templateOf } from '../units/templates'
 
 /**
- * Couche de commandement (choix d'Adrien, 10 oct. : formations nommées et durables). Les brigades
- * d'une armée sont regroupées automatiquement en divisions, les divisions en corps. Une formation sert
- * à l'affichage selon le zoom, à la sélection, aux ordres (donnés à toutes ses brigades) et au secteur
- * commun de ses brigades dans la répartition du front ; la simulation reste à la brigade.
+ * Couche de commandement : divisions et corps nommés et durables. Une division suit un modèle (2 à 4
+ * brigades, units/templates.ts) ; elle est organique (phase D3) : une brigade garde sa division, même
+ * détachée dans une autre armée, et la division suit l'armée qui tient la plupart de ses brigades. Une
+ * formation sert à l'affichage selon le zoom, à la sélection, aux ordres (donnés à toutes ses brigades)
+ * et au secteur commun de ses brigades dans la répartition du front ; la simulation reste à la brigade.
  *
- * Une brigade garde sa division tant qu'elle reste dans son armée (ou dans un groupe détaché de cette
- * armée : encerclement, avance) ; une recrue rejoint la division incomplète la plus proche, sinon une
- * nouvelle division est formée. Une division vide est dissoute, un corps sans division aussi.
+ * Une brigade nouvelle (recrue, aide, levée) est affectée à une division de son armée qui a une place
+ * pour son modèle (la plus proche, à moins de JOIN_KM), sinon à une nouvelle division formée autour
+ * d'elle. Une brigade détruite réduit sa division ; une division vide est dissoute, de même qu'une
+ * division dont aucune brigade n'a plus d'armée, et un corps sans division.
  */
 
-/** Brigades de manœuvre par division (infanterie, mécanisée, blindés, défense territoriale). */
-export const DIVISION_MANEUVER = 3
-/** Brigades d'appui par division (artillerie). */
-export const DIVISION_SUPPORT = 1
 /** Divisions par corps. */
 export const CORPS_DIVISIONS = 3
-/** Distance maximale entre une recrue (ou une brigade sans division) et la division qu'elle rejoint. */
+/** Distance maximale entre une brigade nouvelle et la division qu'elle rejoint. */
 export const JOIN_KM = 150
 /** Distance maximale entre une division et le corps qu'elle rejoint. */
 const CORPS_JOIN_KM = 300
-
-type Role = 'maneuver' | 'support'
-
-function roleOf(kind: UnitKind): Role {
-  return kind === 'art' ? 'support' : 'maneuver'
-}
-
-function capacity(role: Role): number {
-  return role === 'support' ? DIVISION_SUPPORT : DIVISION_MANEUVER
-}
 
 /** Unités regroupées en divisions : toutes les brigades (pas la logistique ni les QG). */
 export function inDivisions(kind: UnitKind): boolean {
@@ -111,6 +100,7 @@ function create(
   owner: string,
   kind: FormationKind,
   armyId: number,
+  template?: string,
 ): FormationState {
   const number = freeNumber(ctx, owner, kind)
   const f: FormationState = {
@@ -121,6 +111,7 @@ function create(
     name: formationName(kind, number),
     armyId,
     parentId: null,
+    ...(template ? { template } : {}),
   }
   ctx.formations.set(f.id, f)
   return f
@@ -129,7 +120,8 @@ function create(
 interface DivisionInfo {
   f: FormationState
   members: UnitState[]
-  count: Record<Role, number>
+  /** Places libres : modèles de brigade attendus par le modèle de la division. */
+  free: string[]
   lon: number
   lat: number
 }
@@ -144,17 +136,68 @@ function centroid(units: UnitState[]): [number, number] {
   return [lon / Math.max(1, units.length), lat / Math.max(1, units.length)]
 }
 
+/** Modèle d'une division (une division d'avant les modèles prend celui de sa première brigade). */
+function divisionTemplate(d: FormationState, members: UnitState[]): string {
+  if (d.template && DIVISION_TEMPLATES[d.template]) return d.template
+  const first = members[0]
+  return divisionTemplateFor((first && templateOf(first)) ?? '')
+}
+
+/** Meilleure place libre pour une brigade (indice dans `free`, ou −1), et son score. */
+function bestSlot(free: string[], u: UnitState): { index: number; fit: number } {
+  const t = templateOf(u) ?? ''
+  let index = -1
+  let fit = 0
+  for (const [i, slot] of free.entries()) {
+    const f = slotFit(slot, t)
+    if (f > fit) {
+      fit = f
+      index = i
+    }
+  }
+  return { index, fit }
+}
+
+/** Places libres d'une division : son modèle moins ses brigades. */
+function freeSlots(template: string, members: UnitState[]): string[] {
+  const free = [...(DIVISION_TEMPLATES[template]?.brigades ?? [])]
+  for (const u of members) {
+    const { index } = bestSlot(free, u)
+    if (index >= 0) free.splice(index, 1)
+  }
+  return free
+}
+
+/** Armée qui tient la plupart des brigades d'une division (null : aucune). */
+function majorityArmy(ctx: SimContext, members: UnitState[]): number | null {
+  const count = new Map<number, number>()
+  for (const u of members) {
+    const home = homeArmyId(ctx, u)
+    if (home !== null) count.set(home, (count.get(home) ?? 0) + 1)
+  }
+  let best: number | null = null
+  let n = 0
+  for (const [id, c] of count) {
+    if (c > n || (c === n && best !== null && id < best)) {
+      best = id
+      n = c
+    }
+  }
+  return best
+}
+
 /**
- * Met à jour divisions et corps de tous les pays : départs, dissolutions, puis regroupement des brigades
- * sans division. `only` limite le regroupement à une armée (mobilisation), le nettoyage restant global.
+ * Met à jour divisions et corps de tous les pays : armée de chaque division, dissolutions, puis
+ * affectation des brigades sans division. `only` limite l'affectation à une armée (mobilisation), le
+ * nettoyage restant global.
  */
 export function updateFormations(ctx: SimContext, only?: ArmyState): void {
-  // 1. Départs : une brigade quitte sa division si elle a changé d'armée (hors groupe détaché).
+  // 1. Membres : une brigade garde sa division (formation organique), sauf changement de pays.
   const members = new Map<number, UnitState[]>()
   for (const u of ctx.units.values()) {
     if (u.divisionId === undefined) continue
     const d = ctx.formations.get(u.divisionId)
-    if (!d || d.kind !== 'division' || !inDivisions(u.kind) || d.armyId !== homeArmyId(ctx, u)) {
+    if (!d || d.kind !== 'division' || !inDivisions(u.kind) || d.owner !== u.owner) {
       delete u.divisionId
       continue
     }
@@ -162,7 +205,22 @@ export function updateFormations(ctx: SimContext, only?: ArmyState): void {
     if (list) list.push(u)
     else members.set(d.id, [u])
   }
-  // 2. Dissolutions : divisions sans brigade, corps sans division, formations d'une armée disparue.
+  // La division suit l'armée de la plupart de ses brigades ; sans armée, elle est dissoute.
+  for (const [id, list] of members) {
+    const d = ctx.formations.get(id)
+    if (!d) continue
+    const army = majorityArmy(ctx, list)
+    if (army === null) {
+      for (const u of list) delete u.divisionId
+      members.delete(id)
+      continue
+    }
+    if (army !== d.armyId) {
+      d.armyId = army
+      d.parentId = null
+    }
+  }
+  // 2. Dissolutions : divisions sans brigade, corps sans division.
   for (const f of [...ctx.formations.values()]) {
     if (f.kind === 'division' && (!members.has(f.id) || !ctx.armies.has(f.armyId))) {
       ctx.formations.delete(f.id)
@@ -179,7 +237,8 @@ export function updateFormations(ctx: SimContext, only?: ArmyState): void {
     if (f.kind === 'corps' && !corpsUsed.has(f.id)) ctx.formations.delete(f.id)
   }
 
-  // 3. Regroupement, armée par armée (les groupes détachés sont rattachés à leur armée d'origine).
+  // 3. Brigades sans division, armée par armée (les groupes détachés sont rattachés à leur armée
+  // d'origine).
   const loose = new Map<number, UnitState[]>()
   for (const u of ctx.units.values()) {
     if (u.divisionId !== undefined || !inDivisions(u.kind)) continue
@@ -192,13 +251,13 @@ export function updateFormations(ctx: SimContext, only?: ArmyState): void {
   const divisionsOf = new Map<number, DivisionInfo[]>()
   for (const [id, list] of members) {
     const f = ctx.formations.get(id)
-    // Centres et effectifs : seulement pour les armées qui ont des brigades à ranger.
+    // Centres et places : seulement pour les armées qui ont des brigades à ranger.
     if (!f || !loose.has(f.armyId)) continue
+    const template = divisionTemplate(f, list)
+    f.template ??= template
     const [lon, lat] = centroid(list)
-    const count: Record<Role, number> = { maneuver: 0, support: 0 }
-    for (const u of list) count[roleOf(u.kind)]++
     const arr = divisionsOf.get(f.armyId)
-    const info: DivisionInfo = { f, members: list, count, lon, lat }
+    const info: DivisionInfo = { f, members: list, free: freeSlots(template, list), lon, lat }
     if (arr) arr.push(info)
     else divisionsOf.set(f.armyId, [info])
   }
@@ -220,7 +279,11 @@ export function updateFormations(ctx: SimContext, only?: ArmyState): void {
   }
 }
 
-/** Range les brigades sans division : division incomplète proche, sinon nouvelles divisions. */
+/**
+ * Affecte les brigades sans division : place libre pour leur modèle dans une division proche (modèle
+ * exact d'abord, puis même rôle), sinon nouvelle division formée autour d'une brigade de manœuvre et
+ * complétée par ses voisines sans division.
+ */
 function groupBrigades(
   ctx: SimContext,
   army: ArmyState,
@@ -229,16 +292,20 @@ function groupBrigades(
 ): void {
   units.sort((a, b) => a.id - b.id)
   const left: UnitState[] = []
-  // Recrues et brigades isolées : la division incomplète la plus proche, à moins de JOIN_KM.
   for (const u of units) {
-    const role = roleOf(u.kind)
     let best: DivisionInfo | null = null
+    let bestIndex = -1
+    let bestFit = 0
     let bestKm = JOIN_KM
     for (const d of divisions) {
-      if (d.count[role] >= capacity(role)) continue
+      const { index, fit } = bestSlot(d.free, u)
+      if (fit === 0) continue
       const km = distanceKm(u.lon, u.lat, d.lon, d.lat)
-      if (km <= bestKm) {
+      if (km > JOIN_KM) continue
+      if (fit > bestFit || (fit === bestFit && km <= bestKm)) {
         best = d
+        bestIndex = index
+        bestFit = fit
         bestKm = km
       }
     }
@@ -247,7 +314,7 @@ function groupBrigades(
       continue
     }
     u.divisionId = best.f.id
-    best.count[role]++
+    best.free.splice(bestIndex, 1)
     best.members.push(u)
   }
   // Nouvelles divisions : une brigade de manœuvre (à défaut d'appui) et ses plus proches voisines.
@@ -255,7 +322,7 @@ function groupBrigades(
   while (free.size > 0) {
     let seed: UnitState | undefined
     for (const u of free) {
-      if (roleOf(u.kind) === 'maneuver') {
+      if (u.kind !== 'art') {
         seed = u
         break
       }
@@ -263,22 +330,23 @@ function groupBrigades(
     seed ??= free.values().next().value
     if (!seed) break
     const s = seed
-    const d = create(ctx, army.owner, 'division', army.id)
-    const count: Record<Role, number> = { maneuver: 0, support: 0 }
-    const take = (u: UnitState): void => {
+    const template = divisionTemplateFor(templateOf(s) ?? '')
+    const d = create(ctx, army.owner, 'division', army.id, template)
+    const slots = [...(DIVISION_TEMPLATES[template]?.brigades ?? [])]
+    const take = (u: UnitState, index: number): void => {
       u.divisionId = d.id
-      count[roleOf(u.kind)]++
+      if (index >= 0) slots.splice(index, 1)
       free.delete(u)
     }
-    take(s)
+    take(s, bestSlot(slots, s).index)
     const near = [...free]
       .map((u) => ({ u, km: distanceKm(s.lon, s.lat, u.lon, u.lat) }))
       .filter((x) => x.km <= JOIN_KM)
       .sort((a, b) => a.km - b.km || a.u.id - b.u.id)
     for (const { u } of near) {
-      const role = roleOf(u.kind)
-      if (count[role] < capacity(role)) take(u)
-      if (count.maneuver >= DIVISION_MANEUVER && count.support >= DIVISION_SUPPORT) break
+      if (slots.length === 0) break
+      const { index, fit } = bestSlot(slots, u)
+      if (fit > 0) take(u, index)
     }
   }
 }

@@ -1,4 +1,5 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
+import { unitType } from '../units/templates'
 import type { UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
 
@@ -97,7 +98,7 @@ export function updateSupply(ctx: SimContext, only?: (side: number) => boolean):
   let depots: UnitState[] | null = null
   const depotsList = (): UnitState[] =>
     (depots ??= [...ctx.units.values()].filter((u) => {
-      if (ctx.catalog[u.kind].supplyRadiusKm <= 0) return false
+      if (unitType(u).supplyRadiusKm <= 0) return false
       const reach = ctx.supplyReach[sideIndex(ctx, u.owner)]
       return reach?.[grid.cellAt(u.lon, u.lat)] === 1
     }))
@@ -126,7 +127,7 @@ export function updateSupply(ctx: SimContext, only?: (side: number) => boolean):
       supplied = depotsList().some(
         (d) =>
           d.owner === u.owner &&
-          distanceKm(d.lon, d.lat, u.lon, u.lat) <= ctx.catalog[d.kind].supplyRadiusKm,
+          distanceKm(d.lon, d.lat, u.lon, u.lat) <= unitType(d).supplyRadiusKm,
       )
     }
     if (rt.supplied && !supplied) ctx.log(`Ravitaillement coupé : ${u.name}`, u.owner)

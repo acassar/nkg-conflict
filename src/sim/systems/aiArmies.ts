@@ -2,7 +2,7 @@ import { combatStrength } from '../units/equipment'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, LineMissionKind, LonLat, Posture, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
-import { BRIGADE_SPLIT, isLineUnit } from '../units/catalog'
+import { isLineUnit } from '../units/catalog'
 import { postureOf } from '../units/postures'
 import { assignFront, frontCells, type FrontCell } from './armies'
 import { axisBonus, frontWeight } from './axes'
@@ -44,11 +44,11 @@ export const AI_RATIO = {
 const MIN_ORG_OFFENSIVE = 0.6
 const MIN_ORG_BREACH = 0.65
 /** Unités de ligne minimales pour lancer une percée (la moitié forme le groupe de choc). */
-const MIN_BREACH_UNITS = 8 * BRIGADE_SPLIT
+const MIN_BREACH_UNITS = 8
 /** Densité (unités de ligne pour 100 km de front) en dessous de laquelle l'armée tient les points clés. */
-const THIN_DENSITY = 0.5 * BRIGADE_SPLIT
+const THIN_DENSITY = 0.5
 /** Densité au-dessus de laquelle une armée faible peut tenir deux lignes (défense en profondeur). */
-const DEPTH_DENSITY = 1.5 * BRIGADE_SPLIT
+const DEPTH_DENSITY = 1.5
 /** Part de front calme (terrain difficile sans route) au-delà de laquelle les points clés suffisent. */
 const CALM_SHARE = 0.35
 /** Profondeur (km) du point visé par une percée, à défaut de ville ennemie à portée. */

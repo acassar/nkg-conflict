@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { BRIGADE_SPLIT } from '@/sim/units/catalog'
 import { Simulation } from '@/sim/simulation'
 import { buildScenario } from '@/sim/scenarios'
 import { loadTheater } from '@/sim/theater/load'
@@ -95,7 +94,7 @@ describe('aide étrangère', () => {
     expect(sim.requestAid('CHN')).toMatch(/jours/)
   })
 
-  it('le matériel accumulé est livré sous forme de brigades (une ancienne unité par jour)', () => {
+  it('le matériel accumulé est livré sous forme de brigades (une par jour)', () => {
     const sim = newWorld('FRA')
     const aid = aidBetween(sim.ctx, 'USA', 'UKR')
     if (!aid) throw new Error('aide manquante')
@@ -103,7 +102,7 @@ describe('aide étrangère', () => {
     const eco = sim.ctx.economies.get('UKR')
     if (eco) eco.manpower = 100
     sim.step(24)
-    expect(aid.unitsDelivered).toBe(BRIGADE_SPLIT)
+    expect(aid.unitsDelivered).toBe(1)
     expect(sim.snapshot().events.some((e) => e.text.startsWith('Matériel livré par'))).toBe(true)
   })
 

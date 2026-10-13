@@ -19,19 +19,17 @@ export interface UnitType {
 }
 
 /**
- * Échelle de la brigade (choix d'Adrien, 10 oct. : scission neutre). Une unité de combat est une
- * brigade ; chaque ancienne unité en vaut BRIGADE_SPLIT, d'un tiers d'effectifs, de coûts et de
- * consommation. La puissance par unité vient de sa force (0 à 1) : les valeurs d'attaque et de défense
- * restent des rapports. Logistique et QG ne sont pas des brigades et gardent leur échelle.
+ * Une unité de combat est une brigade interarmes, à l'effectif d'une vraie brigade (phase D3 : fin de
+ * la division par trois de la phase D). Ses valeurs viennent de son modèle (units/templates.ts) ;
+ * celles du catalogue servent de référence par rôle et pour la logistique et les QG.
  */
-export const BRIGADE_SPLIT = 3
 
-/** Unités à l'échelle de la brigade (toutes sauf la logistique et les QG). */
+/** Brigades : toutes les unités sauf la logistique et les QG. */
 export function isBrigade(kind: UnitKind): boolean {
   return kind !== 'log' && kind !== 'hq'
 }
 
-/** Catalogue de l'époque moderne. Valeurs de départ, à équilibrer en jouant. */
+/** Catalogue de l'époque moderne : valeurs des modèles de brigade par défaut, logistique et QG. */
 export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
   inf: {
     kind: 'inf',
@@ -40,7 +38,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 7,
     speedKmh: 3,
     supportRangeKm: 0,
-    zocKm: 8,
+    zocKm: 12,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -51,7 +49,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 7,
     speedKmh: 6,
     supportRangeKm: 0,
-    zocKm: 8,
+    zocKm: 12,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -62,7 +60,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 6,
     speedKmh: 6,
     supportRangeKm: 0,
-    zocKm: 8,
+    zocKm: 12,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -73,7 +71,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 2,
     speedKmh: 4,
     supportRangeKm: 30,
-    zocKm: 3.5,
+    zocKm: 5,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },
@@ -95,7 +93,7 @@ export const MODERN_CATALOG: Record<UnitKind, UnitType> = {
     defense: 5,
     speedKmh: 3,
     supportRangeKm: 0,
-    zocKm: 6,
+    zocKm: 9,
     supplyRadiusKm: 0,
     commandRadiusKm: 0,
   },

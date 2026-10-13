@@ -1,4 +1,5 @@
 import { runtimeOf, sideIndex, type SimContext } from '../context'
+import { unitType } from '../units/templates'
 import { isOffensiveOrder, type LonLat, type OrderKind, type UnitState } from '../core/types'
 import { distanceKm, moveToward, terrainRule } from '../theater/grid'
 import { CONTACT_KM, retreatFromEnemy } from './combat'
@@ -6,7 +7,6 @@ import { WarIndex } from './spatial'
 import { postureOf } from '../units/postures'
 import { layObstacles } from './obstacles'
 import { fuelSpeedFactor, kindTerrainSpeed } from '../units/kinds'
-import { BRIGADE_SPLIT } from '../units/catalog'
 import { airSpeed } from './air'
 
 const ENTRENCH_PER_HOUR = 0.01
@@ -15,8 +15,8 @@ function speedKmh(ctx: SimContext, u: UnitState): number {
   const { grid } = ctx
   const cell = grid.cellAt(u.lon, u.lat)
   const t = grid.terrain[cell]
-  let v = ctx.catalog[u.kind].speedKmh * (0.5 + 0.5 * u.org)
-  v *= terrainRule(t).speed * kindTerrainSpeed(u.kind, t)
+  let v = unitType(u).speedKmh * (0.5 + 0.5 * u.org)
+  v *= terrainRule(t).speed * kindTerrainSpeed(u, t)
   // Unité motorisée longtemps coupée du ravitaillement : réservoirs vides.
   v *= fuelSpeedFactor(u)
   const owner = grid.owner[cell] ?? 0
@@ -46,9 +46,8 @@ export function planPath(ctx: SimContext, u: UnitState, target: LonLat): void {
 
 /**
  * Chemins calculés au plus par tick pour les postes de front : évite les à-coups sur les grands fronts.
- * Trois par tick à l'ancienne échelle d'unité, autant de fois plus à l'échelle de la brigade.
  */
-const QUEUED_PATHS_PER_TICK = 3 * BRIGADE_SPLIT
+const QUEUED_PATHS_PER_TICK = 3
 /** Exploration maximale pour rejoindre un poste : le chemin partiel est complété aux tours suivants. */
 const FRONT_MAX_EXPANDED = 20_000
 /** Heuristique plus gourmande pour ces trajets : le chemin exact compte moins que sa rapidité. */

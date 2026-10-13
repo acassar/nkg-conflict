@@ -4,6 +4,8 @@
  * pour tenir dans le quota de quelques mégaoctets du navigateur.
  */
 
+import { isObsoleteVersion, SAVE_VERSION } from '@/sim/core/save'
+
 export type SaveSlot = 'manual' | 'auto'
 
 export interface SaveMeta {
@@ -15,6 +17,13 @@ export interface SaveMeta {
   savedAt: string
   /** Taille stockée, en octets. */
   size: number
+  /** Version du format (absente avant la version 6). */
+  version?: number
+}
+
+/** Sauvegarde d'avant les armées réelles (phase D3) : elle ne se charge plus. */
+export function isObsoleteSave(meta: SaveMeta): boolean {
+  return isObsoleteVersion(meta.version)
 }
 
 const PREFIX = 'nkg-conflict:save:'
@@ -47,11 +56,17 @@ async function gunzip(base64: string): Promise<string> {
 export async function writeSave(
   slot: SaveSlot,
   text: string,
-  meta: Omit<SaveMeta, 'slot' | 'size' | 'savedAt'>,
+  meta: Omit<SaveMeta, 'slot' | 'size' | 'savedAt' | 'version'>,
 ): Promise<string | null> {
   try {
     const data = await gzip(text)
-    const full: SaveMeta = { ...meta, slot, size: data.length, savedAt: new Date().toISOString() }
+    const full: SaveMeta = {
+      ...meta,
+      slot,
+      size: data.length,
+      savedAt: new Date().toISOString(),
+      version: SAVE_VERSION,
+    }
     localStorage.removeItem(DATA(slot))
     localStorage.setItem(DATA(slot), data)
     localStorage.setItem(META(slot), JSON.stringify(full))

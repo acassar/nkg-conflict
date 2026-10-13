@@ -1,4 +1,5 @@
 import type { UnitKind, UnitState } from '../core/types'
+import { profileOf } from './templates'
 
 /**
  * Effectifs et matériel séparés (choix d'Adrien, 10 oct. : deux jauges par unité). `strength` est la
@@ -11,7 +12,10 @@ import type { UnitKind, UnitState } from '../core/types'
  * hommes). À jauges égales, la force vaut cette jauge : l'équilibrage d'avant est conservé.
  */
 
-/** Poids du matériel dans la force d'une unité, par type. */
+/**
+ * Poids du matériel dans la force, par rôle (valeurs de référence ; une brigade prend la moyenne de ses
+ * bataillons, voir units/templates.ts).
+ */
 export const EQUIPMENT_WEIGHT: Record<UnitKind, number> = {
   inf: 0.35,
   tdf: 0.25,
@@ -22,28 +26,16 @@ export const EQUIPMENT_WEIGHT: Record<UnitKind, number> = {
   hq: 0.3,
 }
 
-/**
- * Part du matériel dans les pertes, rapportée à celle des hommes : plus de matériel que d'hommes perdus
- * pour les blindés et l'artillerie, l'inverse pour l'infanterie.
- */
-export const EQUIPMENT_LOSS_RATIO: Record<UnitKind, number> = {
-  inf: 0.8,
-  tdf: 0.7,
-  mech: 1.1,
-  tank: 1.35,
-  art: 1.3,
-  log: 1,
-  hq: 0.8,
-}
-
 /** Jauge du matériel (absente : égale aux effectifs, comme avant la séparation). */
 export function equipmentOf(u: Pick<UnitState, 'strength' | 'equipment'>): number {
   return u.equipment ?? u.strength
 }
 
 /** Force de combat d'une unité, 0 à 1 : effectifs et matériel pondérés selon le type. */
-export function combatStrength(u: Pick<UnitState, 'kind' | 'strength' | 'equipment'>): number {
-  const w = EQUIPMENT_WEIGHT[u.kind]
+export function combatStrength(
+  u: Pick<UnitState, 'kind' | 'template' | 'strength' | 'equipment'>,
+): number {
+  const w = profileOf(u).equipmentWeight
   const men = Math.max(0, u.strength)
   const gear = Math.max(0, equipmentOf(u))
   // Jauges égales (unité neuve ou au complet) : pas de calcul de puissance.
@@ -52,11 +44,13 @@ export function combatStrength(u: Pick<UnitState, 'kind' | 'strength' | 'equipme
 }
 
 /** Facteurs des deux jauges dans la force de combat (écran de bataille) : effectifs, matériel. */
-export function strengthFactors(u: Pick<UnitState, 'kind' | 'strength' | 'equipment'>): {
+export function strengthFactors(
+  u: Pick<UnitState, 'kind' | 'template' | 'strength' | 'equipment'>,
+): {
   men: number
   gear: number
 } {
-  const w = EQUIPMENT_WEIGHT[u.kind]
+  const w = profileOf(u).equipmentWeight
   return { men: Math.max(0, u.strength) ** (1 - w), gear: Math.max(0, equipmentOf(u)) ** w }
 }
 
@@ -66,8 +60,9 @@ export function strengthFactors(u: Pick<UnitState, 'kind' | 'strength' | 'equipm
  */
 export function applyLosses(u: UnitState, lost: number): void {
   if (lost <= 0) return
-  const w = EQUIPMENT_WEIGHT[u.kind]
-  const r = EQUIPMENT_LOSS_RATIO[u.kind]
+  const p = profileOf(u)
+  const w = p.equipmentWeight
+  const r = p.equipmentLossRatio
   const men = 1 / (1 - w + w * r)
   u.equipment = Math.max(0, equipmentOf(u) - lost * r * men)
   u.strength = Math.max(0, u.strength - lost * men)

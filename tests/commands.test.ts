@@ -120,8 +120,9 @@ describe('front de l’armée', () => {
     for (const army of sim.ctx.armies.values()) {
       const lines = army.frontLine ?? []
       if (lines.length === 0) continue
-      // Quelques secteurs au plus, jamais une quinzaine de morceaux.
-      expect(lines.length).toBeLessThanOrEqual(4)
+      // Quelques secteurs au plus, jamais une quinzaine de morceaux (avec une vingtaine de brigades
+      // par camp, de petites poches ajoutent un ou deux courts secteurs).
+      expect(lines.length).toBeLessThanOrEqual(6)
       const cells = frontCells(sim.ctx, sideIndex(sim.ctx, army.owner), null)
       for (const l of lines) {
         for (let i = 1; i < l.length; i++) {

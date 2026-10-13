@@ -10,6 +10,7 @@ describe('save', () => {
 
   it('rejette un JSON invalide ou une mauvaise version', () => {
     expect(() => parseSave('{')).toThrow(/JSON/)
-    expect(() => parseSave(JSON.stringify({ version: 1 }))).toThrow(/Version/)
+    expect(() => parseSave(JSON.stringify({ version: 1 }))).toThrow(/avant les armées réelles/)
+    expect(() => parseSave(JSON.stringify({ version: 99 }))).toThrow(/Version/)
   })
 })

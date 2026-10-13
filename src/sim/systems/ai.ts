@@ -2,7 +2,7 @@ import { combatStrength } from '../units/equipment'
 import { countryName, runtimeOf, sideIndex, type SimContext } from '../context'
 import type { CountryId, LonLat, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
-import { BRIGADE_SPLIT, isLineUnit } from '../units/catalog'
+import { isLineUnit } from '../units/catalog'
 import { defenseValue } from './combat'
 import { frontCells } from './armies'
 import { planPath } from './movement'
@@ -11,7 +11,7 @@ import { isHalted } from './restraint'
 import { WarIndex } from './spatial'
 import { updateAiArmies, type AiArmyMemory } from './aiArmies'
 
-const STRIKE_SIZE = 3 * BRIGADE_SPLIT
+const STRIKE_SIZE = 3
 const STRIKE_DEPTH_KM = 50
 /** Une offensive tous les ~3 jours au plus. */
 const OFFENSIVE_COOLDOWN_TICKS = 72

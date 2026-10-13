@@ -1,8 +1,9 @@
 import { combatStrength } from '../units/equipment'
+import { unitType } from '../units/templates'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, LonLat, UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
-import { BRIGADE_SPLIT, isLineUnit } from '../units/catalog'
+import { isLineUnit } from '../units/catalog'
 import { nearestCity } from './ai'
 import { planPath } from './movement'
 import { snapToAxis } from './axes'
@@ -17,7 +18,7 @@ export const REACT_KM = 60
 /** Une unité retranchée au moins à ce niveau garde son poste. */
 export const HOLD_ENTRENCH = 0.6
 /** Unités envoyées au plus contre une même percée. */
-const RESPONDERS_PER_BREACH = 2 * BRIGADE_SPLIT
+const RESPONDERS_PER_BREACH = 2
 /** Part des unités de ligne d'une armée qui peuvent réagir en même temps. */
 const MAX_REACTING_SHARE = 1 / 5
 /** Rapport de force pour une contre-attaque directe sur la pointe. */
@@ -33,7 +34,7 @@ const CUT_AXIS_KM = 10
 
 /** Armée en réserve : portée de son intervention, unités engagées par percée (toutes disponibles). */
 const RESERVE_REACT_KM = 150
-const RESERVE_RESPONDERS = 4 * BRIGADE_SPLIT
+const RESERVE_RESPONDERS = 4
 
 /** Durée maximale d'une réaction avant retour au poste. */
 const REACTION_TICKS = 72
@@ -56,12 +57,12 @@ export function reactionOf(ctx: SimContext, id: number): Reaction | undefined {
 
 /** Puissance offensive brute d'une unité. */
 function punch(ctx: SimContext, u: UnitState): number {
-  return ctx.catalog[u.kind].attack * combatStrength(u) * (0.25 + 0.75 * u.org)
+  return unitType(u).attack * combatStrength(u) * (0.25 + 0.75 * u.org)
 }
 
 /** Puissance défensive brute d'une unité. */
 function guard(ctx: SimContext, u: UnitState): number {
-  return ctx.catalog[u.kind].defense * combatStrength(u) * (0.25 + 0.75 * u.org)
+  return unitType(u).defense * combatStrength(u) * (0.25 + 0.75 * u.org)
 }
 
 /**

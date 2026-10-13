@@ -1,4 +1,5 @@
 import { combatStrength } from '../units/equipment'
+import { unitType } from '../units/templates'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { UnitState } from '../core/types'
 import { distanceKm } from '../theater/grid'
@@ -13,7 +14,7 @@ function beachhead(ctx: SimContext, u: UnitState): boolean {
 }
 
 function zocKm(ctx: SimContext, u: UnitState): number {
-  return ctx.catalog[u.kind].zocKm * (0.5 + 0.5 * combatStrength(u))
+  return unitType(u).zocKm * (0.5 + 0.5 * combatStrength(u))
 }
 
 /**

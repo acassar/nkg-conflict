@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import theaterJson from '@/sim/data/theater-ukraine.json'
 import { Simulation } from '@/sim/simulation'
+import { profileOf } from '@/sim/units/templates'
 import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { combatModifiers, defenseValue, firePower } from '@/sim/systems/combat'
 import { Terrain, type TheaterData } from '@/sim/theater/grid'
@@ -44,12 +45,12 @@ function placeOn(sim: Simulation, u: UnitState, terrain: number): void {
 
 describe("différences entre types d'unités", () => {
   it('le terrain gêne les blindés et avantage l’infanterie', () => {
-    expect(kindTerrainSpeed('tank', Terrain.FOREST)).toBeLessThan(1)
-    expect(kindTerrainSpeed('inf', Terrain.FOREST)).toBe(1)
-    expect(kindTerrainAttack('tank', Terrain.URBAN)).toBeLessThan(1)
-    expect(kindTerrainAttack('inf', Terrain.URBAN)).toBeGreaterThan(1)
-    expect(kindTerrainAttack('art', Terrain.MOUNTAINS)).toBeLessThan(1)
-    expect(kindTerrainAttack('tank', Terrain.PLAIN)).toBe(1)
+    expect(kindTerrainSpeed({ kind: 'tank' }, Terrain.FOREST)).toBeLessThan(1)
+    expect(kindTerrainSpeed({ kind: 'inf' }, Terrain.FOREST)).toBe(1)
+    expect(kindTerrainAttack({ kind: 'tank' }, Terrain.URBAN)).toBeLessThan(1)
+    expect(kindTerrainAttack({ kind: 'inf' }, Terrain.URBAN)).toBeGreaterThan(1)
+    expect(kindTerrainAttack({ kind: 'art' }, Terrain.MOUNTAINS)).toBeLessThan(1)
+    expect(kindTerrainAttack({ kind: 'tank' }, Terrain.PLAIN)).toBe(1)
 
     const { sim, of } = setup()
     const tank = of('tank')
@@ -57,7 +58,9 @@ describe("différences entre types d'unités", () => {
     const open = firePower(sim.ctx, tank)
     const openDef = defenseValue(sim.ctx, tank)
     placeOn(sim, tank, Terrain.FOREST)
-    expect(firePower(sim.ctx, tank)).toBeCloseTo(open * kindTerrainAttack('tank', Terrain.FOREST))
+    expect(firePower(sim.ctx, tank)).toBeCloseTo(
+      open * kindTerrainAttack({ kind: 'tank' }, Terrain.FOREST),
+    )
     // Défense en forêt : bonus commun du terrain, réduit pour les blindés.
     expect(defenseValue(sim.ctx, tank) / openDef).toBeLessThan(1.25)
     const labels = combatModifiers(sim.ctx, tank).attack.map((m) => m.key)
@@ -69,14 +72,21 @@ describe("différences entre types d'unités", () => {
     const tank = of('tank')
     const inf = of('inf')
     const art = of('art')
-    expect(matchup(tank, inf, Terrain.PLAIN)?.factor).toBe(ARMOR_OPEN_FACTOR)
+    // Au prorata des chars du tireur et des fantassins de la cible (brigade blindée : surtout des chars).
+    const share = profileOf(tank).armor * profileOf(inf).foot
+    expect(share).toBeGreaterThan(0.8)
+    expect(matchup(tank, inf, Terrain.PLAIN)?.factor).toBeCloseTo(
+      1 + (ARMOR_OPEN_FACTOR - 1) * share,
+    )
     inf.entrench = 1
-    expect(matchup(tank, inf, Terrain.URBAN)?.factor).toBe(ARMOR_URBAN_FACTOR)
+    expect(matchup(tank, inf, Terrain.URBAN)?.factor).toBeCloseTo(
+      1 + (ARMOR_URBAN_FACTOR - 1) * share,
+    )
     inf.entrench = 0
     expect(matchup(tank, inf, Terrain.URBAN)).toBeNull()
     expect(matchup(inf, tank, Terrain.PLAIN)).toBeNull()
     inf.path = []
-    expect(matchup(art, inf, Terrain.FOREST)?.factor).toBe(ARTILLERY_STATIC_FACTOR)
+    expect(matchup(art, inf, Terrain.FOREST)?.factor).toBeCloseTo(ARTILLERY_STATIC_FACTOR)
     inf.path = [[inf.lon + 0.1, inf.lat]]
     expect(matchup(art, inf, Terrain.FOREST)).toBeNull()
   })

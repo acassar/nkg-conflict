@@ -11,6 +11,7 @@ import {
 } from '@/sim/systems/transport'
 import { navalCapacity } from '@/sim/systems/naval'
 import { parseSave, serializeSave } from '@/sim/core/save'
+import { bringToContact } from './helpers/contact'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import type { LonLat, UnitKind, UnitState } from '@/sim/core/types'
 
@@ -84,14 +85,7 @@ describe('transport stratégique', () => {
     const [u] = placeAt(sim, 'Lviv', 'inf', 1)
     expect(sim.transportUnits([u?.id ?? -1], city(sim, 'Rostov'))).toMatch(/ville amie/)
     // Une unité ukrainienne sur la ligne de front.
-    const front = [...sim.ctx.units.values()].find(
-      (x) =>
-        x.owner === 'UKR' &&
-        [...sim.ctx.units.values()].some(
-          (e) => e.owner === 'RUS' && distanceKm(x.lon, x.lat, e.lon, e.lat) < 10,
-        ),
-    )
-    if (!front) throw new Error('aucune unité au contact')
+    const front = bringToContact(sim)
     expect(sim.transportUnits([front.id], city(sim, 'Lviv'))).toMatch(/contact/)
   })
 

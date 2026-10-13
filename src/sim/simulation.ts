@@ -53,7 +53,8 @@ import type {
 } from './core/types'
 import { countryName, runtimeOf, sideIndex, type SimContext } from './context'
 import { decodeRle, Grid, type TheaterData } from './theater/grid'
-import { BRIGADE_SPLIT, MODERN_CATALOG } from './units/catalog'
+import { MODERN_CATALOG } from './units/catalog'
+import { templateOf } from './units/templates'
 import { Pathfinder } from './systems/pathfinding'
 import { updateSupply } from './systems/supply'
 import { supplyView, type SupplyView } from './systems/supplyView'
@@ -178,7 +179,7 @@ const DAY = 24
 const MONTH = 24 * 30
 /** Sans unité pendant une guerre depuis plus de 7 jours : capitulation. */
 const NO_ARMY_DAYS = 7
-const DEFAULT_FORCE_SIZE = 8 * BRIGADE_SPLIT
+const DEFAULT_FORCE_SIZE = 8
 
 export type PlayerOrder = Extract<OrderKind, 'move' | 'attack' | 'hold' | 'retreat'>
 
@@ -1454,6 +1455,7 @@ export class Simulation {
           fatigue: u.fatigue ?? 0,
           relief: u.relief === true,
           divisionId: u.divisionId ?? null,
+          template: templateOf(u),
           equipment: equipmentOf(u),
           stance: rt.stance
             ? stanceText(rt.stance)

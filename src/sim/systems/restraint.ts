@@ -2,7 +2,7 @@ import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, Posture, UnitState } from '../core/types'
 import { distanceKm, terrainRule } from '../theater/grid'
 import { fortFactorAt } from '../economy/economy'
-import { BRIGADE_SPLIT, isLineUnit } from '../units/catalog'
+import { isLineUnit } from '../units/catalog'
 import { enemyShare } from './flanks'
 
 /**
@@ -121,16 +121,13 @@ function friendsOf(ctx: SimContext, side: number, lines: Map<number, UnitState[]
   return out
 }
 
-/**
- * Voisines à moins de SUPPORT_KM, comptées en unités de l'ancienne échelle (une brigade pèse
- * 1 / BRIGADE_SPLIT) : trois brigades isolées restent « seules », comme l'ancienne unité.
- */
+/** Voisines à moins de SUPPORT_KM. */
 function supportOf(u: UnitState, friends: UnitState[]): number {
   let n = 0
   const dLat = SUPPORT_KM / 111
   for (const f of friends) {
     if (f === u || Math.abs(f.lat - u.lat) > dLat) continue
-    if (distanceKm(u.lon, u.lat, f.lon, f.lat) <= SUPPORT_KM) n += 1 / BRIGADE_SPLIT
+    if (distanceKm(u.lon, u.lat, f.lon, f.lat) <= SUPPORT_KM) n++
   }
   return n
 }

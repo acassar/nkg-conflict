@@ -4,7 +4,6 @@ import type { BudgetResult } from '../economy/budget'
 import { citiesOf } from '../economy/economy'
 import { RECRUIT_COSTS } from '../economy/rules'
 import { unitName } from '../units/names'
-import { BRIGADE_SPLIT } from '../units/catalog'
 import { addRelation, enemiesInWar, isAtWarWith, relation, sameAlliance } from './politics'
 import type { Aid, AidLevel } from './types'
 import { AID_CAP, AID_LEVEL_NAMES, AID_MONEY_SHARE, AID_SHARE } from './aidLevels'
@@ -267,8 +266,8 @@ export function deliverEquipment(ctx: SimContext): void {
       aid.equipment = 0
       continue
     }
-    // Jusqu'à BRIGADE_SPLIT brigades par livraison, soit une unité de l'ancienne échelle.
-    for (let k = 0; k < BRIGADE_SPLIT; k++) deliverOne(ctx, aid, eco)
+    // Une brigade par livraison.
+    deliverOne(ctx, aid, eco)
   }
 }
 

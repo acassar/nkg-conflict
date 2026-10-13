@@ -1,4 +1,5 @@
 import { combatStrength } from '../units/equipment'
+import { unitType } from '../units/templates'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { LonLat, UnitState } from '../core/types'
 import { distanceKm, Terrain, terrainRule } from '../theater/grid'
@@ -65,7 +66,7 @@ export function isWithdrawing(ctx: SimContext, id: number): boolean {
 
 /** Puissance d'assaut brute d'une unité ennemie. */
 function punch(ctx: SimContext, u: UnitState): number {
-  return ctx.catalog[u.kind].attack * combatStrength(u) * (0.25 + 0.75 * u.org)
+  return unitType(u).attack * combatStrength(u) * (0.25 + 0.75 * u.org)
 }
 
 /** Valeur défensive d'une cellule pour un camp (terrain × fortifications), hors unité. */

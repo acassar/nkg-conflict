@@ -23,9 +23,18 @@ import type {
   War,
 } from '../politics/types'
 
-export const SAVE_VERSION = 5
+/** Version 6 : brigades à l'effectif réel, modèles et divisions organiques (phase D3). */
+export const SAVE_VERSION = 6
 /** Versions encore lisibles (les champs ajoutés depuis prennent leur valeur par défaut). */
-const READABLE_VERSIONS = [4, 5]
+const READABLE_VERSIONS = [6]
+/** Message des sauvegardes d'avant les armées réelles, qui ne se chargent plus. */
+export const OBSOLETE_SAVE =
+  "Sauvegarde d'une ancienne version du jeu, d'avant les armées réelles : elle ne peut plus être chargée"
+
+/** Une sauvegarde de cette version ne se charge plus. */
+export function isObsoleteVersion(version: number | undefined): boolean {
+  return version === undefined || version < READABLE_VERSIONS[0]!
+}
 
 export interface SaveFile {
   version: number
@@ -130,6 +139,7 @@ export function parseSave(text: string): SaveFile {
   }
   if (typeof data !== 'object' || data === null) throw new Error('Sauvegarde invalide')
   const d = data as Record<string, unknown>
+  if (typeof d.version === 'number' && isObsoleteVersion(d.version)) throw new Error(OBSOLETE_SAVE)
   if (typeof d.version !== 'number' || !READABLE_VERSIONS.includes(d.version)) {
     throw new Error(`Version de sauvegarde non prise en charge : ${String(d.version)}`)
   }

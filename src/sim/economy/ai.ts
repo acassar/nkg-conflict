@@ -4,7 +4,6 @@ import type { BuildingKind, CountryId, EconomyState, UnitKind } from '../core/ty
 import { distanceKm } from '../theater/grid'
 import { citiesOf, queueConstruction, queueRecruit, setWarEconomy } from './economy'
 import { BUILDINGS, RECRUIT_COSTS, constructionSlots, formationSlots } from './rules'
-import { BRIGADE_SPLIT } from '../units/catalog'
 import { relation } from '../politics/politics'
 import { territoryShares } from './national'
 import { FACTORY_RESERVE_DAYS } from './budget'
@@ -21,19 +20,8 @@ export interface AiEconomyParts {
 const ALL_PARTS: AiEconomyParts = { warEconomy: true, build: true, recruit: true }
 
 /** Composition visée des nouvelles unités de l'IA (cycle). */
-// Une logistique pour sept unités de l'ancienne échelle, soit BRIGADE_SPLIT fois plus de brigades.
-const RECRUIT_CYCLE: UnitKind[] = [
-  ...Array.from({ length: BRIGADE_SPLIT }, (): UnitKind[] => [
-    'inf',
-    'mech',
-    'inf',
-    'tank',
-    'art',
-    'inf',
-    'mech',
-  ]).flat(),
-  'log',
-]
+// Une logistique pour sept brigades.
+const RECRUIT_CYCLE: UnitKind[] = ['inf', 'mech', 'inf', 'tank', 'art', 'inf', 'mech', 'log']
 const FRONT_CITY_KM = 60
 /** Relations sous lesquelles un pays se sent menacé et renforce son armée en temps de paix. */
 export const TENSION_RELATION = -50
@@ -180,7 +168,7 @@ export function updateAiEconomy(
   const ordered = (): number =>
     Object.values(eco.unitCounters).reduce((n, v) => n + v, 0) + eco.recruitment.length
   let guard = 0
-  while (eco.recruitment.length < slots && guard++ < 10 * BRIGADE_SPLIT) {
+  while (eco.recruitment.length < slots && guard++ < 10) {
     let kind = RECRUIT_CYCLE[ordered() % RECRUIT_CYCLE.length]
     // Hommes en surplus et production à court : défense territoriale.
     if (kind && eco.manpower > TDF_MANPOWER && eco.production < RECRUIT_COSTS[kind].production) {

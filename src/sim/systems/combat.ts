@@ -1,3 +1,4 @@
+import { unitType } from '../units/templates'
 import {
   applyLosses,
   combatStrength,
@@ -51,7 +52,7 @@ function commandFactor(ctx: SimContext, u: UnitState): number {
 export function updateCommand(ctx: SimContext): void {
   const hqsByOwner = new Map<string, UnitState[]>()
   for (const u of ctx.units.values()) {
-    if (ctx.catalog[u.kind].commandRadiusKm <= 0 || runtimeOf(ctx, u.id).routed) continue
+    if (unitType(u).commandRadiusKm <= 0 || runtimeOf(ctx, u.id).routed) continue
     const list = hqsByOwner.get(u.owner)
     if (list) list.push(u)
     else hqsByOwner.set(u.owner, [u])
@@ -59,9 +60,7 @@ export function updateCommand(ctx: SimContext): void {
   for (const u of ctx.units.values()) {
     const hqs = hqsByOwner.get(u.owner) ?? []
     runtimeOf(ctx, u.id).commanded = hqs.some(
-      (h) =>
-        h.id !== u.id &&
-        distanceKm(h.lon, h.lat, u.lon, u.lat) <= ctx.catalog[h.kind].commandRadiusKm,
+      (h) => h.id !== u.id && distanceKm(h.lon, h.lat, u.lon, u.lat) <= unitType(h).commandRadiusKm,
     )
   }
 }
@@ -72,7 +71,7 @@ function supplyFactor(ctx: SimContext, u: UnitState): number {
 
 function terrainDefense(ctx: SimContext, u: UnitState): number {
   const t = ctx.grid.terrain[ctx.grid.cellAt(u.lon, u.lat)]
-  return terrainRule(t).defense * kindTerrainDefense(u.kind, t)
+  return terrainRule(t).defense * kindTerrainDefense(u, t)
 }
 
 /** Terrain sous une unité. */
@@ -82,12 +81,12 @@ function terrainUnder(ctx: SimContext, u: UnitState): number | undefined {
 
 /** Effet du terrain sur la puissance de feu du type de l'unité (blindés en forêt…). */
 function terrainAttack(ctx: SimContext, u: UnitState): number {
-  return kindTerrainAttack(u.kind, terrainUnder(ctx, u))
+  return kindTerrainAttack(u, terrainUnder(ctx, u))
 }
 
 /** Cible de l'artillerie pour l'écran de bataille : l'ennemi le plus proche à portée. */
 function artilleryTarget(ctx: SimContext, u: UnitState): UnitState | undefined {
-  const range = ctx.catalog[u.kind].supportRangeKm
+  const range = unitType(u).supportRangeKm
   const side = sideIndex(ctx, u.owner)
   let best: UnitState | undefined
   let bestD = range
@@ -175,11 +174,11 @@ export function combatModifiers(
   const theirs = foe && isOffensive(u) ? obstaclesUnder(ctx, foe) : 0
   const pctOf = (v: number): string => `${Math.round(v * 100)} %`
   const flank = runtimeOf(ctx, u.id).flank
-  const type = ctx.catalog[u.kind].name
+  const type = unitType(u).name
   const tName = terrainRule(ctx.grid.terrain[cell]).name.toLowerCase()
   const tAttack = terrainAttack(ctx, u)
-  const tDefense = kindTerrainDefense(u.kind, ctx.grid.terrain[cell])
-  const shotAt = ctx.catalog[u.kind].supportRangeKm > 0 ? artilleryTarget(ctx, u) : foe
+  const tDefense = kindTerrainDefense(u, ctx.grid.terrain[cell])
+  const shotAt = unitType(u).supportRangeKm > 0 ? artilleryTarget(ctx, u) : foe
   const vs = shotAt ? matchup(u, shotAt, terrainUnder(ctx, shotAt)) : null
   return {
     attack: [
@@ -251,7 +250,7 @@ function isOffensive(u: UnitState): boolean {
 
 /** Valeur de combat effective, sans unité. */
 export function firePower(ctx: SimContext, u: UnitState): number {
-  const type = ctx.catalog[u.kind]
+  const type = unitType(u)
   const base = isOffensive(u) ? type.attack : type.defense
   return (
     base *
@@ -268,7 +267,7 @@ export function firePower(ctx: SimContext, u: UnitState): number {
 }
 
 export function defenseValue(ctx: SimContext, u: UnitState): number {
-  const type = ctx.catalog[u.kind]
+  const type = unitType(u)
   return (
     type.defense *
     combatStrength(u) *
@@ -296,7 +295,7 @@ function hit(
   let defense = defenseValue(ctx, target)
   if (isOffensive(from) && riverBetween(ctx, from, target)) defense *= 1.4
   // Chaque tir consomme des munitions, selon le type (l'artillerie bien plus que l'infanterie).
-  const ammo = useMunitions(ctx, from.owner, munitionsPerShot(from.kind))
+  const ammo = useMunitions(ctx, from.owner, munitionsPerShot(from))
   let fire = firePower(ctx, from) * ammo
   // Rapport de force entre types (blindés à découvert, infanterie retranchée en ville, artillerie).
   const vs = matchup(from, target, terrainUnder(ctx, target))
@@ -348,8 +347,8 @@ export function updateCombat(ctx: SimContext): void {
   updateFlanks(ctx, index)
 
   // 2. Tirs directs : chaque unité au contact frappe, parmi les ennemis au contact, celui qui a reçu
-  // le moins de tirs ce tour, puis le plus proche. Les brigades d'une même ancienne unité ne
-  // concentrent pas leurs feux sur une seule brigade adverse (l'échelle de la brigade reste neutre).
+  // le moins de tirs ce tour, puis le plus proche : les brigades voisines ne concentrent pas leurs
+  // feux sur une seule brigade adverse.
   const fired = new Map<number, number>()
   for (const u of index.units) {
     const rt = runtimeOf(ctx, u.id)
@@ -374,7 +373,7 @@ export function updateCombat(ctx: SimContext): void {
 
   // 3. Artillerie : frappe l'ennemi le plus proche à portée, même sans contact direct.
   for (const u of index.units) {
-    const range = ctx.catalog[u.kind].supportRangeKm
+    const range = unitType(u).supportRangeKm
     if (range <= 0 || runtimeOf(ctx, u.id).routed) continue
     const target = index.nearestEnemy(u, range)
     if (target) hit(ctx, u, target, ARTILLERY_FACTOR, false)

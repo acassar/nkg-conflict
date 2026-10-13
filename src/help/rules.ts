@@ -72,7 +72,13 @@ import {
   SPAN_MIN,
   SPAN_STEP,
 } from '@/sim/systems/command'
-import { CONTACT_KM, OUT_OF_SUPPLY_FACTOR, ROUT_ORG, RALLY_ORG } from '@/sim/systems/combat'
+import {
+  CONTACT_KM,
+  ENTRENCH_DEFENSE,
+  OUT_OF_SUPPLY_FACTOR,
+  ROUT_ORG,
+  RALLY_ORG,
+} from '@/sim/systems/combat'
 import {
   DEMINING_PER_DAY,
   OBSTACLE_FIRE_MALUS,
@@ -256,7 +262,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     id: 'entrench',
     title: 'Retranchement',
     paragraphs: [
-      "Une unité à l'arrêt se retranche peu à peu (plus vite en posture défensive, moins vite en offensive) ; retranchée à 100 %, sa défense gagne +50 %. Tout déplacement fait perdre le retranchement.",
+      `Une unité à l'arrêt se retranche peu à peu (plus vite en posture défensive, moins vite en offensive) ; retranchée à 100 %, sa défense gagne ${signedPct(1 + ENTRENCH_DEFENSE)}. Tout déplacement fait perdre le retranchement.`,
     ],
   },
   {
@@ -375,7 +381,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: 'Transport stratégique (provisoire)',
     paragraphs: [
       `« Transporter » puis clic sur une ville à vous, à un cobelligérant ou à un pays qui vous accorde le passage (la plus proche du clic, à moins de ${DEST_PICK_KM} km) : chaque unité choisie quitte la carte et y réapparaît à l'arrivée. Une unité au contact de l'ennemi ne part pas ; pendant le trajet, elle quitte son armée et sa division et ne peut être interceptée.`,
-      `Le mode est choisi pour chaque unité, dans cet ordre. Rail : départ et arrivée reliés par un territoire ami continu ; ${RAIL_LOAD_HOURS} heures de chargement, puis ${RAIL_KM_PER_HOUR} km par heure sur la ligne droite allongée de 30 %. Mer : unité à moins de ${EMBARK_KM} km d'un port tenu et arrivée dans un port, ${MAX_LANDING_KM} km au plus ; mêmes délais et même capacité que les débarquements. Air : infanterie, défense territoriale et QG seulement, entre deux villes d'au moins ${Math.round(AIRFIELD_POP / 1000)} 000 habitants (départ à moins de ${EMBARK_KM} km), ${AIR_LOAD_HOURS} heures de préparation puis ${AIR_KM_PER_HOUR} km par heure, ${MAX_AIR_KM} km au plus et ${AIR_CAPACITY} unités en vol à la fois.`,
+      `Le mode est choisi pour chaque unité, dans cet ordre. Rail : départ et arrivée reliés par un territoire ami continu ; ${RAIL_LOAD_HOURS} heures de chargement, puis ${RAIL_KM_PER_HOUR} km par heure sur la ligne droite allongée de 30 %. Mer : unité à moins de ${EMBARK_KM} km d'un port tenu et arrivée dans un port, ${MAX_LANDING_KM} km au plus ; mêmes délais et même capacité que les débarquements. Air : infanterie et défense territoriale seulement, entre deux villes d'au moins ${Math.round(AIRFIELD_POP / 1000)} 000 habitants (départ à moins de ${EMBARK_KM} km), ${AIR_LOAD_HOURS} heures de préparation puis ${AIR_KM_PER_HOUR} km par heure, ${MAX_AIR_KM} km au plus et ${AIR_CAPACITY} unités en vol à la fois.`,
       `Coût en production, par 1 000 km (500 km comptés au moins) : ${pct(TRANSPORT_COST.rail)} du prix d'une unité neuve par le rail, ${pct(TRANSPORT_COST.sea)} par la mer, ${pct(TRANSPORT_COST.air)} par l'air. Si la ville d'arrivée n'est plus amie à l'arrivée, l'unité revient à son point de départ, ou à défaut à la ville tenue la plus proche.`,
       "L'IA en guerre sans aucun front s'en sert aussi : elle appelle ses alliés, demande au besoin le passage à un voisin de son ennemi (jamais à vous), y transporte la moitié de ses unités de ligne puis attaque ; sans route terrestre, elle débarque depuis son port le plus proche de la côte ennemie.",
     ],
@@ -429,7 +435,7 @@ export const MODIFIER_HELP: Record<ModifierKey, { text: string; section: HelpSec
     section: 'terrain',
   },
   entrench: {
-    text: "Retranchement gagné à l'arrêt : jusqu'à +50 % de défense, perdu en se déplaçant.",
+    text: `Retranchement gagné à l'arrêt : jusqu'à ${signedPct(1 + ENTRENCH_DEFENSE)} de défense, perdu en se déplaçant.`,
     section: 'entrench',
   },
   fort: {

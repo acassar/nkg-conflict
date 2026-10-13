@@ -215,17 +215,50 @@ try {
   const crumbsDeep = await tree.getByTestId('forces-crumbs').locator('.crumb').count()
   const echelonText =
     formationRows > 0 ? await page.getByTestId('selection-echelon').innerText() : ''
+  // Une brigade seule montre ses bataillons ; la touche U remonte à sa division.
+  const oneBrigade = await page.evaluate(() => {
+    const g = window.__nkg
+    const s = g.snapshot
+    const u = s.units.find((x) => x.owner === s.playerCountry && x.divisionId != null)
+    if (u) g.selectUnits([u.id], false)
+    return u ? u.id : null
+  })
+  let battalions = 0
+  let afterUp = 0
+  if (oneBrigade !== null) {
+    await page.getByTestId('unit-battalions').waitFor({ timeout: 5000 })
+    battalions = await page.getByTestId('unit-battalions').locator('li').count()
+    await page
+      .locator('canvas')
+      .first()
+      .focus()
+      .catch(() => {})
+    await page.keyboard.press('u')
+    await page.waitForTimeout(400)
+    afterUp = await page.evaluate(() => window.__nkg.selection.length)
+  }
   await shot('02a1-vue-forces-echelons')
   await tree.getByTestId('forces-tab-templates').click()
   const templates = await page.locator('[data-testid^="template-"]').count()
   await shot('02a2-modeles')
   await tree.getByTestId('forces-tab-tree').click()
   await tree.getByTestId('forces-crumbs').locator('button.crumb').first().click()
-  step('vue Forces', { crumbsArmy, formationRows, crumbsDeep, echelonText, templates })
+  step('vue Forces', {
+    crumbsArmy,
+    formationRows,
+    crumbsDeep,
+    echelonText,
+    templates,
+    battalions,
+    afterUp,
+  })
   if (crumbsArmy !== 2 || formationRows < 1 || crumbsDeep < 3 || templates < 5) {
     report.errors.push(
       `vue Forces : fil ${crumbsArmy}→${crumbsDeep}, ${formationRows} formations, ${templates} modèles`,
     )
+  }
+  if (oneBrigade !== null && (battalions < 2 || afterUp < 2)) {
+    report.errors.push(`inspecteur : ${battalions} bataillons, ${afterUp} brigades après « U »`)
   }
   await page.getByTestId('drawer-forces').locator('.armies li').first().click()
   await page.getByTestId('inspector-army').waitFor()
@@ -346,6 +379,18 @@ try {
   step('budget national', { secteurs: sectors })
   if (sectors !== 4 || !/usines militaires à \d+ %/.test(budgetText))
     report.errors.push(`bloc budget incomplet (${sectors} secteurs) : ${budgetText.slice(0, 120)}`)
+  // Économie réelle : entretien de l'armée, réserve mobilisable et conscription.
+  const upkeepLine = await page
+    .getByTestId('budget-upkeep')
+    .innerText()
+    .catch(() => '')
+  const manpowerLine = await page
+    .getByTestId('budget-manpower')
+    .innerText()
+    .catch(() => '')
+  step('entretien et conscription', { entretien: upkeepLine, reserve: manpowerLine })
+  if (!/Entretien de l'armée/.test(upkeepLine) || !/Réserve mobilisable/.test(manpowerLine))
+    report.errors.push(`entretien ou réserve mobilisable absents (${upkeepLine} | ${manpowerLine})`)
   // Curseurs : répartition manuelle, défense portée à 80 %, puis retour à l'automatique.
   await page.getByTestId('budget-auto').uncheck()
   await page.getByTestId('budget-slider-defense').waitFor()

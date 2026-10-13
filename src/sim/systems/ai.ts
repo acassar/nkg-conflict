@@ -97,6 +97,9 @@ export function updateAi(ctx: SimContext, country: CountryId, state: AiState): v
     for (const e of enemies) {
       if (distanceKm(lon, lat, e.lon, e.lat) < 30) power += defenseValue(ctx, e)
     }
+    // Seulement là où l'ennemi tient le front : une frontière sans défenseur n'est pas un but (sans
+    // cela, l'IA s'enfonce sans combat dans les régions frontalières mal garnies, Briansk ou Koursk).
+    if (power === 0) continue
     // Petit bruit pour ne pas frapper toujours au même endroit ; un axe vaut jusqu'à deux fois moins
     // de défense (front discontinu : l'offensive suit les routes).
     power = (power + ctx.rng.range(0, 0.5)) / (1 + axisBonus(ctx, c.cell) / 5)

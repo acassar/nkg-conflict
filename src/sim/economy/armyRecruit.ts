@@ -1,6 +1,7 @@
 import type { ArmyState, LonLat, RecruitItem, UnitKind } from '../core/types'
 import { distanceKm } from '../theater/grid'
-import { RECRUIT_COSTS } from './rules'
+import { BRIGADE_TEMPLATES, DIVISION_TEMPLATES } from '../units/templates'
+import { recruitCostOf } from './rules'
 
 /**
  * Recrutement par armée : répartition des formations entre les casernes du pays.
@@ -16,8 +17,28 @@ export interface BarracksSite {
   barracks: number
 }
 
-/** Commande : nombre d'unités voulues par type. */
-export type RecruitOrder = Partial<Record<UnitKind, number>>
+/**
+ * Commande d'une armée (phase D3, par modèle) : brigades d'un modèle pour une division donnée (ou la
+ * division la plus proche qui a une place), et divisions entières d'un modèle de division.
+ */
+export interface RecruitOrder {
+  /** Brigades voulues par modèle de brigade (units/templates.ts). */
+  brigades?: Record<string, number>
+  /** Division que rejoignent ces brigades ; absente : la plus proche qui a une place, sinon une nouvelle. */
+  divisionId?: number | null
+  /** Divisions entières voulues par modèle de division. */
+  divisions?: Record<string, number>
+}
+
+/** Une formation de la commande : sa brigade, et sa division entière s'il y a lieu (`group`). */
+export interface RecruitLine {
+  kind: UnitKind
+  template: string
+  divisionId?: number
+  divisionTemplate?: string
+  /** Rang de la division entière dans la commande (ses brigades partagent ce rang). */
+  group?: number
+}
 
 export interface RecruitPlanCity {
   name: string
@@ -31,7 +52,7 @@ export interface RecruitPlanCity {
 
 export interface RecruitPlan {
   /** Formations dans l'ordre de la commande, avec leur ville. */
-  items: { kind: UnitKind; city: string }[]
+  items: { kind: UnitKind; city: string; line: number }[]
   cities: RecruitPlanCity[]
   production: number
   manpower: number
@@ -77,19 +98,45 @@ function distanceTo(anchors: LonLat[], lon: number, lat: number): number {
 }
 
 /** Jours restants d'une formation au rythme maximal de sa caserne. */
-function remainingDays(item: Pick<RecruitItem, 'kind' | 'progress' | 'cost'>): number {
+function remainingDays(item: Pick<RecruitItem, 'kind' | 'progress' | 'cost' | 'template'>): number {
   return Math.max(
     1,
-    Math.ceil(((item.cost - item.progress) / item.cost) * RECRUIT_COSTS[item.kind].days),
+    Math.ceil(
+      ((item.cost - item.progress) / item.cost) * recruitCostOf(item.kind, item.template).days,
+    ),
   )
 }
 
-/** Développe une commande en liste de types, dans l'ordre des types fourni. */
-export function expandOrder(order: RecruitOrder, kinds: UnitKind[]): UnitKind[] {
-  const list: UnitKind[] = []
-  for (const kind of kinds) {
-    const n = Math.max(0, Math.floor(order[kind] ?? 0))
-    for (let k = 0; k < n; k++) list.push(kind)
+/**
+ * Développe une commande en formations : brigades dans l'ordre des modèles, puis les brigades de chaque
+ * division entière, à la suite.
+ */
+export function expandOrder(order: RecruitOrder): RecruitLine[] {
+  const list: RecruitLine[] = []
+  for (const [template, count] of Object.entries(order.brigades ?? {})) {
+    const t = BRIGADE_TEMPLATES[template]
+    if (!t) continue
+    for (let k = 0; k < Math.max(0, Math.floor(count)); k++) {
+      list.push({
+        kind: t.kind,
+        template,
+        ...(order.divisionId !== undefined && order.divisionId !== null
+          ? { divisionId: order.divisionId }
+          : {}),
+      })
+    }
+  }
+  let group = 0
+  for (const [id, count] of Object.entries(order.divisions ?? {})) {
+    const d = DIVISION_TEMPLATES[id]
+    if (!d) continue
+    for (let k = 0; k < Math.max(0, Math.floor(count)); k++) {
+      for (const template of d.brigades) {
+        const t = BRIGADE_TEMPLATES[template]
+        if (t) list.push({ kind: t.kind, template, divisionTemplate: id, group })
+      }
+      group++
+    }
   }
   return list
 }
@@ -105,13 +152,13 @@ export function expandOrder(order: RecruitOrder, kinds: UnitKind[]): UnitKind[] 
  */
 export function planArmyRecruit(input: {
   sites: BarracksSite[]
-  queue: Pick<RecruitItem, 'kind' | 'city' | 'progress' | 'cost'>[]
+  queue: Pick<RecruitItem, 'kind' | 'city' | 'progress' | 'cost' | 'template'>[]
   anchors: LonLat[]
-  kinds: UnitKind[]
+  lines: ReadonlyArray<Pick<RecruitLine, 'kind' | 'template'>>
   stock: number
   productionPerDay: number
 }): RecruitPlan {
-  const { sites, queue, anchors, kinds } = input
+  const { sites, queue, anchors, lines } = input
   // Pour chaque ville : date de libération de chaque caserne, en jours.
   const slots = new Map<string, number[]>()
   const dist = new Map<string, number>()
@@ -150,8 +197,9 @@ export function planArmyRecruit(input: {
   let affordable = 0
   let lastOut = 0
   const available = input.stock - queuedCost
-  for (const kind of kinds) {
-    const cost = RECRUIT_COSTS[kind]
+  for (const [index, line] of lines.entries()) {
+    const { kind } = line
+    const cost = recruitCostOf(kind, line.template)
     production += cost.production
     manpower += cost.manpower
     let best: string | null = null
@@ -173,7 +221,7 @@ export function planArmyRecruit(input: {
       lastOut,
       start + cost.days + (dist.get(best) ?? 0) / RECRUIT_TRAVEL_KM_PER_DAY,
     )
-    items.push({ kind, city: best })
+    items.push({ kind, city: best, line: index })
     const entry = perCity.get(best) ?? {
       name: best,
       count: 0,

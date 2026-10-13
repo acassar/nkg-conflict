@@ -6,7 +6,14 @@ import { parseSave, serializeSave } from '@/sim/core/save'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import { formationName, formationUnits, updateFormations } from '@/sim/systems/formations'
 import { divisionCohesion, divisionSectors } from '@/sim/systems/armies'
-import { orderOfBattle, selectionFormation } from '@/composables/composition'
+import {
+  forcesCrumbs,
+  forcesRows,
+  openRow,
+  orderOfBattle,
+  selectionEchelon,
+  selectionFormation,
+} from '@/composables/composition'
 import {
   brigadeSpots,
   formationMembers,
@@ -310,6 +317,52 @@ describe('affichage et ordre de bataille', () => {
     expect(selectedSectors(units, withSectors, new Set([1])).map((x) => x.id)).toEqual([2])
     expect(selectedSectors(units, withSectors, new Set([1, 4])).map((x) => x.id)).toEqual([1])
     expect(selectedSectors(units, withSectors, new Set())).toEqual([])
+  })
+
+  it('vue Forces : armées, corps, divisions, brigades, fil d’Ariane et échelon choisi', () => {
+    const inArmy = units.map((u) => ({ ...u, armyId: 9, equipment: 1 }))
+    const armies = [{ id: 9, name: '1re armée', unitIds: inArmy.map((u) => u.id) }]
+    const top = forcesRows({}, inArmy, formations, armies)
+    expect(top.map((r) => [r.echelon, r.name, r.unitIds.length])).toEqual([
+      ['army', '1re armée', 6],
+    ])
+    const army = openRow({}, top[0]!, formations)
+    const corps = forcesRows(army, inArmy, formations, armies)
+    expect(corps.map((r) => [r.echelon, r.name])).toEqual([['corps', 'Ier corps']])
+    const inCorps = openRow(army, corps[0]!, formations)
+    const divisions = forcesRows(inCorps, inArmy, formations, armies)
+    expect(divisions.map((r) => r.name)).toEqual(['1re division', '2e division'])
+    const inDivision = openRow(inCorps, divisions[1]!, formations)
+    expect(inDivision).toEqual({ army: 9, corps: 1, division: 3 })
+    const brigades = forcesRows(inDivision, inArmy, formations, armies)
+    expect(brigades.map((r) => [r.echelon, r.id, r.open])).toEqual([
+      ['brigade', 4, false],
+      ['brigade', 5, false],
+      ['brigade', 6, false],
+    ])
+    expect(forcesCrumbs(inDivision, formations, armies).map((c) => c.label)).toEqual([
+      'Forces',
+      '1re armée',
+      'Ier corps',
+      '2e division',
+    ])
+    const echelon = (ids: number[]) =>
+      selectionEchelon(
+        inArmy.filter((u) => ids.includes(u.id)),
+        inArmy,
+        formations,
+        armies,
+      )?.echelon
+    expect(echelon([4])).toBe('brigade')
+    expect(echelon([4, 5, 6])).toBe('division')
+    expect(echelon([1, 2, 3, 4, 5, 6])).toBe('army')
+    expect(echelon([4, 5])).toBeNull()
+    const solo = selectionEchelon(inArmy.slice(3, 4), inArmy, formations, armies)
+    expect([solo?.division?.name, solo?.corps?.name, solo?.army?.name]).toEqual([
+      '2e division',
+      'Ier corps',
+      '1re armée',
+    ])
   })
 
   it("ordre de bataille d'une armée et formation d'une sélection", () => {

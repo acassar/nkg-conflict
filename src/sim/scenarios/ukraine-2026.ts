@@ -64,7 +64,8 @@ export const ukraine2026: ScenarioDef = {
       [34.1, 44.95],
     ],
   },
-  // Budget tiré du PIB (données Natural Earth, comme la carte du monde) ; usines des villes du théâtre
+  // Budget tiré du PIB (FMI) et des dépenses militaires (SIPRI), comme la carte du monde ; Ukraine en
+  // guerre totale, Russie en mobilisation partielle au départ (conscription réelle) ; usines des villes du théâtre
   // plus usines hors carte (industrie du pays hors du théâtre, et part de l'industrie civile qui
   // travaille pour l'armée). La Russie n'a qu'une partie de son PIB sur la carte. L'aide étrangère
   // passe par les donneurs hors carte (voir `politics.aids`).
@@ -76,8 +77,10 @@ export const ukraine2026: ScenarioDef = {
       productionPerDay: 0,
       munitionsPerDay: 0,
       manpowerPerDay: 1.2,
-      gdpB: 154,
-      popM: 44,
+      gdpB: 212.9,
+      popM: 39,
+      defensePct: 39.6,
+      warEconomy: 2,
       offMapFactories: { civ: 0, mil: 21 },
     },
     RUS: {
@@ -87,9 +90,11 @@ export const ukraine2026: ScenarioDef = {
       productionPerDay: 0,
       munitionsPerDay: 0,
       manpowerPerDay: 1.8,
-      gdpB: 1700,
+      gdpB: 2587.9,
       gdpOnMap: 0.4,
-      popM: 144,
+      popM: 143.5,
+      defensePct: 7.5,
+      warEconomy: 1,
       offMapFactories: { civ: 0, mil: 25 },
     },
     USA: flows(140, 90),

@@ -1,4 +1,6 @@
 import type { BuildingKind, Buildings, UnitKind, WarEconomyLevel } from '../core/types'
+import type { BattalionKind } from '../units/battalions'
+import { BRIGADE_TEMPLATES, DEFAULT_BRIGADE_TEMPLATE, brigadeProfile } from '../units/templates'
 
 export interface BuildingType {
   kind: BuildingKind
@@ -68,6 +70,25 @@ export const PRODUCTION_PER_MIL = 3
 export const MUNITIONS_PER_MIL = 4
 /** Main-d'œuvre quotidienne (en milliers) par million d'habitants des villes tenues. */
 export const MANPOWER_PER_MILLION = 0.15
+/**
+ * Conscription des pays à budget (phase D3, à valider) : milliers d'hommes par jour et par million
+ * d'habitants du territoire tenu, selon l'économie de guerre. Ordres de grandeur réels : environ
+ * 1 000 recrues par jour pour l'Ukraine (39 M) en guerre totale ou la Russie (144 M) en mobilisation
+ * partielle.
+ */
+export const CONSCRIPTION_PER_MILLION: Record<WarEconomyLevel, number> = {
+  0: 0.003,
+  1: 0.008,
+  2: 0.025,
+}
+/**
+ * Multiplicateur de la conscription réelle, le temps du rééquilibrage (phase D3, à valider) : les
+ * pertes du jeu sont plus lourdes que les pertes réelles (aucun blessé ne revient), et l'Ukraine
+ * s'effondre en trois mois au rythme réel.
+ */
+export const CONSCRIPTION_FACTOR = 2.5
+/** Part de la population mobilisable au départ, hommes déjà sous les drapeaux compris (à valider). */
+export const MOBILIZABLE_SHARE = 0.12
 /** Plafond du stock de munitions des pays à apports fixes (les autres : voir budget.ts). */
 export const MUNITIONS_CAP = 3000
 export const FORT_BONUS_PER_LEVEL = 0.15
@@ -107,6 +128,51 @@ export const RECRUIT_COSTS: Record<UnitKind, RecruitCost> = {
   hq: { production: 400, manpower: 1, days: 8 },
   // Défense territoriale : peu de matériel, beaucoup d'hommes ; tient les secteurs calmes.
   tdf: { production: 100, manpower: 6, days: 7 },
+}
+
+/**
+ * Production militaire par bataillon (phase D3, coût de formation d'une brigade : somme de ses
+ * bataillons). Valeurs réglées pour que les modèles par défaut gardent les coûts des anciens types
+ * (infanterie légère 300, mécanisée 660, blindée 900, artillerie 500, défense territoriale 100).
+ */
+export const BATTALION_COST: Record<BattalionKind, number> = {
+  lightInf: 70,
+  motInf: 80,
+  mechInf: 130,
+  tank: 250,
+  gunArt: 120,
+  rocketArt: 140,
+  recon: 90,
+  engineer: 70,
+  airDefense: 150,
+  territorial: 25,
+  support: 20,
+}
+
+const costCache = new Map<string, RecruitCost>()
+
+/**
+ * Coût de formation d'une brigade d'un modèle (units/templates.ts) : production de ses bataillons,
+ * main-d'œuvre de son effectif réel, durée de son type. Sans modèle (logistique, QG) : coût du type.
+ */
+export function recruitCostOf(kind: UnitKind, template?: string | null): RecruitCost {
+  const id = template ?? DEFAULT_BRIGADE_TEMPLATE[kind]
+  const t = id ? BRIGADE_TEMPLATES[id] : undefined
+  if (!t || !id) return RECRUIT_COSTS[kind]
+  let cost = costCache.get(id)
+  if (!cost) {
+    let production = 0
+    for (const [b, n] of Object.entries(t.battalions) as [BattalionKind, number][]) {
+      production += BATTALION_COST[b] * n
+    }
+    cost = {
+      production,
+      manpower: Math.round(brigadeProfile(id).men / 100) / 10,
+      days: RECRUIT_COSTS[t.kind].days,
+    }
+    costCache.set(id, cost)
+  }
+  return cost
 }
 
 /** Formations menées en même temps par une caserne. */

@@ -114,6 +114,16 @@ function create(
   return f
 }
 
+/** Nouvelle division d'une armée (division entière commandée au recrutement). */
+export function createDivision(
+  ctx: SimContext,
+  owner: string,
+  armyId: number,
+  template: string,
+): FormationState {
+  return create(ctx, owner, 'division', armyId, template)
+}
+
 interface DivisionInfo {
   f: FormationState
   members: UnitState[]

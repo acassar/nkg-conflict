@@ -10,6 +10,7 @@ import {
   constructionSlots,
   MAX_PARALLEL_CONSTRUCTION,
   RECRUIT_COSTS,
+  recruitCostOf,
   WAR_ECONOMY,
 } from '@/sim/economy/rules'
 import type { TheaterData } from '@/sim/theater/grid'
@@ -98,7 +99,7 @@ describe('économie', () => {
     // Numéro suivant ceux de l'ordre de bataille de départ.
     const name = `${ecoOf(sim).unitCounters.inf}e brigade d'infanterie`
     expect(sim.queueRecruit('inf', 'Kyiv', null)).toBe(null)
-    expect(ecoOf(sim).manpower).toBeCloseTo(men - RECRUIT_COSTS.inf.manpower)
+    expect(ecoOf(sim).manpower).toBeCloseTo(men - recruitCostOf('inf').manpower)
     sim.step(24 * (RECRUIT_COSTS.inf.days + 1))
     const recruit = [...sim.ctx.units.values()].find((u) => u.name === name)
     expect(recruit?.owner).toBe('UKR')
@@ -132,6 +133,8 @@ describe('économie de guerre', () => {
   it('la guerre totale déplace la construction vers la production et use la population', () => {
     const peace = newGame()
     const total = newGame()
+    // L'Ukraine du scénario est déjà en guerre totale.
+    peace.setWarEconomy(0)
     total.setWarEconomy(2)
     expect(ecoOf(total).warEconomy).toBe(2)
     // Revenus propres du pays, hors aides étrangères.
@@ -139,6 +142,8 @@ describe('économie de guerre', () => {
     const t = dailyIncome(total.ctx, ukraine2026, 'UKR')
     expect(t.production / p.production).toBeCloseTo(WAR_ECONOMY[2].production)
     expect(t.munitions / p.munitions).toBeCloseTo(WAR_ECONOMY[2].production)
+    // La conscription suit le niveau de mobilisation.
+    expect(t.manpower).toBeGreaterThan(5 * p.manpower)
     // Capacité des usines civiles (aucun chantier : rien n'est dépensé en construction).
     peace.step(24)
     total.step(24)

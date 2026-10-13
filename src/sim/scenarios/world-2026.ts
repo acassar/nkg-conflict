@@ -1,5 +1,5 @@
 import type { CountryDef, CountryId, ScenarioDef, ScenarioEconomy } from '../core/types'
-import { countryForces, forceUnits, type CountryForces } from './forces'
+import { countryForces, forceUnits, rawCountry, type CountryForces } from './forces'
 import { forceSectors, sectorForces } from './sectors'
 import { CONSTRUCTION_PER_CIV, PRODUCTION_PER_MIL } from '../economy/rules'
 
@@ -339,8 +339,10 @@ const AIDS_2026: Array<{ from: CountryId; to: CountryId; level: 1 | 2 | 3 }> = [
  * Économie d'un pays : stocks de départ, budget tiré du PIB et industrie de départ (usines posées
  * autour des grandes villes, nombre d'après la racine du PIB). La militarisation oriente une plus
  * grande part de l'industrie vers l'armée. La main-d'œuvre vient de la population. Valeurs de jeu.
+ * PIB du FMI et dépenses militaires du SIPRI quand ils sont connus (phase D3), sinon Natural Earth.
  */
 function economyOf(row: WorldCountryRow, militarization: number): ScenarioEconomy {
+  const raw = rawCountry(row.code)
   const popM = row.pop / 1e6
   const root = Math.sqrt(Math.max(0, row.gdpB))
   const military = 0.5 + 0.5 * militarization
@@ -356,6 +358,7 @@ function economyOf(row: WorldCountryRow, militarization: number): ScenarioEconom
     munitionsPerDay: 0,
     manpowerPerDay: Math.round((0.2 + 0.06 * popM) * 10) / 10,
     gdpB: Math.max(1, row.gdpB),
+    ...(raw?.defensePct ? { defensePct: raw.defensePct } : {}),
     factories: {
       civ: Math.max(1, Math.round(construction / CONSTRUCTION_PER_CIV)),
       // Une part des usines civiles travaillait déjà pour l'armée (ancienne conversion de 30 %).
@@ -369,6 +372,8 @@ function economyOf(row: WorldCountryRow, militarization: number): ScenarioEconom
  * Scénario hypothétique de jeu, sans prétention de reconstitution historique.
  */
 export function buildWorld2026(rows: WorldCountryRow[]): ScenarioDef {
+  // PIB réel (FMI) quand il est connu.
+  rows = rows.map((r) => ({ ...r, gdpB: rawCountry(r.code)?.gdpB ?? r.gdpB }))
   const countries: CountryDef[] = rows.map((r) => ({
     id: r.code,
     name: r.name,

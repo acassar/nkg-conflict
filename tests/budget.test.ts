@@ -6,7 +6,9 @@ import { dailyIncome } from '@/sim/economy/economy'
 import { canFundFactory, FACTORY_RESERVE_DAYS, updateAiEconomy } from '@/sim/economy/ai'
 import {
   applyBudget,
+  armyUpkeep,
   computeBudget,
+  dailyGdp,
   factoryCount,
   GDP_DRIFT_DAYS,
   MOBILIZATION_DRAG,
@@ -14,8 +16,9 @@ import {
   newBudget,
   normalizeAllocation,
   START_INDUSTRY_BUDGET_SHARE,
+  UPKEEP_SHARE,
 } from '@/sim/economy/budget'
-import { BUILDINGS, MUNITIONS_PER_MIL } from '@/sim/economy/rules'
+import { BUILDINGS, CONSCRIPTION_FACTOR, MUNITIONS_PER_MIL } from '@/sim/economy/rules'
 import { parseSave, serializeSave } from '@/sim/core/save'
 import {
   budgetForecast,
@@ -43,7 +46,7 @@ describe('budget national', () => {
     const sim = newGame()
     const eco = ecoOf(sim)
     const b = eco.budget
-    expect(b?.gdpB).toBe(154)
+    expect(b?.gdpB).toBe(212.9)
     // Usines posées autour des villes, plus l'industrie hors carte.
     expect(eco.factories.length).toBeGreaterThan(20)
     expect(eco.factories.every((f) => f.city)).toBe(true)
@@ -70,8 +73,8 @@ describe('budget national', () => {
     sim.setBudgetAllocation({ reserve: 1 })
     if (eco.budget) eco.budget.treasury = 0
     expect(dailyIncome(sim.ctx, ukraine2026, 'UKR').production).toBe(0)
-    // Une part de défense finance une partie des usines seulement.
-    sim.setBudgetAllocation({ defense: 0.3, reserve: 0.7 })
+    // Une part de défense paie l'entretien de l'armée, puis une partie des usines seulement.
+    sim.setBudgetAllocation({ defense: 0.6, reserve: 0.4 })
     const part = dailyIncome(sim.ctx, ukraine2026, 'UKR').production
     expect(part).toBeGreaterThan(0)
     expect(part).toBeLessThan(full.production)
@@ -199,7 +202,7 @@ describe('budget national', () => {
       delete o.factories
     }
     const migrated = ecoOf(Simulation.fromSave(parseSave(serializeSave(old)), ukraine2026, theater))
-    expect(migrated.budget?.gdpB).toBe(154)
+    expect(migrated.budget?.gdpB).toBe(212.9)
     expect(migrated.factories.length).toBeGreaterThan(20)
   })
 
@@ -216,11 +219,63 @@ describe('budget national', () => {
     ])
     const shares = view?.lines.reduce((s, l) => s + l.share, 0) ?? 0
     expect(shares).toBeCloseTo(1)
-    expect(view?.lines[0]?.note).toBe('usines militaires à 100 %')
+    expect(view?.lines[0]?.note).toBe(
+      "entretien de l'armée payé à 100 %, usines militaires à 100 %",
+    )
+    expect(view?.upkeep?.need).toBeGreaterThan(0)
+    expect(view?.manpower?.pool).toBeGreaterThan(1000)
     expect(view?.gdpB).toBeGreaterThan(100)
     expect(money(42.4)).toBe('42 M$')
     expect(money(1234)).toBe('1,2 Md$')
     expect(budgetView(null)).toBeNull()
+  })
+
+  it('l’armée de départ coûte la part prévue des dépenses militaires réelles ; impayée, elle se renforce moins', () => {
+    const sim = newGame()
+    const eco = ecoOf(sim)
+    const b = eco.budget
+    expect(b?.defenseShare).toBeCloseTo(0.396)
+    const gdp = dailyGdp(sim.ctx, ukraine2026, eco)
+    expect(armyUpkeep(sim.ctx, eco)).toBeCloseTo(gdp * 0.396 * UPKEEP_SHARE, 0)
+    sim.step(24)
+    expect(b?.last?.upkeep?.paid).toBe(1)
+    expect(eco.upkeepPaid).toBe(1)
+    // Plus d'argent pour la défense ni de réserve : entretien impayé, renforts arrêtés.
+    sim.setBudgetAllocation({ reserve: 1 })
+    if (b) b.treasury = 0
+    const hurt = [...sim.ctx.units.values()].find((u) => u.owner === 'UKR')
+    if (!hurt) throw new Error('unité absente')
+    hurt.strength = 0.5
+    eco.manpower = 1e4
+    sim.step(24)
+    expect(eco.upkeepPaid).toBe(0)
+    // La réserve vide : l'argent mis de côté la veille couvrirait sinon l'entretien.
+    if (b) b.treasury = 0
+    hurt.strength = 0.5
+    sim.step(24)
+    expect(eco.upkeepPaid).toBe(0)
+    expect(hurt.strength).toBe(0.5)
+    // La prévision du budget le dit, une fois la réserve vide.
+    if (b) b.treasury = 0
+    expect(
+      budgetForecast(eco, { defense: 0, construction: 0, research: 0, reserve: 1 })?.upkeepPaid,
+    ).toBe(0)
+  })
+
+  it('la conscription suit la population et la mobilisation, plafonnée par la réserve mobilisable', () => {
+    const sim = newGame()
+    const eco = ecoOf(sim)
+    // Ukraine en guerre totale : environ 1 000 recrues par jour au rythme réel, réserve de quelques
+    // millions.
+    const day = dailyIncome(sim.ctx, ukraine2026, 'UKR').manpower / CONSCRIPTION_FACTOR
+    expect(day).toBeGreaterThan(0.5)
+    expect(day).toBeLessThan(1.5)
+    expect(eco.manpowerPool).toBeGreaterThan(3000)
+    const pool = eco.manpowerPool ?? 0
+    sim.step(24)
+    expect(eco.manpowerPool).toBeCloseTo(pool - eco.daily.manpower)
+    eco.manpowerPool = 0.2
+    expect(dailyIncome(sim.ctx, ukraine2026, 'UKR').manpower).toBeCloseTo(0.2)
   })
 
   it('un curseur garde la somme à 100 % en répartissant le reste au prorata', () => {
@@ -251,7 +306,9 @@ describe('budget national', () => {
     expect(poor?.reserveDays).toBeGreaterThan(0)
     // Production attendue proche de celle du jour (sans l'aide reçue).
     expect(ok?.production).toBeCloseTo(
-      ((eco.budget?.last?.need.defense ?? 0) / (eco.budget?.factoryDayCost ?? 1)) * 3,
+      (((eco.budget?.last?.need.defense ?? 0) - (eco.budget?.last?.upkeep?.need ?? 0)) /
+        (eco.budget?.factoryDayCost ?? 1)) *
+        3,
     )
   })
 

@@ -10,7 +10,7 @@ import type {
   ScenarioDef,
 } from '../core/types'
 import { Terrain } from '../theater/grid'
-import { RECRUIT_COSTS } from './rules'
+import { recruitCostOf } from './rules'
 import { OCCUPATION_YIELD, territoryShares } from './national'
 
 /**
@@ -19,7 +19,18 @@ import { OCCUPATION_YIELD, territoryShares } from './national'
  * réserve. Les usines (des sites sur la carte) plafonnent ce que l'argent achète : une journée d'usine
  * militaire donne de la production et des munitions, une journée d'usine civile des points de
  * construction. L'argent inemployé va à la réserve, qui couvre ensuite les manques.
+ *
+ * Entretien de l'armée (phase D3) : le budget reçoit en plus UPKEEP_SHARE des dépenses militaires
+ * réelles du pays (part du PIB, SIPRI), et la défense paie chaque jour l'entretien de ses brigades
+ * (coût proportionnel à leur coût de formation et à leurs effectifs), avant ses usines militaires. Le
+ * prix est fixé au départ : l'armée de départ coûte exactement cette part. Une armée plus grande
+ * prend sur les usines et la réserve ; un entretien impayé ralentit les renforts.
  */
+
+/** Part des dépenses militaires réelles consacrée à l'entretien de l'armée de départ (à valider). */
+export const UPKEEP_SHARE = 0.6
+/** Dépenses militaires d'un pays sans donnée (médiane des pays connus, % du PIB). */
+export const DEFAULT_DEFENSE_PCT = 1.85
 
 /** Part du PIB prélevée pour le budget, hors économie de guerre. */
 export const BUDGET_LEVY = 0.12
@@ -73,10 +84,12 @@ export function newBudget(
   gdpB: number,
   gdpOnMap: number,
   offMap: Record<FactoryKind, number>,
+  defensePct = DEFAULT_DEFENSE_PCT,
 ): BudgetState {
   return {
     gdpB,
     gdpOnMap,
+    defenseShare: Math.max(0, defensePct) / 100,
     gdpIndex: 1,
     // Réserve de départ fixée à la première journée, quand le budget est connu.
     treasury: -1,
@@ -286,21 +299,80 @@ export function priceFactories(ctx: SimContext, scenario: ScenarioDef, eco: Econ
   )
 }
 
-const menCache = new WeakMap<SimContext, { tick: number; men: Map<CountryId, number> }>()
+const armyCache = new WeakMap<
+  SimContext,
+  { tick: number; men: Map<CountryId, number>; weight: Map<CountryId, number> }
+>()
 
-/** Part de la population active sous les drapeaux (hommes comptés une fois par tick pour tous). */
-export function mobilizedShare(ctx: SimContext, eco: EconomyState, popM: number): number {
-  if (popM <= 0) return 0
-  let entry = menCache.get(ctx)
+/**
+ * Hommes sous les drapeaux et poids d'entretien de l'armée de chaque pays (coût de formation de ses
+ * brigades, au prorata de leurs effectifs), comptés une fois par tick pour tous.
+ */
+function armyTotals(ctx: SimContext): {
+  men: Map<CountryId, number>
+  weight: Map<CountryId, number>
+} {
+  let entry = armyCache.get(ctx)
   if (!entry || entry.tick !== ctx.tick) {
     const men = new Map<CountryId, number>()
+    const weight = new Map<CountryId, number>()
     for (const u of ctx.units.values()) {
-      men.set(u.owner, (men.get(u.owner) ?? 0) + RECRUIT_COSTS[u.kind].manpower * u.strength)
+      const cost = recruitCostOf(u.kind, u.template)
+      men.set(u.owner, (men.get(u.owner) ?? 0) + cost.manpower * u.strength)
+      weight.set(u.owner, (weight.get(u.owner) ?? 0) + cost.production * u.strength)
     }
-    entry = { tick: ctx.tick, men }
-    menCache.set(ctx, entry)
+    entry = { tick: ctx.tick, men, weight }
+    armyCache.set(ctx, entry)
   }
-  return (entry.men.get(eco.country) ?? 0) / (popM * 1000 * ACTIVE_SHARE)
+  return entry
+}
+
+/** Part de la population active sous les drapeaux. */
+export function mobilizedShare(ctx: SimContext, eco: EconomyState, popM: number): number {
+  if (popM <= 0) return 0
+  return (armyTotals(ctx).men.get(eco.country) ?? 0) / (popM * 1000 * ACTIVE_SHARE)
+}
+
+/** Hommes sous les drapeaux d'un pays (milliers). */
+export function menUnderArms(ctx: SimContext, country: CountryId): number {
+  return armyTotals(ctx).men.get(country) ?? 0
+}
+
+/** Population du territoire tenu (millions) : la part sur la carte suit le territoire contrôlé. */
+export function heldPopulation(ctx: SimContext, eco: EconomyState, popM: number): number {
+  const b = eco.budget
+  if (!b) return popM
+  const own = territoryShares(ctx).home[sideIndex(ctx, eco.country)] ?? 0
+  return popM * (1 - b.gdpOnMap + b.gdpOnMap * own)
+}
+
+/** Coût d'entretien du jour de l'armée d'un pays (M$) ; 0 sans prix fixé (sauvegardes antérieures). */
+export function armyUpkeep(ctx: SimContext, eco: EconomyState): number {
+  const price = eco.budget?.upkeepDayCost
+  if (!price) return 0
+  return price * (armyTotals(ctx).weight.get(eco.country) ?? 0)
+}
+
+/** Budget de défense qui finance l'entretien (M$ par jour de PIB), hors économie de guerre. */
+export function upkeepFunding(eco: EconomyState, gdp: number): number {
+  const b = eco.budget
+  if (!b?.upkeepDayCost) return 0
+  return gdp * (b.defenseShare ?? DEFAULT_DEFENSE_PCT / 100) * UPKEEP_SHARE
+}
+
+/** Fixe le prix de l'entretien : l'armée de départ coûte UPKEEP_SHARE du budget de défense réel. */
+export function priceUpkeep(ctx: SimContext, scenario: ScenarioDef, eco: EconomyState): void {
+  const b = eco.budget
+  if (!b) return
+  // Au départ, les unités viennent d'être posées : comptes recalculés.
+  armyCache.delete(ctx)
+  const weight = armyTotals(ctx).weight.get(eco.country) ?? 0
+  const gdp = dailyGdp(ctx, scenario, eco)
+  // Sans armée : prix d'une brigade d'infanterie au même rapport que la médiane des pays (sans effet).
+  b.upkeepDayCost =
+    weight > 0
+      ? (gdp * (b.defenseShare ?? DEFAULT_DEFENSE_PCT / 100) * UPKEEP_SHARE) / weight
+      : 1e-6
 }
 
 /** PIB du jour (M$) : territoire tenu (et une part du territoire occupé), indice d'activité. */
@@ -329,6 +401,8 @@ export interface BudgetResult {
   /** Variations de la réserve et de la recherche à appliquer. */
   treasury: number
   research: number
+  /** Part de l'entretien de l'armée payée (1 : tout). */
+  upkeepPaid: number
 }
 
 export interface BudgetInput {
@@ -340,6 +414,9 @@ export interface BudgetInput {
   /** Points de construction que les chantiers peuvent absorber aujourd'hui. */
   constructionDemand: (points: number) => number
   mobilized: number
+  /** Entretien de l'armée du jour (M$) et budget de défense qui le finance (M$, avant prélèvement). */
+  upkeep?: number
+  upkeepFunding?: number
   pointsPerMil: { production: number; munitions: number }
   pointsPerCiv: number
 }
@@ -349,10 +426,13 @@ export function computeBudget(eco: EconomyState, input: BudgetInput): BudgetResu
   const b = eco.budget
   if (!b) return null
   const factories = factoryCount(eco)
-  const budget = input.gdp * BUDGET_LEVY * input.levy
+  const upkeep = Math.max(0, input.upkeep ?? 0)
+  const budget = (input.gdp * BUDGET_LEVY + (input.upkeepFunding ?? 0)) * input.levy
   const milDays = factories.mil * input.milRate
   const civDays = factories.civ * input.civRate
-  const defenseNeed = milDays * b.factoryDayCost
+  // Défense : l'entretien de l'armée d'abord, puis les usines militaires.
+  const factoryNeed = milDays * b.factoryDayCost
+  const defenseNeed = upkeep + factoryNeed
   // Construction : seulement ce que les chantiers en cours peuvent absorber.
   const civPoints = civDays * input.pointsPerCiv
   const absorb = civPoints > 0 ? Math.min(1, input.constructionDemand(civPoints) / civPoints) : 0
@@ -394,7 +474,8 @@ export function computeBudget(eco: EconomyState, input: BudgetInput): BudgetResu
   }
   const defense = spend(allocated.defense, defenseNeed)
   const construction = spend(allocated.construction, constructionNeed)
-  const milUse = defenseNeed > 0 ? defense / defenseNeed : 0
+  const upkeepPaid = upkeep > 0 ? Math.min(1, defense / upkeep) : 1
+  const milUse = factoryNeed > 0 ? Math.max(0, defense - upkeep) / factoryNeed : 0
   // Part des usines civiles employée : absorbée par les chantiers et payée.
   const civUse = constructionNeed > 0 ? absorb * (construction / constructionNeed) : 0
   return {
@@ -403,6 +484,7 @@ export function computeBudget(eco: EconomyState, input: BudgetInput): BudgetResu
     construction: civPoints * civUse,
     treasury: saved - drawn,
     research: allocated.research,
+    upkeepPaid,
     day: {
       gdp: input.gdp,
       budget,
@@ -413,6 +495,7 @@ export function computeBudget(eco: EconomyState, input: BudgetInput): BudgetResu
       use: { mil: milUse, civ: civUse },
       civPoints,
       mobilized: input.mobilized,
+      ...(upkeep > 0 ? { upkeep: { need: upkeep, paid: upkeepPaid } } : {}),
     },
   }
 }

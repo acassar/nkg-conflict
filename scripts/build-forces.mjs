@@ -26,6 +26,7 @@ for (const file of fs.readdirSync(DIR).sort()) {
     gdpB: m.gdpB?.value ?? null,
     pop: m.pop?.value ?? null,
     armedForces: m.armedForces?.value ?? null,
+    defensePct: m.defensePctGdp?.value ?? null,
   }
   const o = d.oob
   if (o) {

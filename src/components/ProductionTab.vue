@@ -411,6 +411,18 @@ const warTitle = (level: WarEconomyLevel): string => {
           </li>
         </ul>
         <ul v-if="forecast" class="effects" data-testid="budget-forecast">
+          <li
+            v-if="budget.upkeep"
+            :class="{ warn: forecast.upkeepPaid < 1 }"
+            data-testid="budget-upkeep"
+          >
+            Entretien de l'armée : {{ money(budget.upkeep.need) }}/j,
+            {{ Math.round(forecast.upkeepPaid * 100) }} % payé<template
+              v-if="forecast.upkeepPaid < 1"
+            >
+              (les renforts ralentissent d'autant)</template
+            >
+          </li>
           <li>
             Usines militaires : {{ Math.round(forecast.milUse * 100) }} % payées par la défense ·
             production ≈ {{ round(forecast.production) }}/j, munitions ≈
@@ -429,6 +441,10 @@ const warTitle = (level: WarEconomyLevel): string => {
             >
               (vide dans {{ forecast.reserveDays }} j, puis les usines ralentissent)</template
             >
+          </li>
+          <li v-if="budget.manpower" data-testid="budget-manpower">
+            Réserve mobilisable : {{ round(budget.manpower.pool) }} k hommes · conscription ≈
+            {{ budget.manpower.perDay.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) }} k/j
           </li>
           <li v-if="budget.aid.in > 0 || budget.aid.out > 0" data-testid="budget-aid">
             Aide étrangère en argent : {{ aidText }} (comptée dans la réserve)

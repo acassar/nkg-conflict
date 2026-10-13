@@ -231,6 +231,8 @@ export interface FormationState {
   sector?: LonLat[]
   /** Corps : QG et logistique intégrés, placés derrière ses brigades (systems/command.ts). */
   hq?: LonLat
+  /** Division entière commandée : numéro de la commande, que ses brigades rejoignent à leur sortie. */
+  batch?: number
 }
 
 export interface ArmyState {
@@ -500,6 +502,13 @@ export interface BudgetState {
   offMap: Record<FactoryKind, number>
   /** Prix d'une journée d'usine à plein régime (M$), fixé au départ d'après le PIB. */
   factoryDayCost: number
+  /** Part du PIB consacrée à la défense (dépenses réelles, SIPRI ; phase D3). */
+  defenseShare?: number
+  /**
+   * Prix d'une journée d'entretien (M$) par point de coût de formation des brigades, fixé au départ :
+   * l'armée de départ absorbe UPKEEP_SHARE du budget de défense réel (economy/budget.ts).
+   */
+  upkeepDayCost?: number
   /** Dernier jour, pour l'affichage. */
   last?: BudgetDay
   /** Évolution sur les derniers jours (au plus BUDGET_HISTORY_DAYS) : PIB (M$/j), production, main-d'œuvre. */
@@ -526,6 +535,8 @@ export interface BudgetDay {
   mobilized: number
   /** Aide étrangère en argent (M$) : reçue (versée à la réserve) et versée à d'autres pays. */
   aid?: { in: number; out: number }
+  /** Entretien de l'armée (M$) : coût du jour et part payée (0 à 1). */
+  upkeep?: { need: number; paid: number }
 }
 
 /** Mission d'une zone aérienne (aviation provisoire, voir systems/air.ts). */
@@ -578,6 +589,13 @@ export interface RecruitItem {
   cost: number
   /** Armée rejointe à la sortie (null = réserve). */
   armyId: number | null
+  /** Modèle de brigade (phase D3) ; absent : celui du type par défaut. */
+  template?: string
+  /** Division rejointe à la sortie (si elle existe encore, au pays). */
+  divisionId?: number
+  /** Division entière commandée : son modèle, et le numéro de commande partagé par ses brigades. */
+  divisionTemplate?: string
+  batch?: number
 }
 
 /** Économie d'un pays. Les stocks sont en points, la main-d'œuvre en milliers d'hommes. */
@@ -590,6 +608,13 @@ export interface EconomyState {
   recruitment: RecruitItem[]
   /** Numéro de la prochaine unité de chaque type (noms des nouvelles unités). */
   unitCounters: Record<UnitKind, number>
+  /**
+   * Réserve mobilisable (milliers d'hommes en âge de servir, phase D3) : la conscription y puise ;
+   * absente : pas de plafond (sauvegardes antérieures, pays à apports fixes).
+   */
+  manpowerPool?: number
+  /** Part de l'entretien de l'armée payée la veille (1 : tout) ; en dessous, les renforts ralentissent. */
+  upkeepPaid?: number
   /** Part de l'industrie tournée vers l'armée (voir `WAR_ECONOMY`). */
   warEconomy: WarEconomyLevel
   /** Budget national ; absent pour les pays hors carte à apports fixes (donneurs du théâtre). */
@@ -666,6 +691,10 @@ export interface ScenarioEconomy {
   factories?: { civ: number; mil: number }
   /** Population en millions, quand le pays n'en a pas (théâtre) : poids de la mobilisation sur le PIB. */
   popM?: number
+  /** Dépenses militaires réelles, en % du PIB (SIPRI) : financent l'entretien de l'armée. */
+  defensePct?: number
+  /** Économie de guerre au départ (0 : paix). */
+  warEconomy?: WarEconomyLevel
 }
 
 export interface GridSnapshot {

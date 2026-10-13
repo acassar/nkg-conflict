@@ -330,7 +330,13 @@ export function mobilizeForces(
   if (pol?.mobilized) return 0
   if (pol) pol.mobilized = true
   const eco = ctx.economies.get(country.id)
-  const specs: Array<{ army: ArmyState; division: number | null; def: UnitSpec }> = []
+  const specs: Array<{
+    army: ArmyState
+    division: number | null
+    def: UnitSpec
+    /** Direction connue du corps : ses brigades y partent (ordre des corps le long du front). */
+    sector?: LonLat
+  }> = []
   const armies: Array<{ army: ArmyState; front: ForceFront }> = []
   for (const fa of forces.armies) {
     const front = frontOf(fa)
@@ -345,7 +351,7 @@ export function mobilizeForces(
     }
     ctx.armies.set(army.id, army)
     armies.push({ army, front })
-    const addDivision = (d: ForceDivision, parentId: number | null): void => {
+    const addDivision = (d: ForceDivision, parentId: number | null, sector?: LonLat): void => {
       const f = createNamedFormation(ctx, country.id, 'division', army.id, d.name, {
         template: d.template,
         parentId,
@@ -353,13 +359,18 @@ export function mobilizeForces(
       })
       for (const b of d.brigades) {
         const kind = BRIGADE_TEMPLATES[b.template]?.kind ?? 'inf'
-        specs.push({ army, division: f.id, def: { kind, name: b.name, template: b.template } })
+        specs.push({
+          army,
+          division: f.id,
+          def: { kind, name: b.name, template: b.template },
+          ...(sector ? { sector } : {}),
+        })
         if (eco) eco.unitCounters[kind]++
       }
     }
     for (const c of fa.corps) {
       const corps = createNamedFormation(ctx, country.id, 'corps', army.id, c.name)
-      for (const d of c.divisions) addDivision(d, corps.id)
+      for (const d of c.divisions) addDivision(d, corps.id, c.sector)
     }
     for (const d of fa.divisions) addDivision(d, null)
     // QG et logistique intégrés aux corps et aux armées (systems/command.ts) : pas de pion.
@@ -370,11 +381,11 @@ export function mobilizeForces(
   const atWar = ctx.matrix.atWar[sideIndex(ctx, country.id)] === 1
   const deployed = new Set(armies.filter((a) => atWar && a.front !== null).map((a) => a.army.id))
   const divisionSpot = new Map<number, LonLat>()
-  for (const [k, { army, division, def }] of specs.entries()) {
+  for (const [k, { army, division, def, sector }] of specs.entries()) {
     let spot = spots[k]
     if (!spot) continue
     if (division !== null && deployed.has(army.id)) {
-      const first = divisionSpot.get(division)
+      const first = sector ?? divisionSpot.get(division)
       if (first) spot = first
       else divisionSpot.set(division, spot)
     }

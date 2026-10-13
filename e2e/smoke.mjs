@@ -618,8 +618,20 @@ try {
       picked.map((u) => u.id),
       false,
     )
-    window.__nkgMap.jumpTo({ center: [best.r.lon, best.r.lat], zoom: 8 })
-    return { id: best.r.id, lon: best.r.lon, lat: best.r.lat }
+    // Les brigades d'une division sont réunies en un pion, au centre des brigades proches : on vise
+    // ce pion (le clic sur le pion vise toute la division).
+    const km = (a, b) => d(a, b) * 111
+    const pawn = rus.filter(
+      (u) => u.divisionId !== null && u.divisionId === best.r.divisionId && km(u, best.r) <= 60,
+    )
+    const at = pawn.length
+      ? {
+          lon: pawn.reduce((t, u) => t + u.lon, 0) / pawn.length,
+          lat: pawn.reduce((t, u) => t + u.lat, 0) / pawn.length,
+        }
+      : best.r
+    window.__nkgMap.jumpTo({ center: [at.lon, at.lat], zoom: 9 })
+    return { id: best.r.id, lon: at.lon, lat: at.lat }
   })
   await page.waitForTimeout(800)
   await page.getByTestId('inspector-units').waitFor()
@@ -664,11 +676,13 @@ try {
 
   // Encerclement par la même sélection, puis retour à l'armée sur ordre.
   await page.getByTestId('order-encircle').click()
-  const at2 = await page.evaluate((id) => {
-    const u = window.__nkg.snapshot.units.find((x) => x.id === id)
-    const p = window.__nkgMap.project([u.lon, u.lat])
-    return [p.x, p.y]
-  }, target.id)
+  const at2 = await page.evaluate(
+    ([lon, lat]) => {
+      const p = window.__nkgMap.project([lon, lat])
+      return [p.x, p.y]
+    },
+    [target.lon, target.lat],
+  )
   await page.mouse.click(at2[0], at2[1])
   await page.waitForTimeout(600)
   const group = await page.evaluate(

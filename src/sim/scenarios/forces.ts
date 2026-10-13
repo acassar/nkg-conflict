@@ -1,4 +1,4 @@
-import type { CountryId, UnitKind } from '../core/types'
+import type { CountryId, LonLat, UnitKind } from '../core/types'
 import { BRIGADE_TEMPLATES, brigadeProfile, divisionTemplateFor } from '../units/templates'
 import forcesTable from '../data/forces.json'
 
@@ -68,6 +68,8 @@ export interface ForceDivision {
 export interface ForceCorps {
   name: string
   divisions: ForceDivision[]
+  /** Direction du front tenue au départ, si elle est connue (scenarios/sectors.ts). */
+  sector?: LonLat
 }
 export interface ForceArmy {
   name: string
@@ -107,7 +109,7 @@ export function rawCountry(code: CountryId): RawCountry | null {
   return TABLE[code] ?? null
 }
 
-const ordinal = (n: number, feminine = true): string =>
+export const ordinal = (n: number, feminine = true): string =>
   n === 1 ? (feminine ? '1re' : '1er') : `${n}e`
 
 const kindOf = (template: string): UnitKind => BRIGADE_TEMPLATES[template]?.kind ?? 'inf'

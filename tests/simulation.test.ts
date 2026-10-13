@@ -5,6 +5,7 @@ import { ukraine2026 } from '@/sim/scenarios/ukraine-2026'
 import { parseSave, serializeSave } from '@/sim/core/save'
 import { distanceKm, Terrain, type TheaterData } from '@/sim/theater/grid'
 import type { LonLat } from '@/sim/core/types'
+import { HQ_RADIUS_KM, spanFactor, updateCommand } from '@/sim/systems/command'
 
 const theater = theaterJson as unknown as TheaterData
 const KYIV: LonLat = [30.52, 50.45]
@@ -60,8 +61,8 @@ describe('pathfinding', () => {
 describe('ordres', () => {
   it('une unité en ordre de mouvement se rapproche de sa cible', () => {
     const sim = newGame()
-    const u = [...sim.ctx.units.values()].find((x) => x.owner === 'UKR' && x.kind === 'hq')
-    if (!u) throw new Error('QG introuvable')
+    const u = [...sim.ctx.units.values()].find((x) => x.owner === 'UKR' && x.kind === 'inf')
+    if (!u) throw new Error('unité introuvable')
     const before = distanceKm(u.lon, u.lat, KYIV[0], KYIV[1])
     sim.orderUnits([u.id], 'move', KYIV)
     sim.step(24)
@@ -91,23 +92,41 @@ describe('ordres', () => {
 })
 
 describe('commandement', () => {
-  it('une unité proche d’un QG est commandée, une unité lointaine non', () => {
+  it('une brigade proche du QG de son corps est commandée, une brigade isolée non', () => {
     const sim = newGame()
-    const units = [...sim.ctx.units.values()].filter((u) => u.owner === 'UKR')
-    const hqs = units.filter((u) => u.kind === 'hq')
-    const other = units.find((u) => u.kind === 'inf')
-    if (!other || hqs.length === 0) throw new Error('unités introuvables')
-    const hq = hqs[0]
-    if (!hq) throw new Error('QG introuvable')
-    // Les autres QG partent loin pour ne pas fausser le test.
-    for (const h of hqs.slice(1)) [h.lon, h.lat] = [24, 49.8]
-    ;[other.lon, other.lat] = [hq.lon + 0.3, hq.lat]
-    sim.step(6)
-    expect(sim.snapshot().units.find((u) => u.id === other.id)?.commanded).toBe(true)
-    ;[other.lon, other.lat] = [hq.lon - 4, hq.lat]
-    other.path = []
-    sim.step(6)
-    expect(sim.snapshot().units.find((u) => u.id === other.id)?.commanded).toBe(false)
+    const ctx = sim.ctx
+    updateCommand(ctx)
+    const corps = [...ctx.formations.values()].find(
+      (f) => f.owner === 'UKR' && f.kind === 'corps' && f.hq,
+    )
+    if (!corps?.hq) throw new Error('corps introuvable')
+    const brigade = [...ctx.units.values()].find(
+      (u) => u.divisionId !== undefined && ctx.formations.get(u.divisionId)?.parentId === corps.id,
+    )
+    if (!brigade) throw new Error('brigade introuvable')
+    ;[brigade.lon, brigade.lat] = [corps.hq[0] + 0.3, corps.hq[1]]
+    updateCommand(ctx)
+    expect(ctx.runtime.get(brigade.id)?.commanded).toBe(true)
+    expect(ctx.runtime.get(brigade.id)?.command).toBeGreaterThan(1)
+    // Loin de tout QG de corps et d'armée : plus commandée.
+    ;[brigade.lon, brigade.lat] = [22.6, 48.6]
+    updateCommand(ctx)
+    const far = (p: LonLat | undefined): boolean =>
+      !p || distanceKm(p[0], p[1], brigade.lon, brigade.lat) > HQ_RADIUS_KM
+    expect(far(corps.hq) && far(ctx.armies.get(corps.armyId)?.hq)).toBe(true)
+    expect(ctx.runtime.get(brigade.id)?.commanded).toBe(false)
+  })
+
+  it('l’étendue de commandement pénalise au-delà de cinq subordonnés', () => {
+    expect(spanFactor(3)).toBe(1)
+    expect(spanFactor(5)).toBe(1)
+    expect(spanFactor(7)).toBeCloseTo(0.8)
+    expect(spanFactor(30)).toBe(0.5)
+  })
+
+  it('ne crée plus de pion de QG ni de logistique', () => {
+    const units = [...newGame().ctx.units.values()]
+    expect(units.some((u) => u.kind === 'hq' || u.kind === 'log')).toBe(false)
   })
 })
 

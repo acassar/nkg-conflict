@@ -79,7 +79,8 @@ import {
   startRetreat,
   updateMissions,
 } from './systems/missions'
-import { updateCombat, updateCommand } from './systems/combat'
+import { updateCombat } from './systems/combat'
+import { updateCommand } from './systems/command'
 import { updateTerritory } from './systems/territory'
 import { defendPoints } from './systems/defendPoints'
 import { assignBorder, borderNeighbors, borderWith, updateBorderFronts } from './systems/frontiers'
@@ -494,10 +495,19 @@ export class Simulation {
         supplied,
         routed,
         commanded: commanded ?? false,
+        command: 1,
+        span: 1,
         ...(reaction ? { reaction } : {}),
         ...(stance ? { stance } : {}),
         ...(pending ? { pathPending: true } : {}),
       })
+    }
+    for (const [id, command, span] of save.command ?? []) {
+      const rt = ctx.runtime.get(id)
+      if (rt) {
+        rt.command = command
+        rt.span = span
+      }
     }
     initCities(ctx, scenario)
     for (const c of save.cities) {
@@ -1633,6 +1643,9 @@ export class Simulation {
       owner: encodeRle(ctx.grid.owner),
       // Tableau creux (seuls les camps en guerre ont une couverture) : on remplit les trous.
       supplyReach: Array.from(ctx.supplyReach, (r) => (r ? encodeRle(r) : [])),
+      command: [...ctx.runtime.entries()]
+        .filter(([, r]) => r.command !== 1 || r.span !== 1)
+        .map(([id, r]): [number, number, number] => [id, r.command, r.span]),
       runtime: [...ctx.runtime.entries()].map(([id, r]): SaveFile['runtime'][number] => {
         const reaction = r.reaction ? { ...r.reaction } : null
         const stance = r.stance?.decision === 'withdraw' ? { ...r.stance } : null

@@ -168,7 +168,7 @@ function dominantKind(units: UnitSnapshot[]): UnitKind {
  */
 export function formationIcon(
   units: UnitSnapshot[],
-  kind: FormationKind,
+  kind: FormationKind | 'army',
   color: [number, number, number],
   selected: boolean,
 ): IconDef {
@@ -198,7 +198,7 @@ export function formationIcon(
     ctx.font = 'bold 10px system-ui, sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    const mark = kind === 'corps' ? 'XXX' : 'XX'
+    const mark = kind === 'army' ? 'XXXX' : kind === 'corps' ? 'XXX' : 'XX'
     ctx.strokeText(mark, ICON_W / 2, ECHELON_H / 2 + 1)
     ctx.fillText(mark, ICON_W / 2, ECHELON_H / 2 + 1)
     ctx.translate(0, ECHELON_H)

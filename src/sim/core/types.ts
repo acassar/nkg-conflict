@@ -227,6 +227,10 @@ export interface FormationState {
   template?: string
   /** Division créée par le jeu (brigades rattachées directement à un corps ou une armée). */
   generated?: boolean
+  /** Secteur tenu sur le front : postes de ses brigades, dans l'ordre du front (armies.ts). */
+  sector?: LonLat[]
+  /** Corps : QG et logistique intégrés, placés derrière ses brigades (systems/command.ts). */
+  hq?: LonLat
 }
 
 export interface ArmyState {
@@ -259,6 +263,8 @@ export interface ArmyState {
   } | null
   /** Groupe d'encerclement (absent pour une armée ordinaire). */
   encirclement?: Encirclement
+  /** QG et logistique intégrés de l'armée, placés derrière ses brigades (systems/command.ts). */
+  hq?: LonLat
   /** Posture donnée à toute l'armée (les nouvelles recrues la reçoivent aussi). */
   posture?: Posture
   /** Tracé du front tenu (lignes qui suivent les cellules de contact), pour l'affichage. */

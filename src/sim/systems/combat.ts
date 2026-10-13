@@ -38,31 +38,13 @@ const STRENGTH_LOSS = 0.0025
 const ORG_LOSS = 0.02
 const ARTILLERY_FACTOR = 0.6
 export const OUT_OF_SUPPLY_FACTOR = 0.6
-/** Bonus de combat d'une unité commandée par un QG proche. */
-export const COMMAND_FACTOR = 1.15
 /** Récupération d'organisation hors combat, par heure (ravitaillée / commandée en plus). */
 const ORG_RECOVERY = 0.01
 const ORG_RECOVERY_COMMAND = 0.005
 
+/** Bonus du commandement : QG intégré du corps ou de l'armée à portée (systems/command.ts). */
 function commandFactor(ctx: SimContext, u: UnitState): number {
-  return runtimeOf(ctx, u.id).commanded ? COMMAND_FACTOR : 1
-}
-
-/** Marque les unités à portée d'un QG de leur camp qui n'est pas en déroute. */
-export function updateCommand(ctx: SimContext): void {
-  const hqsByOwner = new Map<string, UnitState[]>()
-  for (const u of ctx.units.values()) {
-    if (unitType(u).commandRadiusKm <= 0 || runtimeOf(ctx, u.id).routed) continue
-    const list = hqsByOwner.get(u.owner)
-    if (list) list.push(u)
-    else hqsByOwner.set(u.owner, [u])
-  }
-  for (const u of ctx.units.values()) {
-    const hqs = hqsByOwner.get(u.owner) ?? []
-    runtimeOf(ctx, u.id).commanded = hqs.some(
-      (h) => h.id !== u.id && distanceKm(h.lon, h.lat, u.lon, u.lat) <= unitType(h).commandRadiusKm,
-    )
-  }
+  return runtimeOf(ctx, u.id).command
 }
 
 function supplyFactor(ctx: SimContext, u: UnitState): number {
@@ -385,7 +367,8 @@ export function updateCombat(ctx: SimContext): void {
     const rt = runtimeOf(ctx, u.id)
     if (rt.engagedWith === null) {
       const recovery = rt.supplied
-        ? ORG_RECOVERY + (rt.commanded ? ORG_RECOVERY_COMMAND : 0)
+        ? // Étendue de commandement trop large : récupération ralentie.
+          (ORG_RECOVERY + (rt.commanded ? ORG_RECOVERY_COMMAND : 0)) * rt.span
         : 0.002
       let m = morale.get(u.owner)
       if (m === undefined) {

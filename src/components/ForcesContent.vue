@@ -7,6 +7,7 @@ import ArmyComposition from './ArmyComposition.vue'
 import { useProductionStats } from '@/composables/production'
 import { isTouch } from '@/composables/layout'
 import { selectionFormation } from '@/composables/composition'
+import { countSubordinates, spanText } from '@/sim/systems/command'
 import { compositionText, templateLabel } from '@/sim/units/templates'
 import { EMBARK_KM } from '@/sim/systems/naval'
 import { MODE_NAMES } from '@/sim/systems/transport'
@@ -136,6 +137,19 @@ const formationLabel = computed(() => {
   if (!f) return null
   return [f.division?.name, f.corps?.name].filter(Boolean).join(' · ')
 })
+/** Étendue de commandement du corps des unités choisies (sélection d'un corps entier ou d'une partie). */
+const corpsSpan = computed(() => {
+  const formations = game.snapshot?.formations ?? []
+  const corps = selectionFormation(selectedUnits.value, formations)?.corps
+  if (!corps) return null
+  return `Étendue du ${corps.name} : ${spanText(countSubordinates(formations, { corps: corps.id }))}`
+})
+/** Étendue de commandement de l'armée affichée. */
+const armySpan = computed(() =>
+  selectedArmy.value
+    ? spanText(countSubordinates(game.snapshot?.formations ?? [], { army: selectedArmy.value.id }))
+    : '',
+)
 /** Posture commune de la sélection, ou null si elle est mêlée. */
 const selectionPosture = computed(() => {
   const set = new Set(selectedUnits.value.map((u) => u.posture))
@@ -428,6 +442,9 @@ async function createArmy(): Promise<void> {
         </div>
         <p v-if="formationLabel" class="formation-label" data-testid="selection-formation">
           {{ formationLabel }}
+        </p>
+        <p v-if="corpsSpan" class="formation-label" data-testid="selection-span">
+          {{ corpsSpan }}
         </p>
         <div class="group">
           <span class="label">Mouvement</span>
@@ -747,6 +764,7 @@ async function createArmy(): Promise<void> {
             {{ POSTURES[selectedArmy.posture ?? 'balanced'].name.toLowerCase() }} ·
             {{ sheetSummary.engaged }} au contact
           </p>
+          <p class="current" data-testid="army-span">Étendue de commandement : {{ armySpan }}</p>
         </div>
         <div class="subtabs" role="tablist">
           <button

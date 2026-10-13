@@ -438,18 +438,7 @@ export function fillOf(personnel: number | null, armies: ForceArmy[]): number {
   return Math.max(MIN_FILL, Math.min(1, personnel / nominal))
 }
 
-/** QG et logistique d'une armée de `brigades` brigades : un QG, une logistique pour 30 brigades. */
-export function armyServices(brigades: number): { hq: number; log: number } {
-  return { hq: 1, log: brigades > 6 ? Math.max(1, Math.round(brigades / 30)) : 0 }
-}
-
-/** Unités levées pour ces forces : brigades, QG et logistique. */
+/** Unités levées pour ces forces : leurs brigades (QG et logistique sont intégrés, sans pion). */
 export function forceUnits(forces: CountryForces): number {
-  let n = 0
-  for (const a of forces.armies) {
-    const b = brigadeCount([a])
-    const s = armyServices(b)
-    n += b + s.hq + s.log
-  }
-  return n
+  return brigadeCount(forces.armies)
 }

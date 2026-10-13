@@ -1,10 +1,5 @@
 import { createNamedFormation, updateFormations } from '../systems/formations'
-import {
-  armyServices,
-  type CountryForces,
-  type ForceArmy,
-  type ForceDivision,
-} from '../scenarios/forces'
+import { type CountryForces, type ForceArmy, type ForceDivision } from '../scenarios/forces'
 import { BRIGADE_TEMPLATES } from '../units/templates'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, CountryDef, LonLat, UnitKind, UnitState } from '../core/types'
@@ -350,7 +345,6 @@ export function mobilizeForces(
     }
     ctx.armies.set(army.id, army)
     armies.push({ army, front })
-    let brigades = 0
     const addDivision = (d: ForceDivision, parentId: number | null): void => {
       const f = createNamedFormation(ctx, country.id, 'division', army.id, d.name, {
         template: d.template,
@@ -361,7 +355,6 @@ export function mobilizeForces(
         const kind = BRIGADE_TEMPLATES[b.template]?.kind ?? 'inf'
         specs.push({ army, division: f.id, def: { kind, name: b.name, template: b.template } })
         if (eco) eco.unitCounters[kind]++
-        brigades++
       }
     }
     for (const c of fa.corps) {
@@ -369,13 +362,7 @@ export function mobilizeForces(
       for (const d of c.divisions) addDivision(d, corps.id)
     }
     for (const d of fa.divisions) addDivision(d, null)
-    const services = armyServices(brigades)
-    for (const kind of ['hq', 'log'] as const) {
-      for (let k = 0; k < services[kind]; k++) {
-        const number = eco ? eco.unitCounters[kind]++ : k + 1
-        specs.push({ army, division: null, def: { kind, name: unitName(kind, number) } })
-      }
-    }
+    // QG et logistique intégrés aux corps et aux armées (systems/command.ts) : pas de pion.
   }
   const spots = garrisons(ctx, country, specs.length)
   // Une division qui part au front part groupée : ses brigades partagent la garnison de la première,

@@ -211,14 +211,26 @@ function slots(
 export const OUT_OF_SECTOR_KM = 100
 
 /**
- * Secteurs des divisions sur une ligne de postes rangés le long du front (`dist` : distances unité ×
- * poste). Les divisions (et les brigades sans division, chacune seule) sont classées selon la position
- * moyenne, le long du front, du poste le plus proche de leurs brigades ; chacune reçoit autant de postes
- * contigus qu'elle a de brigades, et ses brigades prennent ensuite les plus proches dans ce secteur.
+ * Front hiérarchique sur une ligne de postes rangés le long du front (`dist` : distances unité × poste) :
+ * les corps (et les divisions sans corps, chacune seule) sont classés selon la position moyenne, le
+ * long du front, du poste le plus proche de leurs brigades, et reçoivent autant de postes contigus
+ * qu'ils ont de brigades ; dans chaque corps, ses divisions se partagent son secteur de la même façon,
+ * puis les brigades prennent les postes les plus proches dans le secteur de leur division. Les brigades
+ * sans division sont chacune leur propre groupe. `corpsOf` donne le corps d'une division (absent : sans
+ * corps).
  */
-export function divisionSectors(units: UnitState[], posts: number, dist: Float64Array): void {
+export function divisionSectors(
+  units: ReadonlyArray<Pick<UnitState, 'id' | 'divisionId'>>,
+  posts: number,
+  dist: Float64Array,
+  corpsOf: (divisionId: number) => number | null | undefined = () => null,
+): void {
   if (posts !== units.length || units.length < 2) return
-  const groups = new Map<number, { members: number[]; at: number }>()
+  interface Group {
+    members: number[]
+    at: number
+  }
+  const divisions = new Map<number, Group>()
   units.forEach((u, ui) => {
     let best = 0
     let bestKm = Infinity
@@ -230,27 +242,82 @@ export function divisionSectors(units: UnitState[], posts: number, dist: Float64
       }
     }
     const key = u.divisionId ?? -u.id
-    const g = groups.get(key) ?? { members: [], at: 0 }
+    const g = divisions.get(key) ?? { members: [], at: 0 }
     g.at += best
     g.members.push(ui)
-    groups.set(key, g)
+    divisions.set(key, g)
   })
-  if (groups.size === units.length) return
-  const ordered = [...groups.values()].sort(
-    (a, b) =>
-      a.at / a.members.length - b.at / b.members.length ||
-      (a.members[0] ?? 0) - (b.members[0] ?? 0),
-  )
-  let start = 0
-  for (const g of ordered) {
-    const end = start + g.members.length
-    for (const ui of g.members) {
-      for (let pi = 0; pi < posts; pi++) {
-        if (pi < start || pi >= end)
-          dist[ui * posts + pi] = (dist[ui * posts + pi] ?? 0) + OUT_OF_SECTOR_KM
-      }
+  if (divisions.size === units.length) return
+  // Corps : leurs divisions, dans l'ordre d'apparition.
+  const corps = new Map<string, Array<[number, Group]>>()
+  for (const [key, g] of divisions) {
+    const c = key > 0 ? corpsOf(key) : null
+    const ck = c !== null && c !== undefined ? `c${c}` : `d${key}`
+    const list = corps.get(ck)
+    if (list) list.push([key, g])
+    else corps.set(ck, [[key, g]])
+  }
+  const mean = (list: Group[]): number => {
+    let at = 0
+    let n = 0
+    for (const g of list) {
+      at += g.at
+      n += g.members.length
     }
-    start = end
+    return at / Math.max(1, n)
+  }
+  const first = (list: Group[]): number => list[0]?.members[0] ?? 0
+  const orderedCorps = [...corps.values()].sort((a, b) => {
+    const ga = a.map(([, g]) => g)
+    const gb = b.map(([, g]) => g)
+    return mean(ga) - mean(gb) || first(ga) - first(gb)
+  })
+  let start = 0
+  for (const list of orderedCorps) {
+    const ordered = list
+      .map(([, g]) => g)
+      .sort((a, b) => mean([a]) - mean([b]) || first([a]) - first([b]))
+    for (const g of ordered) {
+      const end = start + g.members.length
+      for (const ui of g.members) {
+        for (let pi = 0; pi < posts; pi++) {
+          if (pi < start || pi >= end)
+            dist[ui * posts + pi] = (dist[ui * posts + pi] ?? 0) + OUT_OF_SECTOR_KM
+        }
+      }
+      start = end
+    }
+  }
+}
+
+/**
+ * Secteur tenu par chaque division et chaque corps après la répartition d'une ligne : postes de ses
+ * brigades, du premier au dernier le long du front (`unitAt[poste]` = index de la brigade).
+ */
+export function recordSectors(
+  ctx: SimContext,
+  units: ReadonlyArray<UnitState>,
+  unitAt: Int32Array,
+  posts: ReadonlyArray<LonLat>,
+): void {
+  const range = new Map<number, [number, number]>()
+  const widen = (id: number, pi: number): void => {
+    const r = range.get(id)
+    if (r) {
+      r[0] = Math.min(r[0], pi)
+      r[1] = Math.max(r[1], pi)
+    } else range.set(id, [pi, pi])
+  }
+  unitAt.forEach((ui, pi) => {
+    const d = ui >= 0 ? units[ui]?.divisionId : undefined
+    if (d === undefined) return
+    widen(d, pi)
+    const parent = ctx.formations.get(d)?.parentId
+    if (parent !== null && parent !== undefined) widen(parent, pi)
+  })
+  for (const [id, [a, b]] of range) {
+    const f = ctx.formations.get(id)
+    if (f) f.sector = posts.slice(a, b + 1).map((p) => [p[0], p[1]] as LonLat)
   }
 }
 
@@ -572,6 +639,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     depth: number,
     favorable = false,
     layers: Array<{ count: number; depth: number }> = [{ count: units.length, depth }],
+    record = false,
   ): void => {
     const posts: LonLat[] = layers.flatMap((l) => linePosts(units, l.count, l.depth, favorable))
     // Chaque poste revient à l'unité la plus proche encore libre (paires triées par distance) :
@@ -587,7 +655,10 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     })
     // Distances réelles, gardées pour les échanges de postes ; `dist` reçoit l'écart hors secteur.
     const real = layers.length === 1 ? dist.slice() : dist
-    if (layers.length === 1) divisionSectors(units, P, dist)
+    // Front par corps puis par division ; mission « Points clés » : par division seulement, pour que
+    // les brigades se concentrent sur les points clés quel que soit le secteur de leur corps.
+    if (layers.length === 1)
+      divisionSectors(units, P, dist, (d) => (keyPoints ? null : ctx.formations.get(d)?.parentId))
     const order = new Uint32Array(dist.length)
     for (let k = 0; k < order.length; k++) order[k] = k
     order.sort((a, b) => (dist[a] ?? 0) - (dist[b] ?? 0) || a - b)
@@ -630,6 +701,8 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         if (withdrawing(u)) frozen[ui] = 1
       })
       divisionCohesion(units, unitAt, real, frozen)
+      // Secteurs des divisions et des corps (affichés à la sélection de la formation).
+      if (record) recordSectors(ctx, units, unitAt, posts)
     }
     const postOf = new Int32Array(units.length).fill(-1)
     unitAt.forEach((ui, pi) => {
@@ -671,7 +744,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   if (mission === 'reserve') {
     // Réserve : en retrait du front, prête à intervenir sur les percées (breakthrough.ts).
     const depth = Math.max(LINE_DEPTH + 1, cellsFor(RESERVE_KM))
-    place(line, depth)
+    place(line, depth, false, undefined, true)
     place(rear, depth + 2)
     return
   }
@@ -685,7 +758,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     place(rear, Math.max(7, cellsFor(SECOND_LINE_KM) + 2))
     return
   }
-  place(line, LINE_DEPTH, picksFavorablePosts(army))
+  place(line, LINE_DEPTH, picksFavorablePosts(army), undefined, true)
   place(rear, 7)
 }
 

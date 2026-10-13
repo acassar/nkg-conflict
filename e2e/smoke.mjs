@@ -1263,7 +1263,8 @@ try {
   const borderArmies = await page.evaluate(async () => {
     const g = window.__nkg
     const east = g.snapshot.units
-      .filter((u) => u.owner === 'FRA' && u.lon > 3 && u.lat > 42)
+      // En métropole (l'ordre de bataille réel n'a que quelques brigades à l'est).
+      .filter((u) => u.owner === 'FRA' && u.lon > -5 && u.lon < 10 && u.lat > 42 && u.lat < 52)
       .sort((p, q) => q.lon - p.lon)
     g.selectUnits(
       east.slice(0, 3).map((u) => u.id),

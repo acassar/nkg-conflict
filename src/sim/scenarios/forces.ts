@@ -1,5 +1,5 @@
 import type { CountryId, UnitKind } from '../core/types'
-import { BRIGADE_TEMPLATES, divisionTemplateFor } from '../units/templates'
+import { BRIGADE_TEMPLATES, brigadeProfile, divisionTemplateFor } from '../units/templates'
 import forcesTable from '../data/forces.json'
 
 /**
@@ -77,7 +77,15 @@ export interface CountryForces {
   /** Origine : ordre de bataille réel, génération, ou réel complété par la génération. */
   source: 'oob' | 'generated' | 'combined'
   armies: ForceArmy[]
+  /**
+   * Effectif de départ des brigades (part de leur effectif théorique) : effectif réel de l'armée de terre
+   * rapporté à celui de ses brigades au complet, quand l'ordre de bataille le donne (1 sinon).
+   */
+  fill?: number
 }
+
+/** Effectif de départ minimal d'une brigade. */
+export const MIN_FILL = 0.5
 
 const TABLE = forcesTable as unknown as Record<CountryId, RawCountry>
 
@@ -412,7 +420,22 @@ export function countryForces(
       return { source: 'combined', armies: [...oob, ...extra] }
     }
   }
-  return { source: 'oob', armies: oob }
+  return { source: 'oob', armies: oob, fill: fillOf(raw.oob?.armyPersonnel ?? null, oob) }
+}
+
+/** Effectif réel / effectif des brigades au complet, entre MIN_FILL et 1 (1 sans effectif réel). */
+export function fillOf(personnel: number | null, armies: ForceArmy[]): number {
+  if (!personnel) return 1
+  let nominal = 0
+  for (const a of armies) {
+    const walk = (d: ForceDivision): void => {
+      for (const b of d.brigades) nominal += brigadeProfile(b.template).men
+    }
+    a.divisions.forEach(walk)
+    for (const c of a.corps) c.divisions.forEach(walk)
+  }
+  if (nominal === 0) return 1
+  return Math.max(MIN_FILL, Math.min(1, personnel / nominal))
 }
 
 /** QG et logistique d'une armée de `brigades` brigades : un QG, une logistique pour 30 brigades. */

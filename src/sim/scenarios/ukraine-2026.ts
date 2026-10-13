@@ -1,14 +1,14 @@
 import type { CountryDef, ScenarioDef, ScenarioEconomy } from '../core/types'
 import { countryForces } from './forces'
-import { forceSectors, frontOnly } from './sectors'
+import { forceSectors, frontOnly, sectorForces } from './sectors'
 
 /**
  * Ordres de bataille réels (phase D3) : toute l'armée ukrainienne, et les armées russes qui ont un
  * secteur sur le front ; chaque armée sur son secteur au départ.
  */
 const FORCES = {
-  UKR: countryForces('UKR'),
-  RUS: frontOnly('RUS', countryForces('RUS')),
+  UKR: sectorForces('UKR', countryForces('UKR')),
+  RUS: frontOnly('RUS', sectorForces('RUS', countryForces('RUS'))),
 }
 
 /** Donneurs hors carte, présents par leur économie et leur diplomatie. */

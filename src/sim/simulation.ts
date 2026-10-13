@@ -118,12 +118,7 @@ import { newBudget } from './economy/budget'
 import type { RecruitOrder } from './economy/armyRecruit'
 import type { ArmyRecruitResult } from './economy/economy'
 import { SideMatrix } from './politics/matrix'
-import {
-  mobilize,
-  mobilizeForces,
-  sectorFront,
-  type ForceFront,
-} from './politics/mobilization'
+import { mobilize, mobilizeForces, sectorFront, type ForceFront } from './politics/mobilization'
 import type { CountryForces, ForceArmy } from './scenarios/forces'
 import { clearObstacles } from './systems/obstacles'
 import {
@@ -420,8 +415,10 @@ export class Simulation {
         const sectors = scenario.forceSectors?.[country.id]
         sim.levyForces(country, forces, (a) => {
           if (!sectors) return 'whole'
+          // Hors du front : garnison ; secteur inconnu : tout le front.
           const anchors = sectors[a.name]
-          return anchors?.length ? sectorFront(ctx, side, anchors) : null
+          if (!anchors) return null
+          return (anchors.length && sectorFront(ctx, side, anchors)) || 'whole'
         })
         continue
       }
@@ -466,7 +463,20 @@ export class Simulation {
     const auto = save.autoEconomy ?? false
     sim.autoEconomy = typeof auto === 'boolean' ? { build: auto, recruit: auto } : { ...auto }
     for (const [c, tick] of Object.entries(save.aiLastOffensiveTick)) {
-      sim.ai.set(c, newAiState(tick))
+      const state = newAiState(tick)
+      const saved = save.aiArmies?.[c]
+      if (saved) {
+        state.lastArmyReview = saved.lastArmyReview ?? -Infinity
+        for (const [id, m] of saved.armies) {
+          state.armies.set(id, {
+            lastChange: m.lastChange ?? -Infinity,
+            lastBreach: m.lastBreach ?? -Infinity,
+            offensiveSince: m.offensiveSince ?? -Infinity,
+            offensiveEnded: m.offensiveEnded ?? -Infinity,
+          })
+        }
+      }
+      sim.ai.set(c, state)
     }
     if (isSpeed(save.speed)) sim.clock.setSpeed(save.speed)
     for (const [
@@ -1603,6 +1613,23 @@ export class Simulation {
       aiLastOffensiveTick: Object.fromEntries(
         [...this.ai.entries()].map(([c, s]) => [c, s.lastOffensiveTick]),
       ),
+      aiArmies: Object.fromEntries(
+        [...this.ai.entries()].map(([c, s]) => [
+          c,
+          {
+            lastArmyReview: finite(s.lastArmyReview),
+            armies: [...s.armies.entries()].map(([id, m]) => [
+              id,
+              {
+                lastChange: finite(m.lastChange),
+                lastBreach: finite(m.lastBreach),
+                offensiveSince: finite(m.offensiveSince),
+                offensiveEnded: finite(m.offensiveEnded),
+              },
+            ]),
+          },
+        ]),
+      ),
       owner: encodeRle(ctx.grid.owner),
       // Tableau creux (seuls les camps en guerre ont une couverture) : on remplit les trous.
       supplyReach: Array.from(ctx.supplyReach, (r) => (r ? encodeRle(r) : [])),
@@ -1664,4 +1691,9 @@ export class Simulation {
   countryDef(code: CountryId): CountryDef | undefined {
     return this.ctx.countries.get(code)
   }
+}
+
+/** Valeur finie, ou null (−∞ ne passe pas en JSON). */
+function finite(x: number): number | null {
+  return Number.isFinite(x) ? x : null
 }

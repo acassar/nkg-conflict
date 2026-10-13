@@ -1,0 +1,585 @@
+{
+  "asOf": "2026-09",
+  "notes": "Méthode : affectations tirées des évaluations quotidiennes ISW/CTP (sept.-oct. 2026), des fiches Militaryland.net (corps et groupements opérationnels, MAJ 2025-2026) et de Wikipédia ; chaque entrée cite la source principale (indice dans 'sources'), les sources secondaires sont mentionnées dans la note. Les directions suivent le découpage ISW de l'automne 2026 (axe nord Soumy, Kharkiv, Oskil/Koupiansk, quatre efforts autour de la ceinture des forteresses Sloviansk-Kramatorsk-Kostiantynivka-Droujkivka, oblast de Dnipropetrovsk, axe sud Houliaïpole/Orikhiv, Kherson). Les coordonnées sont celles de la ville d'ancrage (connaissances géographiques, approximatives) et non la ligne de contact exacte ; Pokrovsk et Houliaïpole étant probablement aux mains russes, Dobropillia sert d'ancre pour Pokrovsk/Dobropillia. Limites : l'ISW nomme rarement les corps ukrainiens et les armées russes ; plusieurs affectations reposent sur des données de 2025 (confiance faible) ; une formation dispersée prend le secteur principal sourcé, ou null sans source. Les conteneurs sans brigades directes (« District militaire … — corps d'armée ») ne sont pas listés : leurs corps le sont individuellement. Les noms des sources sont en anglais, les notes en français.",
+  "sources": [
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, September 30, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-september-30-2026",
+      "date": "2026-09-30"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, September 23, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-september-23-2026",
+      "date": "2026-09-23"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, September 24, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-september-24-2026",
+      "date": "2026-09-24"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, September 25, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-september-25-2026",
+      "date": "2026-09-25"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, September 26, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-september-26-2026",
+      "date": "2026-09-26"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, September 28, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-september-28-2026",
+      "date": "2026-09-28"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, October 1, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-october-1-2026",
+      "date": "2026-10-01"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, October 2, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-october-2-2026-6ac053ceab44c",
+      "date": "2026-10-02"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, October 4, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-october-4-2026",
+      "date": "2026-10-04"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, October 5, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-october-5-2026",
+      "date": "2026-10-05"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, October 6, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-october-6-2026",
+      "date": "2026-10-06"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, October 8, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-october-8-2026",
+      "date": "2026-10-08"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, October 9, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-october-9-2026",
+      "date": "2026-10-09"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, May 22, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-may-22-2026",
+      "date": "2026-05-22"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, March 22, 2026",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-march-22-2026",
+      "date": "2026-03-22"
+    },
+    {
+      "title": "ISW/CTP – Russian Offensive Campaign Assessment, December 26, 2025",
+      "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-december-26-2025",
+      "date": "2025-12-26"
+    },
+    {
+      "title": "Militaryland – 11th Army Corps",
+      "url": "https://militaryland.net/ukraine/armed-forces/11th-army-corps/",
+      "date": "2026-10-01"
+    },
+    {
+      "title": "Militaryland – Joint Task Force Composition Revealed",
+      "url": "https://militaryland.net/news/joint-task-force-composition-revealed/",
+      "date": "2026-02-09"
+    },
+    {
+      "title": "Militaryland – Defense Forces Establish Two New Operation Task Forces in Donetsk Oblast",
+      "url": "https://militaryland.net/news/defense-forces-establish-two-new-operation-task-forces-in-donetsk-oblast/",
+      "date": "2026-09-13"
+    },
+    {
+      "title": "Militaryland – 17th Army Corps",
+      "url": "https://militaryland.net/ukraine/armed-forces/17th-army-corps/",
+      "date": "2026-09-04"
+    },
+    {
+      "title": "Militaryland – 20th Army Corps",
+      "url": "https://militaryland.net/ukraine/armed-forces/20th-army-corps/",
+      "date": "2026-09-29"
+    },
+    {
+      "title": "Militaryland – 19th Army Corps",
+      "url": "https://militaryland.net/ukraine/armed-forces/19th-army-corps/",
+      "date": "2026-09-04"
+    },
+    {
+      "title": "Militaryland – 16th Army Corps",
+      "url": "https://militaryland.net/ukraine/armed-forces/16th-army-corps/",
+      "date": "2026-08-26"
+    },
+    {
+      "title": "Militaryland – Introducing the Ukrainian 15th Army Corps",
+      "url": "https://militaryland.net/news/introducing-the-ukrainian-15th-army-corps/",
+      "date": "2025-10-13"
+    },
+    {
+      "title": "Militaryland – Revealing Sumy's 18th Army Corps",
+      "url": "https://militaryland.net/news/revealing-the-sumys-18th-army-corps/",
+      "date": "2025-08-31"
+    },
+    {
+      "title": "Militaryland – Operation Task Force West",
+      "url": "https://militaryland.net/ukraine/armed-forces/operation-task-force-west",
+      "date": "2026-05-17"
+    },
+    {
+      "title": "Militaryland – Operation Task Force North",
+      "url": "https://militaryland.net/ukraine/armed-forces/operation-task-force-north",
+      "date": "2026-03-24"
+    },
+    {
+      "title": "Militaryland – Operation Task Force South",
+      "url": "https://militaryland.net/ukraine/armed-forces/operation-task-force-south/",
+      "date": "2026-04-16"
+    },
+    {
+      "title": "Wikipedia – 2026 Ukrainian counteroffensive",
+      "url": "https://en.wikipedia.org/wiki/2026_Ukrainian_counteroffensive",
+      "date": "consulté 2026-10-13"
+    },
+    {
+      "title": "Wikipedia – Novopavlivka offensive",
+      "url": "https://en.wikipedia.org/wiki/Novopavlivka_offensive",
+      "date": "consulté 2026-10-13 (faits jusqu'à nov. 2025)"
+    },
+    {
+      "title": "Wikipedia – Battle of Kostiantynivka",
+      "url": "https://en.wikipedia.org/wiki/Battle_of_Kostiantynivka",
+      "date": "consulté 2026-10-13 (faits jusqu'à juil. 2026)"
+    },
+    {
+      "title": "Wikipedia – 30th Marine Corps (Ukraine)",
+      "url": "https://en.wikipedia.org/wiki/30th_Marine_Corps_(Ukraine)",
+      "date": "consulté 2026-10-13 (faits d'août 2025)"
+    },
+    {
+      "title": "Wikipedia – 12th Army Corps (Ukraine)",
+      "url": "https://en.wikipedia.org/wiki/12th_Army_Corps_(Ukraine)",
+      "date": "consulté 2026-10-13 (faits de juin 2025)"
+    },
+    {
+      "title": "Wikipedia – 102nd Military Base (Russie, Gyumri)",
+      "url": "https://en.wikipedia.org/wiki/102nd_Military_Base",
+      "date": "consulté 2026-10-13"
+    },
+    {
+      "title": "Obozrevatel – Première année du 21e corps d'armée (OK « Nord »)",
+      "url": "https://www.obozrevatel.com/ukr/novosti-obschestvo/rik-sili-rik-stijkosti-na-rivnenschini-vidznachili-pershu-richnitsyu-stvorennya-21-armijskogo-korpusu-ok-pivnich.htm",
+      "date": "2026-03-31"
+    },
+    {
+      "title": "Wikipedia – 9th Army Corps (Ukraine)",
+      "url": "https://en.wikipedia.org/wiki/9th_Army_Corps_(Ukraine)",
+      "date": "consulté 2026-10-13 (faits d'août 2025)"
+    },
+    {
+      "title": "Wikipedia – 19th Army Corps (Ukraine)",
+      "url": "https://en.wikipedia.org/wiki/19th_Army_Corps_(Ukraine)",
+      "date": "consulté 2026-10-13 (faits d'août 2025)"
+    },
+    {
+      "title": "Wikipedia – Dobropillia offensive",
+      "url": "https://en.wikipedia.org/wiki/Dobropillia_offensive",
+      "date": "consulté 2026-10-13 (faits août-nov. 2025)"
+    },
+    {
+      "title": "Militaryland – 14th Army Corps",
+      "url": "https://militaryland.net/ukraine/armed-forces/14th-army-corps/",
+      "date": "2026-08-26"
+    }
+  ],
+  "directions": {
+    "sumy": {
+      "name": "Koursk / Soumy (frontière nord-est)",
+      "lon": 34.8,
+      "lat": 50.91
+    },
+    "kharkiv": {
+      "name": "Kharkiv (Vovtchansk / Kozatcha Lopan / Velykyï Bourlouk)",
+      "lon": 36.12,
+      "lat": 50.11
+    },
+    "kupiansk": {
+      "name": "Koupiansk / Borova (rivière Oskil)",
+      "lon": 37.62,
+      "lat": 49.71
+    },
+    "lyman": {
+      "name": "Lyman (ceinture des forteresses, nord-ouest)",
+      "lon": 37.8,
+      "lat": 48.99
+    },
+    "sloviansk": {
+      "name": "Siversk / Sloviansk-Kramatorsk (est)",
+      "lon": 37.62,
+      "lat": 48.85
+    },
+    "kostiantynivka": {
+      "name": "Kostiantynivka / Droujkivka (sud)",
+      "lon": 37.53,
+      "lat": 48.62
+    },
+    "dobropillia": {
+      "name": "Pokrovsk / Dobropillia (sud-ouest)",
+      "lon": 37.08,
+      "lat": 48.47
+    },
+    "novopavlivka": {
+      "name": "Novopavlivka (frontière Donetsk-Dnipropetrovsk)",
+      "lon": 36.6,
+      "lat": 48.13
+    },
+    "oleksandrivka": {
+      "name": "Oleksandrivka / Pokrovske (est de l'oblast de Dnipropetrovsk)",
+      "lon": 36.22,
+      "lat": 47.98
+    },
+    "huliaipole": {
+      "name": "Houliaïpole",
+      "lon": 36.27,
+      "lat": 47.66
+    },
+    "orikhiv": {
+      "name": "Zaporijjia (Orikhiv)",
+      "lon": 35.79,
+      "lat": 47.57
+    },
+    "kherson": {
+      "name": "Kherson (Dniepr)",
+      "lon": 32.62,
+      "lat": 46.64
+    },
+    "north_border": {
+      "name": "Frontière nord (Tchernihiv / Kyiv, face à la Russie et à la Biélorussie)",
+      "lon": 31.29,
+      "lat": 51.49,
+      "front": true
+    },
+    "kaliningrad": {
+      "name": "Hors front – Kaliningrad",
+      "lon": 20.51,
+      "lat": 54.71,
+      "front": false
+    },
+    "kola": {
+      "name": "Hors front – presqu'île de Kola (Mourmansk)",
+      "lon": 33.08,
+      "lat": 68.97,
+      "front": false
+    },
+    "far_east": {
+      "name": "Hors front – Extrême-Orient russe (Khabarovsk)",
+      "lon": 135.07,
+      "lat": 48.48,
+      "front": false
+    },
+    "armenia": {
+      "name": "Hors front – Arménie (Gumri)",
+      "lon": 43.85,
+      "lat": 40.79,
+      "front": false
+    },
+    "strategic_reserve": {
+      "name": "Hors front – réserve stratégique / dispersé",
+      "lon": null,
+      "lat": null,
+      "front": false
+    }
+  },
+  "UKR": {
+    "3e corps d'armée": {
+      "sector": "lyman",
+      "source": 4,
+      "confidence": "haute",
+      "note": "ISW (24, 26 sept., 9 oct. 2026) : le 3e corps mène l'opération « Vivaldi » au nord/nord-est de Lyman (Ridkodoub, Zelena Dolyna, Kolodiazi). Depuis le 13/09/2026, son chef Biletskyi commande aussi l'OTF Centre (Sloviansk-Kramatorsk) [source 18]."
+    },
+    "9e corps d'armée": {
+      "sector": "novopavlivka",
+      "source": 29,
+      "confidence": "faible",
+      "note": "Dernière localisation sourcée : défense de Novopavlivka (vidéo du corps, mi-nov. 2025) ; en août 2025 il tenait Pokrovsk-Myrnohrad [source 35]. Aucune source 2026 trouvée sur son secteur."
+    },
+    "10e corps d'armée": {
+      "sector": "kupiansk",
+      "source": 17,
+      "confidence": "faible",
+      "note": "Militaryland (09/02/2026) : rattaché au Joint Forces Task Force, chargé du nord-est et de la défense de Koupiansk ; secteur précis du corps non publié. Pas de confirmation après février 2026."
+    },
+    "11e corps d'armée": {
+      "sector": "sloviansk",
+      "source": 16,
+      "confidence": "haute",
+      "note": "Militaryland (MAJ 01/10/2026) : après la perte de Siversk (déc. 2025), zone réduite ; chargé en sept. 2026 de la protection de Sloviansk et Kramatorsk, sous l'OTF Centre."
+    },
+    "12e corps d'armée": {
+      "sector": "north_border",
+      "source": 26,
+      "confidence": "faible",
+      "note": "Militaryland (24/03/2026) : seul corps de l'OTF Nord (« défense des régions du nord-est ») ; Wikipédia : responsable de la défense de Kyiv (juin 2025) [source 32]. Les brigades peuvent être engagées ailleurs ; aucun secteur de combat publié."
+    },
+    "14e corps d'armée": {
+      "sector": "kharkiv",
+      "source": 13,
+      "confidence": "moyenne",
+      "note": "ISW (22/05/2026) : le porte-parole du 14e corps commente les directions de Soumy (Riasne) et de Kharkiv (Kozatcha Lopan). Rattaché au JFTF (fév. 2026) puis à l'OTF Ouest (mai 2026) [sources 17, 25]. Peut chevaucher Soumy."
+    },
+    "15e corps d'armée": {
+      "sector": "sumy",
+      "source": 23,
+      "confidence": "faible",
+      "note": "Militaryland (13/10/2025) : 129e et 158e brigades surtout dans l'oblast de Soumy, autres éléments à Tchernihiv, nord de Kharkiv, Siversk, Orikhiv. OTF Ouest (mai 2026) [source 25]. Données anciennes et très dispersées."
+    },
+    "16e corps d'armée": {
+      "sector": "kharkiv",
+      "source": 22,
+      "confidence": "moyenne",
+      "note": "Militaryland (MAJ 26/08/2026) et Wikipédia : défense de l'oblast de Kharkiv depuis juillet 2025 (succède au groupe tactique Kharkiv), rattaché au JFTF en février 2026."
+    },
+    "17e corps d'armée": {
+      "sector": "orikhiv",
+      "source": 19,
+      "confidence": "moyenne",
+      "note": "Militaryland (MAJ 04/09/2026) : « combat actuellement sur la direction de Zaporijjia » ; QG à Zaporijjia, OTF Sud [source 27]."
+    },
+    "18e corps d'armée": {
+      "sector": "sumy",
+      "source": 24,
+      "confidence": "moyenne",
+      "note": "Militaryland (31/08/2025) : la plupart de ses brigades dans l'oblast de Soumy (direction de Iounakivka, frontière). OTF Ouest (mai 2026) [source 25]. Pas de confirmation de secteur en 2026."
+    },
+    "19e corps d'armée": {
+      "sector": "dobropillia",
+      "source": 21,
+      "confidence": "moyenne",
+      "note": "Militaryland (MAJ 04/09/2026) : unités rattachées redéployées vers Dobropillia-Pokrovsk fin 2025-début 2026 ; Wikipédia : zone Pokrovsk-Dobropillia-Droujkivka en août 2025 [source 36]."
+    },
+    "20e corps d'armée": {
+      "sector": "oleksandrivka",
+      "source": 20,
+      "confidence": "moyenne",
+      "note": "Militaryland (MAJ 29/09/2026) : commande temporairement au printemps 2026 les 82e et 95e brigades d'assaut aérien, engagées sur le front d'Oleksandrivka (contre-offensive 2026, source 28). Sous l'OTF Sud (avr. 2026)."
+    },
+    "21e corps d'armée": {
+      "sector": null,
+      "source": 34,
+      "confidence": "faible",
+      "note": "Aucune source publique ne précise son secteur : rattaché au commandement opérationnel « Nord », anniversaire à Rivne (31/03/2026) en présence du chef de l'OTF « Ouest », « sur les lignes avancées » sans direction. Non placé."
+    },
+    "7e corps de réaction rapide": {
+      "sector": "huliaipole",
+      "source": 12,
+      "confidence": "haute",
+      "note": "ISW (09/10/2026) : le 7e corps de réaction rapide a pris la responsabilité de la direction de Houliaïpole. Avait mené la contre-offensive d'Oleksandrivka (fév.-mai 2026, source 28)."
+    },
+    "8e corps d'assaut aérien": {
+      "sector": "sumy",
+      "source": 12,
+      "confidence": "haute",
+      "note": "ISW (26/09 et 09/10/2026) : le 8e corps d'assaut aérien rend compte des combats au nord de Soumy (Kyianytsia)."
+    },
+    "30e corps d'infanterie de marine": {
+      "sector": "kherson",
+      "source": 31,
+      "confidence": "faible",
+      "note": "Wikipédia : éléments sur la rive gauche du Dniepr près de Kherson (août 2025) ; OTF Sud (avr. 2026) [source 27]. Ses brigades sont réparties sur plusieurs secteurs du front."
+    },
+    "1er corps Azov (Garde nationale)": {
+      "sector": "dobropillia",
+      "source": 4,
+      "confidence": "haute",
+      "note": "ISW (23 et 26/09/2026) : le 1er corps Azov contre les tentatives russes vers Dobropillia et Droujkivka ; son chef commande l'OTF Azov (sud de l'oblast de Donetsk) depuis le 13/09/2026 [source 18]."
+    },
+    "2e corps Khartia (Garde nationale)": {
+      "sector": "kupiansk",
+      "source": 5,
+      "confidence": "haute",
+      "note": "ISW (28/09/2026) : le 2e corps Khartia rend compte de la direction de Koupiansk (Oskil) ; membre du JFTF chargé de Koupiansk (fév. 2026) [source 17]."
+    },
+    "Forces terrestres ukrainiennes": {
+      "sector": null,
+      "source": null,
+      "confidence": "faible",
+      "note": "Brigades et appuis rattachés directement au commandement : dispersés sur tout le front, aucun secteur principal sourcé."
+    },
+    "Troupes d'assaut (Commandement des forces de réaction rapide interarmées)": {
+      "sector": "oleksandrivka",
+      "source": 28,
+      "confidence": "faible",
+      "note": "Régiments dispersés : 1er et 225e régiments d'assaut cités dans la contre-offensive d'Oleksandrivka (2026) ; 425e « Skelia » à Kostiantynivka (juil. 2026, source 30). Secteur principal choisi sur cette seule base."
+    },
+    "Forces d'assaut aérien (DShV)": {
+      "sector": null,
+      "source": null,
+      "confidence": "faible",
+      "note": "Niveau commandement (33e régiment du génie) : pas de secteur propre ; les brigades sont placées via les 7e et 8e corps."
+    },
+    "Garde nationale d'Ukraine": {
+      "sector": null,
+      "source": null,
+      "confidence": "faible",
+      "note": "Brigades et régiments hors corps dispersés (19e et 27e brigades rattachées temporairement au 12e corps selon Militaryland) ; aucun secteur principal sourcé."
+    },
+    "Forces de défense territoriale (brigades non rattachées)": {
+      "sector": null,
+      "source": null,
+      "confidence": "faible",
+      "note": "Brigades de défense territoriale non rattachées : missions régionales, aucun secteur sourcé."
+    }
+  },
+  "RUS": {
+    "1re armée blindée de la Garde (DM Moscou)": {
+      "sector": "kupiansk",
+      "source": 8,
+      "confidence": "moyenne",
+      "note": "ISW (04/10/2026) : 153e régiment de chars (47e div. de chars) à Koupiansk-Vouzlovyï ; 26e rég. de chars près de Hlouchkivka (déc. 2025, source 15) ; transmissions près de Borova (mars 2026, source 14). Éléments de la 47e div. aussi au nord de Kharkiv (ISW 09/10/2026)."
+    },
+    "20e armée interarmes de la Garde (DM Moscou)": {
+      "sector": "lyman",
+      "source": 11,
+      "confidence": "moyenne",
+      "note": "ISW (08/10/2026) : redéploiement de forces vers la zone de la 20e armée (144e div.) dans la section Lyman / nord-ouest de la ceinture des forteresses. En mars 2026 la 3e div. opérait vers Borova (source 14)."
+    },
+    "6e armée interarmes (DM Léningrad)": {
+      "sector": "kharkiv",
+      "source": 6,
+      "confidence": "haute",
+      "note": "ISW (24/09 et 01/10/2026) : 344e rég. (69e div.) dans l'oblast de Kharkiv (Nesterne) ; 15e rég. de chars sur l'axe nord (02/10/2026, source 7). Groupement Nord."
+    },
+    "11e corps d'armée (Kaliningrad)": {
+      "sector": "kharkiv",
+      "source": 6,
+      "confidence": "moyenne",
+      "note": "ISW (25/09 et 01/10/2026) : 11e corps (groupement Nord) dans l'oblast de Kharkiv, 1431e rég. vers Vysoka Iarouha. Les brigades listées dans l'OOB (152e missiles, 244e artillerie) sont stationnées à Kaliningrad."
+    },
+    "14e corps d'armée (Mourmansk)": {
+      "sector": "kharkiv",
+      "source": 0,
+      "confidence": "haute",
+      "note": "ISW (24 et 30/09, 02/10/2026) : 126e/127e rég. (71e div., 14e corps) dans la direction de Velykyï Bourlouk, oblast de Kharkiv."
+    },
+    "44e corps d'armée (Petrozavodsk)": {
+      "sector": "kharkiv",
+      "source": 11,
+      "confidence": "moyenne",
+      "note": "ISW (08/10/2026) : 128e brigade (44e corps) créditée par le groupement Nord dans l'oblast de Kharkiv."
+    },
+    "3e armée interarmes de la Garde (DM Sud, ex-2e corps LNR)": {
+      "sector": "sloviansk",
+      "source": 8,
+      "confidence": "haute",
+      "note": "ISW (sept.-oct. 2026) : objectif évalué de la 3e armée = avance sur Sloviansk-Kramatorsk par l'est (Mykolaïvka) ; nouvelle 84e div. formée sur la 4e brigade (04/10/2026)."
+    },
+    "51e armée interarmes de la Garde (DM Sud, ex-1er corps DNR)": {
+      "sector": "dobropillia",
+      "source": 3,
+      "confidence": "haute",
+      "note": "ISW (25/09/2026 et suiv.) : 51e armée + groupement Centre, encerclement par le sud-ouest depuis Pokrovsk/Dobropillia."
+    },
+    "8e armée interarmes de la Garde (DM Sud)": {
+      "sector": "kostiantynivka",
+      "source": 0,
+      "confidence": "haute",
+      "note": "ISW (sept.-oct. 2026) : 8e armée + groupement Sud, avance par le sud sur Kostiantynivka-Droujkivka. 20e div. vue vers Dobropillia en déc. 2025 (source 15)."
+    },
+    "18e armée interarmes (DM Sud)": {
+      "sector": "kherson",
+      "source": 1,
+      "confidence": "moyenne",
+      "note": "ISW (23/09/2026) : 8e rég. d'artillerie (18e armée) dans l'oblast de Kherson ; bataillon de drones formé à Kherson (déc. 2025). Mais la 70e div. combat à Kostiantynivka (ISW 26/12/2025, source 15)."
+    },
+    "49e armée interarmes (DM Sud)": {
+      "sector": "kharkiv",
+      "source": 6,
+      "confidence": "faible",
+      "note": "Seul élément sourcé en 2025-2026 : 34e brigade sous contrôle du groupement Nord dans l'oblast de Kharkiv (ISW 23/09, 01/10, 02/10/2026). Reste de l'armée non localisé."
+    },
+    "58e armée interarmes de la Garde (DM Sud)": {
+      "sector": "orikhiv",
+      "source": 14,
+      "confidence": "haute",
+      "note": "ISW (22/03/2026) : 58e armée dans l'ouest de l'oblast de Zaporijjia (19e et 42e div.), 291e rég. au sud d'Orikhiv (déc. 2025). Note : 349e rég. (42e div.) sur l'axe Soumy (ISW 30/09/2026), 4e base vers Kherson."
+    },
+    "District militaire Sud — unités hors armée": {
+      "sector": "armenia",
+      "source": 33,
+      "confidence": "haute",
+      "note": "102e base militaire à Gumri (Arménie) : stationnement permanent, hors du front."
+    },
+    "2e armée interarmes de la Garde (DM Centre)": {
+      "sector": "dobropillia",
+      "source": 3,
+      "confidence": "moyenne",
+      "note": "ISW (25/09/2026) : 2e armée liée au commandement du groupement Centre (Dobropillia/Pokrovsk) ; 71e bat. spetsnaz rattaché opérant près de Pokrovsk (déc. 2025, source 15)."
+    },
+    "41e armée interarmes de la Garde (DM Centre)": {
+      "sector": "novopavlivka",
+      "source": 29,
+      "confidence": "faible",
+      "note": "Wikipédia (offensive de Novopavlivka, 2025) : 90e div. de chars, 35e et 74e brigades ; ISW (26/12/2025, source 15) : 35e brigade au nord-ouest de Pokrovsk. Pas de mention trouvée en sept.-oct. 2026."
+    },
+    "25e armée interarmes (DM Centre)": {
+      "sector": "lyman",
+      "source": 0,
+      "confidence": "haute",
+      "note": "ISW (sept.-oct. 2026) : 25e armée + groupement Ouest, encerclement de la ceinture des forteresses par le nord-ouest (Lyman, Sviatohirsk)."
+    },
+    "3e corps d'armée (Moulino)": {
+      "sector": "kostiantynivka",
+      "source": 15,
+      "confidence": "moyenne",
+      "note": "ISW (26/12/2025) : 6e div. et 72e brigade (3e corps, sous groupement Sud) dans le sud de Kostiantynivka ; Wikipédia (bataille de Kostiantynivka, juil. 2026) cite la 72e brigade [source 30]."
+    },
+    "5e armée interarmes (DM Est)": {
+      "sector": "huliaipole",
+      "source": 13,
+      "confidence": "haute",
+      "note": "ISW (26/12/2025) : 57e et 60e brigades dans Houliaïpole ; ISW (22/05/2026) : 394e rég. (127e div.) à Verkhnia Tersa, NO de Houliaïpole."
+    },
+    "29e armée interarmes de la Garde (DM Est)": {
+      "sector": "oleksandrivka",
+      "source": 9,
+      "confidence": "moyenne",
+      "note": "ISW (23/09, 05/10, 06/10/2026) : 36e brigade (29e armée) à Samiïlivka et Holoubkove, oblast de Dnipropetrovsk. En août 2026 dans la direction de Houliaïpole."
+    },
+    "35e armée interarmes (DM Est)": {
+      "sector": "huliaipole",
+      "source": 0,
+      "confidence": "moyenne",
+      "note": "ISW (30/09/2026) : 38e brigade (35e armée) près de Iehorivka, section Houliaïpole/Orikhiv ; ISW (26/12/2025) : concentrée avec la 5e armée près de Houliaïpole."
+    },
+    "36e armée interarmes (DM Est)": {
+      "sector": "oleksandrivka",
+      "source": 1,
+      "confidence": "moyenne",
+      "note": "ISW (23/09/2026) : 36e armée citée dans l'avance dans l'oblast de Dnipropetrovsk (groupement Est)."
+    },
+    "68e corps d'armée (Sakhaline/Kouriles)": {
+      "sector": "kharkiv",
+      "source": 15,
+      "confidence": "faible",
+      "note": "ISW (26/12/2025) : 1472e rég. (68e corps) en renfort vers Baranivka/Basove, direction de Kharkiv ; Wikipédia liste aussi le 68e corps dans l'offensive de Dobropillia (2025, source 37). Rien de plus récent."
+    },
+    "Troupes aéroportées (VDV)": {
+      "sector": null,
+      "source": 12,
+      "confidence": "faible",
+      "note": "Divisions dispersées, pas de secteur principal sourcé : 76e div. vers Dobropillia (ISW 09/10/2026), 83e brigade au nord de Soumy (09/10/2026), 7e div. vers Orikhiv (ISW 22/03/2026). À placer par division."
+    },
+    "Infanterie navale (troupes côtières de la Flotte)": {
+      "sector": null,
+      "source": 13,
+      "confidence": "faible",
+      "note": "Seul élément sourcé : 155e rég. (55e div.) à Verkhnia Tersa, direction de Houliaïpole (ISW 22/05/2026). Autres brigades et divisions non localisées."
+    }
+  }
+}

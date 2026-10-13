@@ -1,6 +1,6 @@
 import type { CountryDef, CountryId, ScenarioDef, ScenarioEconomy } from '../core/types'
 import { countryForces, forceUnits, type CountryForces } from './forces'
-import { forceSectors } from './sectors'
+import { forceSectors, sectorForces } from './sectors'
 import { CONSTRUCTION_PER_CIV, PRODUCTION_PER_MIL } from '../economy/rules'
 
 export interface WorldCountryRow {
@@ -386,8 +386,9 @@ export function buildWorld2026(rows: WorldCountryRow[]): ScenarioDef {
   for (const r of rows) {
     economy[r.code] = economyOf(r, MILITARIZATION[r.code] ?? 1)
     // Ordre de bataille réel, ou généré à partir des effectifs réels (phase D3).
-    forces[r.code] = countryForces(r.code, { gdpB: r.gdpB, pop: r.pop })
-    forceSize[r.code] = forceUnits(forces[r.code])
+    const f = sectorForces(r.code, countryForces(r.code, { gdpB: r.gdpB, pop: r.pop }))
+    forces[r.code] = f
+    forceSize[r.code] = forceUnits(f)
   }
 
   // Affinités et organisations régionales : bonus cumulés, puis valeurs fixées (alliances, tensions).

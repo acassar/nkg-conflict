@@ -95,6 +95,7 @@ describe("différences entre types d'unités", () => {
     const { of } = setup()
     const tank = of('tank')
     const inf = of('inf')
+    inf.template = 'infanterie_legere'
     tank.hoursOutOfSupply = 30
     inf.hoursOutOfSupply = 30
     expect(fuelSpeedFactor(tank)).toBe(NO_FUEL_SPEED)

@@ -95,10 +95,12 @@ describe('économie', () => {
   it('forme une unité dans une caserne et engage la main-d’œuvre', () => {
     const sim = newGame()
     const men = ecoOf(sim).manpower
+    // Numéro suivant ceux de l'ordre de bataille de départ.
+    const name = `${ecoOf(sim).unitCounters.inf}e brigade d'infanterie`
     expect(sim.queueRecruit('inf', 'Kyiv', null)).toBe(null)
     expect(ecoOf(sim).manpower).toBeCloseTo(men - RECRUIT_COSTS.inf.manpower)
     sim.step(24 * (RECRUIT_COSTS.inf.days + 1))
-    const recruit = [...sim.ctx.units.values()].find((u) => u.name === "11e brigade d'infanterie")
+    const recruit = [...sim.ctx.units.values()].find((u) => u.name === name)
     expect(recruit?.owner).toBe('UKR')
     expect(recruit && Math.abs(recruit.lat - 50.45) < 0.5).toBe(true)
   })
@@ -153,10 +155,11 @@ describe('économie de guerre', () => {
     expect(RECRUIT_COSTS.tdf.production).toBeLessThan(RECRUIT_COSTS.inf.production / 2)
     expect(RECRUIT_COSTS.tdf.manpower).toBeGreaterThan(RECRUIT_COSTS.inf.manpower)
     const sim = newGame()
+    const name = `${ecoOf(sim).unitCounters.tdf}e brigade de défense territoriale`
     expect(sim.queueRecruit('tdf', 'Kyiv', null)).toBe(null)
     sim.step(24 * (RECRUIT_COSTS.tdf.days + 1))
-    const tdf = [...sim.ctx.units.values()].find((u) => u.kind === 'tdf')
-    expect(tdf?.name).toBe('1re brigade de défense territoriale')
+    const tdf = [...sim.ctx.units.values()].find((u) => u.name === name)
+    expect(tdf?.kind).toBe('tdf')
     expect(tdf?.owner).toBe('UKR')
   })
 })

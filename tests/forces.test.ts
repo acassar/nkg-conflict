@@ -74,7 +74,8 @@ describe('forces de départ', () => {
     const divisions = big.flatMap((a) => a.corps.flatMap((c) => c.divisions))
     expect(divisions).toHaveLength(20)
     for (const d of divisions) expect(d.brigades.length).toBe(3)
-    for (const a of big) for (const c of a.corps) expect(c.divisions.length).toBeGreaterThanOrEqual(3)
+    for (const a of big)
+      for (const c of a.corps) expect(c.divisions.length).toBeGreaterThanOrEqual(3)
   })
 
   it('ordres de bataille réels : armées, corps et divisions nommés, modèles connus', () => {

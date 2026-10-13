@@ -1,5 +1,10 @@
 import { createNamedFormation, updateFormations } from '../systems/formations'
-import { armyServices, type CountryForces, type ForceArmy, type ForceDivision } from '../scenarios/forces'
+import {
+  armyServices,
+  type CountryForces,
+  type ForceArmy,
+  type ForceDivision,
+} from '../scenarios/forces'
 import { BRIGADE_TEMPLATES } from '../units/templates'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, CountryDef, LonLat, UnitKind, UnitState } from '../core/types'
@@ -316,14 +321,15 @@ export type ForceFront = 'whole' | [LonLat, LonLat] | null
 /**
  * Lève les forces d'un ordre de bataille (scenarios/forces.ts) : une armée par armée de l'ordre de
  * bataille, ses corps et ses divisions nommés, ses brigades avec leur modèle, un QG et sa logistique.
- * Les unités partent en garnison ; une armée qui a un front (`frontOf`) s'y déploie. Renvoie le nombre
+ * Les unités partent en garnison ; une armée qui a un front (`frontOf`, tout le front par défaut, comme
+ * `mobilize`) s'y déploie si le pays est en guerre. Renvoie le nombre
  * d'unités levées.
  */
 export function mobilizeForces(
   ctx: SimContext,
   country: CountryDef,
   forces: CountryForces,
-  frontOf: (army: ForceArmy) => ForceFront = () => null,
+  frontOf: (army: ForceArmy) => ForceFront = () => 'whole',
 ): number {
   const pol = ctx.politics.countries.get(country.id)
   if (pol?.mobilized) return 0
@@ -372,9 +378,20 @@ export function mobilizeForces(
     }
   }
   const spots = garrisons(ctx, country, specs.length)
+  // Une division qui part au front part groupée : ses brigades partagent la garnison de la première,
+  // pour prendre des postes voisins en se déployant. En garnison, elles restent réparties.
+  const atWar = ctx.matrix.atWar[sideIndex(ctx, country.id)] === 1
+  const deployed = new Set(armies.filter((a) => atWar && a.front !== null).map((a) => a.army.id))
+  const divisionSpot = new Map<number, LonLat>()
   for (const [k, { army, division, def }] of specs.entries()) {
-    const spot = spots[k]
+    let spot = spots[k]
     if (!spot) continue
+    if (division !== null && deployed.has(army.id)) {
+      const first = divisionSpot.get(division)
+      if (first) spot = first
+      else divisionSpot.set(division, spot)
+    }
+    const fill = def.template ? (forces.fill ?? 1) : 1
     const u: UnitState = {
       id: ctx.allocId(),
       name: def.name,
@@ -382,7 +399,11 @@ export function mobilizeForces(
       kind: def.kind,
       lon: spot[0],
       lat: spot[1],
-      strength: 1,
+      // Brigades en sous-effectif quand l'armée réelle l'est (QG et logistique au complet) : il leur
+      // manque des hommes, pas du matériel, et les renforts ne comblent que les pertes.
+      strength: fill,
+      equipment: 1,
+      ...(fill < 1 ? { establishment: fill } : {}),
       org: 1,
       entrench: 0.5,
       order: { kind: 'hold' },

@@ -58,7 +58,10 @@ describe('IA des armées : posture et mission selon la situation', () => {
   it("juge la situation d'une armée au départ et trouve un but de percée chez l'ennemi", () => {
     const sim = Simulation.fromScenario(ukraine2026, theater, 3)
     const ctx = sim.ctx
-    const army = [...ctx.armies.values()].find((a) => a.owner === 'RUS' && a.wholeFront)
+    // La plus grande armée russe sur son secteur du front.
+    const army = [...ctx.armies.values()]
+      .filter((a) => a.owner === 'RUS' && a.front)
+      .sort((a, b) => b.unitIds.length - a.unitIds.length)[0]
     if (!army) throw new Error('armée introuvable')
     const side = sim.sideOf('RUS')
     const cells = frontCells(ctx, side, null)
@@ -67,7 +70,7 @@ describe('IA des armées : posture et mission selon la situation', () => {
     expect(s.contact).toBe(true)
     expect(s.ratio).toBeGreaterThan(0.5)
     expect(s.ratio).toBeLessThan(2)
-    expect(s.lineUnits).toBeGreaterThan(10)
+    expect(s.lineUnits).toBeGreaterThan(5)
     const target = breachTarget(ctx, side, cells, index)
     expect(target).not.toBeNull()
     const t = ctx.grid.cellAt(target![0], target![1])
@@ -79,9 +82,13 @@ describe('IA des armées : posture et mission selon la situation', () => {
     const ctx = sim.ctx
     const army = [...ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
     if (!army) throw new Error('armée introuvable')
-    // Armée affaiblie : la moitié de ses unités de ligne disparaît.
-    for (const id of army.unitIds.filter((_, k) => k % 2 === 0)) ctx.units.delete(id)
-    army.unitIds = army.unitIds.filter((id) => ctx.units.has(id))
+    // Camp affaibli (les armées voisines comptent dans le rapport de force) : trois unités sur quatre de
+    // chaque armée disparaissent.
+    for (const a of ctx.armies.values()) {
+      if (a.owner !== 'UKR') continue
+      for (const id of a.unitIds.filter((_, k) => k % 4 !== 0)) ctx.units.delete(id)
+      a.unitIds = a.unitIds.filter((id) => ctx.units.has(id))
+    }
     for (const u of ctx.units.values()) if (u.owner === 'UKR') u.org = 0.5
     const memory = new Map<number, AiArmyMemory>()
     updateAiArmies(ctx, 'UKR', memory, new WarIndex(ctx))

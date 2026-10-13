@@ -25,15 +25,31 @@ beforeAll(async () => {
 function france(): { sim: Simulation; a: number; b: number } {
   const sim = Simulation.fromScenario(buildScenario('world-2026', 'FRA'), theater, 5, 'FRA')
   const line = [...sim.ctx.units.values()]
-    .filter((u) => u.owner === 'FRA' && u.kind === 'inf')
+    // En métropole : l'ordre de bataille réel garnit aussi l'outre-mer (Réunion, Nouvelle-Calédonie).
+    .filter(
+      (u) =>
+        u.owner === 'FRA' &&
+        u.kind === 'inf' &&
+        u.lon > -5 &&
+        u.lon < 10 &&
+        u.lat > 41 &&
+        u.lat < 52,
+    )
     .sort((p, q) => q.lon - p.lon)
+  // Première armée : une brigade par division (la cohésion des divisions ne réordonne pas ses postes).
+  const first = line
+    .filter((u, k) => line.findIndex((v) => v.divisionId === u.divisionId) === k)
+    .slice(0, 4)
   const a = sim.createArmy(
     '1re armée',
-    line.slice(0, 4).map((u) => u.id),
+    first.map((u) => u.id),
   )
   const b = sim.createArmy(
     '2e armée',
-    line.slice(4, 8).map((u) => u.id),
+    line
+      .filter((u) => !first.includes(u))
+      .slice(0, 4)
+      .map((u) => u.id),
   )
   return { sim, a, b }
 }

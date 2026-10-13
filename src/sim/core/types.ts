@@ -56,6 +56,11 @@ export interface UnitState {
   lat: number
   /** Effectifs, 0 à 1. */
   strength: number
+  /**
+   * Effectifs que les renforts peuvent rétablir (1 si absent) : brigade d'une armée réelle en
+   * sous-effectif chronique (scenarios/forces.ts, `fill`).
+   */
+  establishment?: number
   /** Organisation (cohésion), 0 à 1. En dessous de 0,15 l'unité décroche. */
   org: number
   /** Retranchement accumulé en tenant une position, 0 à 1. */

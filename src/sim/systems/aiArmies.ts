@@ -106,23 +106,29 @@ export function assessArmy(
   cells: FrontCell[],
 ): ArmySituation {
   const line = lineOf(ctx, army)
-  // Rapport de force symétrique : nos unités qui ont un ennemi à moins de 50 km, face aux ennemis à moins
-  // de 50 km de l'une d'elles (les réserves lointaines des deux camps ne comptent pas).
-  let own = 0
+  // Rapport de force symétrique : les ennemis à moins de 50 km de nos unités, face à toutes les unités
+  // amies (de cette armée ou des voisines) à moins de 50 km de l'un d'eux. Les armées voisines comptent :
+  // l'ordre de bataille réel en aligne des dizaines côte à côte, chacune ne tenant qu'une portion du
+  // front que les ennemis voient en entier. Les réserves lointaines des deux camps ne comptent pas.
   let org = 0
   const seen = new Map<number, UnitState>()
   for (const u of line) {
     org += u.org
-    let near = false
     index.forEachEnemy(u, CONTACT_KM, (e) => {
       if (!isLineUnit(e.kind) || runtimeOf(ctx, e.id).routed) return
-      near = true
       seen.set(e.id, e)
     })
-    if (near) own += punch(u)
   }
   let enemy = 0
-  for (const e of seen.values()) enemy += punch(e)
+  const friends = new Map<number, UnitState>()
+  for (const e of seen.values()) {
+    enemy += punch(e)
+    index.forEachEnemy(e, CONTACT_KM, (f) => {
+      if (isLineUnit(f.kind) && !runtimeOf(ctx, f.id).routed) friends.set(f.id, f)
+    })
+  }
+  let own = 0
+  for (const f of friends.values()) own += punch(f)
   const kmPerCell = ctx.grid.cell * 111
   const frontKm = Math.max(1, cells.length * kmPerCell)
   let calm = 0

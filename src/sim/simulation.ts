@@ -118,7 +118,13 @@ import { newBudget } from './economy/budget'
 import type { RecruitOrder } from './economy/armyRecruit'
 import type { ArmyRecruitResult } from './economy/economy'
 import { SideMatrix } from './politics/matrix'
-import { mobilize } from './politics/mobilization'
+import {
+  mobilize,
+  mobilizeForces,
+  sectorFront,
+  type ForceFront,
+} from './politics/mobilization'
+import type { CountryForces, ForceArmy } from './scenarios/forces'
 import { clearObstacles } from './systems/obstacles'
 import {
   aiAcceptsPeace,
@@ -312,6 +318,17 @@ export class Simulation {
     return s
   }
 
+  /** Lève un ordre de bataille de départ ; l'effectif visé en paix devient celui levé. */
+  private levyForces(
+    country: CountryDef,
+    forces: CountryForces,
+    frontOf?: (army: ForceArmy) => ForceFront,
+  ): void {
+    const n = mobilizeForces(this.ctx, country, forces, frontOf)
+    const pol = this.ctx.politics.countries.get(country.id)
+    if (pol && n > 0) pol.forceSize = n
+  }
+
   private initPolitics(): void {
     const ctx = this.ctx
     const sp = this.scenario.politics
@@ -393,9 +410,21 @@ export class Simulation {
     initCities(ctx, scenario)
     initEconomies(ctx, scenario)
     sim.initPolitics()
-    // Mobilisation des pays en guerre au départ : unités explicites du scénario, ou levée générique.
+    // Mobilisation des pays en guerre au départ : ordre de bataille du scénario (chaque armée sur son
+    // secteur du front), unités explicites, ou levée générique.
     for (const country of scenario.countries) {
-      if (ctx.matrix.atWar[sideIndex(ctx, country.id)] !== 1) continue
+      const side = sideIndex(ctx, country.id)
+      if (ctx.matrix.atWar[side] !== 1) continue
+      const forces = scenario.forces?.[country.id]
+      if (forces) {
+        const sectors = scenario.forceSectors?.[country.id]
+        sim.levyForces(country, forces, (a) => {
+          if (!sectors) return 'whole'
+          const anchors = sectors[a.name]
+          return anchors?.length ? sectorFront(ctx, side, anchors) : null
+        })
+        continue
+      }
       const explicit = scenario.units.filter((u) => u.owner === country.id)
       mobilize(ctx, country, sim.hooks.armyName(country.id), explicit.length ? explicit : undefined)
     }
@@ -404,7 +433,9 @@ export class Simulation {
       for (const country of scenario.countries) {
         // Micro-États absents de la grille (Vatican, Monaco…) : pas d'armée.
         if (ctx.grid.countOwned(sideIndex(ctx, country.id)) === 0) continue
-        mobilize(ctx, country, sim.hooks.armyName(country.id))
+        const forces = scenario.forces?.[country.id]
+        if (forces) sim.levyForces(country, forces)
+        else mobilize(ctx, country, sim.hooks.armyName(country.id))
       }
     }
     previewIncome(ctx, scenario)

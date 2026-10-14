@@ -195,6 +195,57 @@ describe('secteur commun', () => {
     expect([2, 3].every((pi) => inSector(1, pi) && inSector(3, pi))).toBe(true)
   })
 
+  it('une brigade loin de la ligne (recrue) rejoint le secteur de sa division', () => {
+    // Postes tous les 10 km ; la brigade 4 (division 1) arrive de 300 km, plus près des postes de la
+    // division 2 que de ceux de la sienne.
+    const units = [1, 1, 2, 1].map((d, k) => ({ id: k + 1, divisionId: d }) as UnitState)
+    const P = 4
+    const dist = new Float64Array(16)
+    units.forEach((_, ui) => {
+      for (let pi = 0; pi < P; pi++)
+        dist[ui * P + pi] = ui === 3 ? 300 + (P - pi) * 10 : Math.abs(ui - pi) * 10
+    })
+    divisionSectors(units, P, dist)
+    // Secteur de la division 1 : postes 0 à 2 ; hors secteur, l'écart dépasse le trajet en plus.
+    const best = [0, 1, 2, 3].sort((a, b) => (dist[3 * P + a] ?? 0) - (dist[3 * P + b] ?? 0))[0]
+    expect(best).toBeLessThan(3)
+  })
+
+  it('déploiement instantané : chaque division prend son secteur entier', () => {
+    const units = [1, 2, 1, 2].map((d, k) => ({ id: k + 1, divisionId: d }) as UnitState)
+    const P = 4
+    const dist = new Float64Array(16)
+    // Brigades placées à l'envers de leur secteur, à 200 km l'une de l'autre.
+    units.forEach((_, ui) => {
+      for (let pi = 0; pi < P; pi++) dist[ui * P + pi] = Math.abs(ui - pi) * 200
+    })
+    divisionSectors(units, P, dist, () => null, true)
+    for (const [ui, posts] of [
+      [0, [0, 1]],
+      [2, [0, 1]],
+      [1, [2, 3]],
+      [3, [2, 3]],
+    ] as const) {
+      const best = [0, 1, 2, 3].sort((a, b) => (dist[ui * P + a] ?? 0) - (dist[ui * P + b] ?? 0))
+      expect(posts).toContain(best[0])
+    }
+  })
+
+  it('divisions groupées au départ, appuis derrière leur division', () => {
+    const sim = Simulation.fromScenario(ukraine2026, theater, 3)
+    const ctx = sim.ctx
+    let spread = 0
+    for (const f of ctx.formations.values()) {
+      const army = ctx.armies.get(f.armyId)
+      // Armées sans secteur connu (tout le front) : leurs divisions s'étalent avec la ligne.
+      if (f.kind !== 'division' || !army || army.wholeFront) continue
+      const list = [...ctx.units.values()].filter((u) => u.divisionId === f.id)
+      for (const a of list)
+        for (const b of list) spread = Math.max(spread, distanceKm(a.lon, a.lat, b.lon, b.lat))
+    }
+    expect(spread).toBeLessThan(250)
+  })
+
   it('échange les postes de brigades voisines pour réunir une division, sans trajet excessif', () => {
     const units = [1, 2, 1, 2].map((d) => ({ divisionId: d }))
     const near = new Float64Array(16)

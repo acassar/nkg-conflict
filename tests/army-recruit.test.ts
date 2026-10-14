@@ -187,4 +187,29 @@ describe('recrutement par armée (simulation)', () => {
     expect(whole.every((u) => u.divisionId === formed?.id)).toBe(true)
     expect(whole.length).toBeGreaterThanOrEqual(size - 1)
   })
+
+  it('sans division choisie, la recrue comble une place libre de son armée, même loin de la caserne', () => {
+    const sim = newGame()
+    const ctx = sim.ctx
+    const army = mainArmy(sim)
+    const eco = ecoOf(sim)
+    eco.manpower = 1e4
+    // Une brigade détruite libère une place dans sa division.
+    const gone = army.unitIds
+      .map((id) => ctx.units.get(id))
+      .find((u) => u?.template && u.kind === 'inf')
+    if (!gone?.template || gone.divisionId === undefined) throw new Error('brigade absente')
+    ctx.units.delete(gone.id)
+    sim.step(1)
+    const before = new Set(
+      [...ctx.formations.values()].filter((f) => f.armyId === army.id).map((f) => f.id),
+    )
+    const existing = new Set(ctx.units.keys())
+    expect(sim.queueArmyRecruit(army.id, { brigades: { [gone.template]: 1 } }).launched).toBe(1)
+    eco.production += 1e6
+    for (let d = 0; d < 60 && eco.recruitment.some((q) => q.armyId === army.id); d++) sim.step(24)
+    const recruit = [...ctx.units.values()].find((u) => !existing.has(u.id) && u.owner === 'UKR')
+    // Une division déjà là (celle de la brigade détruite, ou une autre qui a une place pour ce modèle).
+    expect(before.has(recruit?.divisionId ?? -1)).toBe(true)
+  })
 })

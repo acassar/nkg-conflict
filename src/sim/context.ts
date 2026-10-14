@@ -90,6 +90,8 @@ export interface SimContext {
   air: AirZone[]
   /** Prochain identifiant de formation. */
   nextFormationId: number
+  /** Dernière unité servie par la file des chemins en attente (tour de rôle, movement.ts). */
+  pathCursor?: number
   /** Nouvel identifiant unique (unités, armées, files d'attente). */
   allocId(): number
   /** `minor` : gardé seulement pour le joueur et les pays en guerre. */

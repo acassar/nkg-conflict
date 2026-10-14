@@ -140,6 +140,42 @@ const formationLabel = computed(() => {
   if (!f) return null
   return [f.division?.name, f.corps?.name].filter(Boolean).join(' · ')
 })
+/**
+ * Liste de l'inspecteur : les brigades choisies, groupées par division quand elles en mêlent plusieurs
+ * (pile de pions, sélection par zone). Un clic sur une division la sélectionne entière, un clic sur une
+ * brigade la sélectionne seule.
+ */
+const unitGroups = computed(() => {
+  const list = selectedUnits.value
+  const formations = game.snapshot?.formations ?? []
+  const keys = new Set(list.map((u) => u.divisionId))
+  if (keys.size <= 1) return [{ key: 'all', division: null, total: 0, units: list }]
+  const groups = new Map<number | null, UnitSnapshot[]>()
+  for (const u of list) groups.set(u.divisionId, [...(groups.get(u.divisionId) ?? []), u])
+  const number = (id: number | null): number =>
+    formations.find((f) => f.id === id)?.number ?? Number.MAX_SAFE_INTEGER
+  return [...groups]
+    .sort(([a], [b]) => number(a) - number(b))
+    .map(([id, units]) => {
+      const f = id === null ? undefined : formations.find((x) => x.id === id)
+      return {
+        key: `d${id ?? 'none'}`,
+        division: f ? { id: f.id, name: f.name } : null,
+        total: f ? divisionMembers(f.id).length : units.length,
+        units,
+      }
+    })
+})
+/** Brigades du joueur d'une division. */
+const divisionMembers = (id: number): number[] => {
+  const s = game.snapshot
+  return (
+    s?.units.filter((u) => u.owner === s.playerCountry && u.divisionId === id).map((u) => u.id) ??
+    []
+  )
+}
+const pickUnit = (u: UnitSnapshot): void => game.selectUnits([u.id], false)
+const pickDivision = (id: number): void => game.selectUnits(divisionMembers(id), false)
 /** Bataillons d'une brigade (composition, pour une brigade choisie seule). */
 const battalionRows = (u: UnitSnapshot) =>
   battalionsOf(templateOf({ kind: u.kind, template: u.template ?? undefined }) ?? '').map((b) => ({
@@ -619,36 +655,66 @@ async function createArmy(): Promise<void> {
             {{ POSTURES[p].name }}
           </button>
         </div>
-        <ul class="units">
-          <li v-for="u in selectedUnits" :key="u.id">
-            <div class="row">
-              <span class="name">{{ u.name }}</span>
-              <span class="meta" data-testid="unit-template" :title="compositionText(u)">{{
-                templateLabel(u)
-              }}</span>
-            </div>
-            <div class="row">
-              <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
-                <i :style="{ width: cssPct(u.strength) }" class="strength" />
-              </span>
-              <span
-                class="gauge"
-                data-testid="unit-equipment"
-                :title="`Matériel ${pct(u.equipment)}`"
+        <template v-for="g in unitGroups" :key="g.key">
+          <button
+            v-if="unitGroups.length > 1"
+            class="group-head"
+            data-testid="selection-group"
+            :title="g.division ? 'Sélectionner toute cette division' : undefined"
+            :disabled="!g.division"
+            @click="g.division && pickDivision(g.division.id)"
+          >
+            <span class="name">{{ g.division?.name ?? 'Sans division' }}</span>
+            <span class="meta"
+              >{{ g.units.length }}{{ g.division ? ` / ${g.total}` : '' }} brigade{{
+                g.units.length > 1 ? 's' : ''
+              }}</span
+            >
+          </button>
+          <ul class="units">
+            <li
+              v-for="u in g.units"
+              :key="u.id"
+              :class="{ pick: selectedUnits.length > 1 }"
+              data-testid="selection-unit"
+              :title="selectedUnits.length > 1 ? 'Sélectionner cette brigade seule' : undefined"
+              @click="selectedUnits.length > 1 && pickUnit(u)"
+            >
+              <div class="row">
+                <span class="name">{{ u.name }}</span>
+                <span class="meta" data-testid="unit-template" :title="compositionText(u)">{{
+                  templateLabel(u)
+                }}</span>
+              </div>
+              <div class="row">
+                <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
+                  <i :style="{ width: cssPct(u.strength) }" class="strength" />
+                </span>
+                <span
+                  class="gauge"
+                  data-testid="unit-equipment"
+                  :title="`Matériel ${pct(u.equipment)}`"
+                >
+                  <i :style="{ width: cssPct(u.equipment) }" class="equipment" />
+                </span>
+                <span class="gauge" :title="`Organisation ${pct(u.org)}`">
+                  <i :style="{ width: cssPct(u.org) }" class="org" />
+                </span>
+              </div>
+              <div class="meta">
+                {{ armyOf(u.armyId) }} · {{ game.terrainNameAt(u.lon, u.lat) }}
+              </div>
+              <ul
+                v-if="selectedUnits.length === 1"
+                class="battalions"
+                data-testid="unit-battalions"
               >
-                <i :style="{ width: cssPct(u.equipment) }" class="equipment" />
-              </span>
-              <span class="gauge" :title="`Organisation ${pct(u.org)}`">
-                <i :style="{ width: cssPct(u.org) }" class="org" />
-              </span>
-            </div>
-            <div class="meta">{{ armyOf(u.armyId) }} · {{ game.terrainNameAt(u.lon, u.lat) }}</div>
-            <ul v-if="selectedUnits.length === 1" class="battalions" data-testid="unit-battalions">
-              <li v-for="b in battalionRows(u)" :key="b.kind">{{ b.count }} × {{ b.name }}</li>
-            </ul>
-            <div class="status" :class="{ warn: u.routed || !u.supplied }">{{ status(u) }}</div>
-          </li>
-        </ul>
+                <li v-for="b in battalionRows(u)" :key="b.kind">{{ b.count }} × {{ b.name }}</li>
+              </ul>
+              <div class="status" :class="{ warn: u.routed || !u.supplied }">{{ status(u) }}</div>
+            </li>
+          </ul>
+        </template>
         <form v-if="armies.length" class="create" @submit.prevent="attach">
           <select v-model="attachTo" aria-label="Armée à rejoindre">
             <option v-for="a in armies" :key="a.id" :value="a.id">{{ a.name }}</option>
@@ -1417,6 +1483,20 @@ ul {
   border-radius: 6px;
   margin-bottom: 4px;
   background: #1b2028;
+}
+.units li.pick {
+  cursor: pointer;
+}
+.units li.pick:hover {
+  outline: 1px solid #2563eb;
+}
+.group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  margin: 6px 0 4px;
+  text-align: left;
 }
 .armies li {
   cursor: pointer;

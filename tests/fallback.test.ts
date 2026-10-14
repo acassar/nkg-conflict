@@ -16,6 +16,7 @@ import {
 } from '@/sim/systems/fallback'
 import { isLineUnit } from '@/sim/units/catalog'
 import type { ArmyState, LonLat, UnitState } from '@/sim/core/types'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const theater = theaterJson as unknown as TheaterData
 
@@ -33,7 +34,7 @@ interface Setup {
 function setup(): Setup {
   const sim = Simulation.fromScenario(ukraine2026, theater, 7)
   const ctx = sim.ctx
-  const army = [...ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+  const army = wholeFrontArmy(sim)
   if (!army) throw new Error('armée introuvable')
   const line = army.unitIds
     .map((id) => ctx.units.get(id))

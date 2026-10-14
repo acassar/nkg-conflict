@@ -9,6 +9,7 @@ import type { LonLat, UnitState } from '@/sim/core/types'
 import { combatModifiers, firePower } from '@/sim/systems/combat'
 import { updatePostureReflexes } from '@/sim/systems/postures'
 import { frontCells } from '@/sim/systems/armies'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const theater = theaterJson as unknown as TheaterData
 const newGame = (): Simulation => Simulation.fromScenario(ukraine2026, theater, 7)
@@ -32,7 +33,7 @@ function closestPair(sim: Simulation): { mine: UnitState; enemy: UnitState } {
 }
 
 const playerArmy = (sim: Simulation) => {
-  const army = [...sim.ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+  const army = wholeFrontArmy(sim)
   if (!army) throw new Error('armée manquante')
   return army
 }

@@ -400,6 +400,8 @@ const DEPTH_FORWARD_SHARE = 0.6
 const SECOND_LINE_KM = 25
 /** Réserve : distance de ses postes derrière le front (km). */
 const RESERVE_KM = 40
+/** Réserve : rayon autour du point d'une division où se placent ses brigades (km). */
+const RESERVE_SPREAD_KM = 30
 /** Écart au milieu de son secteur toléré par un poste favorable : −5 % de valeur au bord du secteur. */
 const OFF_CENTER_PENALTY = 0.05
 /** Fleuve devant le poste : même bonus que dans le combat (assaut à travers un fleuve). */
@@ -803,6 +805,68 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     }
     place(free, depth)
   }
+  /**
+   * Réserve : chaque division se regroupe en un point derrière le front (points répartis comme les
+   * postes, un par division), ses brigades côte à côte, au lieu de s'étaler le long de la ligne.
+   */
+  const placeReserve = (depth: number): void => {
+    const groups = new Map<number, UnitState[]>()
+    for (const u of line) {
+      const key = u.divisionId ?? -u.id
+      groups.set(key, [...(groups.get(key) ?? []), u])
+    }
+    const list = [...groups.values()]
+    const spots = slots(ctx, cells, list.length, weight)
+    const at = spots.map((c) => cells.indexOf(c))
+    // Chaque point revient au groupe le plus proche encore libre (paires triées par distance).
+    const center = list.map((g): LonLat => [
+      g.reduce((t, u) => t + u.lon, 0) / g.length,
+      g.reduce((t, u) => t + u.lat, 0) / g.length,
+    ])
+    const pairs: Array<{ gi: number; si: number; km: number }> = []
+    list.forEach((_, gi) =>
+      spots.forEach((c, si) => {
+        const [lon, lat] = center[gi] ?? [0, 0]
+        pairs.push({
+          gi,
+          si,
+          km: distanceKm(lon, lat, ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)),
+        })
+      }),
+    )
+    pairs.sort((a, b) => a.km - b.km || a.gi - b.gi || a.si - b.si)
+    const groupDone = new Set<number>()
+    const spotDone = new Set<number>()
+    for (const { gi, si } of pairs) {
+      if (groupDone.has(gi) || spotDone.has(si)) continue
+      groupDone.add(gi)
+      spotDone.add(si)
+      const spot = spots[si]
+      if (!spot) continue
+      const group = list[gi] ?? []
+      // Brigades côte à côte : les cellules de front les plus proches du point (30 km au plus).
+      const sLon = ctx.grid.lonOf(spot.cell)
+      const sLat = ctx.grid.latOf(spot.cell)
+      // Même direction de recul que le point : pas de cellule d'un autre pan du front.
+      const near = cells
+        .filter((c) => c.back[0] === spot.back[0] && c.back[1] === spot.back[1])
+        .map((c) => ({
+          c,
+          km: distanceKm(sLon, sLat, ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)),
+        }))
+        .filter((x) => x.km <= RESERVE_SPREAD_KM)
+        .sort((a, b) => a.km - b.km || a.c.cell - b.c.cell)
+      const step = Math.max(1, Math.min(2, Math.floor(near.length / Math.max(1, group.length))))
+      group.forEach((u, k) => {
+        const c = near[Math.min(near.length - 1, k * step)]?.c ?? spot
+        placedAt.set(u.id, {
+          at: (at[si] ?? 0) + k,
+          post: [ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)],
+        })
+        if (!withdrawing(u)) send(u, deepBehind(ctx, side, c, depth), SLOT_TOLERANCE_KM)
+      })
+    }
+  }
   const deep = army.mission?.kind === 'depth' || army.mission?.kind === 'reserve'
   const cellsFor = (km: number): number => Math.max(1, Math.round(km / (ctx.grid.cell * 111)))
   // Unités en relève : hors de portée de l'ennemi, derrière les lignes.
@@ -811,7 +875,7 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   if (mission === 'reserve') {
     // Réserve : en retrait du front, prête à intervenir sur les percées (breakthrough.ts).
     const depth = Math.max(LINE_DEPTH + 1, cellsFor(RESERVE_KM))
-    place(line, depth, false, undefined, true)
+    placeReserve(depth)
     placeRear(depth + 2)
     return
   }

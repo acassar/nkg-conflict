@@ -310,8 +310,11 @@ export function forceSizeOf(
   return Math.max(3, Math.min(cap, Math.round(base * militarization)))
 }
 
-/** Front d'une armée au départ : tout le front, une portion, ou aucun (garnison). */
-export type ForceFront = 'whole' | [LonLat, LonLat] | null
+/**
+ * Front d'une armée au départ : tout le front, une portion, aucun (garnison), ou la réserve derrière
+ * tout le front (armée sans secteur connu : elle intervient sur les percées).
+ */
+export type ForceFront = 'whole' | 'reserve' | [LonLat, LonLat] | null
 
 /**
  * Lève les forces d'un ordre de bataille (scenarios/forces.ts) : une armée par armée de l'ordre de
@@ -346,8 +349,9 @@ export function mobilizeForces(
       owner: country.id,
       unitIds: [],
       front: Array.isArray(front) ? front : null,
-      wholeFront: front === 'whole',
+      wholeFront: front === 'whole' || front === 'reserve',
       offensive: null,
+      ...(front === 'reserve' ? { mission: { kind: 'reserve' as const } } : {}),
     }
     ctx.armies.set(army.id, army)
     armies.push({ army, front })

@@ -7,6 +7,7 @@ import { isBreach, reactionOf, reactToBreakthroughs } from '@/sim/systems/breakt
 import { isLineUnit } from '@/sim/units/catalog'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import type { ArmyState, UnitState } from '@/sim/core/types'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const theater = theaterJson as unknown as TheaterData
 
@@ -23,7 +24,7 @@ interface Setup {
 function setup(): Setup {
   const sim = Simulation.fromScenario(ukraine2026, theater, 7)
   const ctx = sim.ctx
-  const army = [...ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+  const army = wholeFrontArmy(sim)
   if (!army) throw new Error('armée introuvable')
   const line = army.unitIds
     .map((id) => ctx.units.get(id))

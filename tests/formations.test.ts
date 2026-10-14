@@ -237,13 +237,15 @@ describe('secteur commun', () => {
     let spread = 0
     for (const f of ctx.formations.values()) {
       const army = ctx.armies.get(f.armyId)
-      // Armées sans secteur connu (tout le front) : leurs divisions s'étalent avec la ligne.
-      if (f.kind !== 'division' || !army || army.wholeFront) continue
+      if (f.kind !== 'division' || !army) continue
       const list = [...ctx.units.values()].filter((u) => u.divisionId === f.id)
       for (const a of list)
         for (const b of list) spread = Math.max(spread, distanceKm(a.lon, a.lat, b.lon, b.lat))
     }
     expect(spread).toBeLessThan(250)
+    // Armées sans secteur connu : en réserve derrière tout le front.
+    const reserve = [...ctx.armies.values()].filter((a) => a.mission?.kind === 'reserve')
+    expect(reserve.map((a) => a.name)).toContain("Garde nationale d'Ukraine")
   })
 
   it('échange les postes de brigades voisines pour réunir une division, sans trajet excessif', () => {

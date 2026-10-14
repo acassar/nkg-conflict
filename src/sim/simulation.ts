@@ -417,10 +417,11 @@ export class Simulation {
         const sectors = scenario.forceSectors?.[country.id]
         sim.levyForces(country, forces, (a) => {
           if (!sectors) return 'whole'
-          // Hors du front : garnison ; secteur inconnu : tout le front.
+          // Hors du front : garnison ; secteur inconnu : en réserve derrière tout le front.
           const anchors = sectors[a.name]
           if (!anchors) return null
-          return (anchors.length && sectorFront(ctx, side, anchors)) || 'whole'
+          if (anchors.length === 0) return 'reserve'
+          return sectorFront(ctx, side, anchors) || 'whole'
         })
         continue
       }

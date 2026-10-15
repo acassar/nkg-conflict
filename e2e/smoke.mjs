@@ -1578,6 +1578,19 @@ try {
   await shot('07c-aide-argent')
   await page.getByTestId('rail-production').click()
 
+  // Journal : événements groupés par jour, filtre par catégorie.
+  await page.getByTestId('rail-log').click()
+  const journal = page.getByTestId('journal')
+  await journal.waitFor({ timeout: 10_000 }).catch(() => {})
+  const allEvents = await journal.locator('.e').count()
+  await page.getByTestId('journal-filter-combat').click()
+  const combatEvents = await journal.locator('.e').count()
+  step('journal', { tout: allEvents, combats: combatEvents })
+  if (allEvents === 0 || combatEvents > allEvents)
+    report.errors.push(`journal : filtre incohérent (${combatEvents} combats sur ${allEvents})`)
+  await shot('07d-journal')
+  await page.getByTestId('rail-log').click()
+
   // WebGL indisponible : la page affiche un message clair avec « Réessayer ».
   const noGl = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await noGl.addInitScript(() => {

@@ -441,8 +441,9 @@ try {
   if (clicked !== 'POL') report.errors.push(`clic sur Varsovie : fiche ${clicked} au lieu de POL`)
 
   // Production : jauges de capacité et casernes sur la carte.
+  // Deux onglets sur grand écran : Budget (économie de guerre, budget, soutenabilité) et Chantiers.
   await page.getByTestId('rail-production').click()
-  await page.getByTestId('production-capacity').waitFor()
+  await page.getByTestId('production-tab-budget').click()
   // Économie de guerre : mobilisation partielle choisie depuis le panneau.
   await page
     .getByTestId('war-economy')
@@ -460,7 +461,7 @@ try {
   const sectors = await budget.locator('[data-sector]').count()
   const budgetText = await budget.innerText()
   step('budget national', { secteurs: sectors })
-  if (sectors !== 4 || !/usines militaires à \d+ %/.test(budgetText))
+  if (sectors !== 4 || !/usines militaires à \d+ %/i.test(budgetText))
     report.errors.push(`bloc budget incomplet (${sectors} secteurs) : ${budgetText.slice(0, 120)}`)
   // Économie réelle : entretien de l'armée, réserve mobilisable et conscription.
   const upkeepLine = await page
@@ -499,6 +500,8 @@ try {
     window.__nkg.queueConstruction('Odessa', 'depot')
   })
   await page.waitForTimeout(400)
+  await page.getByTestId('production-tab-build').click()
+  await page.getByTestId('production-capacity').waitFor()
   const queueRows = await page.getByTestId('production-queue').locator('li').count()
   const firstCity = () => page.evaluate(() => window.__nkg.snapshot.economy.construction[0]?.city)
   const headBefore = await firstCity()
@@ -578,6 +581,7 @@ try {
     report.errors.push('la fiche de la ville propose encore le recrutement')
   }
   // Soutenabilité de l'armée : bloc du tiroir Production et indicateur de la barre du haut.
+  await page.getByTestId('production-tab-budget').click()
   await page.getByTestId('sustain-panel').waitFor()
   // Deux journées économiques : la première mesure sert de référence.
   await page.evaluate(() => window.__nkg.step(48))
@@ -1563,6 +1567,7 @@ try {
   await page.evaluate(() => window.__nkg.step(24))
   await page.waitForTimeout(800)
   await page.getByTestId('rail-production').click()
+  await page.getByTestId('production-tab-budget').click()
   const aidLine = page.getByTestId('budget-aid')
   await aidLine.waitFor({ timeout: 10_000 }).catch(() => {})
   const aidText = (await aidLine.count()) ? await aidLine.innerText() : ''

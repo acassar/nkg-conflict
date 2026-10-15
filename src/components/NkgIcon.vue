@@ -35,6 +35,12 @@ const ICONS = {
   mission: ['M6 21V4M6 4h11l-2 4 2 4H6'],
   info: ['M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16', 'M12 8v4M12 16h.01'],
   alert: ['M12 4l9 16H3zM12 10v4M12 17h.01'],
+  milfactory: ['M3 20V11l5 3v-3l5 3V6h4v14zM14 10l4-4'],
+  barracks: ['M4 20V9l8-5 8 5v11zM9 20v-6h6v6'],
+  depot: ['M3 9l9-5 9 5v11H3zM7 13h10M7 17h10'],
+  fort: ['M4 20V8h3v3h3V8h4v3h3V8h3v12z'],
+  clock: ['M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16', 'M12 8v4l3 2'],
+  city: ['M3 21V10l4-3 4 3V5l5-2 5 2v16zM3 21h18M14 8h2M14 12h2M14 16h2M6 14h2M6 17h2'],
 } as const
 
 export type IconName = keyof typeof ICONS

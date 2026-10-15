@@ -206,6 +206,7 @@ pnpm theater chemin/vers/natural-earth-vector/geojson
 - `src/stores/game.ts` : store Pinia, pont entre l'interface et le Worker.
 - `src/map/` : MapLibre GL pour le fond, deck.gl pour le territoire, les pions, les fronts et les flèches.
 - `src/components/` : interface Vue.
+- `src/styles/theme.css` et `docs/charte.md` : charte de l'interface sur grand écran (couleurs, typographie, panneaux, icônes), à respecter pour tout nouvel écran.
 
 1 tick = 1 heure de jeu. Vitesses 1 à 5 : 1, 3, 8, 24 et 72 ticks par seconde. Une heure simulée coûte environ 1 ms sur le théâtre ukrainien, 2 ms sur la carte du monde.
 

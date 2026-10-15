@@ -22,7 +22,7 @@ function toggle(): void {
   <button
     v-if="!(layout === 'portrait' && game.drawer === 'full')"
     class="lasso"
-    :class="{ active: game.lasso }"
+    :class="{ active: game.lasso, desk: layout === 'desktop' }"
     :style="style"
     :aria-pressed="game.lasso"
     title="Sélection par zone : glissez un rectangle sur la carte"
@@ -65,5 +65,26 @@ function toggle(): void {
   background: #facc15;
   border-color: #facc15;
   color: #1f2937;
+}
+
+/* Grand écran : charte (docs/charte.md). */
+.lasso.desk {
+  width: 44px;
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-text-soft);
+  border-color: var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #10141a,
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+.lasso.desk:hover {
+  color: var(--nkg-text);
+  border-color: var(--nkg-brass);
+}
+.lasso.desk.active {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
 }
 </style>

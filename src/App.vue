@@ -215,4 +215,36 @@ body,
   letter-spacing: 0.04em;
   border-radius: 4px;
 }
+/* Grand écran : consigne et avertissement aux couleurs de la charte (docs/charte.md). */
+.hint:not(.mobile):not(.aim):not(.notice) {
+  top: 66px;
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-brass-pale);
+  border: 1px solid var(--nkg-brass-light);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  font: 500 13px/1.3 var(--nkg-sans);
+}
+.hint.aim {
+  background: var(--nkg-panel-bg);
+  border-color: var(--nkg-brass-light);
+  border-radius: 4px;
+  font-family: var(--nkg-sans);
+}
+.hint.aim::before {
+  background: var(--nkg-brass-light);
+}
+.hint:not(.mobile) .hint-cancel {
+  background: var(--nkg-gold-bg);
+  color: #1a140a;
+  border-radius: 3px;
+}
+.disclaimer {
+  left: 14px;
+  bottom: 14px;
+  background: rgba(14, 18, 23, 0.75);
+  color: var(--nkg-text-soft);
+  font-family: var(--nkg-sans);
+  border-radius: 3px;
+}
 </style>

@@ -49,7 +49,7 @@ function toggleCountries(): void {
   <template v-if="!(layout === 'portrait' && game.drawer === 'full')">
     <button
       class="mode"
-      :class="{ active }"
+      :class="{ active, desk: layout === 'desktop' }"
       :style="style"
       :aria-pressed="active"
       title="Carte logistique : ravitaillement, portée des dépôts et des QG, poches (L)"
@@ -71,7 +71,7 @@ function toggleCountries(): void {
     </button>
     <button
       class="mode"
-      :class="{ active: countries }"
+      :class="{ active: countries, desk: layout === 'desktop' }"
       :style="countriesStyle"
       :aria-pressed="countries"
       title="Filtre « Pays » : une teinte par pays (P)"
@@ -89,7 +89,13 @@ function toggleCountries(): void {
         />
       </svg>
     </button>
-    <div v-if="countries" class="legend" :style="legendStyle" data-testid="countries-legend">
+    <div
+      v-if="countries"
+      class="legend"
+      :class="{ desk: layout === 'desktop' }"
+      :style="legendStyle"
+      data-testid="countries-legend"
+    >
       <strong>Pays</strong>
       <p class="note">Une teinte par pays ; deux voisins n'ont jamais la même.</p>
       <ul>
@@ -97,7 +103,13 @@ function toggleCountries(): void {
         <li><span class="line border-war" />Frontière entre pays en guerre</li>
       </ul>
     </div>
-    <div v-if="active" class="legend" :style="legendStyle" data-testid="logistics-legend">
+    <div
+      v-if="active"
+      class="legend"
+      :class="{ desk: layout === 'desktop' }"
+      :style="legendStyle"
+      data-testid="logistics-legend"
+    >
       <strong>Logistique</strong>
       <p v-if="view && !view.atWar" class="peace">En paix : tout le territoire est ravitaillé.</p>
       <ul>
@@ -260,5 +272,34 @@ function toggleCountries(): void {
 .ring.fort {
   border-color: #475569;
   background: rgba(71, 85, 105, 0.35);
+}
+
+/* Grand écran : charte (docs/charte.md). */
+.mode.desk {
+  width: 44px;
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-text-soft);
+  border-color: var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #10141a,
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+.mode.desk:hover {
+  color: var(--nkg-text);
+  border-color: var(--nkg-brass);
+}
+.mode.desk.active {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
+}
+.legend.desk {
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-text);
+  border-color: var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  font-family: var(--nkg-sans);
 }
 </style>

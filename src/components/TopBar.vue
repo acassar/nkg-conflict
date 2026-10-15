@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { STANCE_COLORS } from '@/map/territoryImage'
 import { isMobile } from '@/composables/layout'
@@ -70,6 +70,30 @@ function menuAction(fn: () => unknown): void {
   menuOpen.value = false
   void fn()
 }
+
+// Grand écran : le menu est une fenêtre « En pause » qui arrête le temps et le relance en partant.
+let resumeOnClose = false
+watch(menuOpen, (open) => {
+  if (isMobile.value) return
+  if (open) {
+    resumeOnClose = !game.paused
+    if (resumeOnClose) void game.togglePause()
+  } else if (resumeOnClose) {
+    resumeOnClose = false
+    if (game.paused && game.snapshot) void game.togglePause()
+  }
+})
+function quitFromPause(): void {
+  if (!confirm('Revenir au menu ? La partie est sauvegardée automatiquement.')) return
+  resumeOnClose = false
+  menuOpen.value = false
+  void game.quitToMenu()
+}
+function onKey(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && menuOpen.value && !isMobile.value) menuOpen.value = false
+}
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
@@ -176,6 +200,25 @@ async function onFile(event: Event): Promise<void> {
 
         <div class="files">
           <button
+            class="icon-btn bell"
+            :class="{ on: game.alerts.length && !game.alertsFolded }"
+            :disabled="!game.alerts.length"
+            :aria-label="`Alertes : ${game.alerts.length}`"
+            :aria-pressed="game.alerts.length > 0 && !game.alertsFolded"
+            :title="
+              game.alerts.length
+                ? game.alertsFolded
+                  ? 'Afficher les alertes'
+                  : 'Masquer les alertes'
+                : 'Aucune alerte'
+            "
+            data-testid="alerts-bell"
+            @click="game.alertsFolded = !game.alertsFolded"
+          >
+            <NkgIcon name="bell" />
+            <span v-if="game.alerts.length" class="badge">{{ game.alerts.length }}</span>
+          </button>
+          <button
             class="icon-btn menu-btn"
             :aria-expanded="menuOpen"
             aria-label="Menu"
@@ -184,13 +227,21 @@ async function onFile(event: Event): Promise<void> {
           >
             <NkgIcon name="menu" />
           </button>
-          <div v-if="menuOpen" class="menu" role="menu">
-            <div class="menu-actions">
-              <button @click="menuAction(() => game.saveLocal())">Sauver</button>
-              <button @click="menuAction(game.exportToFile)">Exporter</button>
-              <button @click="menuAction(() => fileInput?.click())">Importer</button>
-              <button data-testid="menu-help" @click="menuAction(() => openHelp())">Aide</button>
-              <button @click="menuAction(quit)">Menu principal</button>
+          <div v-if="menuOpen" class="pause-veil" @click.self="menuOpen = false">
+            <div class="pause-menu" role="dialog" aria-label="Menu" data-testid="pause-menu">
+              <h2>En pause</h2>
+              <p class="pause-sub">{{ game.playerCountry?.name }} · {{ game.dateLabel }}</p>
+              <button class="mi gold" @click="menuOpen = false">Reprendre</button>
+              <button class="mi" @click="menuAction(() => game.saveLocal())">Sauvegarder</button>
+              <button class="mi" @click="menuAction(() => fileInput?.click())">
+                Importer une partie
+              </button>
+              <button class="mi" @click="menuAction(game.exportToFile)">Exporter la partie</button>
+              <button class="mi" data-testid="menu-help" @click="menuAction(() => openHelp())">
+                Règles du jeu
+              </button>
+              <div class="pause-rule" />
+              <button class="mi quit" @click="quitFromPause">Quitter vers l'écran de départ</button>
             </div>
           </div>
         </div>
@@ -637,6 +688,100 @@ async function onFile(event: Event): Promise<void> {
 }
 .topbar:not(.compact) .menu-actions button:hover {
   border-color: var(--nkg-brass);
+}
+/* Cloche des alertes. */
+.topbar:not(.compact) .files {
+  display: flex;
+  gap: 8px;
+}
+.bell {
+  position: relative;
+}
+.topbar:not(.compact) .bell:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.topbar:not(.compact) .bell.on {
+  border-color: var(--nkg-brass-dark);
+  color: var(--nkg-brass-light);
+}
+.bell .badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: #d9822b;
+  color: #14110c;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+/* Fenêtre « En pause ». */
+.pause-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 10, 14, 0.6);
+}
+.pause-menu {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+}
+.pause-menu h2 {
+  margin: 0;
+  font-family: var(--nkg-serif);
+  font-size: 26px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--nkg-brass-pale);
+}
+.pause-sub {
+  margin: -6px 0 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #a99a7a;
+}
+.topbar:not(.compact) .pause-menu .mi {
+  height: 40px;
+  padding: 0 14px;
+  background: var(--nkg-tile-bg);
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+  color: var(--nkg-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.topbar:not(.compact) .pause-menu .mi:hover {
+  border-color: var(--nkg-brass);
+}
+.topbar:not(.compact) .pause-menu .mi.gold {
+  background: var(--nkg-gold-bg);
+  border-color: var(--nkg-brass-pale);
+  color: #1a140a;
+  font-weight: 600;
+}
+.topbar:not(.compact) .pause-menu .mi.quit {
+  color: #f0b0a5;
+}
+.pause-rule {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--nkg-divider);
 }
 /* Écrans moyens : on retire d'abord les libellés, puis les tendances, puis le soutien. */
 @media (max-width: 1480px) {

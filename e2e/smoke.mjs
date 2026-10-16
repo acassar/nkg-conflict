@@ -49,6 +49,17 @@ page.on('console', (m) => {
 })
 
 const shot = (name) => page.screenshot({ path: path.join(out, `${name}.png`) })
+/** Fiche de la sélection (grand écran) : ouvre le volet accolé s'il ne l'est pas déjà. */
+const openFlyout = async (kind) => {
+  if (
+    !(await page
+      .getByTestId(`flyout-${kind}`)
+      .isVisible()
+      .catch(() => false))
+  )
+    await page.getByTestId(`tile-${kind}`).click()
+  await page.getByTestId(`flyout-${kind}`).waitFor({ timeout: 5000 })
+}
 const state = () =>
   page.evaluate(() => {
     const g = window.__nkg
@@ -654,6 +665,7 @@ try {
   })
   await page.waitForTimeout(800)
   await page.getByTestId('inspector-units').waitFor()
+  await openFlyout('order')
   await page.getByTestId('order-pursue').click()
   const at = await page.evaluate(
     ([lon, lat]) => {
@@ -682,6 +694,7 @@ try {
   if (stillPursuing !== 0) report.errors.push("l'ordre n'a pas été annulé")
 
   // Posture : « Dégâts max » pour la sélection.
+  await openFlyout('posture')
   await page.getByTestId('posture').getByRole('button', { name: 'Dégâts max' }).click()
   await page.waitForTimeout(500)
   const postures = await page.evaluate(() => [
@@ -694,6 +707,7 @@ try {
   await shot('02g1-posture')
 
   // Encerclement par la même sélection, puis retour à l'armée sur ordre.
+  await openFlyout('order')
   await page.getByTestId('order-encircle').click()
   const at2 = await page.evaluate(
     ([lon, lat]) => {
@@ -1335,6 +1349,7 @@ try {
   await page.evaluate((ids) => window.__nkg.selectUnits(ids, false), nearNice)
   await page.evaluate(() => window.__nkgMap.jumpTo({ center: [1.5, 46.2], zoom: 4.6 }))
   await page.waitForTimeout(500)
+  await openFlyout('order')
   await page.getByTestId('order-landing').click()
   const brest = await page.evaluate(() => {
     const p = window.__nkgMap.project([-4.45, 48.4])
@@ -1372,6 +1387,7 @@ try {
   )
   await page.evaluate((ids) => window.__nkg.selectUnits(ids, false), eastIds)
   await page.waitForTimeout(300)
+  await openFlyout('order')
   await page.getByTestId('order-transport').click()
   const bordeaux = await page.evaluate(() => {
     const p = window.__nkgMap.project([-0.58, 44.84])

@@ -7,7 +7,8 @@ import ArmyComposition from './ArmyComposition.vue'
 import ForcesTree from './ForcesTree.vue'
 import EchelonSymbol from './EchelonSymbol.vue'
 import { useProductionStats } from '@/composables/production'
-import { isTouch } from '@/composables/layout'
+import { isTouch, layout } from '@/composables/layout'
+import NkgIcon, { type IconName } from './NkgIcon.vue'
 import { selectionFormation } from '@/composables/composition'
 import { countSubordinates, spanText } from '@/sim/systems/command'
 import { battalionsOf, compositionText, templateLabel, templateOf } from '@/sim/units/templates'
@@ -479,6 +480,106 @@ const unitsOfArmy = computed(() => {
   return game.snapshot?.units.filter((u) => ids.has(u.id)) ?? []
 })
 
+// ---------- Fiche compacte de la sélection (grand écran) et volet accolé ----------
+
+const desktop = computed(() => layout.value === 'desktop')
+type Flyout = 'order' | 'posture' | 'mission' | 'details'
+/** Volet ouvert à gauche de la fiche, ou aucun. */
+const flyout = ref<Flyout | null>(null)
+function toggleFlyout(f: Flyout): void {
+  flyout.value = flyout.value === f ? null : f
+}
+const FLYOUT_TITLES: Record<Flyout, string> = {
+  order: 'Ordres',
+  posture: 'Posture',
+  mission: 'Mission « Avancer »',
+  details: 'Détails',
+}
+/** Ordre commun de la sélection, en clair. */
+const selectionOrder = computed(() => {
+  const set = new Set(selectedUnits.value.map((u) => u.order))
+  return set.size === 1 ? ORDER_NAMES[[...set][0] as OrderKind] : 'Ordres mêlés'
+})
+/** Libellé du bouton « Échelon au-dessus » : la formation que la touche U sélectionnerait. */
+const upTarget = computed(() => {
+  const info = game.selectionInfo
+  if (!info || info.echelon === 'army') return null
+  if (info.echelon === 'brigade' && info.division) return info.division.name
+  if ((info.echelon === 'brigade' || info.echelon === 'division') && info.corps)
+    return info.corps.name
+  return info.army?.name ?? null
+})
+/** Sous-titre de la fiche : modèle d'une brigade seule, sinon nombre de brigades. */
+const sheetSubtitle = computed(() => {
+  const list = selectedUnits.value
+  const first = list[0]
+  if (list.length === 1 && first) return templateLabel(first)
+  return `${list.length} brigade${list.length > 1 ? 's' : ''}`
+})
+const gaugeColor = (v: number): string =>
+  v >= 0.7 ? 'var(--nkg-good)' : v >= 0.4 ? 'var(--nkg-warn)' : 'var(--nkg-bad)'
+const terrainHere = computed(() => {
+  const u = selectedUnits.value[0]
+  return u ? game.terrainNameAt(u.lon, u.lat) : ''
+})
+const ORDER_TILES: {
+  label: string
+  icon: IconName
+  title: string
+  testid?: string
+  run: () => void
+}[] = [
+  {
+    label: 'Déplacer',
+    icon: 'move',
+    title: 'Déplacer (M) — ou clic droit sur la carte',
+    run: () => game.startOrder('move'),
+  },
+  { label: 'Tenir', icon: 'hold', title: 'Tenir la position (H)', run: () => game.hold() },
+  {
+    label: 'Se replier',
+    icon: 'retreat',
+    title: 'Se replier (R)',
+    run: () => game.startOrder('retreat'),
+  },
+  {
+    label: 'Transporter',
+    icon: 'truck',
+    title:
+      "Transport stratégique (rail, mer ou air) : cliquer ensuite sur la ville d'arrivée, chez vous ou chez un ami",
+    testid: 'order-transport',
+    run: () => game.startTransport(),
+  },
+]
+const ATTACK_TILES: {
+  label: string
+  icon: IconName
+  title: string
+  testid?: string
+  run: () => void
+}[] = [
+  {
+    label: 'Zone',
+    icon: 'forces',
+    title: 'Attaquer une zone (T)',
+    run: () => game.startOrder('attack'),
+  },
+  {
+    label: 'Assaut',
+    icon: 'move',
+    title: "Attaquer la position actuelle d'une unité ennemie, puis tenir le terrain",
+    testid: 'order-assault',
+    run: () => game.startTargetOrder('assault'),
+  },
+  {
+    label: 'Poursuite',
+    icon: 'right',
+    title: "Suivre une unité ennemie jusqu'à sa destruction ou sa fuite",
+    testid: 'order-pursue',
+    run: () => game.startTargetOrder('pursue'),
+  },
+]
+
 const attachTo = ref<number | null>(null)
 async function attach(): Promise<void> {
   const id = attachTo.value ?? armies.value[0]?.id
@@ -502,6 +603,283 @@ async function createArmy(): Promise<void> {
             : 'Cliquez sur une de vos unités pour la sélectionner, Maj + clic pour en ajouter.'
         }}
       </p>
+      <!-- Grand écran : fiche compacte ; ordres, posture, mission et détails dans un volet accolé. -->
+      <div v-else-if="desktop" class="sheet" data-testid="unit-sheet">
+        <button
+          v-if="upTarget"
+          class="up"
+          title="Sélectionner l'échelon au-dessus (U)"
+          data-testid="echelon-up"
+          @click="game.selectUp()"
+        >
+          <NkgIcon name="up" :size="16" />
+          <span class="up-text"
+            ><span class="up-k">Échelon au-dessus</span><span>{{ upTarget }}</span></span
+          >
+        </button>
+        <div class="sheet-head" data-testid="selection-echelon">
+          <EchelonSymbol
+            v-if="echelonHead"
+            :echelon="echelonHead.echelon"
+            :kind="echelonHead.kind"
+            :size="52"
+            :color="playerColor"
+          />
+          <div class="sheet-title">
+            <h3>{{ echelonHead?.name ?? `${selectedUnits.length} unités` }}</h3>
+            <span class="sub">{{ sheetSubtitle }}</span>
+            <span v-if="formationLabel" class="sub faint" data-testid="selection-formation">{{
+              formationLabel
+            }}</span>
+          </div>
+        </div>
+        <div class="sheet-bars" data-testid="selection-summary">
+          <div
+            v-for="g in [
+              { k: 'Effectifs', v: selectionSummary.strength },
+              { k: 'Matériel', v: selectionSummary.equipment },
+              { k: 'Organisation', v: selectionSummary.org },
+            ]"
+            :key="g.k"
+          >
+            <div class="bar-head">
+              <span>{{ g.k }}</span
+              ><span class="num">{{ pct(g.v) }}</span>
+            </div>
+            <div class="bar">
+              <i :style="{ width: cssPct(g.v), background: gaugeColor(g.v) }" />
+            </div>
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip"><span class="dot" />{{ selectionOrder }}</span>
+          <span v-if="terrainHere" class="chip">{{ terrainHere }}</span>
+          <span v-if="selectionSummary.engaged" class="chip warn"
+            >{{ selectionSummary.engaged }} au contact</span
+          >
+          <span v-if="selectionSummary.unsupplied" class="chip warn"
+            >{{ selectionSummary.unsupplied }} sans ravitaillement</span
+          >
+        </div>
+        <p v-if="corpsSpan" class="faint small" data-testid="selection-span">{{ corpsSpan }}</p>
+        <div class="divider" />
+        <div class="tiles">
+          <button
+            class="tile"
+            :class="{ on: flyout === 'order' }"
+            :aria-expanded="flyout === 'order'"
+            data-testid="tile-order"
+            @click="toggleFlyout('order')"
+          >
+            <span class="tk"><NkgIcon name="move" :size="16" />Ordre</span>
+            <span class="tv">{{ selectionOrder }}</span>
+          </button>
+          <button
+            class="tile"
+            :class="{ on: flyout === 'posture' }"
+            :aria-expanded="flyout === 'posture'"
+            data-testid="tile-posture"
+            @click="toggleFlyout('posture')"
+          >
+            <span class="tk"><NkgIcon name="shield" :size="16" />Posture</span>
+            <span class="tv">{{
+              selectionPosture ? POSTURES[selectionPosture].name : 'Mêlées'
+            }}</span>
+          </button>
+          <button
+            class="tile"
+            :class="{ on: flyout === 'mission' }"
+            :aria-expanded="flyout === 'mission'"
+            data-testid="tile-mission"
+            @click="toggleFlyout('mission')"
+          >
+            <span class="tk"><NkgIcon name="mission" :size="16" />Mission</span>
+            <span class="tv">Avancer en groupe</span>
+          </button>
+          <button
+            class="tile"
+            :class="{ on: flyout === 'details' }"
+            :aria-expanded="flyout === 'details'"
+            data-testid="tile-details"
+            @click="toggleFlyout('details')"
+          >
+            <span class="tk"><NkgIcon name="info" :size="16" />Détails</span>
+            <span class="tv">État, armée</span>
+          </button>
+        </div>
+
+        <!-- Échelon en dessous : bataillons d'une brigade seule, sinon brigades (par division). -->
+        <template v-if="selectedUnits.length === 1 && selectedUnits[0]">
+          <div class="label">Bataillons</div>
+          <ul class="subs battalions" data-testid="unit-battalions">
+            <li v-for="b in battalionRows(selectedUnits[0])" :key="b.kind">
+              {{ b.count }} × {{ b.name }}
+            </li>
+          </ul>
+        </template>
+        <template v-else>
+          <div class="label">Échelon en dessous · {{ selectedUnits.length }} brigades</div>
+          <template v-for="g in unitGroups" :key="g.key">
+            <button
+              v-if="unitGroups.length > 1"
+              class="sub-row group-row"
+              data-testid="selection-group"
+              :title="g.division ? 'Sélectionner toute cette division' : undefined"
+              :disabled="!g.division"
+              @click="g.division && pickDivision(g.division.id)"
+            >
+              <span class="sname">{{ g.division?.name ?? 'Sans division' }}</span>
+              <span class="faint small"
+                >{{ g.units.length }}{{ g.division ? ` / ${g.total}` : '' }}</span
+              >
+            </button>
+            <button
+              v-for="u in g.units"
+              :key="u.id"
+              class="sub-row"
+              :class="{ nested: unitGroups.length > 1 }"
+              data-testid="selection-unit"
+              :title="`${templateLabel(u)} · sélectionner cette brigade seule`"
+              @click="pickUnit(u)"
+            >
+              <span class="sname">{{ u.name }}</span>
+              <span class="bar mini" :title="`Effectifs ${pct(u.strength)}`"
+                ><i :style="{ width: cssPct(u.strength), background: gaugeColor(u.strength) }"
+              /></span>
+              <span
+                class="bar mini"
+                data-testid="unit-equipment"
+                :title="`Matériel ${pct(u.equipment)}`"
+                ><i :style="{ width: cssPct(u.equipment), background: gaugeColor(u.equipment) }"
+              /></span>
+            </button>
+          </template>
+        </template>
+
+        <Teleport to="body">
+          <section
+            v-if="flyout"
+            class="flyout"
+            :aria-label="FLYOUT_TITLES[flyout]"
+            :data-testid="`flyout-${flyout}`"
+          >
+            <header>
+              <h3>{{ FLYOUT_TITLES[flyout] }}</h3>
+              <button class="x" aria-label="Fermer le volet" @click="flyout = null">
+                <NkgIcon name="close" :size="16" />
+              </button>
+            </header>
+            <template v-if="flyout === 'order'">
+              <div class="label">Mouvement</div>
+              <div class="cmds">
+                <button
+                  v-for="t in ORDER_TILES"
+                  :key="t.label"
+                  class="cmd"
+                  :title="t.title"
+                  :data-testid="t.testid"
+                  @click="t.run()"
+                >
+                  <NkgIcon :name="t.icon" :size="20" />{{ t.label }}
+                </button>
+                <button
+                  v-if="naval.ports.length > 0"
+                  class="cmd"
+                  :disabled="!landing.ok"
+                  :title="landing.title"
+                  data-testid="order-landing"
+                  @click="game.startLanding()"
+                >
+                  <NkgIcon name="flag" :size="20" />Débarquer
+                </button>
+              </div>
+              <div class="label">Attaque</div>
+              <div class="cmds">
+                <button
+                  v-for="t in ATTACK_TILES"
+                  :key="t.label"
+                  class="cmd"
+                  :title="t.title"
+                  :data-testid="t.testid"
+                  @click="t.run()"
+                >
+                  <NkgIcon :name="t.icon" :size="20" />{{ t.label }}
+                </button>
+                <button
+                  class="cmd"
+                  :disabled="selectedUnits.length < 2"
+                  title="Les unités sélectionnées quittent leur armée et entourent la cible ; l'armée garde son front"
+                  data-testid="order-encircle"
+                  @click="game.startTargetOrder('encircle')"
+                >
+                  <NkgIcon name="lasso" :size="20" />Encercler
+                </button>
+              </div>
+              <button
+                class="wide cancel"
+                title="Annule l'ordre en cours : les unités s'arrêtent (celles d'une armée reprennent leur poste)"
+                data-testid="cancel-order"
+                @click="game.cancelOrders()"
+              >
+                Annuler l'ordre en cours
+              </button>
+            </template>
+            <div v-else-if="flyout === 'posture'" class="opts" data-testid="posture">
+              <button
+                v-for="p in POSTURE_ORDER"
+                :key="p"
+                class="opt"
+                :class="{ on: selectionPosture === p }"
+                :aria-pressed="selectionPosture === p"
+                @click="game.setPosture(p)"
+              >
+                <span class="ot">{{ POSTURES[p].name }}</span>
+                <span class="od">{{ POSTURES[p].description }}</span>
+              </button>
+            </div>
+            <div v-else-if="flyout === 'mission'" class="opts" data-testid="group-mission">
+              <p class="faint small">
+                Les unités choisies forment un groupe détaché qui avance, puis rejoint son armée.
+              </p>
+              <button class="opt" @click="game.startAdvance('border')">
+                <span class="ot">Frontière</span>
+                <span class="od">Jusqu'à la frontière avec le pays cliqué</span>
+              </button>
+              <button class="opt" @click="game.startAdvance('line')">
+                <span class="ot">Trait</span>
+                <span class="od">Jusqu'à un trait libre (clics successifs, ou glisser)</span>
+              </button>
+              <button class="opt" @click="game.startAdvance('objective')">
+                <span class="ot">Objectif</span>
+                <span class="od">Jusqu'au point cliqué</span>
+              </button>
+            </div>
+            <template v-else>
+              <ul class="detail-list">
+                <li v-for="u in selectedUnits" :key="u.id">
+                  <span class="sname">{{ u.name }}</span>
+                  <span class="faint small" data-testid="unit-template" :title="compositionText(u)"
+                    >{{ templateLabel(u) }} · {{ armyOf(u.armyId) }}</span
+                  >
+                  <span class="small" :class="{ warn: u.routed || !u.supplied }">{{
+                    status(u)
+                  }}</span>
+                </li>
+              </ul>
+              <form v-if="armies.length" class="create" @submit.prevent="attach">
+                <select v-model="attachTo" aria-label="Armée à rejoindre">
+                  <option v-for="a in armies" :key="a.id" :value="a.id">{{ a.name }}</option>
+                </select>
+                <button type="submit">Rattacher la sélection à cette armée</button>
+              </form>
+              <form class="create" @submit.prevent="createArmy">
+                <input v-model="armyName" placeholder="Nom de la nouvelle armée" maxlength="40" />
+                <button type="submit">Créer une armée</button>
+              </form>
+            </template>
+          </section>
+        </Teleport>
+      </div>
       <template v-else>
         <div class="summary" data-testid="selection-summary">
           <strong>{{ selectedUnits.length }} unité{{ selectedUnits.length > 1 ? 's' : '' }}</strong>
@@ -1616,5 +1994,351 @@ h3 {
   padding-left: 16px;
   font-size: 12px;
   color: #cbd5e1;
+}
+/* Fiche compacte de la sélection (grand écran, charte : docs/charte.md). */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.forces .sheet .up.up {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: #1d1a15;
+  border-color: #4a4030;
+  text-align: left;
+  color: var(--nkg-brass-light);
+}
+.up-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  color: var(--nkg-text);
+}
+.up-k {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a99a7a;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0;
+}
+.sheet-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sheet-title h3 {
+  margin: 0;
+  font-family: var(--nkg-serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.sheet-title .sub {
+  font-size: 13px;
+  color: var(--nkg-text-muted);
+}
+.faint {
+  color: var(--nkg-text-faint);
+}
+.small {
+  font-size: 12px;
+}
+.sheet .faint.sub {
+  font-size: 12px;
+  color: var(--nkg-text-faint);
+}
+.sheet-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bar-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+  font-size: 12px;
+  color: var(--nkg-text-muted);
+}
+.bar-head .num {
+  color: var(--nkg-text);
+}
+.bar {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: #2b333e;
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+}
+.bar.mini {
+  width: 44px;
+  flex: none;
+  height: 5px;
+}
+.sheet .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sheet .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border: 1px solid #3a4452;
+  border-radius: 999px;
+  background: #1a212a;
+  font-size: 12px;
+  color: var(--nkg-text-soft);
+}
+.sheet .chip.warn {
+  color: var(--nkg-warn-text);
+}
+.sheet .chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nkg-good);
+}
+.sheet .divider {
+  height: 1px;
+  background: var(--nkg-divider);
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.forces .sheet .tiles .tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 58px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-align: left;
+}
+.forces .sheet .tiles .tile.on,
+.forces .sheet .tiles .tile.on:hover:not(:disabled) {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+}
+.tk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.tk .nkg-icon {
+  color: var(--nkg-brass);
+}
+.tile.on .tk {
+  color: var(--nkg-brass-light);
+}
+.tv {
+  font-size: 13px;
+  color: var(--nkg-text);
+}
+.sheet .label {
+  margin: 4px 0 -4px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.forces .sheet .sub-row.sub-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 13px;
+}
+.forces .sheet .sub-row.nested {
+  margin-left: 12px;
+}
+.forces .sheet .sub-row.group-row {
+  background: none;
+  border-color: transparent;
+  color: var(--nkg-brass-light);
+}
+.sname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.subs li {
+  padding: 6px 10px;
+  border: 1px solid var(--nkg-line);
+  border-radius: 4px;
+  background: var(--nkg-surface);
+  font-size: 13px;
+}
+
+/* Volet accolé à gauche de la fiche (option B). */
+.flyout {
+  position: fixed;
+  top: 70px;
+  right: 366px;
+  z-index: 12;
+  width: 300px;
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 14px 14px;
+  box-sizing: border-box;
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-right-color: var(--nkg-brass-light);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  color: var(--nkg-text);
+  font: 13px/1.4 var(--nkg-sans);
+}
+.flyout header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 -14px 4px;
+  padding: 10px 10px 8px 14px;
+  border-bottom: 1px solid var(--nkg-brass-line);
+}
+.flyout h3 {
+  margin: 0;
+  font-family: var(--nkg-serif);
+  font-size: 20px;
+  font-weight: 600;
+}
+.flyout button {
+  background: var(--nkg-tile-bg);
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+}
+.flyout button:hover:not(:disabled) {
+  background: var(--nkg-tile-bg);
+  border-color: var(--nkg-brass);
+}
+.flyout .x {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+.flyout .label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.cmds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.flyout .cmd {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 62px;
+  padding: 6px 2px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.flyout .cmd .nkg-icon {
+  color: var(--nkg-brass);
+}
+.flyout .wide {
+  height: 34px;
+  margin-top: 4px;
+}
+.flyout .cancel {
+  color: #f0b0a5;
+}
+.opts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.flyout .opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  text-align: left;
+}
+.flyout .opt.on,
+.flyout .opt.on:hover:not(:disabled) {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+}
+.ot {
+  font-weight: 600;
+}
+.od {
+  font-size: 12px;
+  color: var(--nkg-text-muted);
+}
+.detail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 340px;
+  overflow: auto;
+}
+.detail-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--nkg-line);
+  border-radius: 4px;
+  background: var(--nkg-surface);
+}
+.detail-list .warn {
+  color: var(--nkg-warn-text);
+}
+.flyout .create input,
+.flyout .create select {
+  background: #12171d;
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+  color: inherit;
 }
 </style>

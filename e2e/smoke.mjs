@@ -50,6 +50,17 @@ page.on('console', (m) => {
 
 const shot = (name) => page.screenshot({ path: path.join(out, `${name}.png`) })
 /** Fiche de la sélection (grand écran) : ouvre le volet accolé s'il ne l'est pas déjà. */
+/** Fiche d'armée (grand écran) : ouvre le volet Mission, Composition ou Renforts. */
+const openArmy = async (kind) => {
+  if (
+    !(await page
+      .getByTestId(`army-flyout-${kind}`)
+      .isVisible()
+      .catch(() => false))
+  )
+    await page.getByTestId(`army-view-${kind}`).click()
+  await page.getByTestId(`army-flyout-${kind}`).waitFor({ timeout: 5000 })
+}
 const openFlyout = async (kind) => {
   if (
     !(await page
@@ -728,6 +739,7 @@ try {
   )
   await page.getByTestId('army-sheet').waitFor()
   await shot('02g2-encerclement')
+  await openArmy('command')
   await page.getByTestId('end-encirclement').click()
   await page.waitForTimeout(500)
   const left = await page.evaluate(() => window.__nkg.armies.filter((a) => a.encirclement).length)
@@ -742,6 +754,7 @@ try {
     return army.id
   })
   await page.getByTestId('army-sheet').waitFor()
+  await openArmy('command')
   await page.getByTestId('mission-advance').click()
   await page.getByTestId('advance-line').click()
   // Deux points à gauche du panneau, dans le territoire visible (la carte est zoomée sur l'armée).
@@ -760,6 +773,7 @@ try {
   step('mission avancer', { mission, statut: missionText })
   if (mission !== 'advance') report.errors.push(`mission « Avancer » non lancée (${mission})`)
   await shot('02g3-mission-avancer')
+  await openArmy('command')
   await page.getByTestId('mission-hold').click()
   await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
@@ -771,6 +785,7 @@ try {
 
   // Mission « Tenir les points clés » : carte choisie, aperçu sur la carte (postes et points clés) sans
   // effet sur l'armée, puis « Appliquer ».
+  await openArmy('command')
   await page.getByTestId('mission-keyPoints').click()
   await page.getByTestId('mission-preview').waitFor()
   const keyPreview = await page.evaluate((id) => {
@@ -806,6 +821,7 @@ try {
     ['depth', '02g3c-profondeur'],
     ['reserve', '02g3d-reserve'],
   ]) {
+    await openArmy('command')
     await page.getByTestId(`mission-${kind}`).click()
     await page.getByTestId('mission-preview').waitFor()
     const lines = await page.evaluate(() => window.__nkg.missionPreview?.lines.length ?? 0)
@@ -824,6 +840,7 @@ try {
   }
 
   // Mission « Défendre des points » : villes cochées par défaut, tout le pays, puis retour à « Tenir ».
+  await openArmy('command')
   await page.getByTestId('mission-defendPoints').click()
   await page.getByTestId('defend-points-group').waitFor()
   await page.getByTestId('defend-country').click()
@@ -841,11 +858,13 @@ try {
     report.errors.push(`mission « Défendre des points » non appliquée (${defended.mission})`)
   }
   await shot('02g3e-defendre-points')
+  await openArmy('command')
   await page.getByTestId('mission-hold').click()
   await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
 
   // Mission « Percée sur un axe » : point visé sur l'unité ennemie la plus proche de l'armée.
+  await openArmy('command')
   await page.getByTestId('mission-breach').click()
   await page.getByTestId('breach-target').click()
   const breachAt = await page.evaluate((id) => {
@@ -900,6 +919,7 @@ try {
   await shot('02g3e-percee')
 
   // Mission « Retraite ordonnée » : ligne de repli tracée en deux clics derrière les unités de l'armée.
+  await openArmy('command')
   await page.getByTestId('mission-retreat').click()
   await page.getByTestId('retreat-line').click()
   const rearPoints = await page.evaluate((id) => {
@@ -934,13 +954,14 @@ try {
   if (retreat !== 'retreat')
     report.errors.push(`mission « Retraite ordonnée » non lancée (${retreat})`)
   await shot('02g3f-retraite')
+  await openArmy('command')
   await page.getByTestId('mission-hold').click()
   await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
 
   // Recrutement par armée, par modèle : 3 brigades d'infanterie légère au clic, 2 d'artillerie
   // saisies, une division entière.
-  await page.getByTestId('army-view-recruit').click()
+  await openArmy('recruit')
   for (let k = 0; k < 3; k++) await page.getByTestId('recruit-add-infanterie_legere').click()
   await page.getByTestId('recruit-count-artillerie').fill('2')
   await page.getByTestId('recruit-count-artillerie').press('Enter')
@@ -978,7 +999,7 @@ try {
   await shot('02g5-recrutement-commandes')
 
   // Onglet « Composition » : une ligne par type d'unité de l'armée.
-  await page.getByTestId('army-view-composition').click()
+  await openArmy('composition')
   await page.getByTestId('army-composition').waitFor()
   const compoRows = await page
     .getByTestId('army-composition')
@@ -1037,7 +1058,7 @@ try {
   await shot('04g-pions-corps')
   await page.evaluate((id) => window.__nkg.selectArmy(id), missionArmy)
   await page.waitForTimeout(300)
-  await page.getByTestId('army-view-command').click()
+  await openArmy('command')
 
   // Sauvegarde dans le navigateur, retour au menu, reprise.
   await page.evaluate(() => window.__nkg.step(24))
@@ -1478,8 +1499,9 @@ try {
     g.selectArmy(a)
     return { a, b }
   })
-  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [7.8, 48.3], zoom: 6.5 }))
+  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [9.5, 48.3], zoom: 6.5 }))
   await page.getByTestId('army-sheet').waitFor()
+  await openArmy('command')
   await page.getByTestId('border-paint').click()
   await page.getByTestId('border-paint-layer').waitFor()
   const rhine = await page.evaluate(() =>
@@ -1508,6 +1530,7 @@ try {
   const summary = (await page.getByTestId('border-summary').textContent())?.trim() ?? ''
   await shot('06f-frontiere-tenue')
   await page.evaluate((id) => window.__nkg.selectArmy(id), borderArmies.b)
+  await openArmy('command')
   await page.getByTestId('border-paint').click()
   const germany = await page.evaluate(() => {
     const q = window.__nkgMap.project([9.0, 48.6])

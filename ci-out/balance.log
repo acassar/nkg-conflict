@@ -1,0 +1,28 @@
+
+> nkg-conflict@0.1.0 balance /home/runner/work/nkg-conflict/nkg-conflict
+> tsx scripts/balance.ts 120 1,2,3 ci-out/balance
+
+graine 1 : 120 jours en 17659 ms
+graine 2 : 120 jours en 18198 ms
+graine 3 : 120 jours en 18074 ms
+## Équilibrage Ukraine 2026, IA contre IA, 120 jours
+
+Territoire rapporté à celui du début de partie ; pertes en équivalent brigades.
+
+| Graine | Jours | Issue | UKR territoire · unités · pertes | RUS territoire · unités · pertes |
+| --- | --- | --- | --- | --- |
+| 1 | 120 | guerre en cours | 90 % · 181 · 59.3 (14 détruites) | 105 % · 192 · 53.1 (9 détruites) |
+| 2 | 120 | guerre en cours | 100 % · 189 · 57.2 (6 détruites) | 100 % · 202 · 52.1 (5 détruites) |
+| 3 | 120 | guerre en cours | 99 % · 184 · 63.9 (13 détruites) | 101 % · 202 · 54.0 (8 détruites) |
+
+Calcul d'une journée de jeu : graine 1 147 ms, graine 2 152 ms, graine 3 151 ms.
+
+- UKR : territoire 90 % à 100 % (moyenne 96 %), pertes 60.1 brigades en moyenne
+- RUS : territoire 100 % à 105 % (moyenne 102 %), pertes 53.1 brigades en moyenne
+
+Territoire par jour (0, 30, 60, 90, 120) :
+
+- graine 1 : UKR 100 % → 97 % → 95 % → 93 % → 90 % ; RUS 100 % → 101 % → 102 % → 103 % → 105 %
+- graine 2 : UKR 100 % → 99 % → 99 % → 99 % → 100 % ; RUS 100 % → 100 % → 101 % → 100 % → 100 %
+- graine 3 : UKR 100 % → 102 % → 100 % → 101 % → 99 % ; RUS 100 % → 99 % → 100 % → 100 % → 101 %
+

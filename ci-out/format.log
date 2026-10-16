@@ -1,0 +1,6 @@
+
+> nkg-conflict@0.1.0 format:check /home/runner/work/nkg-conflict/nkg-conflict
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!

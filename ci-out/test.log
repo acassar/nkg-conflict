@@ -1,0 +1,201 @@
+
+> nkg-conflict@0.1.0 test /home/runner/work/nkg-conflict/nkg-conflict
+> vitest run
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90m/home/runner/work/nkg-conflict/nkg-conflict[39m
+
+ [32m✓[39m tests/formations.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 1702[2mms[22m[39m
+   [33m[2m✓[22m[39m divisions et corps[2m > [22mpart de l'ordre de bataille réel : divisions, corps et divisions de jeu [33m363[2mms[22m[39m
+   [33m[2m✓[22m[39m divisions et corps[2m > [22mgarde divisions et corps dans les sauvegardes [33m721[2mms[22m[39m
+ [32m✓[39m tests/orders.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 3179[2mms[22m[39m
+   [33m[2m✓[22m[39m ordres visant une unité[2m > [22mpoursuite : les unités suivent la cible et gardent l’ordre en mouvement [33m426[2mms[22m[39m
+   [33m[2m✓[22m[39m ordres visant une unité[2m > [22mpoursuite terminée quand la cible disparaît [33m333[2mms[22m[39m
+   [33m[2m✓[22m[39m ordre direct à une unité d’armée[2m > [22mle déplacement n’est pas écrasé par la répartition du front, puis l’armée reprend l’unité [33m391[2mms[22m[39m
+   [33m[2m✓[22m[39m ordre direct à une unité d’armée[2m > [22mun repli reste prioritaire et survit à une sauvegarde [33m315[2mms[22m[39m
+ [32m✓[39m tests/budget.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 5738[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22mle PIB fournit un budget qui fait tourner les usines de départ, le reste en réserve [33m765[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22ml'IA ne lance une usine que si le budget peut la faire tourner [33m461[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22ml'aide en argent compte dans la réserve annoncée [33m351[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22mune usine se pose librement sur le territoire, pas ailleurs [33m580[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22mbudget et usines sont gardés dans la sauvegarde ; une ancienne sauvegarde les recrée [33m571[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22mrésume le budget pour le tiroir Production [33m302[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22ml’armée de départ coûte la part prévue des dépenses militaires réelles ; impayée, elle se renforce moins [33m674[2mms[22m[39m
+   [33m[2m✓[22m[39m budget national[2m > [22mgarde l’évolution du PIB, de la production et de la main-d’œuvre [33m1041[2mms[22m[39m
+ [32m✓[39m tests/commands.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 8673[2mms[22m[39m
+   [33m[2m✓[22m[39m annuler un ordre[2m > [22mles unités s’arrêtent et oublient leur chemin [33m301[2mms[22m[39m
+   [33m[2m✓[22m[39m front de l’armée[2m > [22mle tracé du front est continu, sans demi-tour, et colle à la ligne de contact [33m5489[2mms[22m[39m
+   [33m[2m✓[22m[39m écran de bataille[2m > [22mrapport des deux camps avec les modificateurs [33m404[2mms[22m[39m
+   [33m[2m✓[22m[39m donneurs hors carte (théâtre ukrainien)[2m > [22mexistent sans territoire, aident dès le départ, et ne peuvent pas entrer en guerre [33m852[2mms[22m[39m
+ [32m✓[39m tests/frontiers.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 8895[2mms[22m[39m
+   [33m[2m✓[22m[39m frontières tenues par une armée[2m > [22mclic sur un voisin : toute la frontière, déploiement défensif sans franchir [33m5565[2mms[22m[39m
+   [33m[2m✓[22m[39m frontières tenues par une armée[2m > [22mpartage : sans chevauchement, la peinture prend, « toute la frontière » retire aux autres [33m731[2mms[22m[39m
+   [33m[2m✓[22m[39m frontières tenues par une armée[2m > [22mla guerre avec le voisin fait de la frontière le front, la paix la rend [33m754[2mms[22m[39m
+   [33m[2m✓[22m[39m frontières tenues par une armée[2m > [22mmissions de ligne valables sur une frontière en paix ; gardée dans la sauvegarde [33m1016[2mms[22m[39m
+   [33m[2m✓[22m[39m frontières tenues par une armée[2m > [22mcôte en option : peinte comme une frontière, déploiement face à la mer, gardée à la guerre [33m708[2mms[22m[39m
+ [32m✓[39m tests/missions.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 6924[2mms[22m[39m
+   [33m[2m✓[22m[39m missions d’armée[2m > [22m« Tenir » par défaut ; l’encerclement compte comme mission [33m325[2mms[22m[39m
+   [33m[2m✓[22m[39m missions d’armée[2m > [22mchaque unité de ligne vise un poste sur le tracé [33m1337[2mms[22m[39m
+   [33m[2m✓[22m[39m missions d’armée[2m > [22mtrait libre déjà dans son territoire : les unités s’y placent puis la mission s’achève [33m499[2mms[22m[39m
+   [33m[2m✓[22m[39m missions d’armée[2m > [22mdéfensive : avance par bonds, arrêt pour se retrancher [33m1881[2mms[22m[39m
+   [33m[2m✓[22m[39m missions d’armée[2m > [22mgroupe de brigades : détaché de son armée, la rejoint à la fin [33m2146[2mms[22m[39m
+[90mstdout[2m | tests/roads.test.ts[2m > [22m[2mréseau routier et ferroviaire[2m > [22m[2msegmente le réseau mondial en un temps raisonnable
+[22m[39mréseau mondial : 53200 + 63216 segments en 267 ms
+
+ [32m✓[39m tests/roads.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 757[2mms[22m[39m
+ [32m✓[39m tests/unit-model.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 1528[2mms[22m[39m
+   [33m[2m✓[22m[39m modèle d’unités[2m > [22mles pertes usent le soutien à la guerre : une brigade perdue, −0,01 pour 20 unités [33m1013[2mms[22m[39m
+ [32m✓[39m tests/army-recruit.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 15687[2mms[22m[39m
+   [33m[2m✓[22m[39m recrutement par armée (simulation)[2m > [22mlance les formations dans les casernes et les recrues rejoignent l’armée [33m9430[2mms[22m[39m
+   [33m[2m✓[22m[39m recrutement par armée (simulation)[2m > [22mcommande une brigade d’un modèle pour une division, et une division entière [33m3913[2mms[22m[39m
+   [33m[2m✓[22m[39m recrutement par armée (simulation)[2m > [22msans division choisie, la recrue comble une place libre de son armée, même loin de la caserne [33m2134[2mms[22m[39m
+ [32m✓[39m tests/transport.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1748[2mms[22m[39m
+   [33m[2m✓[22m[39m transport stratégique[2m > [22mpar le rail entre deux villes reliées par un territoire ami [33m820[2mms[22m[39m
+   [33m[2m✓[22m[39m transport stratégique[2m > [22mrevient au départ si la ville d'arrivée a été prise [33m410[2mms[22m[39m
+ [32m✓[39m tests/mission-preview.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 1545[2mms[22m[39m
+   [33m[2m✓[22m[39m aperçu des missions de ligne[2m > [22mne change rien à la partie [33m567[2mms[22m[39m
+   [33m[2m✓[22m[39m aperçu des missions de ligne[2m > [22mun poste par unité de ligne, seconde ligne à 25 km, réserve à 40 km, points clés [33m805[2mms[22m[39m
+ [32m✓[39m tests/simulation.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 7516[2mms[22m[39m
+   [33m[2m✓[22m[39m théâtre[2m > [22mplace Kyiv chez l’Ukraine et la mer Noire en eau [33m338[2mms[22m[39m
+   [33m[2m✓[22m[39m ordres[2m > [22mune unité en ordre de mouvement se rapproche de sa cible [33m425[2mms[22m[39m
+   [33m[2m✓[22m[39m partie[2m > [22mfait bouger le front sans valeurs invalides sur deux semaines [33m3343[2mms[22m[39m
+   [33m[2m✓[22m[39m partie[2m > [22mune sauvegarde rechargée rejoue exactement la même suite [33m1953[2mms[22m[39m
+ [32m✓[39m tests/restraint.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 926[2mms[22m[39m
+ [32m✓[39m tests/fallback.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 934[2mms[22m[39m
+ [32m✓[39m tests/production-queue.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 1853[2mms[22m[39m
+   [33m[2m✓[22m[39m file de production[2m > [22mune formation passée en tête occupe la caserne [33m471[2mms[22m[39m
+   [33m[2m✓[22m[39m gestion automatique en deux parties[2m > [22mles constructions seules ne lancent aucune formation ni n'imposent l'économie de guerre [33m383[2mms[22m[39m
+ [32m✓[39m tests/breach.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2306[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Percée sur un axe »[2m > [22mgroupe de choc concentré vers le point visé, flancs tenus par le reste [33m502[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Percée sur un axe »[2m > [22mle groupe de choc échappe à l'arrêt des attaques isolées, et Tenir le ramène au front [33m888[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Percée sur un axe »[2m > [22mau point visé, la mission s'achève et le groupe de choc reprend le front [33m770[2mms[22m[39m
+ [32m✓[39m tests/naval.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1522[2mms[22m[39m
+   [33m[2m✓[22m[39m marine provisoire[2m > [22membarque, traverse puis débarque désorganisée, avec un malus de quelques heures [33m846[2mms[22m[39m
+ [32m✓[39m tests/aid.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 9686[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mles aides de 2026 sont en place au départ, dans les deux camps [33m755[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22ml'aide est prélevée sur le donneur et versée au receveur [33m1928[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mun donneur à budget verse aussi de l'argent à la réserve du receveur, plafonné [33m1786[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mle joueur accorde, ajuste puis révoque une aide [33m607[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mune IA accepte ou refuse une demande selon ses relations, puis impose un délai [33m601[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mle matériel accumulé est livré sous forme de brigades (une par jour) [33m920[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mune guerre entre donneur et receveur met fin à l’aide [33m827[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mle joueur répond à une demande d’aide [33m595[2mms[22m[39m
+   [33m[2m✓[22m[39m aide étrangère[2m > [22mles aides survivent à une sauvegarde [33m1591[2mms[22m[39m
+ [32m✓[39m tests/ai-expedition.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 7073[2mms[22m[39m
+   [33m[2m✓[22m[39m IA de guerre à distance[2m > [22mdemande le passage à un voisin de l’ennemi, y transporte un corps expéditionnaire puis attaque [33m1429[2mms[22m[39m
+   [33m[2m✓[22m[39m IA de guerre à distance[2m > [22mle corps expéditionnaire prend du terrain depuis le pays de transit, et un front se forme [33m4165[2mms[22m[39m
+   [33m[2m✓[22m[39m IA de guerre à distance[2m > [22msans route terrestre, amène ses brigades au port puis débarque sur la côte ennemie [33m700[2mms[22m[39m
+   [33m[2m✓[22m[39m IA de guerre à distance[2m > [22mn’engage jamais le joueur : ni appel à la guerre, ni demande de passage [33m683[2mms[22m[39m
+ [32m✓[39m tests/world.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 9304[2mms[22m[39m
+   [33m[2m✓[22m[39m monde[2m > [22mcharge tous les pays et place Paris en France [33m952[2mms[22m[39m
+   [33m[2m✓[22m[39m monde[2m > [22mchaque pays a ses armées dès le départ, en garnison sur son territoire [33m700[2mms[22m[39m
+   [33m[2m✓[22m[39m monde[2m > [22mferme les frontières des pays en paix [33m637[2mms[22m[39m
+   [33m[2m✓[22m[39m guerre et diplomatie[2m > [22mune déclaration de guerre mobilise les deux pays et rend leurs unités hostiles [33m630[2mms[22m[39m
+   [33m[2m✓[22m[39m guerre et diplomatie[2m > [22mles alliés d’un pays agressé entrent en guerre [33m633[2mms[22m[39m
+   [33m[2m✓[22m[39m guerre et diplomatie[2m > [22mune paix blanche rend les territoires conquis [33m579[2mms[22m[39m
+   [33m[2m✓[22m[39m guerre et diplomatie[2m > [22mla prise de la capitale fait capituler un pays [33m662[2mms[22m[39m
+   [33m[2m✓[22m[39m guerre et diplomatie[2m > [22mrefuse d’attaquer un allié [33m796[2mms[22m[39m
+   [33m[2m✓[22m[39m guerre et diplomatie[2m > [22mune sauvegarde mondiale rechargée rejoue la même suite [33m3622[2mms[22m[39m
+ [32m✓[39m tests/ai-armies.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 509[2mms[22m[39m
+ [32m✓[39m tests/coalition.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 3684[2mms[22m[39m
+   [33m[2m✓[22m[39m coalition[2m > [22mun allié accepte de participer selon son score, et rejoint la guerre [33m829[2mms[22m[39m
+   [33m[2m✓[22m[39m coalition[2m > [22mun refus bloque une nouvelle demande pendant un mois [33m757[2mms[22m[39m
+   [33m[2m✓[22m[39m coalition[2m > [22mdroit de passage : territoire ouvert, puis fermé à la paix et unités rapatriées [33m898[2mms[22m[39m
+   [33m[2m✓[22m[39m coalition[2m > [22mrefus sans appel : ami de l’ennemi ; le passage est gardé dans la sauvegarde [33m1110[2mms[22m[39m
+ [32m✓[39m tests/forces.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 154[2mms[22m[39m
+ [32m✓[39m tests/obstacles.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1491[2mms[22m[39m
+   [33m[2m✓[22m[39m obstacles[2m > [22ms’accumulent sous une unité retranchée, deux fois plus vite en ville [33m827[2mms[22m[39m
+   [33m[2m✓[22m[39m obstacles[2m > [22mfreinent l’assaut et alourdissent les pertes de l’attaquant [33m382[2mms[22m[39m
+ [32m✓[39m tests/sustainability.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 2733[2mms[22m[39m
+   [33m[2m✓[22m[39m soutenabilité de l'armée[2m > [22mmesure les pertes du jour : renforts et unités détruites [33m1095[2mms[22m[39m
+   [33m[2m✓[22m[39m soutenabilité de l'armée[2m > [22mreste dans la sauvegarde et reprend après un chargement [33m1613[2mms[22m[39m
+ [32m✓[39m tests/key-points.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1422[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Tenir les points clés »[2m > [22mrepère villes, passages de fleuve et nœuds routiers [33m349[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Tenir les points clés »[2m > [22mreste active en jeu, en posture défensive et après une sauvegarde [33m823[2mms[22m[39m
+ [32m✓[39m tests/fatigue.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 867[2mms[22m[39m
+   [33m[2m✓[22m[39m fatigue et relève[2m > [22mla fatigue monte au contact et retombe au repos [33m313[2mms[22m[39m
+ [32m✓[39m tests/defend-points.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 5610[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Défendre des points »[2m > [22mtout le pays : la capitale d’abord, brigades réparties en anneau autour des points [33m4398[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Défendre des points »[2m > [22mzone et types cochés ; erreurs ; retour à « Tenir » ; sauvegarde [33m1097[2mms[22m[39m
+ [32m✓[39m tests/depth-reserve.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 529[2mms[22m[39m
+ [32m✓[39m tests/equipment.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 513[2mms[22m[39m
+ [32m✓[39m tests/peace-garrison.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1714[2mms[22m[39m
+   [33m[2m✓[22m[39m retour en garnison à la paix[2m > [22ml'armée sans frontière rentre en garnison, celle qui tient une frontière reste [33m952[2mms[22m[39m
+   [33m[2m✓[22m[39m retour en garnison à la paix[2m > [22mles places autour d’une ville sont distinctes et à côté de la ville [33m683[2mms[22m[39m
+ [32m✓[39m tests/unit-kinds.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 662[2mms[22m[39m
+ [32m✓[39m tests/air.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 1100[2mms[22m[39m
+   [33m[2m✓[22m[39m aviation provisoire[2m > [22mtire la puissance aérienne des usines militaires [33m300[2mms[22m[39m
+ [32m✓[39m tests/economy.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 42005[2mms[22m[39m
+   [33m[2m✓[22m[39m économie[2m > [22mproduit chaque jour [33m626[2mms[22m[39m
+   [33m[2m✓[22m[39m économie[2m > [22machève une construction après sa durée minimale [33m7361[2mms[22m[39m
+   [33m[2m✓[22m[39m économie[2m > [22mune usine demande plusieurs mois, quels que soient les points disponibles [33m25723[2mms[22m[39m
+   [33m[2m✓[22m[39m économie[2m > [22mle nombre de chantiers dépend des points de construction [33m359[2mms[22m[39m
+   [33m[2m✓[22m[39m économie[2m > [22mforme une unité dans une caserne et engage la main-d’œuvre [33m2243[2mms[22m[39m
+   [33m[2m✓[22m[39m économie de guerre[2m > [22mla guerre totale déplace la construction vers la production et use la population [33m3677[2mms[22m[39m
+   [33m[2m✓[22m[39m économie de guerre[2m > [22mforme une brigade de défense territoriale, peu coûteuse en matériel [33m1483[2mms[22m[39m
+ [32m✓[39m tests/flanks.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1141[2mms[22m[39m
+   [33m[2m✓[22m[39m règle de flanc[2m > [22mun seul ennemi de face : pas de malus [33m365[2mms[22m[39m
+   [33m[2m✓[22m[39m règle de flanc[2m > [22mpresque encerclée : malus plus fort et moral qui cède plus vite [33m424[2mms[22m[39m
+ [32m✓[39m tests/peace-ai.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1116[2mms[22m[39m
+   [33m[2m✓[22m[39m IA de paix[2m > [22mfrontière tendue couverte, points défendus ailleurs ; fusion à la guerre, garnison sans tension [33m986[2mms[22m[39m
+ [32m✓[39m tests/peace.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1114[2mms[22m[39m
+   [33m[2m✓[22m[39m évacuation après une paix[2m > [22mpaix blanche : repli vers son territoire, puis retour à l’armée [33m324[2mms[22m[39m
+   [33m[2m✓[22m[39m évacuation après une paix[2m > [22maucune unité ne reste en territoire fermé, joueur comme IA [33m338[2mms[22m[39m
+ [32m✓[39m tests/cell-info.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m tests/performance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 6339[2mms[22m[39m
+   [33m[2m✓[22m[39m mesure des performances[2m > [22mmultiplie les unités en conservant la force totale et les armées [33m2026[2mms[22m[39m
+   [33m[2m✓[22m[39m mesure des performances[2m > [22mle profilage mesure chaque système sans changer la partie [33m1697[2mms[22m[39m
+   [33m[2m✓[22m[39m mesure des performances[2m > [22mles parts de territoire suivies par la grille égalent un parcours complet [33m2499[2mms[22m[39m
+[90mstdout[2m | tests/borders.test.ts[2m > [22m[2mfrontières nationales[2m > [22m[2msépare les voisins sur la carte du monde, en un temps raisonnable
+[22m[39mmonde : couleurs en 53 ms, 13831 segments de frontière en 152 ms
+
+ [32m✓[39m tests/borders.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1136[2mms[22m[39m
+   [33m[2m✓[22m[39m frontières nationales[2m > [22msépare les voisins sur la carte du monde, en un temps raisonnable [33m1122[2mms[22m[39m
+ [32m✓[39m tests/breakthrough.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 930[2mms[22m[39m
+   [33m[2m✓[22m[39m riposte aux percées[2m > [22mcontre-attaque une pointe faible, bloque une pointe forte [33m319[2mms[22m[39m
+ [32m✓[39m tests/retreat.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 2227[2mms[22m[39m
+   [33m[2m✓[22m[39m mission « Retraite ordonnée »[2m > [22mrepli par bonds alternés jusqu’à la ligne, puis l’armée la tient [33m2021[2mms[22m[39m
+ [32m✓[39m tests/scenario-options.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 4709[2mms[22m[39m
+   [33m[2m✓[22m[39m options de l'écran de départ[2m > [22msans affiliations : ni alliances, ni organisations, ni relations, sanctions ou aides [33m1372[2mms[22m[39m
+   [33m[2m✓[22m[39m options de l'écran de départ[2m > [22msans guerres : tout le monde en paix, armées en garnison, liens politiques conservés [33m1056[2mms[22m[39m
+   [33m[2m✓[22m[39m options de l'écran de départ[2m > [22mles deux options se cumulent et sont gardées dans la sauvegarde [33m870[2mms[22m[39m
+   [33m[2m✓[22m[39m options de l'écran de départ[2m > [22mune partie sans option ne porte aucune option ; une option non proposée est ignorée [33m1285[2mms[22m[39m
+ [32m✓[39m tests/gauges.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 46[2mms[22m[39m
+ [32m✓[39m tests/alerts.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 954[2mms[22m[39m
+ [32m✓[39m tests/supply-view.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1023[2mms[22m[39m
+   [33m[2m✓[22m[39m vue logistique de la carte[2m > [22men guerre, le territoire relié aux sources est marqué ravitaillé [33m611[2mms[22m[39m
+ [32m✓[39m tests/favorable-posts.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 488[2mms[22m[39m
+ [32m✓[39m tests/publish.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1650[2mms[22m[39m
+   [33m[2m✓[22m[39m publication de l'état par différences[2m > [22ml'état reconstruit est identique à l'état complet, partie en cours [33m1253[2mms[22m[39m
+ [32m✓[39m tests/real-data.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 115[2mms[22m[39m
+ [32m✓[39m tests/axes.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 466[2mms[22m[39m
+ [32m✓[39m tests/city-labels.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 829[2mms[22m[39m
+   [33m[2m✓[22m[39m villes sur la carte[2m > [22mtrie les villes de la carte du monde en quelques millisecondes [33m824[2mms[22m[39m
+ [32m✓[39m tests/map-ui.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m tests/queued-paths.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 491[2mms[22m[39m
+   [33m[2m✓[22m[39m chemins en attente (carte du monde)[2m > [22mun ordre d'attaque dont le chemin n'est pas encore calculé n'est pas abandonné [33m320[2mms[22m[39m
+ [32m✓[39m tests/world-start.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 18024[2mms[22m[39m
+   [33m[2m✓[22m[39m économie nationale[2m > [22mles revenus dépendent du pays entier, et suivent le territoire tenu [33m829[2mms[22m[39m
+   [33m[2m✓[22m[39m liens politiques de départ[2m > [22morganisations régionales et affinités rapprochent leurs membres [33m827[2mms[22m[39m
+   [33m[2m✓[22m[39m liens politiques de départ[2m > [22mun pacte de défense fait entrer les États-Unis en guerre pour le Japon [33m975[2mms[22m[39m
+   [33m[2m✓[22m[39m liens politiques de départ[2m > [22mles sanctions occidentales pèsent sur la Russie selon le poids économique des sanctionneurs [33m813[2mms[22m[39m
+   [33m[2m✓[22m[39m armées du temps de paix[2m > [22ml'IA reconstitue son armée en paix [33m14492[2mms[22m[39m
+ [32m✓[39m tests/army-commands.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m tests/forts.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m tests/frame.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m tests/clusters.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m tests/war-brief.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m tests/loop.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m tests/webgl.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m tests/clock.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m tests/save.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m tests/rules-help.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 3257[2mms[22m[39m
+   [33m[2m✓[22m[39m aide en jeu[2m > [22mles modificateurs d’une vraie bataille ont tous une explication [33m3253[2mms[22m[39m
+ [32m✓[39m tests/balance.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 3340[2mms[22m[39m
+   [33m[2m✓[22m[39m rapport d’équilibrage[2m > [22mrelève territoire, unités et pertes des deux camps [33m3338[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m65 passed[39m[22m[90m (65)[39m
+[2m      Tests [22m [1m[32m341 passed[39m[22m[90m (341)[39m
+[2m   Start at [22m 17:46:31
+[2m   Duration [22m 80.92s[2m (transform 1.86s, setup 0ms, collect 14.19s, tests 209.95s, environment 12ms, prepare 5.62s)[22m
+

@@ -1,0 +1,734 @@
+{
+  "url": "http://localhost:4173",
+  "ok": true,
+  "errors": [],
+  "console": [
+    "warning: deck: Attribute instanceColors is normalized",
+    "debug: luma.gl: WebGL uniform block reflection failed for \"gouraudMaterialUniforms\"; using supplied std140 metadata. Failed to validate WebGL uniform block \"gouraudMaterialUniforms\": reflected layout for \"gouraudMaterialUniforms.unlit\" does not match supplied std140 metadata",
+    "debug: luma.gl: WebGL uniform block reflection failed for \"lightingUniforms\"; using supplied std140 metadata. Failed to validate WebGL uniform block \"lightingUniforms\": reflected layout for \"lightingUniforms.lights[0].color\" does not match supplied std140 metadata",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: delete: object does not belong to this context",
+    "warning: WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context",
+    "warning: WebGL: too many errors, no more errors will be reported to the console for this context.",
+    "warning: WebGL: INVALID_OPERATION: bindTexture: attempt to use a deleted object",
+    "warning: WebGL: INVALID_OPERATION: texSubImage2D: no texture bound to target",
+    "warning: WebGL: INVALID_OPERATION: bindTexture: attempt to use a deleted object",
+    "warning: WebGL: INVALID_OPERATION: generateMipmap: no texture bound to target"
+  ],
+  "steps": [
+    {
+      "name": "chargement",
+      "tick": 0,
+      "player": "UKR",
+      "wars": [
+        "RUS→UKR"
+      ],
+      "paused": true,
+      "units": 3638,
+      "engaged": 0,
+      "armies": 11,
+      "territoryHeld": {
+        "UKR": 100,
+        "RUS": 100
+      },
+      "gridVersion": 1,
+      "hasGrid": true,
+      "events": []
+    },
+    {
+      "name": "survol de la carte",
+      "texte": "Ville : vitesse −30 %, défense +50 % Route principale Voie ferrée Kyiv, capitale : 2,7 M hab."
+    },
+    {
+      "name": "alerte centrée",
+      "selection": [
+        5827
+      ],
+      "center": [
+        37.549999999999955,
+        49.849999999999994
+      ]
+    },
+    {
+      "name": "alertes repliées",
+      "folded": true
+    },
+    {
+      "name": "cadre",
+      "rail": 14,
+      "tiroir": 104,
+      "inspecteur": 1080,
+      "largeur": 1440
+    },
+    {
+      "name": "vue Forces",
+      "crumbsArmy": 2,
+      "formationRows": 3,
+      "crumbsDeep": 3,
+      "echelonText": "XXX\n3e corps d'armée\n9 brigades\n3e corps d'armée",
+      "templates": 18,
+      "battalions": 3,
+      "afterUp": 5
+    },
+    {
+      "name": "armée sélectionnée",
+      "tick": 0,
+      "player": "UKR",
+      "wars": [
+        "RUS→UKR"
+      ],
+      "paused": true,
+      "units": 3638,
+      "engaged": 0,
+      "armies": 11,
+      "territoryHeld": {
+        "UKR": 100,
+        "RUS": 100
+      },
+      "gridVersion": 1,
+      "hasGrid": true,
+      "events": []
+    },
+    {
+      "name": "sélection suivie dans la vue Forces",
+      "followed": {
+        "drawer": true,
+        "opened": "2e division (Garde nationale d'Ukraine)",
+        "entity": "2e division (Garde nationale d'Ukraine)",
+        "selection": 4
+      },
+      "closed": {
+        "drawer": false,
+        "selection": 0
+      }
+    },
+    {
+      "name": "ordre clic droit",
+      "ordre": "move"
+    },
+    {
+      "name": "production",
+      "avant": {
+        "construction": 0,
+        "recruitment": 0
+      },
+      "apres": {
+        "construction": 1,
+        "recruitment": 0
+      }
+    },
+    {
+      "name": "fortifications de Kyiv",
+      "texte": "Sans fortification. Chaque niveau : +15 % de défense à vos unités à moins de 15 km."
+    },
+    {
+      "name": "diplomatie",
+      "avant": 40,
+      "apres": 50
+    },
+    {
+      "name": "aide demandée",
+      "niveau": 1
+    },
+    {
+      "name": "clic sur Varsovie",
+      "pays": "POL"
+    },
+    {
+      "name": "budget national",
+      "secteurs": 4
+    },
+    {
+      "name": "entretien et conscription",
+      "entretien": "Entretien de l'armée : 138 M$/j, 100 % payé",
+      "reserve": "Réserve mobilisable : 4 836 k hommes · conscription ≈ 0,4 k/j"
+    },
+    {
+      "name": "curseurs du budget",
+      "allocation": {
+        "defense": 0.8,
+        "construction": 0,
+        "research": 0.19999999999999996,
+        "reserve": 0
+      }
+    },
+    {
+      "name": "file de production",
+      "lignes": 3,
+      "tete": [
+        "Kyiv",
+        "Lviv"
+      ],
+      "auto": {
+        "build": false,
+        "recruit": true
+      }
+    },
+    {
+      "name": "construire quoi puis où",
+      "conseils": 3,
+      "premier": "1 Kharkiv à 27 km du front · 3 unités à portée · 3 places libres · risque de prise élevé Construire"
+    },
+    {
+      "name": "usine posée librement",
+      "pixel": [
+        677.5567067314042,
+        486.40728782821725
+      ],
+      "emplacement": [
+        28.980128528369953,
+        49.60942146385456
+      ]
+    },
+    {
+      "name": "économie de guerre",
+      "niveau": 1,
+      "recrutementVille": 0,
+      "renvoi": 1
+    },
+    {
+      "name": "soutenabilité",
+      "panneau": "Soutenabilité de l'armée : durable (×7)",
+      "barre": "durable\n×7",
+      "titre": "Soutenabilité de l'armée (moyenne glissante sur une semaine)\nLes revenus couvrent les besoins de l'armée (×7 sur la ressource la plus tendue) : armée durable.\nProduction : besoins 2/j, revenus 244/j, solde +242/j, stock 901 (besoins : renforts 2, unités détruites 0 · dont aide reçue 170/j)\nMunitions : besoins 47/j, revenus 326/j, solde +279/j, stock 1 112 (besoins : tirs des unités au contact · dont aide reçue 227/j)\nMain-d'œuvre : besoins 0 k/j, revenus 1 k/j, solde +1 k/j, stock 39 k (besoins : renforts 0, unités détruites 0)"
+    },
+    {
+      "name": "jauges",
+      "jauges": 4,
+      "capacites": 0,
+      "fenetre": "MUNITIONS\n1 112\n+296/j\n×\n\nMunitions en stock : chaque tir en consomme ; à zéro, "
+    },
+    {
+      "name": "poursuite",
+      "unites": 3
+    },
+    {
+      "name": "ordre annulé",
+      "poursuivent": 0
+    },
+    {
+      "name": "posture",
+      "postures": [
+        "maxDamage"
+      ]
+    },
+    {
+      "name": "encerclement",
+      "phase": "staging"
+    },
+    {
+      "name": "mission avancer",
+      "mission": "advance",
+      "statut": "Avancer : trait tracé · 0 % du tracé tenu"
+    },
+    {
+      "name": "aperçu points clés",
+      "mission": "hold",
+      "posts": 18,
+      "points": 5
+    },
+    {
+      "name": "mission points clés",
+      "mission": "keyPoints",
+      "points": 5,
+      "statut": "Points clés : portion de front · 5 point(s) clé(s) tenu(s)"
+    },
+    {
+      "name": "aperçu depth",
+      "lignes": 1
+    },
+    {
+      "name": "mission depth",
+      "mission": "depth"
+    },
+    {
+      "name": "aperçu reserve",
+      "lignes": 1
+    },
+    {
+      "name": "mission reserve",
+      "mission": "reserve"
+    },
+    {
+      "name": "mission défendre des points",
+      "mission": "defendPoints",
+      "points": 7,
+      "tenus": 7
+    },
+    {
+      "name": "visée percée",
+      "bandeau": {
+        "x": 493,
+        "y": 817.109375,
+        "width": 454,
+        "height": 30.890625
+      },
+      "pointeur": [
+        36.704113994662464,
+        50.15000001991831
+      ]
+    },
+    {
+      "name": "mission percée",
+      "mission": "breach",
+      "choc": 9,
+      "statut": "Percée : 9 unité(s) de choc · 49 % de l'axe tenu"
+    },
+    {
+      "name": "mission retraite",
+      "mission": "retreat",
+      "statut": "Retraite : trait tracé · 0 % des unités sur la ligne"
+    },
+    {
+      "name": "recrutement par armée",
+      "casernes": 6,
+      "avant": 0,
+      "apres": 9,
+      "forArmy": 9
+    },
+    {
+      "name": "composition",
+      "lignes": 5,
+      "types": 5
+    },
+    {
+      "name": "ordre de bataille",
+      "corps": 3,
+      "divisions": 6,
+      "choisie": {
+        "n": 5,
+        "divisions": 1
+      },
+      "formationText": "1re division (3e corps d'armée) · 3e corps d'armée"
+    },
+    {
+      "name": "jauges de matériel",
+      "jauges": 5,
+      "unites": 5
+    },
+    {
+      "name": "sauvegarde et reprise",
+      "sauvee": 72,
+      "reprise": 72
+    },
+    {
+      "name": "après 8 s en vitesse 5",
+      "tick": 587,
+      "player": "UKR",
+      "wars": [
+        "RUS→UKR"
+      ],
+      "paused": true,
+      "units": 3779,
+      "engaged": 29,
+      "armies": 11,
+      "territoryHeld": {
+        "UKR": 98.7,
+        "RUS": 100
+      },
+      "gridVersion": 300,
+      "hasGrid": true,
+      "events": [
+        "Décrochage : 91e brigade d'appui (génie)",
+        "Décrochage : 425e régiment d'assaut « Skelia » (rattachement temporaire)",
+        "Décrochage : 31e brigade mécanisée",
+        "41e armée interarmes de la Garde (DM Centre) coupe la base d’une percée près de Donetsk",
+        "Décrochage : 114e régiment de fusiliers motorisés et 143e régiment de fusiliers motorisés"
+      ]
+    },
+    {
+      "name": "écran de bataille",
+      "camps": 2,
+      "obstacles": 8
+    },
+    {
+      "name": "aide des modificateurs",
+      "explication": true
+    },
+    {
+      "name": "aide depuis le menu",
+      "sections": 17
+    },
+    {
+      "name": "aide : types d’unités",
+      "lignes": 15
+    },
+    {
+      "name": "caméra clavier",
+      "avant": 38.093513436565836,
+      "apres": 38.78558619047112
+    },
+    {
+      "name": "perte du contexte WebGL",
+      "nouvelle": true,
+      "erreur": false,
+      "canvas": 2
+    },
+    {
+      "name": "tracé du front",
+      "morceaux": 2
+    },
+    {
+      "name": "carte logistique",
+      "guerre": true,
+      "sources": 8,
+      "poches": 0,
+      "relie": 6969
+    },
+    {
+      "name": "routes et voies ferrées",
+      "routes": 177245,
+      "rail": 61586,
+      "affichees": true
+    },
+    {
+      "name": "filtre Pays",
+      "vue": "countries"
+    },
+    {
+      "name": "donneurs hors carte",
+      "aides": 5,
+      "fiche": "USA"
+    },
+    {
+      "name": "options de départ",
+      "guerres": 0,
+      "alliances": 0,
+      "organisations": 0,
+      "sanctions": 0,
+      "aides": 0,
+      "optionsUkraine": 1
+    },
+    {
+      "name": "débarquement",
+      "choisies": 1,
+      "enMer": 1,
+      "capacite": 2,
+      "ports": [
+        "Nice",
+        "Cayenne"
+      ]
+    },
+    {
+      "name": "transport stratégique",
+      "choisies": 2,
+      "enRoute": [
+        "7e brigade blindée · rail · Bordeaux",
+        "9e brigade d'infanterie de marine · rail · Bordeaux"
+      ]
+    },
+    {
+      "name": "rappel des transports",
+      "bouton": "2",
+      "lignes": 2
+    },
+    {
+      "name": "aviation",
+      "puissance": 67,
+      "zones": [
+        "support 4.8,45.8"
+      ]
+    },
+    {
+      "name": "frontière tenue",
+      "armees": {
+        "a": 9786,
+        "b": 9787
+      },
+      "peinte": 14,
+      "fiche": "Frontière tenue : environ 130 km avec Allemagne",
+      "partage": {
+        "a": 0,
+        "b": 32,
+        "overlap": 0
+      }
+    },
+    {
+      "name": "encart de guerre",
+      "statut": "Tenir : tout le front",
+      "mission": "advance",
+      "encart": false
+    },
+    {
+      "name": "coalition : droit de passage",
+      "reponse": "Pays-Bas refuse (score −5 pour 40 : relations −5)",
+      "accorde": false
+    },
+    {
+      "name": "aide en argent",
+      "budget": "Aide étrangère en argent : versée −20 M$/j (comptée dans la réserve)"
+    },
+    {
+      "name": "journal",
+      "tout": 7,
+      "combats": 2
+    },
+    {
+      "name": "WebGL indisponible",
+      "bouton": true,
+      "apresReessai": true,
+      "erreurs": []
+    }
+  ],
+  "network": [
+    "échec https://demotiles.maplibre.org/tiles/5/19/9.pbf",
+    "échec https://demotiles.maplibre.org/tiles/5/18/9.pbf",
+    "échec https://demotiles.maplibre.org/tiles/5/20/9.pbf",
+    "échec https://demotiles.maplibre.org/tiles/5/17/9.pbf",
+    "échec https://demotiles.maplibre.org/tiles/5/17/10.pbf",
+    "échec https://demotiles.maplibre.org/tiles/5/17/11.pbf"
+  ]
+}

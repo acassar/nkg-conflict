@@ -59,6 +59,8 @@ export interface SaveFile {
   outcome: GameOutcome | null
   /** Dernière offensive de l'IA militaire, par pays. */
   aiLastOffensiveTick: Record<string, number>
+  /** Dernière unité servie par la file des chemins en attente (absente : 0). */
+  pathCursor?: number
   /**
    * Revue des armées par l'IA (dernière revue, mémoire de chaque armée), pour rejouer la même suite ;
    * null : jamais (−∞).

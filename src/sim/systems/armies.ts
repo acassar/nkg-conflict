@@ -209,6 +209,11 @@ function slots(
  * d'unités chaque jour : sur le théâtre ukrainien, l'Ukraine capitulait dans 6 parties sur 12 (2 sans).
  */
 export const OUT_OF_SECTOR_KM = 100
+/**
+ * Écart hors secteur au déploiement instantané (début de partie) : sans trajet à faire, chaque division
+ * prend son secteur entier, au lieu de garder des brigades éparpillées d'un bout à l'autre du front.
+ */
+const STRICT_SECTOR_KM = 1e5
 
 /**
  * Front hiérarchique sur une ligne de postes rangés le long du front (`dist` : distances unité × poste) :
@@ -217,13 +222,17 @@ export const OUT_OF_SECTOR_KM = 100
  * qu'ils ont de brigades ; dans chaque corps, ses divisions se partagent son secteur de la même façon,
  * puis les brigades prennent les postes les plus proches dans le secteur de leur division. Les brigades
  * sans division sont chacune leur propre groupe. `corpsOf` donne le corps d'une division (absent : sans
- * corps).
+ * corps). Un poste hors secteur compte OUT_OF_SECTOR_KM de plus, plus la distance de la brigade au poste
+ * le plus proche : une brigade loin de la ligne (recrue, réserve) a de toute façon un trajet à faire et
+ * rejoint son secteur ; une brigade déjà en ligne ne traverse pas le front pour l'atteindre. `strict` :
+ * secteurs imposés (déploiement instantané).
  */
 export function divisionSectors(
   units: ReadonlyArray<Pick<UnitState, 'id' | 'divisionId'>>,
   posts: number,
   dist: Float64Array,
   corpsOf: (divisionId: number) => number | null | undefined = () => null,
+  strict = false,
 ): void {
   if (posts !== units.length || units.length < 2) return
   interface Group {
@@ -231,6 +240,7 @@ export function divisionSectors(
     at: number
   }
   const divisions = new Map<number, Group>()
+  const nearestKm = new Float64Array(units.length)
   units.forEach((u, ui) => {
     let best = 0
     let bestKm = Infinity
@@ -241,6 +251,7 @@ export function divisionSectors(
         best = pi
       }
     }
+    nearestKm[ui] = bestKm
     const key = u.divisionId ?? -u.id
     const g = divisions.get(key) ?? { members: [], at: 0 }
     g.at += best
@@ -280,9 +291,9 @@ export function divisionSectors(
     for (const g of ordered) {
       const end = start + g.members.length
       for (const ui of g.members) {
+        const extra = strict ? STRICT_SECTOR_KM : OUT_OF_SECTOR_KM + (nearestKm[ui] ?? 0)
         for (let pi = 0; pi < posts; pi++) {
-          if (pi < start || pi >= end)
-            dist[ui * posts + pi] = (dist[ui * posts + pi] ?? 0) + OUT_OF_SECTOR_KM
+          if (pi < start || pi >= end) dist[ui * posts + pi] = (dist[ui * posts + pi] ?? 0) + extra
         }
       }
       start = end
@@ -389,6 +400,8 @@ const DEPTH_FORWARD_SHARE = 0.6
 const SECOND_LINE_KM = 25
 /** Réserve : distance de ses postes derrière le front (km). */
 const RESERVE_KM = 40
+/** Réserve : rayon autour du point d'une division où se placent ses brigades (km). */
+const RESERVE_SPREAD_KM = 30
 /** Écart au milieu de son secteur toléré par un poste favorable : −5 % de valeur au bord du secteur. */
 const OFF_CENTER_PENALTY = 0.05
 /** Fleuve devant le poste : même bonus que dans le combat (assaut à travers un fleuve). */
@@ -658,7 +671,13 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     // Front par corps puis par division ; mission « Points clés » : par division seulement, pour que
     // les brigades se concentrent sur les points clés quel que soit le secteur de leur corps.
     if (layers.length === 1)
-      divisionSectors(units, P, dist, (d) => (keyPoints ? null : ctx.formations.get(d)?.parentId))
+      divisionSectors(
+        units,
+        P,
+        dist,
+        (d) => (keyPoints ? null : ctx.formations.get(d)?.parentId),
+        teleport,
+      )
     const order = new Uint32Array(dist.length)
     for (let k = 0; k < order.length; k++) order[k] = k
     order.sort((a, b) => (dist[a] ?? 0) - (dist[b] ?? 0) || a - b)
@@ -712,28 +731,140 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       const pi = postOf[ui] ?? -1
       const u = units[ui]
       const target = posts[pi]
-      if (pi < 0 || !u || !target || withdrawing(u)) continue
-      if (teleport) {
-        ;[u.lon, u.lat] = target
-        u.order = { kind: 'front', target }
-        u.path = []
+      if (pi < 0 || !u || !target) continue
+      placedAt.set(u.id, { at: pi, post: target })
+      if (withdrawing(u)) continue
+      send(u, target, tolerance)
+    }
+  }
+  /** Postes pris par les unités de ligne (rang le long du front), pour placer leurs appuis derrière. */
+  const placedAt = new Map<number, { at: number; post: LonLat }>()
+  /** Envoie une unité à son poste ; même poste (à `tolerance` près) : rien n'est recalculé. */
+  const send = (u: UnitState, target: LonLat, tolerance: number): void => {
+    if (teleport) {
+      ;[u.lon, u.lat] = target
+      u.order = { kind: 'front', target }
+      u.path = []
+      return
+    }
+    const prev = u.order.kind === 'front' ? u.order.target : undefined
+    const sameSlot = prev && distanceKm(prev[0], prev[1], target[0], target[1]) < tolerance
+    // Même poste : on ne recalcule rien, sauf si l'unité est arrêtée loin de ce poste.
+    const stuck = u.path.length === 0 && distanceKm(u.lon, u.lat, target[0], target[1]) > tolerance
+    if (sameSlot && !stuck && !ctx.runtime.get(u.id)?.pathPending) return
+    u.order = { kind: 'front', target }
+    if (ctx.grid.size > LARGE_GRID_CELLS) {
+      // Carte du monde : chemin calculé plus tard, quelques-uns par tick (planQueuedPaths),
+      // pour éviter un à-coup de plusieurs centaines de ms sur les grands fronts.
+      u.path = []
+      runtimeOf(ctx, u.id).pathPending = true
+    } else {
+      planPath(ctx, u, target)
+    }
+  }
+  /**
+   * Appuis (artillerie, génie, sol-air…) : à `depth` cellules derrière le secteur de leur division, au
+   * milieu puis de part et d'autre ; ceux dont la division n'a pas de brigade de ligne placée se
+   * répartissent le long du front.
+   */
+  const placeRear = (depth: number): void => {
+    const sectors = new Map<number, Array<{ at: number; post: LonLat }>>()
+    for (const u of line) {
+      const p = placedAt.get(u.id)
+      if (!p || u.divisionId === undefined) continue
+      const list = sectors.get(u.divisionId)
+      if (list) list.push(p)
+      else sectors.set(u.divisionId, [p])
+    }
+    for (const list of sectors.values()) list.sort((a, b) => a.at - b.at)
+    const free: UnitState[] = []
+    const taken = new Map<number, number>()
+    for (const u of rear) {
+      const list = u.divisionId !== undefined ? sectors.get(u.divisionId) : undefined
+      if (!list?.length || u.divisionId === undefined) {
+        free.push(u)
         continue
       }
-      const prev = u.order.kind === 'front' ? u.order.target : undefined
-      const sameSlot = prev && distanceKm(prev[0], prev[1], target[0], target[1]) < tolerance
-      // Même poste : on ne recalcule rien, sauf si l'unité est arrêtée loin de ce poste.
-      const stuck =
-        u.path.length === 0 && distanceKm(u.lon, u.lat, target[0], target[1]) > tolerance
-      if (sameSlot && !stuck && !ctx.runtime.get(u.id)?.pathPending) continue
-      u.order = { kind: 'front', target }
-      if (ctx.grid.size > LARGE_GRID_CELLS) {
-        // Carte du monde : chemin calculé plus tard, quelques-uns par tick (planQueuedPaths),
-        // pour éviter un à-coup de plusieurs centaines de ms sur les grands fronts.
-        u.path = []
-        runtimeOf(ctx, u.id).pathPending = true
-      } else {
-        planPath(ctx, u, target)
+      const k = taken.get(u.divisionId) ?? 0
+      taken.set(u.divisionId, k + 1)
+      // Milieu du secteur, puis alternativement d'un côté et de l'autre.
+      const offset = k % 2 === 0 ? k / 2 : -(k + 1) / 2
+      const n = list.length
+      const p = list[(((Math.floor(n / 2) + offset) % n) + n) % n]?.post
+      if (!p || withdrawing(u)) continue
+      let best: FrontCell | undefined
+      let bestKm = Infinity
+      for (const c of cells) {
+        const km = distanceKm(ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell), p[0], p[1])
+        if (km < bestKm) {
+          best = c
+          bestKm = km
+        }
       }
+      if (best) send(u, behind(ctx, side, best, depth), SLOT_TOLERANCE_KM)
+    }
+    place(free, depth)
+  }
+  /**
+   * Réserve : chaque division se regroupe en un point derrière le front (points répartis comme les
+   * postes, un par division), ses brigades côte à côte, au lieu de s'étaler le long de la ligne.
+   */
+  const placeReserve = (depth: number): void => {
+    const groups = new Map<number, UnitState[]>()
+    for (const u of line) {
+      const key = u.divisionId ?? -u.id
+      groups.set(key, [...(groups.get(key) ?? []), u])
+    }
+    const list = [...groups.values()]
+    const spots = slots(ctx, cells, list.length, weight)
+    const at = spots.map((c) => cells.indexOf(c))
+    // Chaque point revient au groupe le plus proche encore libre (paires triées par distance).
+    const center = list.map((g): LonLat => [
+      g.reduce((t, u) => t + u.lon, 0) / g.length,
+      g.reduce((t, u) => t + u.lat, 0) / g.length,
+    ])
+    const pairs: Array<{ gi: number; si: number; km: number }> = []
+    list.forEach((_, gi) =>
+      spots.forEach((c, si) => {
+        const [lon, lat] = center[gi] ?? [0, 0]
+        pairs.push({
+          gi,
+          si,
+          km: distanceKm(lon, lat, ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)),
+        })
+      }),
+    )
+    pairs.sort((a, b) => a.km - b.km || a.gi - b.gi || a.si - b.si)
+    const groupDone = new Set<number>()
+    const spotDone = new Set<number>()
+    for (const { gi, si } of pairs) {
+      if (groupDone.has(gi) || spotDone.has(si)) continue
+      groupDone.add(gi)
+      spotDone.add(si)
+      const spot = spots[si]
+      if (!spot) continue
+      const group = list[gi] ?? []
+      // Brigades côte à côte : les cellules de front les plus proches du point (30 km au plus).
+      const sLon = ctx.grid.lonOf(spot.cell)
+      const sLat = ctx.grid.latOf(spot.cell)
+      // Même direction de recul que le point : pas de cellule d'un autre pan du front.
+      const near = cells
+        .filter((c) => c.back[0] === spot.back[0] && c.back[1] === spot.back[1])
+        .map((c) => ({
+          c,
+          km: distanceKm(sLon, sLat, ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)),
+        }))
+        .filter((x) => x.km <= RESERVE_SPREAD_KM)
+        .sort((a, b) => a.km - b.km || a.c.cell - b.c.cell)
+      const step = Math.max(1, Math.min(2, Math.floor(near.length / Math.max(1, group.length))))
+      group.forEach((u, k) => {
+        const c = near[Math.min(near.length - 1, k * step)]?.c ?? spot
+        placedAt.set(u.id, {
+          at: (at[si] ?? 0) + k,
+          post: [ctx.grid.lonOf(c.cell), ctx.grid.latOf(c.cell)],
+        })
+        if (!withdrawing(u)) send(u, deepBehind(ctx, side, c, depth), SLOT_TOLERANCE_KM)
+      })
     }
   }
   const deep = army.mission?.kind === 'depth' || army.mission?.kind === 'reserve'
@@ -744,8 +875,8 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
   if (mission === 'reserve') {
     // Réserve : en retrait du front, prête à intervenir sur les percées (breakthrough.ts).
     const depth = Math.max(LINE_DEPTH + 1, cellsFor(RESERVE_KM))
-    place(line, depth, false, undefined, true)
-    place(rear, depth + 2)
+    placeReserve(depth)
+    placeRear(depth + 2)
     return
   }
   if (mission === 'depth' && line.length >= 2) {
@@ -755,11 +886,11 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
       { count: forward, depth: LINE_DEPTH },
       { count: line.length - forward, depth: Math.max(LINE_DEPTH + 1, cellsFor(SECOND_LINE_KM)) },
     ])
-    place(rear, Math.max(7, cellsFor(SECOND_LINE_KM) + 2))
+    placeRear(Math.max(7, cellsFor(SECOND_LINE_KM) + 2))
     return
   }
   place(line, LINE_DEPTH, picksFavorablePosts(army), undefined, true)
-  place(rear, 7)
+  placeRear(7)
 }
 
 /**

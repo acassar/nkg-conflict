@@ -45,7 +45,7 @@ describe("soutenabilité de l'armée", () => {
     const sim = newGame()
     sim.step(48)
     expect(sustainabilityOf(sim.ctx, 'UKR')).not.toBe(null)
-    // Pertes artificielles juste après la mesure : une unité réduite de moitié, une autre détruite.
+    // Pertes artificielles juste après la mesure : une unité réduite de moitié (hommes et matériel), une autre détruite.
     const own = [...sim.ctx.units.values()].filter((u) => u.owner === 'UKR' && u.kind === 'inf')
     const [hurt, gone] = own
     if (!hurt || !gone) throw new Error('unités absentes')
@@ -53,6 +53,8 @@ describe("soutenabilité de l'armée", () => {
     const before = sustainabilityOf(sim.ctx, 'UKR')
     if (!before) throw new Error('mesure absente')
     hurt.strength = Math.max(0, hurt.strength - 0.5)
+    // Le matériel perdu fait la part « production » des renforts (les hommes, la main-d'œuvre).
+    hurt.equipment = Math.max(0, (hurt.equipment ?? 1) - 0.5)
     sim.ctx.units.delete(gone.id)
     sim.step(24)
     const after = sustainabilityOf(sim.ctx, 'UKR')

@@ -61,12 +61,19 @@ const LONG_TRIP_KM = 150
  * chemin partiel s'arrête avant son poste est remise en attente par la répartition suivante.
  */
 export function planQueuedPaths(ctx: SimContext): void {
+  // Chacun son tour, par identifiant à partir de la dernière unité servie : sur un grand front où des
+  // postes changent sans cesse, les dernières unités créées (recrues) restaient sinon en attente.
+  const pending: UnitState[] = []
+  for (const u of ctx.units.values()) if (ctx.runtime.get(u.id)?.pathPending) pending.push(u)
+  if (pending.length === 0) return
+  const cursor = ctx.pathCursor ?? 0
+  pending.sort((a, b) => (a.id > cursor ? 0 : 1) - (b.id > cursor ? 0 : 1) || a.id - b.id)
   let budget = QUEUED_PATHS_PER_TICK
-  for (const u of ctx.units.values()) {
+  for (const u of pending) {
     if (budget <= 0) return
-    const rt = ctx.runtime.get(u.id)
-    if (!rt?.pathPending) continue
+    const rt = runtimeOf(ctx, u.id)
     rt.pathPending = false
+    ctx.pathCursor = u.id
     const target = u.order.target
     const kind = u.order.kind
     if ((kind !== 'front' && kind !== 'attack' && kind !== 'move') || !target) continue

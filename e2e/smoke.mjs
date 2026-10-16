@@ -270,7 +270,7 @@ try {
   }
   step('armée sélectionnée', await state())
 
-  // Clic sur un pion de division ukrainien : la vue Forces s'ouvre sur la division, surlignée ;
+  // Clic sur un pion de division ukrainien : la vue Forces s'ouvre sur la division elle-même ;
   // un clic sur la carte hors des pions ferme la sélection et la vue Forces.
   const camera = await page.evaluate(() => {
     const c = window.__nkgMap.getCenter()
@@ -317,7 +317,15 @@ try {
   }
   const followed = {
     drawer: await page.getByTestId('drawer-forces').isVisible(),
-    activeRows: await page.locator('[data-testid="forces-tree"] li.active').count(),
+    // Niveau ouvert : l'entité choisie elle-même (sa division pour une brigade).
+    opened: await page
+      .locator('[data-testid="forces-crumbs"] strong.crumb')
+      .innerText()
+      .catch(() => ''),
+    entity: await page.evaluate(() => {
+      const i = window.__nkg.selectionInfo
+      return (i?.echelon === 'brigade' ? i.division?.name : i?.name) ?? null
+    }),
     selection: await page.evaluate(() => window.__nkg.selection.length),
   }
   const empty = await page.evaluate(() => {
@@ -336,7 +344,7 @@ try {
   await page.evaluate(() => window.__nkg.selectCountry(null))
   await page.waitForTimeout(300)
   step('sélection suivie dans la vue Forces', { followed, closed })
-  if (!followed.drawer || followed.activeRows < 1 || followed.selection < 1) {
+  if (!followed.drawer || !followed.entity || followed.opened !== followed.entity) {
     report.errors.push(
       `sélection : vue Forces non ouverte sur l'entité (${JSON.stringify(followed)})`,
     )

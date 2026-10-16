@@ -6,6 +6,7 @@ import { parseSave, serializeSave } from '@/sim/core/save'
 import { updateArmies } from '@/sim/systems/armies'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import type { LonLat, UnitState } from '@/sim/core/types'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const theater = theaterJson as unknown as TheaterData
 const newGame = (): Simulation => Simulation.fromScenario(ukraine2026, theater, 7)
@@ -188,7 +189,7 @@ describe('encerclement', () => {
   it('détachement automatique : une partie de l’armée part, le reste tient le front', () => {
     const sim = newGame()
     const { target } = setup(sim)
-    const army = [...sim.ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+    const army = wholeFrontArmy(sim)
     if (!army) throw new Error('armée manquante')
     const before = army.unitIds.length
     expect(sim.encircleWithArmy(army.id, target.id)).toBe(null)

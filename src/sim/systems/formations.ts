@@ -175,6 +175,45 @@ function freeSlots(template: string, members: UnitState[]): string[] {
   return free
 }
 
+/**
+ * Division d'une armée rejointe par une brigade nouvelle (recrue sans division choisie) : une place
+ * libre pour son modèle (le plus proche du sien, puis la division la plus proche), sans limite de
+ * distance (la recrue sort d'une caserne loin du front) ; sans place libre (divisions réelles souvent
+ * plus grandes que leur modèle), la division qui a le moins de brigades, puis la plus proche. Null :
+ * l'armée n'a pas de division.
+ */
+export function openDivision(ctx: SimContext, armyId: number, u: UnitState): FormationState | null {
+  const members = new Map<number, UnitState[]>()
+  for (const x of ctx.units.values()) {
+    if (x.divisionId === undefined || x.id === u.id) continue
+    const list = members.get(x.divisionId)
+    if (list) list.push(x)
+    else members.set(x.divisionId, [x])
+  }
+  let best: FormationState | null = null
+  let bestKey: [number, number, number] = [0, 0, 0]
+  for (const f of ctx.formations.values()) {
+    if (f.kind !== 'division' || f.armyId !== armyId || f.owner !== u.owner) continue
+    const list = members.get(f.id) ?? []
+    if (list.length === 0) continue
+    const { fit } = bestSlot(freeSlots(divisionTemplate(f, list), list), u)
+    const [lon, lat] = centroid(list)
+    const km = distanceKm(u.lon, u.lat, lon, lat)
+    // Place libre d'abord (meilleur modèle, puis la plus proche) ; sinon le moins de brigades.
+    const key: [number, number, number] = [fit, fit > 0 ? 0 : -list.length, -km]
+    const better =
+      !best ||
+      key[0] > bestKey[0] ||
+      (key[0] === bestKey[0] &&
+        (key[1] > bestKey[1] || (key[1] === bestKey[1] && key[2] > bestKey[2])))
+    if (better) {
+      best = f
+      bestKey = key
+    }
+  }
+  return best
+}
+
 /** Armée qui tient la plupart des brigades d'une division (null : aucune). */
 function majorityArmy(ctx: SimContext, members: UnitState[]): number | null {
   const count = new Map<number, number>()

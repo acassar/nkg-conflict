@@ -15,6 +15,7 @@ import {
 } from '@/sim/systems/aiArmies'
 import { WarIndex } from '@/sim/systems/spatial'
 import type { TheaterData } from '@/sim/theater/grid'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const theater = theaterJson as unknown as TheaterData
 
@@ -84,13 +85,13 @@ describe('IA des armées : posture et mission selon la situation', () => {
   it("applique posture et mission à l'armée et à ses unités, puis attend avant d'en changer", () => {
     const sim = Simulation.fromScenario(ukraine2026, theater, 3)
     const ctx = sim.ctx
-    const army = [...ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+    const army = wholeFrontArmy(sim)
     if (!army) throw new Error('armée introuvable')
-    // Camp affaibli (les armées voisines comptent dans le rapport de force) : trois unités sur quatre de
-    // chaque armée disparaissent.
+    // Camp affaibli (les armées voisines et les réserves proches comptent dans le rapport de force) :
+    // quatre unités sur cinq de chaque armée disparaissent.
     for (const a of ctx.armies.values()) {
       if (a.owner !== 'UKR') continue
-      for (const id of a.unitIds.filter((_, k) => k % 4 !== 0)) ctx.units.delete(id)
+      for (const id of a.unitIds.filter((_, k) => k % 5 !== 0)) ctx.units.delete(id)
       a.unitIds = a.unitIds.filter((id) => ctx.units.has(id))
     }
     for (const u of ctx.units.values()) if (u.owner === 'UKR') u.org = 0.5

@@ -15,8 +15,8 @@ import commandTable from '../data/real/commands.json'
  * src/sim/data/real/front-sectors.json. Les corps sont d'abord regroupés sous leurs commandements
  * réels (groupByCommand) ; chaque corps part dans sa direction. Une armée prend les directions de ses
  * corps et la sienne ;
- * sans direction connue, elle couvre tout le front (formations dispersées : VDV, infanterie navale,
- * défense territoriale) ; hors du front (Kaliningrad, Arménie, frontière nord…), elle reste en
+ * sans direction connue, elle part en réserve derrière tout le front (formations dispersées : VDV,
+ * infanterie navale, Garde nationale, défense territoriale) ; hors du front (Kaliningrad, Arménie, frontière nord…), elle reste en
  * garnison.
  */
 

@@ -9,12 +9,13 @@ import { missionKind } from '@/sim/systems/missions'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import type { ArmyState, LonLat, UnitState } from '@/sim/core/types'
 import { isLineUnit } from '@/sim/units/catalog'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const theater = theaterJson as unknown as TheaterData
 
 function setup(): { sim: Simulation; army: ArmyState } {
   const sim = Simulation.fromScenario(ukraine2026, theater, 7)
-  const army = [...sim.ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+  const army = wholeFrontArmy(sim)
   if (!army) throw new Error('armée introuvable')
   return { sim, army }
 }
@@ -70,8 +71,9 @@ describe('missions « Défense en profondeur » et « Réserve »', () => {
     expect(missionKind(army)).toBe('reserve')
     const depths = postDepths(sim, army)
     expect(depths.length).toBeGreaterThan(5)
-    // La plupart des postes à 20 km ou plus du front (quelques-uns restent près d'une autre portion).
-    expect(depths.filter((d) => d >= 20).length / depths.length).toBeGreaterThan(0.6)
+    // La plupart des postes à 20 km ou plus du front (divisions regroupées : celles près d'un coude
+    // du front restent près de l'autre portion).
+    expect(depths.filter((d) => d >= 20).length / depths.length).toBeGreaterThan(0.5)
     expect(depths.reduce((s, d) => s + d, 0) / depths.length).toBeGreaterThan(20)
 
     // Percée : une brigade russe enfoncée en territoire ukrainien, près d'une unité de la réserve.

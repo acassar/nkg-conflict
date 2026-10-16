@@ -40,7 +40,7 @@ import {
   WAR_ECONOMY,
 } from './rules'
 import { unitName } from '../units/names'
-import { createDivision } from '../systems/formations'
+import { createDivision, openDivision } from '../systems/formations'
 import { spotNear, unitsNear } from '../politics/mobilization'
 import { manpowerFactor, productionFactor } from '../politics/politics'
 import { OCCUPATION_MANPOWER, OCCUPATION_YIELD, territoryShares } from './national'
@@ -629,8 +629,9 @@ function deployRecruit(
 
 /**
  * Division d'une recrue commandée par modèle : la division choisie si elle existe encore, ou celle de
- * sa division entière (créée à la sortie de la première brigade). Sans armée, la brigade attend d'en
- * rejoindre une (formations.ts).
+ * sa division entière (créée à la sortie de la première brigade), sinon une division de son armée qui a
+ * une place pour son modèle, même loin de la caserne. Sans armée, la brigade attend d'en rejoindre une
+ * (formations.ts).
  */
 function joinOrderedDivision(
   ctx: SimContext,
@@ -639,12 +640,15 @@ function joinOrderedDivision(
   u: UnitState,
 ): void {
   if (u.armyId === null) return
-  if (item.divisionId !== undefined) {
-    const d = ctx.formations.get(item.divisionId)
-    if (d && d.kind === 'division' && d.owner === country) u.divisionId = d.id
+  if (item.batch === undefined || !item.divisionTemplate) {
+    const chosen = item.divisionId !== undefined ? ctx.formations.get(item.divisionId) : undefined
+    const d =
+      chosen && chosen.kind === 'division' && chosen.owner === country
+        ? chosen
+        : openDivision(ctx, u.armyId, u)
+    if (d) u.divisionId = d.id
     return
   }
-  if (item.batch === undefined || !item.divisionTemplate) return
   let d: FormationState | undefined
   for (const f of ctx.formations.values()) {
     if (f.batch === item.batch && f.owner === country) d = f

@@ -10,6 +10,7 @@ import type { ArmyState, LonLat, UnitSnapshot } from '@/sim/core/types'
 import { isLineUnit } from '@/sim/units/catalog'
 import { breachAxis, encircleRing } from '@/map/missionPreview'
 import { MISSION_GROUPS, isLineMission, missionAction } from '@/composables/missions'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const readPublic = async (p: string): Promise<ArrayBuffer> => {
   const buf = fs.readFileSync(new URL(`../public/${p}`, import.meta.url))
@@ -23,7 +24,7 @@ beforeAll(async () => {
 
 function setup(): { sim: Simulation; army: ArmyState } {
   const sim = Simulation.fromScenario(ukraine2026, theater, 7)
-  const army = [...sim.ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+  const army = wholeFrontArmy(sim)
   if (!army) throw new Error('armée introuvable')
   return { sim, army }
 }

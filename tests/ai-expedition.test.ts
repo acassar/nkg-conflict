@@ -69,9 +69,14 @@ describe('IA de guerre à distance', () => {
     setRelation(ctx, 'ROU', 'MDA', 0)
     const mda = sideIndex(ctx, 'MDA')
     const before = ctx.grid.countOwned(mda)
-    sim.step(24 * 10)
+    // Jour par jour : l'IA peut signer la paix avant la fin des dix jours (le front disparaît alors).
+    let front = 0
+    for (let d = 0; d < 10; d++) {
+      sim.step(24)
+      front = Math.max(front, frontCells(ctx, sideIndex(ctx, 'SRB'), null).length)
+    }
     expect(ctx.grid.countOwned(mda)).toBeLessThan(before)
-    expect(frontCells(ctx, sideIndex(ctx, 'SRB'), null).length).toBeGreaterThan(0)
+    expect(front).toBeGreaterThan(0)
   })
 
   it('sans route terrestre, amène ses brigades au port puis débarque sur la côte ennemie', () => {

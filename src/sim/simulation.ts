@@ -417,10 +417,11 @@ export class Simulation {
         const sectors = scenario.forceSectors?.[country.id]
         sim.levyForces(country, forces, (a) => {
           if (!sectors) return 'whole'
-          // Hors du front : garnison ; secteur inconnu : tout le front.
+          // Hors du front : garnison ; secteur inconnu : en réserve derrière tout le front.
           const anchors = sectors[a.name]
           if (!anchors) return null
-          return (anchors.length && sectorFront(ctx, side, anchors)) || 'whole'
+          if (anchors.length === 0) return 'reserve'
+          return sectorFront(ctx, side, anchors) || 'whole'
         })
         continue
       }
@@ -460,6 +461,7 @@ export class Simulation {
     ctx.sea = (save.sea ?? []).map((t) => structuredClone(t))
     ctx.air = (save.air ?? []).map((z) => structuredClone(z))
     ctx.nextFormationId = Math.max(0, ...[...ctx.formations.keys()]) + 1
+    if (save.pathCursor) ctx.pathCursor = save.pathCursor
     sim.nextId = save.nextId
     sim.events = save.events.slice(-MAX_EVENTS)
     sim.outcome = save.outcome
@@ -1630,6 +1632,7 @@ export class Simulation {
       air: ctx.air.map((z) => structuredClone(z)),
       events: this.events.slice(),
       outcome: this.outcome,
+      ...(ctx.pathCursor ? { pathCursor: ctx.pathCursor } : {}),
       aiLastOffensiveTick: Object.fromEntries(
         [...this.ai.entries()].map(([c, s]) => [c, s.lastOffensiveTick]),
       ),

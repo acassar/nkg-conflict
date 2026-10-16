@@ -7,12 +7,13 @@ import { missionKind } from '@/sim/systems/missions'
 import { distanceKm, type TheaterData } from '@/sim/theater/grid'
 import type { ArmyState, LonLat, RetreatMission, UnitState } from '@/sim/core/types'
 import { isLineUnit } from '@/sim/units/catalog'
+import { wholeFrontArmy } from './helpers/lineArmy'
 
 const theater = theaterJson as unknown as TheaterData
 
 function setup(): { sim: Simulation; army: ArmyState } {
   const sim = Simulation.fromScenario(ukraine2026, theater, 7)
-  const army = [...sim.ctx.armies.values()].find((a) => a.owner === 'UKR' && a.wholeFront)
+  const army = wholeFrontArmy(sim)
   if (!army) throw new Error('armée introuvable')
   return { sim, army }
 }

@@ -1,0 +1,30 @@
+- option de départ au doigt {"cochee":true,"decochee":true}
+- alerte centrée {"selection":[5827],"center":[37.549999999999955,49.849999999999994]}
+- alertes repliées {"folded":true}
+- barre du haut {"hauteur":51}
+- soutenabilité (menu) {"valeur":"Armée\n…"}
+- aide (mobile) {"boite":{"x":0,"y":0,"width":390,"height":844}}
+- jauge (mobile) {"boite":{"x":8,"y":52,"width":374,"height":426.203125}}
+- carte logistique {"legende":{"x":10,"y":97.75,"width":272,"height":278.25}}
+- filtre Pays {"bouton":{"x":114,"y":384,"width":44,"height":44},"legende":{"x":10,"y":267.0625,"width":272,"height":108.9375}}
+- appui prolongé {"texte":"Plaine : vitesse 0 %, défense 0 %","boite":{"x":10,"y":351.8125,"width":370,"height":24.1875},"afterPress":{"selection":0,"mode":"select","tab":null}}
+- sélection par zone {"unites":92,"tiroir":"half"}
+- bouton Débarquer (mobile) {"boite":{"x":140.65625,"y":1020.75,"width":108.671875,"height":55.796875}}
+- bouton Transporter (mobile) {"boite":{"x":26,"y":1020.75,"width":108.65625,"height":55.796875}}
+- ordre au doigt {"ordre":"move","tiroir":"half"}
+- mission au doigt {"avance":true}
+- bataille (mobile) {"boite":{"x":6,"y":52,"width":378,"height":465.40625}}
+- bloc Aviation (mobile) {"boite":{"x":11,"y":508.484375,"width":368,"height":30.796875}}
+- vue Forces (mobile) {"arbre":{"x":11,"y":547.28125,"width":368,"height":750.15625},"echelon":{"x":11,"y":574.484375,"width":368,"height":72.28125}}
+- recrutement par armée (mobile) {"avant":0,"apres":2}
+- points clés (mobile) {"mission":"keyPoints"}
+- barre du bas {"boite":{"x":1,"y":788,"width":388,"height":56},"entrees":4}
+- tiroir glissé {"etat":"full"}
+- file de production (mobile) {"bouton":{"x":313,"y":308.21875,"width":26,"height":36},"tete":[10120,10121]}
+- budget (mobile) {"boite":{"x":11,"y":274.78125,"width":368,"height":450.828125}}
+- curseurs du budget (mobile) {"boite":{"x":133,"y":395.265625,"width":174,"height":16}}
+- construire quoi puis où (mobile) {"conseils":3,"boite":{"x":11,"y":308.015625,"width":368,"height":58.96875}}
+- retour au menu {"ok":true}
+- paysage {"panneau":{"x":516,"y":48,"width":322,"height":336}}
+- WebGL indisponible (mobile) {"message":{"x":16,"y":64,"width":358,"height":319.234375}}
+MOBILE OK

@@ -1,0 +1,67 @@
+- chargement {"tick":0,"player":"UKR","wars":["RUS→UKR"],"paused":true,"units":3638,"engaged":0,"armies":11,"territoryHeld":{"UKR":100,"RUS":100},"gridVersion":1,"hasGrid":true,"events":[]}
+- survol de la carte {"texte":"Ville : vitesse −30 %, défense +50 % Route principale Voie ferrée Kyiv, capitale : 2,7 M hab."}
+- alerte centrée {"selection":[5827],"center":[37.25910143223996,49.87433174230887]}
+- alertes repliées {"folded":true}
+- cadre {"rail":14,"tiroir":104,"inspecteur":1080,"largeur":1440}
+- vue Forces {"crumbsArmy":2,"formationRows":3,"crumbsDeep":3,"echelonText":"XXX\n3e corps d'armée\n9 brigades\n3e corps d'armée","templates":18,"battalions":3,"afterUp":5}
+- armée sélectionnée {"tick":0,"player":"UKR","wars":["RUS→UKR"],"paused":true,"units":3638,"engaged":0,"armies":11,"territoryHeld":{"UKR":100,"RUS":100},"gridVersion":1,"hasGrid":true,"events":[]}
+- sélection suivie dans la vue Forces {"followed":{"drawer":true,"opened":"2e division (Garde nationale d'Ukraine)","entity":"2e division (Garde nationale d'Ukraine)","selection":4},"closed":{"drawer":false,"selection":0}}
+- ordre clic droit {"ordre":"move"}
+- production {"avant":{"construction":0,"recruitment":0},"apres":{"construction":1,"recruitment":0}}
+- fortifications de Kyiv {"texte":"Sans fortification. Chaque niveau : +15 % de défense à vos unités à moins de 15 km."}
+- diplomatie {"avant":40,"apres":50}
+- aide demandée {"niveau":1}
+- clic sur Varsovie {"pays":"POL"}
+- budget national {"secteurs":4}
+- entretien et conscription {"entretien":"Entretien de l'armée : 138 M$/j, 100 % payé","reserve":"Réserve mobilisable : 4 836 k hommes · conscription ≈ 0,4 k/j"}
+- curseurs du budget {"allocation":{"defense":0.8,"construction":0,"research":0.19999999999999996,"reserve":0}}
+- file de production {"lignes":3,"tete":["Kyiv","Lviv"],"auto":{"build":false,"recruit":true}}
+- construire quoi puis où {"conseils":3,"premier":"1 Kharkiv à 27 km du front · 3 unités à portée · 3 places libres · risque de prise élevé Construire"}
+- usine posée librement {"pixel":[677.5567067314042,486.40728782821725],"emplacement":[28.980128528369953,49.60942146385456]}
+- économie de guerre {"niveau":1,"recrutementVille":0,"renvoi":1}
+- soutenabilité {"panneau":"Soutenabilité de l'armée : durable (×7,3)","barre":"durable\n×7,3","titre":"Soutenabilité de l'armée (moyenne glissante sur une semaine)\nLes revenus couvrent les besoins de l'armée (×7,3 sur la ressource la plus tendue) : armée durable.\nProduction : besoins 2/j, revenus 244/j, solde +242/j, stock 901 (besoins : renforts 2, unités détruites 0 · dont aide reçue 170/j)\nMunitions : besoins 45/j, revenus 326/j, solde +281/j, stock 1 114 (besoins : tirs des unités au contact · dont aide reçue 227/j)\nMain-d'œuvre : besoins 0 k/j, revenus 1 k/j, solde +1 k/j, stock 39 k (besoins : renforts 0, unités détruites 0)"}
+- jauges {"jauges":4,"capacites":0,"fenetre":"MUNITIONS\n1 114\n+297/j\n×\n\nMunitions en stock : chaque tir en consomme ; à zéro, "}
+- poursuite {"unites":3}
+- ordre annulé {"poursuivent":0}
+- posture {"postures":["maxDamage"]}
+- encerclement {"phase":"staging"}
+- mission avancer {"mission":"advance","statut":"Avancer : trait tracé · 0 % du tracé tenu"}
+- aperçu points clés {"mission":"hold","posts":18,"points":5}
+- mission points clés {"mission":"keyPoints","points":5,"statut":"Points clés : portion de front · 5 point(s) clé(s) tenu(s)"}
+- aperçu depth {"lignes":1}
+- mission depth {"mission":"depth"}
+- aperçu reserve {"lignes":1}
+- mission reserve {"mission":"reserve"}
+- mission défendre des points {"mission":"defendPoints","points":7,"tenus":7}
+- visée percée {"bandeau":{"x":493,"y":817.109375,"width":454,"height":30.890625},"pointeur":[36.7042475555248,50.15000001208776]}
+- mission percée {"mission":"breach","choc":9,"statut":"Percée : 9 unité(s) de choc · 44 % de l'axe tenu"}
+- mission retraite {"mission":"retreat","statut":"Retraite : trait tracé · 0 % des unités sur la ligne"}
+- recrutement par armée {"casernes":6,"avant":0,"apres":9,"forArmy":9}
+- composition {"lignes":5,"types":5}
+- ordre de bataille {"corps":3,"divisions":6,"choisie":{"n":5,"divisions":1},"formationText":"1re division (3e corps d'armée) · 3e corps d'armée"}
+- jauges de matériel {"jauges":5,"unites":5}
+- sauvegarde et reprise {"sauvee":72,"reprise":72}
+- après 8 s en vitesse 5 {"tick":528,"player":"UKR","wars":["RUS→UKR"],"paused":true,"units":3765,"engaged":5,"armies":11,"territoryHeld":{"UKR":98.8,"RUS":100},"gridVersion":230,"hasGrid":true,"events":["Décrochage : 96e brigade de reconnaissance","Décrochage : 1141e régiment d'artillerie","Forces de défense territoriale (brigades non rattachées) bloque une percée près de Donetsk","41e armée interarmes de la Garde (DM Centre) bloque une percée près de Rostov","Décrochage : 56e régiment d'assaut aérien et 108e régiment d'assaut aérien"]}
+- écran de bataille {"camps":2,"obstacles":3}
+- aide des modificateurs {"explication":true}
+- aide depuis le menu {"sections":17}
+- aide : types d’unités {"lignes":15}
+- caméra clavier {"avant":39.34891368288378,"apres":39.975134386008676}
+- perte du contexte WebGL {"nouvelle":true,"erreur":false,"canvas":2}
+- tracé du front {"morceaux":2}
+- carte logistique {"guerre":true,"sources":8,"poches":0,"relie":6979}
+- routes et voies ferrées {"routes":177245,"rail":61586,"affichees":true}
+- filtre Pays {"vue":"countries"}
+- donneurs hors carte {"aides":5,"fiche":"USA"}
+- options de départ {"guerres":0,"alliances":0,"organisations":0,"sanctions":0,"aides":0,"optionsUkraine":1}
+- débarquement {"choisies":1,"enMer":1,"capacite":2,"ports":["Nice","Cayenne"]}
+- transport stratégique {"choisies":2,"enRoute":["7e brigade blindée · rail · Bordeaux","9e brigade d'infanterie de marine · rail · Bordeaux"]}
+- rappel des transports {"bouton":"2","lignes":2}
+- aviation {"puissance":67,"zones":["support 4.8,45.8"]}
+- frontière tenue {"armees":{"a":9786,"b":9787},"peinte":14,"fiche":"Frontière tenue : environ 130 km avec Allemagne","partage":{"a":0,"b":32,"overlap":0}}
+- encart de guerre {"statut":"Tenir : tout le front","mission":"advance","encart":false}
+- coalition : droit de passage {"reponse":"Pays-Bas refuse (score −5 pour 40 : relations −5)","accorde":false}
+- aide en argent {"budget":"Aide étrangère en argent : versée −20 M$/j (comptée dans la réserve)"}
+- journal {"tout":7,"combats":2}
+- WebGL indisponible {"bouton":true,"apresReessai":true,"erreurs":[]}
+SMOKE OK

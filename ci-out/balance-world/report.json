@@ -1,0 +1,264 @@
+{
+  "sha": "f1518aabcb915d0e5743f77be63e8e9c7c5bddab",
+  "days": 90,
+  "seeds": [
+    1
+  ],
+  "summary": [
+    {
+      "country": "UKR",
+      "territory": {
+        "min": 1.029582448690729,
+        "mean": 1.029582448690729,
+        "max": 1.029582448690729
+      },
+      "losses": {
+        "min": 18,
+        "mean": 18,
+        "max": 18
+      }
+    },
+    {
+      "country": "RUS",
+      "territory": {
+        "min": 0.9992799310938846,
+        "mean": 0.9992799310938846,
+        "max": 0.9992799310938846
+      },
+      "losses": {
+        "min": 20.4,
+        "mean": 20.4,
+        "max": 20.4
+      }
+    },
+    {
+      "country": "USA",
+      "territory": {
+        "min": 1,
+        "mean": 1,
+        "max": 1
+      },
+      "losses": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      }
+    },
+    {
+      "country": "CHN",
+      "territory": {
+        "min": 1,
+        "mean": 1,
+        "max": 1
+      },
+      "losses": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      }
+    },
+    {
+      "country": "IND",
+      "territory": {
+        "min": 1,
+        "mean": 1,
+        "max": 1
+      },
+      "losses": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      }
+    },
+    {
+      "country": "FRA",
+      "territory": {
+        "min": 1,
+        "mean": 1,
+        "max": 1
+      },
+      "losses": {
+        "min": 0,
+        "mean": 0,
+        "max": 0
+      }
+    }
+  ],
+  "games": [
+    {
+      "seed": 1,
+      "days": 90,
+      "peaceDay": null,
+      "outcome": null,
+      "timeline": [
+        {
+          "day": 0,
+          "countries": {
+            "UKR": {
+              "territory": 1,
+              "units": 184
+            },
+            "RUS": {
+              "territory": 1,
+              "units": 170
+            },
+            "USA": {
+              "territory": 1,
+              "units": 133
+            },
+            "CHN": {
+              "territory": 1,
+              "units": 227
+            },
+            "IND": {
+              "territory": 1,
+              "units": 198
+            },
+            "FRA": {
+              "territory": 1,
+              "units": 13
+            }
+          }
+        },
+        {
+          "day": 30,
+          "countries": {
+            "UKR": {
+              "territory": 1.0060863411181882,
+              "units": 189
+            },
+            "RUS": {
+              "territory": 0.9998518518518519,
+              "units": 175
+            },
+            "USA": {
+              "territory": 1,
+              "units": 140
+            },
+            "CHN": {
+              "territory": 1,
+              "units": 235
+            },
+            "IND": {
+              "territory": 1,
+              "units": 204
+            },
+            "FRA": {
+              "territory": 1,
+              "units": 17
+            }
+          }
+        },
+        {
+          "day": 60,
+          "countries": {
+            "UKR": {
+              "territory": 1.0230714791224345,
+              "units": 198
+            },
+            "RUS": {
+              "territory": 0.9994384151593454,
+              "units": 181
+            },
+            "USA": {
+              "territory": 1,
+              "units": 146
+            },
+            "CHN": {
+              "territory": 1,
+              "units": 244
+            },
+            "IND": {
+              "territory": 1,
+              "units": 212
+            },
+            "FRA": {
+              "territory": 1,
+              "units": 17
+            }
+          }
+        },
+        {
+          "day": 90,
+          "countries": {
+            "UKR": {
+              "territory": 1.029582448690729,
+              "units": 194
+            },
+            "RUS": {
+              "territory": 0.9992799310938846,
+              "units": 192
+            },
+            "USA": {
+              "territory": 1,
+              "units": 154
+            },
+            "CHN": {
+              "territory": 1,
+              "units": 255
+            },
+            "IND": {
+              "territory": 1,
+              "units": 219
+            },
+            "FRA": {
+              "territory": 1,
+              "units": 17
+            }
+          }
+        }
+      ],
+      "countries": [
+        {
+          "country": "UKR",
+          "territory": 1.029582448690729,
+          "units": 194,
+          "losses": 18,
+          "destroyed": 9,
+          "created": 19
+        },
+        {
+          "country": "RUS",
+          "territory": 0.9992799310938846,
+          "units": 192,
+          "losses": 20.4,
+          "destroyed": 4,
+          "created": 26
+        },
+        {
+          "country": "USA",
+          "territory": 1,
+          "units": 154,
+          "losses": 0,
+          "destroyed": 0,
+          "created": 21
+        },
+        {
+          "country": "CHN",
+          "territory": 1,
+          "units": 255,
+          "losses": 0,
+          "destroyed": 0,
+          "created": 28
+        },
+        {
+          "country": "IND",
+          "territory": 1,
+          "units": 219,
+          "losses": 0,
+          "destroyed": 0,
+          "created": 21
+        },
+        {
+          "country": "FRA",
+          "territory": 1,
+          "units": 17,
+          "losses": 0,
+          "destroyed": 0,
+          "created": 4
+        }
+      ],
+      "ms": 19280
+    }
+  ]
+}

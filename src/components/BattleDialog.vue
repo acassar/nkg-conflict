@@ -135,21 +135,21 @@ function focus(): void {
           data-testid="battle-help"
           @click="openHelp('combat')"
         >
-          <template v-if="isMobile">?</template><NkgIcon v-else name="info" :size="16" />
+          <NkgIcon name="info" :size="16" />
         </button>
         <button title="Centrer la carte sur la bataille" @click="focus">
           {{ isMobile ? 'Voir' : 'Voir sur la carte' }}
         </button>
         <button class="icon" aria-label="Fermer" @click="game.closeBattle()">
-          <template v-if="isMobile">✕</template><NkgIcon v-else name="close" :size="16" />
+          <NkgIcon name="close" :size="16" />
         </button>
       </div>
     </header>
 
     <p v-if="!report" class="meta">Plus de combat ici.</p>
     <template v-else>
-      <!-- Grand écran : les deux camps de part et d'autre du rapport de force. -->
-      <div v-if="!isMobile && sides.length === 2" class="versus">
+      <!-- Les deux camps de part et d'autre du rapport de force. -->
+      <div v-if="sides.length === 2" class="versus">
         <div class="camp a">
           <span class="camp-name">{{ sides[0]?.title }}</span>
           <span class="camp-meta"
@@ -477,6 +477,9 @@ li.routed {
   top: 80px;
   width: min(760px, calc(100% - 420px));
   padding: 14px 16px 16px;
+}
+/* Téléphone compris : même habillage, seule la place change. */
+.battle.battle {
   background: var(--nkg-panel-bg);
   color: var(--nkg-text);
   border: 1px solid var(--nkg-brass-dark);
@@ -484,29 +487,29 @@ li.routed {
   box-shadow: var(--nkg-panel-shadow);
   font: 13px/1.4 var(--nkg-sans);
 }
-.battle:not(.mobile) header strong {
+.battle.battle header strong {
   font-family: var(--nkg-serif);
   font-size: 22px;
   font-weight: 600;
 }
-.battle:not(.mobile) header .meta {
+.battle.battle header .meta {
   color: #a99a7a;
   font-size: 12.5px;
 }
-.battle:not(.mobile) .actions {
+.battle.battle .actions {
   align-items: center;
 }
-.battle:not(.mobile) button {
+.battle.battle button {
   height: 32px;
   padding: 0 12px;
   background: var(--nkg-tile-bg);
   border: 1px solid var(--nkg-line-strong);
   border-radius: 4px;
 }
-.battle:not(.mobile) button:hover {
+.battle.battle button:hover {
   border-color: var(--nkg-brass);
 }
-.battle:not(.mobile) button.icon {
+.battle.battle button.icon {
   display: grid;
   place-items: center;
   width: 32px;
@@ -570,66 +573,75 @@ li.routed {
   font-size: 12px;
   color: #c9bfa8;
 }
-.battle:not(.mobile) .side h3 {
+.battle.battle .side h3 {
   display: none;
 }
-.battle:not(.mobile) .totals {
+.battle.battle .totals {
   font-size: 12px;
   color: var(--nkg-text-muted);
 }
-.battle:not(.mobile) .loss {
+.battle.battle .loss {
   color: var(--nkg-bad-text);
 }
-.battle:not(.mobile) li {
+.battle.battle li {
   padding: 8px 10px;
   margin-bottom: 6px;
   background: var(--nkg-tile-bg);
   border: 1px solid var(--nkg-line-strong);
   border-radius: 5px;
 }
-.battle:not(.mobile) li:hover {
+.battle.battle li:hover {
   border-color: var(--nkg-brass);
 }
-.battle:not(.mobile) li.open {
+.battle.battle li.open {
   background: var(--nkg-tile-on-bg);
   border-color: var(--nkg-brass-light);
 }
-.battle:not(.mobile) .gauge {
+.battle.battle .gauge {
   background: #2b333e;
 }
-.battle:not(.mobile) .gauge .strength {
+.battle.battle .gauge .strength {
   background: var(--nkg-good);
 }
-.battle:not(.mobile) .gauge .equipment {
+.battle.battle .gauge .equipment {
   background: var(--nkg-warn);
 }
-.battle:not(.mobile) .gauge .org {
+.battle.battle .gauge .org {
   background: #5b8fd9;
 }
-.battle:not(.mobile) .mods {
+.battle.battle .mods {
   padding: 6px 10px 8px;
   background: var(--nkg-surface-sunken);
   border: 1px solid #2e3540;
   border-radius: 5px;
 }
-.battle:not(.mobile) .mods strong {
+.battle.battle .mods strong {
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--nkg-label);
 }
-.battle:not(.mobile) .explain {
+.battle.battle .explain {
   background: #0e1217;
 }
-.battle:not(.mobile) .explain .more {
+.battle.battle .explain .more {
   height: 22px;
   padding: 0 8px;
 }
-.battle:not(.mobile) .up {
+.battle.battle .up {
   color: var(--nkg-good-text);
 }
-.battle:not(.mobile) .down {
+.battle.battle .down {
   color: var(--nkg-bad-text);
+}
+.battle.mobile .versus {
+  gap: 8px;
+}
+.battle.mobile .ratio {
+  width: 96px;
+}
+.battle.mobile .camp-name {
+  font-size: 15px;
 }
 </style>

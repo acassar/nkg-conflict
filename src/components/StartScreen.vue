@@ -7,8 +7,10 @@ import { isMobile } from '@/composables/layout'
 import NkgIcon from './NkgIcon.vue'
 
 const game = useGameStore()
-/** Grand écran : titre en haut à gauche, choix à gauche, pays choisi et « Jouer » à droite. */
-const desktop = computed(() => !isMobile.value)
+/**
+ * Titre en haut à gauche, choix à gauche, pays choisi et « Jouer » à droite ;
+ * sur téléphone, les trois blocs s'empilent.
+ */
 
 interface Choice {
   code: string
@@ -17,21 +19,12 @@ interface Choice {
 }
 
 const scenarioId = ref('world-2026')
-const epoch = ref('modern')
 const countries = ref<Choice[]>([])
 const country = ref<string | null>(null)
 const search = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const noAffiliations = ref(false)
 const noWars = ref(false)
-
-const EPOCHS = [
-  { id: 'modern', name: 'Époque moderne (2026)', available: true },
-  { id: 'cold-war', name: 'Guerre froide (~1985)', available: false },
-  { id: 'ww2', name: 'Seconde Guerre mondiale (1939)', available: false },
-  { id: 'ww1', name: 'Première Guerre mondiale (1914)', available: false },
-  { id: 'napoleon', name: 'Époque napoléonienne (~1805)', available: false },
-]
 
 const scenario = computed(() => game.scenarios.find((s) => s.id === scenarioId.value) ?? null)
 const offers = (key: 'noAffiliations' | 'noWars'): boolean =>
@@ -93,17 +86,12 @@ async function onFile(event: Event): Promise<void> {
 </script>
 
 <template>
-  <div class="start" :class="{ desk: desktop }" data-testid="start-screen">
-    <header v-if="desktop" class="brand">
+  <div class="start desk" :class="{ narrow: isMobile }" data-testid="start-screen">
+    <header class="brand">
       <h1>nkg-conflict</h1>
       <p class="tagline">Grande stratégie en temps réel, sur la carte du monde</p>
     </header>
     <div class="card">
-      <template v-if="!desktop">
-        <h1>nkg-conflict</h1>
-        <p class="tagline">Grande stratégie en temps réel, sur la carte du monde.</p>
-      </template>
-
       <section v-if="game.saves.length" data-testid="saves">
         <h2>Reprendre</h2>
         <ul class="saves">
@@ -133,7 +121,7 @@ async function onFile(event: Event): Promise<void> {
                 aria-label="Supprimer"
                 @click="confirmDelete(s.slot)"
               >
-                <NkgIcon v-if="desktop" name="close" :size="14" /><template v-else>✕</template>
+                <NkgIcon name="close" :size="14" />
               </button>
             </div>
           </li>
@@ -155,15 +143,6 @@ async function onFile(event: Event): Promise<void> {
             <span>{{ s.description }}</span>
           </button>
         </div>
-      </section>
-
-      <section v-if="!desktop">
-        <h2>Époque</h2>
-        <select v-model="epoch" aria-label="Époque">
-          <option v-for="e in EPOCHS" :key="e.id" :value="e.id" :disabled="!e.available">
-            {{ e.name }}{{ e.available ? '' : ' · bientôt' }}
-          </option>
-        </select>
       </section>
 
       <section v-if="offers('noAffiliations') || offers('noWars')" data-testid="start-options">
@@ -213,16 +192,6 @@ async function onFile(event: Event): Promise<void> {
         </ul>
       </section>
 
-      <div v-if="!desktop" class="actions">
-        <button class="primary" :disabled="!chosen || game.loading" @click="start">
-          {{
-            game.loading ? 'Chargement…' : chosen ? `Jouer ${chosen.name}` : 'Choisissez un pays'
-          }}
-        </button>
-        <button :disabled="game.loading" @click="fileInput?.click()">Importer un fichier</button>
-        <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
-      </div>
-      <p v-if="game.notice && !desktop" class="error" role="alert">{{ game.notice }}</p>
       <p class="footnote">
         Scénario hypothétique, sans prétention de reconstitution historique.
         {{
@@ -233,8 +202,8 @@ async function onFile(event: Event): Promise<void> {
       </p>
     </div>
 
-    <!-- Grand écran : pays choisi et lancement de la partie. -->
-    <aside v-if="desktop" class="chosen" aria-label="Pays choisi">
+    <!-- Pays choisi et lancement de la partie. -->
+    <aside class="chosen" aria-label="Pays choisi">
       <div class="chosen-head">
         <span class="emblem"><NkgIcon name="flag" :size="22" /></span>
         <div>
@@ -651,5 +620,33 @@ input:not([type='checkbox']) {
 }
 .chosen .error {
   margin: 0;
+}
+/* Téléphone : titre, choix et pays choisi s'empilent ; « Jouer » reste en bas. */
+.start.desk.narrow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: calc(14px + env(safe-area-inset-top)) 12px 0;
+}
+.narrow .brand,
+.narrow .card,
+.narrow .chosen {
+  position: static;
+  width: auto;
+}
+.narrow .brand h1 {
+  font-size: 34px;
+}
+.narrow .card {
+  flex: none;
+  overflow: visible;
+}
+.narrow .chosen {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -12px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  border-radius: 0;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
 }
 </style>

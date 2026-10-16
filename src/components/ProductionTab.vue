@@ -24,7 +24,6 @@ import {
 import { useProductionStats } from '@/composables/production'
 import { useSustainability } from '@/composables/sustainability'
 import { fortBonusPct, fortSummary } from '@/sim/economy/forts'
-import { layout } from '@/composables/layout'
 import NkgIcon, { type IconName } from './NkgIcon.vue'
 
 /** domain : tiroir Production ; city : fiche de la ville choisie (inspecteur). */
@@ -143,11 +142,10 @@ const spot = computed(() => {
 const warLevel = computed<WarEconomyLevel>(() => economy.value?.warEconomy ?? 0)
 const warEffects = computed(() => warEconomyEffects(warLevel.value))
 const signed = (v: number): string => `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`
-/** Grand écran : deux onglets (budget, chantiers) ; le téléphone garde la liste complète. */
-const desktop = computed(() => layout.value === 'desktop')
+/** Deux onglets : budget, chantiers. */
 const tab = ref<'budget' | 'build'>('budget')
-const showBudget = computed(() => !desktop.value || tab.value === 'budget')
-const showBuild = computed(() => !desktop.value || tab.value === 'build')
+const showBudget = computed(() => tab.value === 'budget')
+const showBuild = computed(() => tab.value === 'build')
 
 const BUILDING_ICONS: Record<string, IconName> = {
   civ: 'factory',
@@ -176,7 +174,7 @@ const warTitle = (level: WarEconomyLevel): string => {
 </script>
 
 <template>
-  <div class="production" :class="{ desk: desktop }">
+  <div class="production desk">
     <template v-if="part === 'city'">
       <!-- Ville sélectionnée : une tuile par bâtiment, l'explication en infobulle. -->
       <section v-if="selectedCity" class="city" data-testid="city-sheet">
@@ -281,7 +279,7 @@ const warTitle = (level: WarEconomyLevel): string => {
       </section>
     </template>
     <template v-else>
-      <nav v-if="desktop" class="tabs" aria-label="Production">
+      <nav class="tabs" aria-label="Production">
         <button
           class="tab"
           :class="{ on: tab === 'budget' }"

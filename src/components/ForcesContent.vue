@@ -480,7 +480,7 @@ const unitsOfArmy = computed(() => {
   return game.snapshot?.units.filter((u) => ids.has(u.id)) ?? []
 })
 
-// ---------- Fiche compacte de la sélection (grand écran) et volet accolé ----------
+// ---------- Fiche compacte de la sélection et volet accolé (sous la fiche sur téléphone) ----------
 
 const desktop = computed(() => layout.value === 'desktop')
 /** Visée sur la carte en cours : le volet s'efface pour la dégager, puis revient (sauf frontière). */
@@ -582,13 +582,11 @@ const ATTACK_TILES: {
   },
 ]
 
-// Fiche d'armée (grand écran) : Mission, Posture, Composition et Renforts s'ouvrent dans le volet.
+// Fiche d'armée : Mission, Posture, Composition et Renforts s'ouvrent dans le volet.
 type ArmyPanel = 'command' | 'posture' | 'composition' | 'recruit'
 const armyPanel = ref<ArmyPanel | null>(armyView.value === 'command' ? null : armyView.value)
-/** Volet affiché : celui choisi sur grand écran, l'onglet en cours sur téléphone. */
-const armyShown = computed<ArmyPanel | null>(() =>
-  desktop.value ? armyPanel.value : armyView.value,
-)
+/** Volet affiché, ou aucun. */
+const armyShown = computed<ArmyPanel | null>(() => armyPanel.value)
 function toggleArmyPanel(p: ArmyPanel): void {
   armyPanel.value = armyPanel.value === p ? null : p
   if (p !== 'posture') armyView.value = p
@@ -599,7 +597,7 @@ function closeArmyPanel(): void {
 }
 // « Commander des renforts » ailleurs dans l'interface ouvre le volet des renforts.
 watch(armyView, (v) => {
-  if (desktop.value && v !== 'command') armyPanel.value = v
+  if (v !== 'command') armyPanel.value = v
 })
 const ARMY_PANEL_TITLES: Record<ArmyPanel, string> = {
   command: 'Mission',
@@ -654,8 +652,8 @@ async function createArmy(): Promise<void> {
             : 'Cliquez sur une de vos unités pour la sélectionner, Maj + clic pour en ajouter.'
         }}
       </p>
-      <!-- Grand écran : fiche compacte ; ordres, posture, mission et détails dans un volet accolé. -->
-      <div v-else-if="desktop" class="sheet" data-testid="unit-sheet">
+      <!-- Fiche compacte ; ordres, posture, mission et détails dans un volet accolé (sous les tuiles sur téléphone). -->
+      <div v-else class="sheet" data-testid="unit-sheet">
         <button
           v-if="upTarget"
           class="up"
@@ -759,58 +757,11 @@ async function createArmy(): Promise<void> {
           </button>
         </div>
 
-        <!-- Échelon en dessous : bataillons d'une brigade seule, sinon brigades (par division). -->
-        <template v-if="selectedUnits.length === 1 && selectedUnits[0]">
-          <div class="label">Bataillons</div>
-          <ul class="subs battalions" data-testid="unit-battalions">
-            <li v-for="b in battalionRows(selectedUnits[0])" :key="b.kind">
-              {{ b.count }} × {{ b.name }}
-            </li>
-          </ul>
-        </template>
-        <template v-else>
-          <div class="label">Échelon en dessous · {{ selectedUnits.length }} brigades</div>
-          <template v-for="g in unitGroups" :key="g.key">
-            <button
-              v-if="unitGroups.length > 1"
-              class="sub-row group-row"
-              data-testid="selection-group"
-              :title="g.division ? 'Sélectionner toute cette division' : undefined"
-              :disabled="!g.division"
-              @click="g.division && pickDivision(g.division.id)"
-            >
-              <span class="sname">{{ g.division?.name ?? 'Sans division' }}</span>
-              <span class="faint small"
-                >{{ g.units.length }}{{ g.division ? ` / ${g.total}` : '' }}</span
-              >
-            </button>
-            <button
-              v-for="u in g.units"
-              :key="u.id"
-              class="sub-row"
-              :class="{ nested: unitGroups.length > 1 }"
-              data-testid="selection-unit"
-              :title="`${templateLabel(u)} · sélectionner cette brigade seule`"
-              @click="pickUnit(u)"
-            >
-              <span class="sname">{{ u.name }}</span>
-              <span class="bar mini" :title="`Effectifs ${pct(u.strength)}`"
-                ><i :style="{ width: cssPct(u.strength), background: gaugeColor(u.strength) }"
-              /></span>
-              <span
-                class="bar mini"
-                data-testid="unit-equipment"
-                :title="`Matériel ${pct(u.equipment)}`"
-                ><i :style="{ width: cssPct(u.equipment), background: gaugeColor(u.equipment) }"
-              /></span>
-            </button>
-          </template>
-        </template>
-
-        <Teleport to="body">
+        <Teleport to="body" :disabled="!desktop">
           <section
             v-if="flyout && !aiming"
             class="flyout"
+            :class="{ inline: !desktop }"
             :aria-label="FLYOUT_TITLES[flyout]"
             :data-testid="`flyout-${flyout}`"
           >
@@ -930,231 +881,55 @@ async function createArmy(): Promise<void> {
             </template>
           </section>
         </Teleport>
-      </div>
-      <template v-else>
-        <div class="summary" data-testid="selection-summary">
-          <strong>{{ selectedUnits.length }} unité{{ selectedUnits.length > 1 ? 's' : '' }}</strong>
-          <span class="gauge" title="Effectifs moyens">
-            <i :style="{ width: cssPct(selectionSummary.strength) }" class="strength" />
-          </span>
-          <span class="gauge" title="Organisation moyenne">
-            <i :style="{ width: cssPct(selectionSummary.org) }" class="org" />
-          </span>
-          <span v-if="selectionSummary.engaged" class="chip warn">
-            {{ selectionSummary.engaged }} au contact
-          </span>
-          <span v-if="selectionSummary.unsupplied" class="chip warn">
-            {{ selectionSummary.unsupplied }} sans ravitaillement
-          </span>
-        </div>
-        <div v-if="echelonHead" class="echelon-head" data-testid="selection-echelon">
-          <EchelonSymbol
-            :echelon="echelonHead.echelon"
-            :kind="echelonHead.kind"
-            :size="44"
-            :color="playerColor"
-          />
-          <div class="echelon-text">
-            <strong>{{ echelonHead.name }}</strong>
-            <span class="meta">{{ echelonHead.crumbs }}</span>
-          </div>
-        </div>
-        <p v-if="formationLabel" class="formation-label" data-testid="selection-formation">
-          {{ formationLabel }}
-        </p>
-        <div v-if="game.selectionInfo" class="group" data-testid="echelon-up">
-          <button
-            v-if="game.selectionInfo.division && game.selectionInfo.echelon === 'brigade'"
-            title="Sélectionner toute la division de cette brigade"
-            @click="game.selectFormation('division')"
-          >
-            Sélectionner la division
-          </button>
-          <button
-            v-if="game.selectionInfo.corps && game.selectionInfo.echelon !== 'corps'"
-            title="Sélectionner tout le corps"
-            data-testid="select-corps"
-            @click="game.selectFormation('corps')"
-          >
-            Sélectionner le corps
-          </button>
-          <button
-            v-if="game.selectionInfo.army && game.selectionInfo.echelon !== 'army'"
-            title="Sélectionner l'armée et ouvrir sa fiche"
-            data-testid="select-army"
-            @click="game.selectFormation('army')"
-          >
-            Sélectionner l'armée
-          </button>
-          <span class="meta">U : échelon au-dessus</span>
-        </div>
-        <p v-if="corpsSpan" class="formation-label" data-testid="selection-span">
-          {{ corpsSpan }}
-        </p>
-        <div class="group">
-          <span class="label">Mouvement</span>
-          <button
-            title="Déplacer (M) — ou clic droit sur la carte"
-            @click="game.startOrder('move')"
-          >
-            Déplacer
-          </button>
-          <button title="Tenir la position (H)" @click="game.hold()">Tenir</button>
-          <button title="Se replier (R)" @click="game.startOrder('retreat')">Se replier</button>
-          <button
-            title="Transport stratégique (rail, mer ou air) : cliquer ensuite sur la ville d'arrivée, chez vous ou chez un ami"
-            data-testid="order-transport"
-            @click="game.startTransport()"
-          >
-            Transporter
-          </button>
-          <button
-            v-if="naval.ports.length > 0"
-            :disabled="!landing.ok"
-            :title="landing.title"
-            data-testid="order-landing"
-            @click="game.startLanding()"
-          >
-            Débarquer
-          </button>
-          <button
-            title="Annule l'ordre en cours : les unités s'arrêtent (celles d'une armée reprennent leur poste)"
-            data-testid="cancel-order"
-            @click="game.cancelOrders()"
-          >
-            Annuler l'ordre
-          </button>
-        </div>
-        <div class="group">
-          <span class="label">Attaque</span>
-          <button title="Attaquer une zone (T)" @click="game.startOrder('attack')">Zone</button>
-          <button
-            title="Attaquer la position actuelle d'une unité ennemie, puis tenir le terrain"
-            data-testid="order-assault"
-            @click="game.startTargetOrder('assault')"
-          >
-            Assaut
-          </button>
-          <button
-            title="Suivre une unité ennemie jusqu'à sa destruction ou sa fuite"
-            data-testid="order-pursue"
-            @click="game.startTargetOrder('pursue')"
-          >
-            Poursuite
-          </button>
-          <button
-            :disabled="selectedUnits.length < 2"
-            title="Les unités sélectionnées quittent leur armée et entourent la cible ; l'armée garde son front"
-            data-testid="order-encircle"
-            @click="game.startTargetOrder('encircle')"
-          >
-            Encercler
-          </button>
-        </div>
-        <div class="group" data-testid="group-mission">
-          <span class="label">Mission « Avancer » (groupe détaché)</span>
-          <button
-            title="Les unités choisies forment un groupe qui avance jusqu'à la frontière avec le pays cliqué, puis rejoint son armée"
-            @click="game.startAdvance('border')"
-          >
-            Frontière
-          </button>
-          <button
-            title="Le groupe avance jusqu'à un trait libre (clics successifs, ou glisser), puis rejoint son armée"
-            @click="game.startAdvance('line')"
-          >
-            Trait
-          </button>
-          <button
-            title="Le groupe avance jusqu'au point cliqué, puis rejoint son armée"
-            @click="game.startAdvance('objective')"
-          >
-            Objectif
-          </button>
-        </div>
-        <div class="group" data-testid="posture">
-          <span class="label">Posture</span>
-          <button
-            v-for="p in POSTURE_ORDER"
-            :key="p"
-            :class="{ active: selectionPosture === p }"
-            :title="POSTURES[p].description"
-            @click="game.setPosture(p)"
-          >
-            {{ POSTURES[p].name }}
-          </button>
-        </div>
-        <template v-for="g in unitGroups" :key="g.key">
-          <button
-            v-if="unitGroups.length > 1"
-            class="group-head"
-            data-testid="selection-group"
-            :title="g.division ? 'Sélectionner toute cette division' : undefined"
-            :disabled="!g.division"
-            @click="g.division && pickDivision(g.division.id)"
-          >
-            <span class="name">{{ g.division?.name ?? 'Sans division' }}</span>
-            <span class="meta"
-              >{{ g.units.length }}{{ g.division ? ` / ${g.total}` : '' }} brigade{{
-                g.units.length > 1 ? 's' : ''
-              }}</span
-            >
-          </button>
-          <ul class="units">
-            <li
-              v-for="u in g.units"
-              :key="u.id"
-              :class="{ pick: selectedUnits.length > 1 }"
-              data-testid="selection-unit"
-              :title="selectedUnits.length > 1 ? 'Sélectionner cette brigade seule' : undefined"
-              @click="selectedUnits.length > 1 && pickUnit(u)"
-            >
-              <div class="row">
-                <span class="name">{{ u.name }}</span>
-                <span class="meta" data-testid="unit-template" :title="compositionText(u)">{{
-                  templateLabel(u)
-                }}</span>
-              </div>
-              <div class="row">
-                <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
-                  <i :style="{ width: cssPct(u.strength) }" class="strength" />
-                </span>
-                <span
-                  class="gauge"
-                  data-testid="unit-equipment"
-                  :title="`Matériel ${pct(u.equipment)}`"
-                >
-                  <i :style="{ width: cssPct(u.equipment) }" class="equipment" />
-                </span>
-                <span class="gauge" :title="`Organisation ${pct(u.org)}`">
-                  <i :style="{ width: cssPct(u.org) }" class="org" />
-                </span>
-              </div>
-              <div class="meta">
-                {{ armyOf(u.armyId) }} · {{ game.terrainNameAt(u.lon, u.lat) }}
-              </div>
-              <ul
-                v-if="selectedUnits.length === 1"
-                class="battalions"
-                data-testid="unit-battalions"
-              >
-                <li v-for="b in battalionRows(u)" :key="b.kind">{{ b.count }} × {{ b.name }}</li>
-              </ul>
-              <div class="status" :class="{ warn: u.routed || !u.supplied }">{{ status(u) }}</div>
+
+        <!-- Échelon en dessous : bataillons d'une brigade seule, sinon brigades (par division). -->
+        <template v-if="selectedUnits.length === 1 && selectedUnits[0]">
+          <div class="label">Bataillons</div>
+          <ul class="subs battalions" data-testid="unit-battalions">
+            <li v-for="b in battalionRows(selectedUnits[0])" :key="b.kind">
+              {{ b.count }} × {{ b.name }}
             </li>
           </ul>
         </template>
-        <form v-if="armies.length" class="create" @submit.prevent="attach">
-          <select v-model="attachTo" aria-label="Armée à rejoindre">
-            <option v-for="a in armies" :key="a.id" :value="a.id">{{ a.name }}</option>
-          </select>
-          <button type="submit">Rattacher la sélection à cette armée</button>
-        </form>
-        <form class="create" @submit.prevent="createArmy">
-          <input v-model="armyName" placeholder="Nom de la nouvelle armée" maxlength="40" />
-          <button type="submit">Créer une armée</button>
-        </form>
-      </template>
+        <template v-else>
+          <div class="label">Échelon en dessous · {{ selectedUnits.length }} brigades</div>
+          <template v-for="g in unitGroups" :key="g.key">
+            <button
+              v-if="unitGroups.length > 1"
+              class="sub-row group-row"
+              data-testid="selection-group"
+              :title="g.division ? 'Sélectionner toute cette division' : undefined"
+              :disabled="!g.division"
+              @click="g.division && pickDivision(g.division.id)"
+            >
+              <span class="sname">{{ g.division?.name ?? 'Sans division' }}</span>
+              <span class="faint small"
+                >{{ g.units.length }}{{ g.division ? ` / ${g.total}` : '' }}</span
+              >
+            </button>
+            <button
+              v-for="u in g.units"
+              :key="u.id"
+              class="sub-row"
+              :class="{ nested: unitGroups.length > 1 }"
+              data-testid="selection-unit"
+              :title="`${templateLabel(u)} · sélectionner cette brigade seule`"
+              @click="pickUnit(u)"
+            >
+              <span class="sname">{{ u.name }}</span>
+              <span class="bar mini" :title="`Effectifs ${pct(u.strength)}`"
+                ><i :style="{ width: cssPct(u.strength), background: gaugeColor(u.strength) }"
+              /></span>
+              <span
+                class="bar mini"
+                data-testid="unit-equipment"
+                :title="`Matériel ${pct(u.equipment)}`"
+                ><i :style="{ width: cssPct(u.equipment), background: gaugeColor(u.equipment) }"
+              /></span>
+            </button>
+          </template>
+        </template>
+      </div>
     </template>
 
     <!-- Armées -->
@@ -1271,7 +1046,7 @@ async function createArmy(): Promise<void> {
     <!-- Fiche de l'armée choisie -->
     <template v-else-if="section === 'army'">
       <section v-if="selectedArmy" class="army" data-testid="army-sheet">
-        <div v-if="desktop" class="army-head sheet" data-testid="army-head">
+        <div class="army-head sheet" data-testid="army-head">
           <div class="sheet-head">
             <EchelonSymbol echelon="army" kind="mech" :size="52" :color="playerColor" />
             <div class="sheet-title">
@@ -1378,89 +1153,14 @@ async function createArmy(): Promise<void> {
             </button>
           </template>
         </div>
-        <div v-else class="army-head" data-testid="army-head">
-          <div class="row">
-            <span class="kicker">Armée · {{ selectedArmy.unitIds.length }} unités</span>
-          </div>
-          <div class="bar-row">
-            <span>Effectifs</span>
-            <span class="gauge wide"
-              ><i :style="{ width: cssPct(sheetSummary.strength) }" class="strength"
-            /></span>
-            <span class="num">{{ pct(sheetSummary.strength) }}</span>
-          </div>
-          <div class="bar-row">
-            <span>Matériel</span>
-            <span class="gauge wide"
-              ><i :style="{ width: cssPct(sheetSummary.equipment) }" class="equipment"
-            /></span>
-            <span class="num">{{ pct(sheetSummary.equipment) }}</span>
-          </div>
-          <div class="bar-row">
-            <span>Organisation</span>
-            <span class="gauge wide"
-              ><i :style="{ width: cssPct(sheetSummary.org) }" class="org"
-            /></span>
-            <span class="num">{{ pct(sheetSummary.org) }}</span>
-          </div>
-          <div class="bar-row">
-            <span>Ravitaillement</span>
-            <span class="gauge wide"
-              ><i
-                :style="{ width: cssPct(sheetSummary.supplied) }"
-                :class="sheetSummary.unsupplied ? 'cut' : 'strength'"
-            /></span>
-            <span :class="sheetSummary.unsupplied ? 'bad' : 'ok'">
-              {{ sheetSummary.unsupplied ? `${sheetSummary.unsupplied} coupée(s)` : 'tout relié' }}
-            </span>
-          </div>
-          <p class="current">
-            En cours :
-            <strong data-testid="mission-status">{{ missionStatus(selectedArmy) }}</strong> ·
-            {{ POSTURES[selectedArmy.posture ?? 'balanced'].name.toLowerCase() }} ·
-            {{ sheetSummary.engaged }} au contact
-          </p>
-          <p class="current" data-testid="army-span">Étendue de commandement : {{ armySpan }}</p>
-        </div>
-        <div v-if="!desktop" class="subtabs" role="tablist">
-          <button
-            role="tab"
-            :class="{ active: armyView === 'command' }"
-            data-testid="army-view-command"
-            @click="armyView = 'command'"
-          >
-            Ordre
-          </button>
-          <button
-            role="tab"
-            :class="{ active: armyView === 'composition' }"
-            data-testid="army-view-composition"
-            @click="armyView = 'composition'"
-          >
-            Composition
-          </button>
-          <button
-            role="tab"
-            :class="{ active: armyView === 'recruit' }"
-            data-testid="army-view-recruit"
-            @click="armyView = 'recruit'"
-          >
-            Renforts<span
-              v-if="freeBarracks > 0"
-              class="tag"
-              :title="`${freeBarracks} place(s) de formation libre(s)`"
-              data-testid="free-barracks"
-              >{{ freeBarracks }}</span
-            >
-          </button>
-        </div>
         <Teleport to="body" :disabled="!desktop">
           <section
-            v-if="armyShown && !(desktop && aiming)"
-            :class="{ flyout: desktop, 'army-flyout': desktop }"
-            :data-testid="desktop ? `army-flyout-${armyShown}` : undefined"
+            v-if="armyShown && !aiming"
+            class="flyout army-flyout"
+            :class="{ inline: !desktop }"
+            :data-testid="`army-flyout-${armyShown}`"
           >
-            <header v-if="desktop">
+            <header>
               <h3>{{ ARMY_PANEL_TITLES[armyShown] }}</h3>
               <button class="x" aria-label="Fermer le volet" @click="closeArmyPanel">
                 <NkgIcon name="close" :size="16" />
@@ -1710,11 +1410,7 @@ async function createArmy(): Promise<void> {
                   </button>
                 </div>
               </div>
-              <div
-                v-if="!desktop || armyShown === 'posture'"
-                class="posture-box"
-                data-testid="army-posture"
-              >
+              <div v-if="armyShown === 'posture'" class="posture-box" data-testid="army-posture">
                 <p class="kicker">Posture</p>
                 <div class="segs">
                   <button
@@ -1745,7 +1441,7 @@ async function createArmy(): Promise<void> {
                 <p class="meta">{{ armyPosture.reflex }}</p>
               </div>
               <button
-                v-if="!desktop || armyShown === 'command'"
+                v-if="armyShown === 'command'"
                 class="danger"
                 @click="game.disbandArmy(selectedArmy.id)"
               >
@@ -2553,6 +2249,15 @@ h3 {
 }
 .army-flyout {
   width: 340px;
+}
+/* Téléphone : le volet s'insère dans la fiche, sous ses tuiles. */
+.flyout.inline {
+  position: static;
+  width: auto;
+  max-height: none;
+  margin-top: 4px;
+  box-shadow: none;
+  border-right-color: var(--nkg-brass-dark);
 }
 .army-flyout .mcards {
   grid-template-columns: repeat(2, minmax(0, 1fr));

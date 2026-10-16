@@ -43,11 +43,7 @@ const daysLeft = (expires: number): number =>
 </script>
 
 <template>
-  <div
-    class="notifications"
-    :class="{ 'below-banner': props.belowBanner, desk: !isMobile }"
-    :style="placement"
-  >
+  <div class="notifications desk" :class="{ 'below-banner': props.belowBanner }" :style="placement">
     <div
       v-for="o in offers"
       :key="`o${o.id}`"
@@ -130,7 +126,7 @@ const daysLeft = (expires: number): number =>
             aria-label="Fermer"
             @click="game.dismissAlert(a.key)"
           >
-            <template v-if="isMobile">×</template><NkgIcon v-else name="close" :size="14" />
+            <NkgIcon name="close" :size="14" />
           </button>
         </div>
         <div v-if="hiddenAlerts" class="more">

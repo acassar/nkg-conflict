@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { formatGameDate, tickToDate } from '@/sim/core/clock'
-import { layout } from '@/composables/layout'
 import NkgIcon, { type IconName } from './NkgIcon.vue'
 
 const props = withDefaults(defineProps<{ embedded?: boolean; limit?: number }>(), {
@@ -50,7 +49,6 @@ const ICON: Record<Category, IconName> = {
   other: 'shield',
 }
 
-const desktop = computed(() => props.embedded && layout.value === 'desktop')
 const filter = ref<Filter>('all')
 const me = computed(() => game.snapshot?.playerCountry ?? '')
 const countryName = (id: string | null): string =>
@@ -89,7 +87,7 @@ const days = computed(() => {
 </script>
 
 <template>
-  <section v-if="desktop && events.length" class="journal" data-testid="journal">
+  <section v-if="embedded && events.length" class="journal" data-testid="journal">
     <div class="filters" role="group" aria-label="Filtrer le journal">
       <button
         v-for="f in FILTERS"

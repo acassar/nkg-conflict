@@ -44,8 +44,8 @@ const pct = (t: { departTick: number; arriveTick: number }): string =>
 <template>
   <template v-if="inTransit.length > 0 && !(layout === 'portrait' && game.drawer === 'full')">
     <button
-      class="transport"
-      :class="{ active: game.showTransports, desk: layout === 'desktop' }"
+      class="transport desk"
+      :class="{ active: game.showTransports }"
       :style="style"
       :aria-pressed="game.showTransports"
       :title="`${inTransit.length} unité(s) en route : afficher les trajets`"
@@ -66,8 +66,7 @@ const pct = (t: { departTick: number; arriveTick: number }): string =>
     </button>
     <div
       v-if="game.showTransports"
-      class="panel"
-      :class="{ desk: layout === 'desktop' }"
+      class="panel desk"
       :style="panelStyle"
       role="dialog"
       aria-label="Unités en route"

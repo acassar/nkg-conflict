@@ -6,7 +6,7 @@ import { isTouch, layout } from '@/composables/layout'
 import { DOMAINS, mobileSheet, type Domain, type InspectKind } from '@/stores/frame'
 import NkgIcon, { type IconName } from './NkgIcon.vue'
 
-/** Icônes du rail sur grand écran (le téléphone garde ses symboles). */
+/** Icônes du rail (grand écran) et de la barre des domaines (téléphone). */
 const RAIL_ICONS: Record<Domain, IconName> = {
   forces: 'forces',
   production: 'factory',
@@ -261,7 +261,7 @@ watch(
           aria-label="Fermer l'inspecteur"
           @click="closeInspector"
         >
-          ×
+          <NkgIcon name="close" :size="16" />
         </button>
       </header>
       <div class="body" :data-testid="sheet.kind === 'inspector' ? 'inspector' : undefined">
@@ -276,7 +276,7 @@ watch(
         :data-testid="`rail-${d.id}`"
         @click="tapDomain(d.id)"
       >
-        <span class="icon" aria-hidden="true">{{ d.icon }}</span>
+        <NkgIcon :name="RAIL_ICONS[d.id]" :size="20" class="icon" />
         <span class="name">{{ d.short }}</span>
       </button>
     </nav>
@@ -605,6 +605,9 @@ header .back {
   top: 70px;
   width: 360px;
   max-height: calc(100% - 150px);
+}
+/* Téléphone compris : même habillage, seule la place change. */
+.frame-panel.frame-panel {
   background: var(--nkg-panel-bg);
   border: 1px solid var(--nkg-brass-dark);
   border-radius: 4px;
@@ -620,16 +623,16 @@ header .back {
   width: 340px;
   border-top: 1px solid var(--nkg-brass-dark);
 }
-.frame-panel:not(.mobile) header {
+.frame-panel.frame-panel header {
   padding: 10px 10px 10px 14px;
   border-bottom-color: var(--nkg-brass-line);
 }
-.frame-panel:not(.mobile) h2 {
+.frame-panel.frame-panel h2 {
   font: 600 20px/1.2 var(--nkg-serif);
   letter-spacing: 0;
   text-transform: none;
 }
-.frame-panel:not(.mobile) header .close {
+.frame-panel.frame-panel header .close {
   width: 30px;
   height: 30px;
   display: grid;
@@ -639,29 +642,66 @@ header .back {
   border-color: #3a4452;
   border-radius: 5px;
 }
-.frame-panel:not(.mobile) header .close:hover {
+.frame-panel.frame-panel header .close:hover {
   border-color: var(--nkg-brass);
   color: var(--nkg-text);
 }
 .frame-panel:not(.mobile) .body {
   padding: 12px 14px;
 }
-.frame-panel:not(.mobile) .body :deep(button) {
+.frame-panel.frame-panel .body :deep(button) {
   background: var(--nkg-tile-bg);
   border-color: var(--nkg-line-strong);
   border-radius: 4px;
 }
-.frame-panel:not(.mobile) .body :deep(button:hover:not(:disabled)) {
+.frame-panel.frame-panel .body :deep(button:hover:not(:disabled)) {
   background: var(--nkg-tile-bg);
   border-color: var(--nkg-brass);
 }
-.frame-panel:not(.mobile) .body :deep(button.active) {
+.frame-panel.frame-panel .body :deep(button.active) {
   background: var(--nkg-tile-on-bg);
   border-color: var(--nkg-brass-light);
   color: var(--nkg-brass-pale);
 }
-.frame-panel:not(.mobile) .body :deep(button.danger) {
+.frame-panel.frame-panel .body :deep(button.danger) {
   border-color: var(--nkg-danger-line);
   color: #f0b0a5;
+}
+/* Téléphone : tiroir et barre des domaines à la charte. */
+.frame-panel.mobile.drawer {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+}
+.frame-panel.mobile.side {
+  box-shadow:
+    0 0 0 1px #10141a,
+    0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.frame-panel.mobile h2 {
+  font-size: 18px;
+}
+.frame-panel.mobile header .back {
+  border-color: var(--nkg-brass-dark);
+  color: var(--nkg-brass-light);
+  font-family: var(--nkg-sans);
+}
+.frame-panel.mobile .handle span {
+  background: var(--nkg-brass-deep);
+}
+.frame-panel.mobile .bar {
+  background: var(--nkg-surface-sunken);
+  border-color: var(--nkg-brass-line);
+}
+.frame-panel.mobile .bar button {
+  color: #b9c0c9;
+  border-radius: 4px;
+  font: 500 10px/1.1 var(--nkg-sans);
+  letter-spacing: 0.05em;
+}
+.frame-panel.mobile .bar button.active {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
 }
 </style>

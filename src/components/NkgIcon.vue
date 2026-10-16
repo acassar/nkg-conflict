@@ -35,6 +35,20 @@ const ICONS = {
   mission: ['M6 21V4M6 4h11l-2 4 2 4H6'],
   info: ['M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16', 'M12 8v4M12 16h.01'],
   alert: ['M12 4l9 16H3zM12 10v4M12 17h.01'],
+  milfactory: ['M3 20V11l5 3v-3l5 3V6h4v14zM14 10l4-4'],
+  barracks: ['M4 20V9l8-5 8 5v11zM9 20v-6h6v6'],
+  depot: ['M3 9l9-5 9 5v11H3zM7 13h10M7 17h10'],
+  fort: ['M4 20V8h3v3h3V8h4v3h3V8h3v12z'],
+  clock: ['M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16', 'M12 8v4l3 2'],
+  city: ['M3 21V10l4-3 4 3V5l5-2 5 2v16zM3 21h18M14 8h2M14 12h2M14 16h2M6 14h2M6 17h2'],
+  heart: ['M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z'],
+  handshake: ['M4 12l4-4 4 3 4-3 4 4-8 7z'],
+  road: ['M4 20l6-16h4l6 16M12 8v2M12 13v2M12 18v1'],
+  ban: ['M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16', 'M6.5 6.5l11 11'],
+  aid: ['M3 13l4-1 5 3 6-5 3 1M7 12V7h10v5'],
+  call: ['M4 10v4h4l5 4V6L8 10zM16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11'],
+  exit: ['M10 4H5v16h5M14 8l4 4-4 4M18 12H9'],
+  dove: ['M3 14c4 0 6-2 8-6l3 3 7-3-4 6c-2 4-6 6-11 5z'],
 } as const
 
 export type IconName = keyof typeof ICONS

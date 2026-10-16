@@ -3,8 +3,14 @@ import { computed, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { isObsoleteSave, SLOT_LABELS, type SaveSlot } from '@/stores/saves'
 import { OBSOLETE_SAVE } from '@/sim/core/save'
+import { isMobile } from '@/composables/layout'
+import NkgIcon from './NkgIcon.vue'
 
 const game = useGameStore()
+/**
+ * Titre en haut à gauche, choix à gauche, pays choisi et « Jouer » à droite ;
+ * sur téléphone, les trois blocs s'empilent.
+ */
 
 interface Choice {
   code: string
@@ -13,21 +19,12 @@ interface Choice {
 }
 
 const scenarioId = ref('world-2026')
-const epoch = ref('modern')
 const countries = ref<Choice[]>([])
 const country = ref<string | null>(null)
 const search = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const noAffiliations = ref(false)
 const noWars = ref(false)
-
-const EPOCHS = [
-  { id: 'modern', name: 'Époque moderne (2026)', available: true },
-  { id: 'cold-war', name: 'Guerre froide (~1985)', available: false },
-  { id: 'ww2', name: 'Seconde Guerre mondiale (1939)', available: false },
-  { id: 'ww1', name: 'Première Guerre mondiale (1914)', available: false },
-  { id: 'napoleon', name: 'Époque napoléonienne (~1805)', available: false },
-]
 
 const scenario = computed(() => game.scenarios.find((s) => s.id === scenarioId.value) ?? null)
 const offers = (key: 'noAffiliations' | 'noWars'): boolean =>
@@ -89,11 +86,12 @@ async function onFile(event: Event): Promise<void> {
 </script>
 
 <template>
-  <div class="start" data-testid="start-screen">
-    <div class="card">
+  <div class="start desk" :class="{ narrow: isMobile }" data-testid="start-screen">
+    <header class="brand">
       <h1>nkg-conflict</h1>
-      <p class="tagline">Grande stratégie en temps réel, sur la carte du monde.</p>
-
+      <p class="tagline">Grande stratégie en temps réel, sur la carte du monde</p>
+    </header>
+    <div class="card">
       <section v-if="game.saves.length" data-testid="saves">
         <h2>Reprendre</h2>
         <ul class="saves">
@@ -118,11 +116,12 @@ async function onFile(event: Event): Promise<void> {
                 Reprendre
               </button>
               <button
+                class="icon"
                 title="Supprimer cette sauvegarde"
                 aria-label="Supprimer"
                 @click="confirmDelete(s.slot)"
               >
-                ✕
+                <NkgIcon name="close" :size="14" />
               </button>
             </div>
           </li>
@@ -144,15 +143,6 @@ async function onFile(event: Event): Promise<void> {
             <span>{{ s.description }}</span>
           </button>
         </div>
-      </section>
-
-      <section>
-        <h2>Époque</h2>
-        <select v-model="epoch" aria-label="Époque">
-          <option v-for="e in EPOCHS" :key="e.id" :value="e.id" :disabled="!e.available">
-            {{ e.name }}{{ e.available ? '' : ' · bientôt' }}
-          </option>
-        </select>
       </section>
 
       <section v-if="offers('noAffiliations') || offers('noWars')" data-testid="start-options">
@@ -202,16 +192,6 @@ async function onFile(event: Event): Promise<void> {
         </ul>
       </section>
 
-      <div class="actions">
-        <button class="primary" :disabled="!chosen || game.loading" @click="start">
-          {{
-            game.loading ? 'Chargement…' : chosen ? `Jouer ${chosen.name}` : 'Choisissez un pays'
-          }}
-        </button>
-        <button :disabled="game.loading" @click="fileInput?.click()">Importer un fichier</button>
-        <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
-      </div>
-      <p v-if="game.notice" class="error" role="alert">{{ game.notice }}</p>
       <p class="footnote">
         Scénario hypothétique, sans prétention de reconstitution historique.
         {{
@@ -221,6 +201,27 @@ async function onFile(event: Event): Promise<void> {
         }}
       </p>
     </div>
+
+    <!-- Pays choisi et lancement de la partie. -->
+    <aside class="chosen" aria-label="Pays choisi">
+      <div class="chosen-head">
+        <span class="emblem"><NkgIcon name="flag" :size="22" /></span>
+        <div>
+          <div class="chosen-name">{{ chosen?.name ?? 'Choisissez un pays' }}</div>
+          <div class="chosen-sub">
+            {{ scenario?.name }}<template v-if="chosen?.pop"> · {{ fmtPop(chosen.pop) }}</template>
+          </div>
+        </div>
+      </div>
+      <button class="primary play" :disabled="!chosen || game.loading" @click="start">
+        {{ game.loading ? 'Chargement…' : chosen ? `Jouer ${chosen.name}` : 'Choisissez un pays' }}
+      </button>
+      <button class="link" :disabled="game.loading" @click="fileInput?.click()">
+        Importer un fichier
+      </button>
+      <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
+      <p v-if="game.notice" class="error" role="alert">{{ game.notice }}</p>
+    </aside>
   </div>
 </template>
 
@@ -416,5 +417,236 @@ input:not([type='checkbox']) {
   margin: 14px 0 0;
   color: #7d8592;
   font-size: 12px;
+}
+/* Grand écran (charte : docs/charte.md). */
+.start.desk {
+  display: block;
+  padding: 0;
+  background: radial-gradient(
+    ellipse at 70% 50%,
+    rgba(8, 10, 14, 0.45) 25%,
+    rgba(8, 10, 14, 0.92) 100%
+  );
+  font: 14px/1.4 var(--nkg-sans);
+  color: var(--nkg-text);
+}
+.desk .brand {
+  position: absolute;
+  left: 64px;
+  top: 48px;
+}
+.desk .brand h1 {
+  font-family: var(--nkg-serif);
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--nkg-brass-pale);
+}
+.desk .brand .tagline {
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: var(--nkg-text-soft);
+}
+.desk .card {
+  position: absolute;
+  left: 64px;
+  top: 160px;
+  bottom: 40px;
+  width: 560px;
+  margin: 0;
+  padding: 6px 20px 16px;
+  overflow: auto;
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+}
+.desk h2 {
+  margin: 16px 0 8px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--nkg-label);
+}
+.desk button {
+  background: var(--nkg-tile-bg);
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+}
+.desk button:hover:not(:disabled) {
+  background: var(--nkg-tile-bg);
+  border-color: var(--nkg-brass);
+}
+.desk .scenarios {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.desk .scenario {
+  padding: 12px 14px;
+  border-radius: 6px;
+}
+.desk .scenario strong {
+  font-family: var(--nkg-serif);
+  font-size: 17px;
+  font-weight: 600;
+}
+.desk .scenario span {
+  font-size: 12.5px;
+  color: var(--nkg-text-muted);
+}
+.desk .scenario.active,
+.desk .scenario.active:hover:not(:disabled) {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+}
+.desk .scenario.active span {
+  color: #c9bfa8;
+}
+.desk input:not([type='checkbox']) {
+  height: 38px;
+  padding: 0 12px;
+  background: #12171d;
+  border-color: var(--nkg-line-strong);
+  border-radius: 4px;
+}
+.desk .option input {
+  accent-color: var(--nkg-brass);
+}
+.desk .countries {
+  max-height: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.desk .countries li {
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 13.5px;
+}
+.desk .countries li:hover {
+  background: var(--nkg-surface);
+}
+.desk .countries li.active {
+  background: var(--nkg-brass-bg-bottom);
+  border-color: var(--nkg-brass);
+}
+.desk .countries li.active .pop {
+  color: var(--nkg-brass-light);
+}
+.desk .saves li {
+  padding: 10px 12px;
+  background: #1d1a15;
+  border: 1px solid var(--nkg-brass-deep);
+  border-radius: 6px;
+}
+.desk .primary {
+  background: var(--nkg-gold-bg);
+  border: 1px solid var(--nkg-brass-pale);
+  color: #1a140a;
+}
+.desk .primary:hover:not(:disabled) {
+  background: var(--nkg-gold-bg);
+  border-color: #fff3d0;
+  filter: brightness(1.06);
+}
+.desk .save-actions .icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  padding: 0;
+  color: var(--nkg-text-soft);
+}
+.desk .footnote {
+  color: var(--nkg-text-faint);
+}
+.chosen {
+  position: absolute;
+  right: 64px;
+  bottom: 56px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+}
+.chosen-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.emblem {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 36px;
+  flex: none;
+  border: 1px solid var(--nkg-brass);
+  background: var(--nkg-brass-bg-bottom);
+  color: var(--nkg-brass-light);
+}
+.chosen-name {
+  font-family: var(--nkg-serif);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.chosen-sub {
+  font-size: 13px;
+  color: var(--nkg-brass-light);
+}
+.chosen .play {
+  height: 48px;
+  font-family: var(--nkg-serif);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+}
+.desk .chosen .link {
+  height: 26px;
+  padding: 0;
+  background: none;
+  border-color: transparent;
+  color: #a99a7a;
+}
+.desk .chosen .link:hover:not(:disabled) {
+  background: none;
+  border-color: transparent;
+  color: var(--nkg-brass-light);
+}
+.chosen .error {
+  margin: 0;
+}
+/* Téléphone : titre, choix et pays choisi s'empilent ; « Jouer » reste en bas. */
+.start.desk.narrow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: calc(14px + env(safe-area-inset-top)) 12px 0;
+}
+.narrow .brand,
+.narrow .card,
+.narrow .chosen {
+  position: static;
+  width: auto;
+}
+.narrow .brand h1 {
+  font-size: 34px;
+}
+.narrow .card {
+  flex: none;
+  overflow: visible;
+}
+.narrow .chosen {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -12px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  border-radius: 0;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
 }
 </style>

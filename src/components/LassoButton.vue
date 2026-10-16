@@ -21,8 +21,8 @@ function toggle(): void {
 <template>
   <button
     v-if="!(layout === 'portrait' && game.drawer === 'full')"
-    class="lasso"
-    :class="{ active: game.lasso, desk: layout === 'desktop' }"
+    class="lasso desk"
+    :class="{ active: game.lasso }"
     :style="style"
     :aria-pressed="game.lasso"
     title="Sélection par zone : glissez un rectangle sur la carte"

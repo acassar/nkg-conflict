@@ -215,9 +215,11 @@ body,
   letter-spacing: 0.04em;
   border-radius: 4px;
 }
-/* Grand écran : consigne et avertissement aux couleurs de la charte (docs/charte.md). */
+/* Consigne et avertissement aux couleurs de la charte (docs/charte.md), téléphone compris. */
 .hint:not(.mobile):not(.aim):not(.notice) {
   top: 66px;
+}
+.hint.hint:not(.aim):not(.notice) {
   background: var(--nkg-panel-bg);
   color: var(--nkg-brass-pale);
   border: 1px solid var(--nkg-brass-light);
@@ -234,7 +236,7 @@ body,
 .hint.aim::before {
   background: var(--nkg-brass-light);
 }
-.hint:not(.mobile) .hint-cancel {
+.hint.hint .hint-cancel {
   background: var(--nkg-gold-bg);
   color: #1a140a;
   border-radius: 3px;

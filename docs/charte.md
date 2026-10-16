@@ -1,6 +1,6 @@
 # Charte de l'interface
 
-Référence de style pour toute modification de l'interface sur grand écran. Les maquettes validées par Adrien (octobre 2026) sont sur le canvas « Refonte des écrans nkg-conflict » ; elles ne sont plus maintenues une fois l'écran codé, et cette charte fait foi. Le téléphone garde son style actuel pour l'instant.
+Référence de style pour toute modification de l'interface. Les maquettes validées par Adrien (octobre 2026) sont sur le canvas « Refonte des écrans nkg-conflict » ; elles ne sont plus maintenues une fois l'écran codé, et cette charte fait foi. Le téléphone suit le même design sans finition dédiée : mêmes écrans et mêmes composants, seule la place change (tiroir en bas, barre compacte en haut, volets insérés dans la fiche sous ses tuiles, jauges dans le menu « En pause »).
 
 ## Principes
 
@@ -41,10 +41,15 @@ Toutes les couleurs sont des variables de `src/styles/theme.css` (`--nkg-…`). 
 - **Jauge** : barre de 5 à 6 px, fond `#2b333e`, vert au-dessus de 70 %, ambre au-dessus de 40 %, rouge en dessous.
 - **Puce d'état** : pastille arrondie, fond `#1a212a`, bordure `#3a4452`, 12 px.
 - **Séparateur** : `--nkg-divider` (filet doré qui s'estompe aux bords).
+- **Onglets** : libellés en ligne, filet laiton sous l'onglet actif (tiroir Production).
+- **Fenêtre modale** (menu « En pause », bataille) : panneau centré sur un voile `rgba(8, 10, 14, 0.6)`, titre serif.
+- **Alertes** : cloche dans la barre du haut avec pastille ambre du nombre ; elle déplie ou replie la liste.
+
+Les tiroirs reçoivent du cadre (`GameFrame.vue`) un style de bouton par défaut à sélecteur fort ; un composant qui veut un autre bouton (onglet, tuile) le préfixe d'au moins quatre classes, par exemple `.production.desk .tabs .tab`.
 
 ## Icônes
 
-Icônes au trait (`src/components/NkgIcon.vue`) : grille 24 × 24, trait 1,7, extrémités arrondies, couleur du texte (`currentColor`), laiton par défaut dans les panneaux. Pas d'emoji ni de symbole Unicode sur grand écran. Les symboles d'unités suivent l'OTAN (`EchelonSymbol.vue`).
+Icônes au trait (`src/components/NkgIcon.vue`) : grille 24 × 24, trait 1,7, extrémités arrondies, couleur du texte (`currentColor`), laiton par défaut dans les panneaux. Pas d'emoji ni de symbole Unicode. Les symboles d'unités suivent l'OTAN (`EchelonSymbol.vue`).
 
 ## Tailles et placement (1440 × 900)
 

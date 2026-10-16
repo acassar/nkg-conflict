@@ -8,6 +8,7 @@ import { isMobile } from '@/composables/layout'
 import { openHelp } from '@/composables/help'
 import { MODIFIER_HELP } from '@/help/rules'
 import type { ModifierKey } from '@/sim/core/types'
+import NkgIcon from './NkgIcon.vue'
 
 const game = useGameStore()
 const report = ref<BattleReport | null>(null)
@@ -89,6 +90,15 @@ const balance = computed(() => {
   const rb = b.fire / Math.max(0.05, a.defense)
   return ra / Math.max(0.0001, ra + rb)
 })
+/** Rapport de force lisible : « 2,8 contre 1 » en faveur du camp le plus fort. */
+const ratioText = computed(() => {
+  const b = balance.value
+  const r = b >= 0.5 ? b / Math.max(0.0001, 1 - b) : (1 - b) / Math.max(0.0001, b)
+  const n = r.toLocaleString('fr-FR', { maximumFractionDigits: 1 })
+  return b >= 0.5 ? `${n} contre 1` : `1 contre ${n}`
+})
+const role = (units: BattleUnit[]): string =>
+  units.some((u) => u.attacking) ? 'Attaque' : 'Défend'
 const river = computed(() =>
   [...(report.value?.a ?? []), ...(report.value?.b ?? [])].some((u) => u.riverCrossing),
 )
@@ -119,21 +129,49 @@ function focus(): void {
       </div>
       <div class="actions">
         <button
+          class="icon"
           title="Règles du combat et des modificateurs"
           aria-label="Aide"
           data-testid="battle-help"
           @click="openHelp('combat')"
         >
-          ?
+          <NkgIcon name="info" :size="16" />
         </button>
-        <button title="Centrer la carte sur la bataille" @click="focus">Voir</button>
-        <button aria-label="Fermer" @click="game.closeBattle()">✕</button>
+        <button title="Centrer la carte sur la bataille" @click="focus">
+          {{ isMobile ? 'Voir' : 'Voir sur la carte' }}
+        </button>
+        <button class="icon" aria-label="Fermer" @click="game.closeBattle()">
+          <NkgIcon name="close" :size="16" />
+        </button>
       </div>
     </header>
 
     <p v-if="!report" class="meta">Plus de combat ici.</p>
     <template v-else>
-      <div class="balance" :title="`Rapport de force : ${pct(balance)} en faveur du premier camp`">
+      <!-- Les deux camps de part et d'autre du rapport de force. -->
+      <div v-if="sides.length === 2" class="versus">
+        <div class="camp a">
+          <span class="camp-name">{{ sides[0]?.title }}</span>
+          <span class="camp-meta"
+            >{{ role(sides[0]?.units ?? []) }} · {{ sides[0]?.units.length }} unité(s)</span
+          >
+        </div>
+        <div class="ratio" :title="`Rapport de force : ${pct(balance)} en faveur du premier camp`">
+          <div class="balance"><span :style="{ width: `${balance * 100}%` }" /></div>
+          <span class="ratio-text">Rapport de force {{ ratioText }}</span>
+        </div>
+        <div class="camp b">
+          <span class="camp-name">{{ sides[1]?.title }}</span>
+          <span class="camp-meta"
+            >{{ role(sides[1]?.units ?? []) }} · {{ sides[1]?.units.length }} unité(s)</span
+          >
+        </div>
+      </div>
+      <div
+        v-else
+        class="balance"
+        :title="`Rapport de force : ${pct(balance)} en faveur du premier camp`"
+      >
         <span :style="{ width: `${balance * 100}%` }" />
       </div>
       <div class="sides">
@@ -146,11 +184,13 @@ function focus(): void {
               Pertes {{ pct(side.losses) }} d'unité
             </span>
           </div>
-          <ul>
+          <ul
+            title="Cliquez une unité pour voir ses modificateurs, puis un modificateur pour son explication"
+          >
             <li
               v-for="u in side.units"
               :key="u.id"
-              :class="{ routed: u.routed }"
+              :class="{ routed: u.routed, open: expanded === u.id }"
               @click="expanded = expanded === u.id ? null : u.id"
             >
               <div class="row">
@@ -239,7 +279,7 @@ function focus(): void {
           </ul>
         </section>
       </div>
-      <p class="meta foot">
+      <p v-if="isMobile" class="meta foot">
         Touchez ou cliquez une unité pour voir ses modificateurs, puis un modificateur pour son
         explication.
       </p>
@@ -431,5 +471,177 @@ li.routed {
 }
 .foot {
   margin: 6px 0 0;
+}
+/* Grand écran (charte : docs/charte.md). */
+.battle:not(.mobile) {
+  top: 80px;
+  width: min(760px, calc(100% - 420px));
+  padding: 14px 16px 16px;
+}
+/* Téléphone compris : même habillage, seule la place change. */
+.battle.battle {
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-text);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  font: 13px/1.4 var(--nkg-sans);
+}
+.battle.battle header strong {
+  font-family: var(--nkg-serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+.battle.battle header .meta {
+  color: #a99a7a;
+  font-size: 12.5px;
+}
+.battle.battle .actions {
+  align-items: center;
+}
+.battle.battle button {
+  height: 32px;
+  padding: 0 12px;
+  background: var(--nkg-tile-bg);
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+}
+.battle.battle button:hover {
+  border-color: var(--nkg-brass);
+}
+.battle.battle button.icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  padding: 0;
+  color: var(--nkg-text-soft);
+}
+.versus {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid transparent;
+  border-image: var(--nkg-divider) 1;
+}
+.camp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.camp.b {
+  align-items: flex-end;
+  text-align: right;
+}
+.camp-name {
+  font-family: var(--nkg-serif);
+  font-size: 18px;
+  font-weight: 600;
+}
+.camp.a .camp-name {
+  color: var(--nkg-player-line);
+}
+.camp.b .camp-name {
+  color: #f0a39a;
+}
+.camp-meta {
+  font-size: 12.5px;
+  color: var(--nkg-text-muted);
+}
+.ratio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 260px;
+}
+.ratio .balance {
+  width: 100%;
+  height: 12px;
+  margin: 0;
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 2px;
+  background: var(--nkg-bad);
+}
+.ratio .balance span {
+  background: var(--nkg-player);
+}
+.ratio-text {
+  font-size: 12px;
+  color: #c9bfa8;
+}
+.battle.battle .side h3 {
+  display: none;
+}
+.battle.battle .totals {
+  font-size: 12px;
+  color: var(--nkg-text-muted);
+}
+.battle.battle .loss {
+  color: var(--nkg-bad-text);
+}
+.battle.battle li {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: var(--nkg-tile-bg);
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 5px;
+}
+.battle.battle li:hover {
+  border-color: var(--nkg-brass);
+}
+.battle.battle li.open {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+}
+.battle.battle .gauge {
+  background: #2b333e;
+}
+.battle.battle .gauge .strength {
+  background: var(--nkg-good);
+}
+.battle.battle .gauge .equipment {
+  background: var(--nkg-warn);
+}
+.battle.battle .gauge .org {
+  background: #5b8fd9;
+}
+.battle.battle .mods {
+  padding: 6px 10px 8px;
+  background: var(--nkg-surface-sunken);
+  border: 1px solid #2e3540;
+  border-radius: 5px;
+}
+.battle.battle .mods strong {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.battle.battle .explain {
+  background: #0e1217;
+}
+.battle.battle .explain .more {
+  height: 22px;
+  padding: 0 8px;
+}
+.battle.battle .up {
+  color: var(--nkg-good-text);
+}
+.battle.battle .down {
+  color: var(--nkg-bad-text);
+}
+.battle.mobile .versus {
+  gap: 8px;
+}
+.battle.mobile .ratio {
+  width: 96px;
+}
+.battle.mobile .camp-name {
+  font-size: 15px;
 }
 </style>

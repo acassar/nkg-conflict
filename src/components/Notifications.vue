@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { isMobile } from '@/composables/layout'
 import type { AlertKind, PlayerAlert } from '@/sim/core/types'
+import NkgIcon from './NkgIcon.vue'
 
 /** Un bandeau (consigne d'un ordre, message) occupe le haut de l'écran : on passe dessous. */
 const props = defineProps<{ belowBanner?: boolean }>()
@@ -42,7 +43,7 @@ const daysLeft = (expires: number): number =>
 </script>
 
 <template>
-  <div class="notifications" :class="{ 'below-banner': props.belowBanner }" :style="placement">
+  <div class="notifications desk" :class="{ 'below-banner': props.belowBanner }" :style="placement">
     <div
       v-for="o in offers"
       :key="`o${o.id}`"
@@ -90,7 +91,12 @@ const daysLeft = (expires: number): number =>
         <button @click="game.answerAidRequest(r.id, false)">Refuser</button>
       </div>
     </div>
-    <section v-if="game.alerts.length" class="alerts" data-testid="player-alerts">
+    <!-- Grand écran : repliée, la liste disparaît ; la cloche de la barre du haut la rouvre. -->
+    <section
+      v-if="game.alerts.length && (isMobile || !game.alertsFolded)"
+      class="alerts"
+      data-testid="player-alerts"
+    >
       <button
         class="alerts-head"
         :aria-expanded="!game.alertsFolded"
@@ -120,7 +126,7 @@ const daysLeft = (expires: number): number =>
             aria-label="Fermer"
             @click="game.dismissAlert(a.key)"
           >
-            ×
+            <NkgIcon name="close" :size="14" />
           </button>
         </div>
         <div v-if="hiddenAlerts" class="more">
@@ -294,5 +300,111 @@ button.ok {
   color: #9aa3af;
   font-size: 11px;
   padding: 0 6px;
+}
+
+/* Grand écran (charte : docs/charte.md). */
+.desk {
+  font: 13px/1.4 var(--nkg-sans);
+}
+.desk .offer,
+.desk .toast,
+.desk .alerts {
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-text);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #10141a,
+    0 10px 24px rgba(0, 0, 0, 0.45);
+}
+.desk .toast {
+  border-left: 3px solid var(--nkg-brass);
+}
+.desk .toast.danger {
+  border-left-color: var(--nkg-bad);
+}
+.desk .toast.success {
+  border-left-color: var(--nkg-good);
+}
+.desk .offer {
+  padding: 12px 14px;
+  border-left: 3px solid var(--nkg-good);
+}
+.desk .offer.aid {
+  border-left-color: var(--nkg-warn);
+}
+.desk .offer strong {
+  font-family: var(--nkg-serif);
+  font-size: 16px;
+  font-weight: 600;
+}
+.desk .muted {
+  color: var(--nkg-text-faint);
+}
+.desk button {
+  height: 30px;
+  padding: 0 12px;
+  background: var(--nkg-tile-bg);
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+}
+.desk button:hover {
+  border-color: var(--nkg-brass);
+}
+.desk button.ok {
+  background: var(--nkg-gold-bg);
+  border-color: var(--nkg-brass-pale);
+  color: #1a140a;
+  font-weight: 600;
+}
+.desk .alerts {
+  gap: 4px;
+  padding: 6px;
+}
+.desk .alerts-head {
+  height: 26px;
+  background: transparent;
+  border-color: transparent;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.desk .alerts-head:hover {
+  border-color: transparent;
+}
+.desk .dot {
+  background: #d9822b;
+}
+.desk .alert {
+  gap: 8px;
+  padding: 4px 4px 4px 10px;
+  background: var(--nkg-surface);
+  border: 1px solid var(--nkg-line);
+  border-left: 3px solid var(--nkg-warn);
+  border-radius: 4px;
+  font-size: 12.5px;
+}
+.desk .alert.encircled {
+  border-left-color: var(--nkg-bad);
+}
+.desk .alert.breach {
+  border-left-color: #d9822b;
+}
+.desk .alert button {
+  height: 26px;
+  padding: 0 10px;
+}
+.desk .alert button.close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--nkg-text-faint);
+}
+.desk .more {
+  color: var(--nkg-text-faint);
 }
 </style>

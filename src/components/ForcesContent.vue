@@ -7,7 +7,8 @@ import ArmyComposition from './ArmyComposition.vue'
 import ForcesTree from './ForcesTree.vue'
 import EchelonSymbol from './EchelonSymbol.vue'
 import { useProductionStats } from '@/composables/production'
-import { isTouch } from '@/composables/layout'
+import { isTouch, layout } from '@/composables/layout'
+import NkgIcon, { type IconName } from './NkgIcon.vue'
 import { selectionFormation } from '@/composables/composition'
 import { countSubordinates, spanText } from '@/sim/systems/command'
 import { battalionsOf, compositionText, templateLabel, templateOf } from '@/sim/units/templates'
@@ -479,6 +480,155 @@ const unitsOfArmy = computed(() => {
   return game.snapshot?.units.filter((u) => ids.has(u.id)) ?? []
 })
 
+// ---------- Fiche compacte de la sélection et volet accolé (sous la fiche sur téléphone) ----------
+
+const desktop = computed(() => layout.value === 'desktop')
+/** Visée sur la carte en cours : le volet s'efface pour la dégager, puis revient (sauf frontière). */
+const aiming = computed(() => game.mode.kind !== 'select' && game.mode.kind !== 'border')
+type Flyout = 'order' | 'posture' | 'mission' | 'details'
+/** Volet ouvert à gauche de la fiche, ou aucun. */
+const flyout = ref<Flyout | null>(null)
+function toggleFlyout(f: Flyout): void {
+  flyout.value = flyout.value === f ? null : f
+}
+const FLYOUT_TITLES: Record<Flyout, string> = {
+  order: 'Ordres',
+  posture: 'Posture',
+  mission: 'Mission « Avancer »',
+  details: 'Détails',
+}
+/** Ordre commun de la sélection, en clair. */
+const selectionOrder = computed(() => {
+  const set = new Set(selectedUnits.value.map((u) => u.order))
+  return set.size === 1 ? ORDER_NAMES[[...set][0] as OrderKind] : 'Ordres mêlés'
+})
+/** Libellé du bouton « Échelon au-dessus » : la formation que la touche U sélectionnerait. */
+const upTarget = computed(() => {
+  const info = game.selectionInfo
+  if (!info || info.echelon === 'army') return null
+  if (info.echelon === 'brigade' && info.division) return info.division.name
+  if ((info.echelon === 'brigade' || info.echelon === 'division') && info.corps)
+    return info.corps.name
+  return info.army?.name ?? null
+})
+/** Sous-titre de la fiche : modèle d'une brigade seule, sinon nombre de brigades. */
+const sheetSubtitle = computed(() => {
+  const list = selectedUnits.value
+  const first = list[0]
+  if (list.length === 1 && first) return templateLabel(first)
+  return `${list.length} brigade${list.length > 1 ? 's' : ''}`
+})
+const gaugeColor = (v: number): string =>
+  v >= 0.7 ? 'var(--nkg-good)' : v >= 0.4 ? 'var(--nkg-warn)' : 'var(--nkg-bad)'
+const terrainHere = computed(() => {
+  const u = selectedUnits.value[0]
+  return u ? game.terrainNameAt(u.lon, u.lat) : ''
+})
+const ORDER_TILES: {
+  label: string
+  icon: IconName
+  title: string
+  testid?: string
+  run: () => void
+}[] = [
+  {
+    label: 'Déplacer',
+    icon: 'move',
+    title: 'Déplacer (M) — ou clic droit sur la carte',
+    run: () => game.startOrder('move'),
+  },
+  { label: 'Tenir', icon: 'hold', title: 'Tenir la position (H)', run: () => game.hold() },
+  {
+    label: 'Se replier',
+    icon: 'retreat',
+    title: 'Se replier (R)',
+    run: () => game.startOrder('retreat'),
+  },
+  {
+    label: 'Transporter',
+    icon: 'truck',
+    title:
+      "Transport stratégique (rail, mer ou air) : cliquer ensuite sur la ville d'arrivée, chez vous ou chez un ami",
+    testid: 'order-transport',
+    run: () => game.startTransport(),
+  },
+]
+const ATTACK_TILES: {
+  label: string
+  icon: IconName
+  title: string
+  testid?: string
+  run: () => void
+}[] = [
+  {
+    label: 'Zone',
+    icon: 'forces',
+    title: 'Attaquer une zone (T)',
+    run: () => game.startOrder('attack'),
+  },
+  {
+    label: 'Assaut',
+    icon: 'move',
+    title: "Attaquer la position actuelle d'une unité ennemie, puis tenir le terrain",
+    testid: 'order-assault',
+    run: () => game.startTargetOrder('assault'),
+  },
+  {
+    label: 'Poursuite',
+    icon: 'right',
+    title: "Suivre une unité ennemie jusqu'à sa destruction ou sa fuite",
+    testid: 'order-pursue',
+    run: () => game.startTargetOrder('pursue'),
+  },
+]
+
+// Fiche d'armée : Mission, Posture, Composition et Renforts s'ouvrent dans le volet.
+type ArmyPanel = 'command' | 'posture' | 'composition' | 'recruit'
+const armyPanel = ref<ArmyPanel | null>(armyView.value === 'command' ? null : armyView.value)
+/** Volet affiché, ou aucun. */
+const armyShown = computed<ArmyPanel | null>(() => armyPanel.value)
+function toggleArmyPanel(p: ArmyPanel): void {
+  armyPanel.value = armyPanel.value === p ? null : p
+  if (p !== 'posture') armyView.value = p
+}
+function closeArmyPanel(): void {
+  armyPanel.value = null
+  armyView.value = 'command'
+}
+// « Commander des renforts » ailleurs dans l'interface ouvre le volet des renforts.
+watch(armyView, (v) => {
+  if (v !== 'command') armyPanel.value = v
+})
+const ARMY_PANEL_TITLES: Record<ArmyPanel, string> = {
+  command: 'Mission',
+  posture: 'Posture',
+  composition: 'Composition',
+  recruit: 'Renforts',
+}
+/** Corps de l'armée affichée, pour l'échelon en dessous. */
+const armyCorps = computed(() => {
+  const a = selectedArmy.value
+  if (!a) return []
+  return (game.snapshot?.formations ?? []).filter((f) => f.kind === 'corps' && f.armyId === a.id)
+})
+
+/** Sélectionne les brigades d'un corps (ses divisions). */
+function pickCorps(id: number): void {
+  const s = game.snapshot
+  if (!s) return
+  const divisions = new Set(
+    s.formations.filter((f) => f.id === id || f.parentId === id).map((f) => f.id),
+  )
+  game.selectUnits(
+    s.units
+      .filter(
+        (u) => u.owner === s.playerCountry && u.divisionId !== null && divisions.has(u.divisionId),
+      )
+      .map((u) => u.id),
+    false,
+  )
+}
+
 const attachTo = ref<number | null>(null)
 async function attach(): Promise<void> {
   const id = attachTo.value ?? armies.value[0]?.id
@@ -502,230 +652,284 @@ async function createArmy(): Promise<void> {
             : 'Cliquez sur une de vos unités pour la sélectionner, Maj + clic pour en ajouter.'
         }}
       </p>
-      <template v-else>
-        <div class="summary" data-testid="selection-summary">
-          <strong>{{ selectedUnits.length }} unité{{ selectedUnits.length > 1 ? 's' : '' }}</strong>
-          <span class="gauge" title="Effectifs moyens">
-            <i :style="{ width: cssPct(selectionSummary.strength) }" class="strength" />
-          </span>
-          <span class="gauge" title="Organisation moyenne">
-            <i :style="{ width: cssPct(selectionSummary.org) }" class="org" />
-          </span>
-          <span v-if="selectionSummary.engaged" class="chip warn">
-            {{ selectionSummary.engaged }} au contact
-          </span>
-          <span v-if="selectionSummary.unsupplied" class="chip warn">
-            {{ selectionSummary.unsupplied }} sans ravitaillement
-          </span>
-        </div>
-        <div v-if="echelonHead" class="echelon-head" data-testid="selection-echelon">
+      <!-- Fiche compacte ; ordres, posture, mission et détails dans un volet accolé (sous les tuiles sur téléphone). -->
+      <div v-else class="sheet" data-testid="unit-sheet">
+        <button
+          v-if="upTarget"
+          class="up"
+          title="Sélectionner l'échelon au-dessus (U)"
+          data-testid="echelon-up"
+          @click="game.selectUp()"
+        >
+          <NkgIcon name="up" :size="16" />
+          <span class="up-text"
+            ><span class="up-k">Échelon au-dessus</span><span>{{ upTarget }}</span></span
+          >
+        </button>
+        <div class="sheet-head" data-testid="selection-echelon">
           <EchelonSymbol
+            v-if="echelonHead"
             :echelon="echelonHead.echelon"
             :kind="echelonHead.kind"
-            :size="44"
+            :size="52"
             :color="playerColor"
           />
-          <div class="echelon-text">
-            <strong>{{ echelonHead.name }}</strong>
-            <span class="meta">{{ echelonHead.crumbs }}</span>
+          <div class="sheet-title">
+            <h3>{{ echelonHead?.name ?? `${selectedUnits.length} unités` }}</h3>
+            <span class="sub">{{ sheetSubtitle }}</span>
+            <span v-if="formationLabel" class="sub faint" data-testid="selection-formation">{{
+              formationLabel
+            }}</span>
           </div>
         </div>
-        <p v-if="formationLabel" class="formation-label" data-testid="selection-formation">
-          {{ formationLabel }}
-        </p>
-        <div v-if="game.selectionInfo" class="group" data-testid="echelon-up">
-          <button
-            v-if="game.selectionInfo.division && game.selectionInfo.echelon === 'brigade'"
-            title="Sélectionner toute la division de cette brigade"
-            @click="game.selectFormation('division')"
+        <div class="sheet-bars" data-testid="selection-summary">
+          <div
+            v-for="g in [
+              { k: 'Effectifs', v: selectionSummary.strength },
+              { k: 'Matériel', v: selectionSummary.equipment },
+              { k: 'Organisation', v: selectionSummary.org },
+            ]"
+            :key="g.k"
           >
-            Sélectionner la division
-          </button>
-          <button
-            v-if="game.selectionInfo.corps && game.selectionInfo.echelon !== 'corps'"
-            title="Sélectionner tout le corps"
-            data-testid="select-corps"
-            @click="game.selectFormation('corps')"
-          >
-            Sélectionner le corps
-          </button>
-          <button
-            v-if="game.selectionInfo.army && game.selectionInfo.echelon !== 'army'"
-            title="Sélectionner l'armée et ouvrir sa fiche"
-            data-testid="select-army"
-            @click="game.selectFormation('army')"
-          >
-            Sélectionner l'armée
-          </button>
-          <span class="meta">U : échelon au-dessus</span>
+            <div class="bar-head">
+              <span>{{ g.k }}</span
+              ><span class="num">{{ pct(g.v) }}</span>
+            </div>
+            <div class="bar">
+              <i :style="{ width: cssPct(g.v), background: gaugeColor(g.v) }" />
+            </div>
+          </div>
         </div>
-        <p v-if="corpsSpan" class="formation-label" data-testid="selection-span">
-          {{ corpsSpan }}
-        </p>
-        <div class="group">
-          <span class="label">Mouvement</span>
-          <button
-            title="Déplacer (M) — ou clic droit sur la carte"
-            @click="game.startOrder('move')"
+        <div class="chips">
+          <span class="chip"><span class="dot" />{{ selectionOrder }}</span>
+          <span v-if="terrainHere" class="chip">{{ terrainHere }}</span>
+          <span v-if="selectionSummary.engaged" class="chip warn"
+            >{{ selectionSummary.engaged }} au contact</span
           >
-            Déplacer
-          </button>
-          <button title="Tenir la position (H)" @click="game.hold()">Tenir</button>
-          <button title="Se replier (R)" @click="game.startOrder('retreat')">Se replier</button>
-          <button
-            title="Transport stratégique (rail, mer ou air) : cliquer ensuite sur la ville d'arrivée, chez vous ou chez un ami"
-            data-testid="order-transport"
-            @click="game.startTransport()"
+          <span v-if="selectionSummary.unsupplied" class="chip warn"
+            >{{ selectionSummary.unsupplied }} sans ravitaillement</span
           >
-            Transporter
-          </button>
-          <button
-            v-if="naval.ports.length > 0"
-            :disabled="!landing.ok"
-            :title="landing.title"
-            data-testid="order-landing"
-            @click="game.startLanding()"
-          >
-            Débarquer
-          </button>
-          <button
-            title="Annule l'ordre en cours : les unités s'arrêtent (celles d'une armée reprennent leur poste)"
-            data-testid="cancel-order"
-            @click="game.cancelOrders()"
-          >
-            Annuler l'ordre
-          </button>
         </div>
-        <div class="group">
-          <span class="label">Attaque</span>
-          <button title="Attaquer une zone (T)" @click="game.startOrder('attack')">Zone</button>
+        <p v-if="corpsSpan" class="faint small" data-testid="selection-span">{{ corpsSpan }}</p>
+        <div class="divider" />
+        <div class="tiles">
           <button
-            title="Attaquer la position actuelle d'une unité ennemie, puis tenir le terrain"
-            data-testid="order-assault"
-            @click="game.startTargetOrder('assault')"
+            class="tile"
+            :class="{ on: flyout === 'order' }"
+            :aria-expanded="flyout === 'order'"
+            data-testid="tile-order"
+            @click="toggleFlyout('order')"
           >
-            Assaut
+            <span class="tk"><NkgIcon name="move" :size="16" />Ordre</span>
+            <span class="tv">{{ selectionOrder }}</span>
           </button>
           <button
-            title="Suivre une unité ennemie jusqu'à sa destruction ou sa fuite"
-            data-testid="order-pursue"
-            @click="game.startTargetOrder('pursue')"
+            class="tile"
+            :class="{ on: flyout === 'posture' }"
+            :aria-expanded="flyout === 'posture'"
+            data-testid="tile-posture"
+            @click="toggleFlyout('posture')"
           >
-            Poursuite
+            <span class="tk"><NkgIcon name="shield" :size="16" />Posture</span>
+            <span class="tv">{{
+              selectionPosture ? POSTURES[selectionPosture].name : 'Mêlées'
+            }}</span>
           </button>
           <button
-            :disabled="selectedUnits.length < 2"
-            title="Les unités sélectionnées quittent leur armée et entourent la cible ; l'armée garde son front"
-            data-testid="order-encircle"
-            @click="game.startTargetOrder('encircle')"
+            class="tile"
+            :class="{ on: flyout === 'mission' }"
+            :aria-expanded="flyout === 'mission'"
+            data-testid="tile-mission"
+            @click="toggleFlyout('mission')"
           >
-            Encercler
+            <span class="tk"><NkgIcon name="mission" :size="16" />Mission</span>
+            <span class="tv">Avancer en groupe</span>
+          </button>
+          <button
+            class="tile"
+            :class="{ on: flyout === 'details' }"
+            :aria-expanded="flyout === 'details'"
+            data-testid="tile-details"
+            @click="toggleFlyout('details')"
+          >
+            <span class="tk"><NkgIcon name="info" :size="16" />Détails</span>
+            <span class="tv">État, armée</span>
           </button>
         </div>
-        <div class="group" data-testid="group-mission">
-          <span class="label">Mission « Avancer » (groupe détaché)</span>
-          <button
-            title="Les unités choisies forment un groupe qui avance jusqu'à la frontière avec le pays cliqué, puis rejoint son armée"
-            @click="game.startAdvance('border')"
+
+        <Teleport to="body" :disabled="!desktop">
+          <section
+            v-if="flyout && !aiming"
+            class="flyout"
+            :class="{ inline: !desktop }"
+            :aria-label="FLYOUT_TITLES[flyout]"
+            :data-testid="`flyout-${flyout}`"
           >
-            Frontière
-          </button>
-          <button
-            title="Le groupe avance jusqu'à un trait libre (clics successifs, ou glisser), puis rejoint son armée"
-            @click="game.startAdvance('line')"
-          >
-            Trait
-          </button>
-          <button
-            title="Le groupe avance jusqu'au point cliqué, puis rejoint son armée"
-            @click="game.startAdvance('objective')"
-          >
-            Objectif
-          </button>
-        </div>
-        <div class="group" data-testid="posture">
-          <span class="label">Posture</span>
-          <button
-            v-for="p in POSTURE_ORDER"
-            :key="p"
-            :class="{ active: selectionPosture === p }"
-            :title="POSTURES[p].description"
-            @click="game.setPosture(p)"
-          >
-            {{ POSTURES[p].name }}
-          </button>
-        </div>
-        <template v-for="g in unitGroups" :key="g.key">
-          <button
-            v-if="unitGroups.length > 1"
-            class="group-head"
-            data-testid="selection-group"
-            :title="g.division ? 'Sélectionner toute cette division' : undefined"
-            :disabled="!g.division"
-            @click="g.division && pickDivision(g.division.id)"
-          >
-            <span class="name">{{ g.division?.name ?? 'Sans division' }}</span>
-            <span class="meta"
-              >{{ g.units.length }}{{ g.division ? ` / ${g.total}` : '' }} brigade{{
-                g.units.length > 1 ? 's' : ''
-              }}</span
-            >
-          </button>
-          <ul class="units">
-            <li
-              v-for="u in g.units"
-              :key="u.id"
-              :class="{ pick: selectedUnits.length > 1 }"
-              data-testid="selection-unit"
-              :title="selectedUnits.length > 1 ? 'Sélectionner cette brigade seule' : undefined"
-              @click="selectedUnits.length > 1 && pickUnit(u)"
-            >
-              <div class="row">
-                <span class="name">{{ u.name }}</span>
-                <span class="meta" data-testid="unit-template" :title="compositionText(u)">{{
-                  templateLabel(u)
-                }}</span>
-              </div>
-              <div class="row">
-                <span class="gauge" :title="`Effectifs ${pct(u.strength)}`">
-                  <i :style="{ width: cssPct(u.strength) }" class="strength" />
-                </span>
-                <span
-                  class="gauge"
-                  data-testid="unit-equipment"
-                  :title="`Matériel ${pct(u.equipment)}`"
+            <header>
+              <h3>{{ FLYOUT_TITLES[flyout] }}</h3>
+              <button class="x" aria-label="Fermer le volet" @click="flyout = null">
+                <NkgIcon name="close" :size="16" />
+              </button>
+            </header>
+            <template v-if="flyout === 'order'">
+              <div class="label">Mouvement</div>
+              <div class="cmds">
+                <button
+                  v-for="t in ORDER_TILES"
+                  :key="t.label"
+                  class="cmd"
+                  :title="t.title"
+                  :data-testid="t.testid"
+                  @click="t.run()"
                 >
-                  <i :style="{ width: cssPct(u.equipment) }" class="equipment" />
-                </span>
-                <span class="gauge" :title="`Organisation ${pct(u.org)}`">
-                  <i :style="{ width: cssPct(u.org) }" class="org" />
-                </span>
+                  <NkgIcon :name="t.icon" :size="20" />{{ t.label }}
+                </button>
+                <button
+                  v-if="naval.ports.length > 0"
+                  class="cmd"
+                  :disabled="!landing.ok"
+                  :title="landing.title"
+                  data-testid="order-landing"
+                  @click="game.startLanding()"
+                >
+                  <NkgIcon name="flag" :size="20" />Débarquer
+                </button>
               </div>
-              <div class="meta">
-                {{ armyOf(u.armyId) }} · {{ game.terrainNameAt(u.lon, u.lat) }}
+              <div class="label">Attaque</div>
+              <div class="cmds">
+                <button
+                  v-for="t in ATTACK_TILES"
+                  :key="t.label"
+                  class="cmd"
+                  :title="t.title"
+                  :data-testid="t.testid"
+                  @click="t.run()"
+                >
+                  <NkgIcon :name="t.icon" :size="20" />{{ t.label }}
+                </button>
+                <button
+                  class="cmd"
+                  :disabled="selectedUnits.length < 2"
+                  title="Les unités sélectionnées quittent leur armée et entourent la cible ; l'armée garde son front"
+                  data-testid="order-encircle"
+                  @click="game.startTargetOrder('encircle')"
+                >
+                  <NkgIcon name="lasso" :size="20" />Encercler
+                </button>
               </div>
-              <ul
-                v-if="selectedUnits.length === 1"
-                class="battalions"
-                data-testid="unit-battalions"
+              <button
+                class="wide cancel"
+                title="Annule l'ordre en cours : les unités s'arrêtent (celles d'une armée reprennent leur poste)"
+                data-testid="cancel-order"
+                @click="game.cancelOrders()"
               >
-                <li v-for="b in battalionRows(u)" :key="b.kind">{{ b.count }} × {{ b.name }}</li>
+                Annuler l'ordre en cours
+              </button>
+            </template>
+            <div v-else-if="flyout === 'posture'" class="opts" data-testid="posture">
+              <button
+                v-for="p in POSTURE_ORDER"
+                :key="p"
+                class="opt"
+                :class="{ on: selectionPosture === p }"
+                :aria-pressed="selectionPosture === p"
+                @click="game.setPosture(p)"
+              >
+                <span class="ot">{{ POSTURES[p].name }}</span>
+                <span class="od">{{ POSTURES[p].description }}</span>
+              </button>
+            </div>
+            <div v-else-if="flyout === 'mission'" class="opts" data-testid="group-mission">
+              <p class="faint small">
+                Les unités choisies forment un groupe détaché qui avance, puis rejoint son armée.
+              </p>
+              <button class="opt" @click="game.startAdvance('border')">
+                <span class="ot">Frontière</span>
+                <span class="od">Jusqu'à la frontière avec le pays cliqué</span>
+              </button>
+              <button class="opt" @click="game.startAdvance('line')">
+                <span class="ot">Trait</span>
+                <span class="od">Jusqu'à un trait libre (clics successifs, ou glisser)</span>
+              </button>
+              <button class="opt" @click="game.startAdvance('objective')">
+                <span class="ot">Objectif</span>
+                <span class="od">Jusqu'au point cliqué</span>
+              </button>
+            </div>
+            <template v-else>
+              <ul class="detail-list">
+                <li v-for="u in selectedUnits" :key="u.id">
+                  <span class="sname">{{ u.name }}</span>
+                  <span class="faint small" data-testid="unit-template" :title="compositionText(u)"
+                    >{{ templateLabel(u) }} · {{ armyOf(u.armyId) }}</span
+                  >
+                  <span class="small" :class="{ warn: u.routed || !u.supplied }">{{
+                    status(u)
+                  }}</span>
+                </li>
               </ul>
-              <div class="status" :class="{ warn: u.routed || !u.supplied }">{{ status(u) }}</div>
+              <form v-if="armies.length" class="create" @submit.prevent="attach">
+                <select v-model="attachTo" aria-label="Armée à rejoindre">
+                  <option v-for="a in armies" :key="a.id" :value="a.id">{{ a.name }}</option>
+                </select>
+                <button type="submit">Rattacher la sélection à cette armée</button>
+              </form>
+              <form class="create" @submit.prevent="createArmy">
+                <input v-model="armyName" placeholder="Nom de la nouvelle armée" maxlength="40" />
+                <button type="submit">Créer une armée</button>
+              </form>
+            </template>
+          </section>
+        </Teleport>
+
+        <!-- Échelon en dessous : bataillons d'une brigade seule, sinon brigades (par division). -->
+        <template v-if="selectedUnits.length === 1 && selectedUnits[0]">
+          <div class="label">Bataillons</div>
+          <ul class="subs battalions" data-testid="unit-battalions">
+            <li v-for="b in battalionRows(selectedUnits[0])" :key="b.kind">
+              {{ b.count }} × {{ b.name }}
             </li>
           </ul>
         </template>
-        <form v-if="armies.length" class="create" @submit.prevent="attach">
-          <select v-model="attachTo" aria-label="Armée à rejoindre">
-            <option v-for="a in armies" :key="a.id" :value="a.id">{{ a.name }}</option>
-          </select>
-          <button type="submit">Rattacher la sélection à cette armée</button>
-        </form>
-        <form class="create" @submit.prevent="createArmy">
-          <input v-model="armyName" placeholder="Nom de la nouvelle armée" maxlength="40" />
-          <button type="submit">Créer une armée</button>
-        </form>
-      </template>
+        <template v-else>
+          <div class="label">Échelon en dessous · {{ selectedUnits.length }} brigades</div>
+          <template v-for="g in unitGroups" :key="g.key">
+            <button
+              v-if="unitGroups.length > 1"
+              class="sub-row group-row"
+              data-testid="selection-group"
+              :title="g.division ? 'Sélectionner toute cette division' : undefined"
+              :disabled="!g.division"
+              @click="g.division && pickDivision(g.division.id)"
+            >
+              <span class="sname">{{ g.division?.name ?? 'Sans division' }}</span>
+              <span class="faint small"
+                >{{ g.units.length }}{{ g.division ? ` / ${g.total}` : '' }}</span
+              >
+            </button>
+            <button
+              v-for="u in g.units"
+              :key="u.id"
+              class="sub-row"
+              :class="{ nested: unitGroups.length > 1 }"
+              data-testid="selection-unit"
+              :title="`${templateLabel(u)} · sélectionner cette brigade seule`"
+              @click="pickUnit(u)"
+            >
+              <span class="sname">{{ u.name }}</span>
+              <span class="bar mini" :title="`Effectifs ${pct(u.strength)}`"
+                ><i :style="{ width: cssPct(u.strength), background: gaugeColor(u.strength) }"
+              /></span>
+              <span
+                class="bar mini"
+                data-testid="unit-equipment"
+                :title="`Matériel ${pct(u.equipment)}`"
+                ><i :style="{ width: cssPct(u.equipment), background: gaugeColor(u.equipment) }"
+              /></span>
+            </button>
+          </template>
+        </template>
+      </div>
     </template>
 
     <!-- Armées -->
@@ -842,338 +1046,410 @@ async function createArmy(): Promise<void> {
     <!-- Fiche de l'armée choisie -->
     <template v-else-if="section === 'army'">
       <section v-if="selectedArmy" class="army" data-testid="army-sheet">
-        <div class="army-head" data-testid="army-head">
-          <div class="row">
-            <span class="kicker">Armée · {{ selectedArmy.unitIds.length }} unités</span>
-          </div>
-          <div class="bar-row">
-            <span>Effectifs</span>
-            <span class="gauge wide"
-              ><i :style="{ width: cssPct(sheetSummary.strength) }" class="strength"
-            /></span>
-            <span class="num">{{ pct(sheetSummary.strength) }}</span>
-          </div>
-          <div class="bar-row">
-            <span>Matériel</span>
-            <span class="gauge wide"
-              ><i :style="{ width: cssPct(sheetSummary.equipment) }" class="equipment"
-            /></span>
-            <span class="num">{{ pct(sheetSummary.equipment) }}</span>
-          </div>
-          <div class="bar-row">
-            <span>Organisation</span>
-            <span class="gauge wide"
-              ><i :style="{ width: cssPct(sheetSummary.org) }" class="org"
-            /></span>
-            <span class="num">{{ pct(sheetSummary.org) }}</span>
-          </div>
-          <div class="bar-row">
-            <span>Ravitaillement</span>
-            <span class="gauge wide"
-              ><i
-                :style="{ width: cssPct(sheetSummary.supplied) }"
-                :class="sheetSummary.unsupplied ? 'cut' : 'strength'"
-            /></span>
-            <span :class="sheetSummary.unsupplied ? 'bad' : 'ok'">
-              {{ sheetSummary.unsupplied ? `${sheetSummary.unsupplied} coupée(s)` : 'tout relié' }}
-            </span>
-          </div>
-          <p class="current">
-            En cours :
-            <strong data-testid="mission-status">{{ missionStatus(selectedArmy) }}</strong> ·
-            {{ POSTURES[selectedArmy.posture ?? 'balanced'].name.toLowerCase() }} ·
-            {{ sheetSummary.engaged }} au contact
-          </p>
-          <p class="current" data-testid="army-span">Étendue de commandement : {{ armySpan }}</p>
-        </div>
-        <div class="subtabs" role="tablist">
-          <button
-            role="tab"
-            :class="{ active: armyView === 'command' }"
-            data-testid="army-view-command"
-            @click="armyView = 'command'"
-          >
-            Ordre
-          </button>
-          <button
-            role="tab"
-            :class="{ active: armyView === 'composition' }"
-            data-testid="army-view-composition"
-            @click="armyView = 'composition'"
-          >
-            Composition
-          </button>
-          <button
-            role="tab"
-            :class="{ active: armyView === 'recruit' }"
-            data-testid="army-view-recruit"
-            @click="armyView = 'recruit'"
-          >
-            Renforts<span
-              v-if="freeBarracks > 0"
-              class="tag"
-              :title="`${freeBarracks} place(s) de formation libre(s)`"
-              data-testid="free-barracks"
-              >{{ freeBarracks }}</span
-            >
-          </button>
-        </div>
-        <ArmyRecruitment v-if="armyView === 'recruit'" :army="selectedArmy" />
-        <ArmyComposition v-else-if="armyView === 'composition'" :army="selectedArmy" />
-        <template v-else>
-          <div data-testid="army-mission">
-            <div v-for="g in visibleGroups" :key="g.label" class="mgroup">
-              <p class="kicker">{{ g.label }}</p>
-              <div class="mcards">
-                <button
-                  v-for="k in g.kinds"
-                  :key="k"
-                  class="mcard"
-                  :class="{ on: missionView === k, cur: missionOf(selectedArmy) === k }"
-                  :aria-pressed="missionView === k"
-                  :disabled="!!selectedArmy.encirclement && k !== 'encircle'"
-                  :title="MISSION_HELP[k]"
-                  :data-testid="`mission-${k}`"
-                  @click="chooseMission(k)"
-                >
-                  <span class="t"
-                    >{{ MISSION_NAMES[k]
-                    }}<span v-if="missionOf(selectedArmy) === k" class="tag">en cours</span></span
-                  >
-                  <span class="d">{{ MISSION_SHORT[k] }}</span>
-                </button>
-              </div>
+        <div class="army-head sheet" data-testid="army-head">
+          <div class="sheet-head">
+            <EchelonSymbol echelon="army" kind="mech" :size="52" :color="playerColor" />
+            <div class="sheet-title">
+              <h3>{{ selectedArmy.name }}</h3>
+              <span class="sub">Armée · {{ selectedArmy.unitIds.length }} unités</span>
             </div>
           </div>
-          <div class="detail" data-testid="mission-detail">
-            <div class="row">
-              <strong>{{ MISSION_NAMES[missionView] }}</strong>
-              <span
-                v-if="game.missionPreview && game.missionPreview.armyId === selectedArmy.id"
-                class="tag preview"
-                data-testid="mission-preview"
-                >aperçu sur la carte</span
-              >
-              <span v-else-if="action?.kind === 'aim'" class="tag preview">visée sur la carte</span>
-            </div>
-            <p class="meta" :data-testid="`mission-help-${missionView}`">
-              {{ MISSION_TEXT[missionView] }}
-            </p>
-            <template v-if="isLineMission(missionView) && !selectedArmy.encirclement">
-              <p v-if="!holdsLine(selectedArmy)" class="meta warn" data-testid="mission-no-front">
-                L'armée n'a pas de front : assignez-lui une portion, tout le front ou une frontière.
-              </p>
-              <div class="group">
-                <span class="label">Front tenu</span>
-                <button @click="game.startFront(selectedArmy.id)">Assigner une portion</button>
-                <button @click="game.setWholeFront(selectedArmy.id)">Tout le front</button>
-                <button @click="game.clearFront(selectedArmy.id)">Aucun</button>
-              </div>
-              <div class="group">
-                <span class="label">Frontière tenue, en paix comme en guerre</span>
-                <button
-                  title="Glissez le long de votre frontière (ou de votre côte, contre les débarquements) pour la peindre, ou cliquez sur un pays voisin : l'armée s'y déploie en défense, sans franchir ; si la guerre éclate avec ce voisin, la frontière devient son front"
-                  data-testid="border-paint"
-                  @click="game.startBorder(selectedArmy.id)"
-                >
-                  Tenir une frontière
-                </button>
-                <button
-                  :disabled="!selectedArmy.border?.length"
-                  title="Toute la frontière avec chaque voisin déjà touché, retirée aux autres armées"
-                  data-testid="border-take-all"
-                  @click="game.takeWholeBorder(selectedArmy.id)"
-                >
-                  Prendre toute la frontière
-                </button>
-              </div>
-              <p v-if="selectedArmy.border?.length" class="meta" data-testid="border-summary">
-                {{ borderText(selectedArmy) }}
-              </p>
-              <div v-if="action?.kind === 'current'" class="group">
-                <span class="label">Offensive ponctuelle</span>
-                <button
-                  title="Toutes les unités de ligne de l'armée participent"
-                  @click="game.startOffensive(selectedArmy.id)"
-                >
-                  Planifier (toute l'armée)
-                </button>
-                <button
-                  :disabled="chosenInArmy === 0 || chosenInArmy === selectedArmy.unitIds.length"
-                  title="Seules les unités sélectionnées de cette armée attaquent ; les autres tiennent le front. Sélectionnez-les sur la carte (clic, Maj + clic ou sélection par zone)."
-                  data-testid="offensive-selection"
-                  @click="game.startOffensive(selectedArmy.id, true)"
-                >
-                  Avec la sélection ({{ chosenInArmy }})
-                </button>
-                <button
-                  :disabled="!selectedArmy.offensive || selectedArmy.offensive.launched"
-                  @click="game.launchOffensive(selectedArmy.id)"
-                >
-                  Lancer
-                </button>
-                <button
-                  :disabled="!selectedArmy.offensive"
-                  @click="game.cancelOffensive(selectedArmy.id)"
-                >
-                  Annuler
-                </button>
-              </div>
-            </template>
-            <div v-else-if="missionView === 'advance'" class="group">
-              <span class="label">Viser sur la carte : avancer jusqu'à…</span>
-              <button
-                title="Cliquez ensuite sur un pays : l'armée reprend son territoire perdu le long de sa frontière, ou traverse l'ennemi jusqu'à elle"
-                data-testid="advance-border"
-                @click="game.startAdvance('border', selectedArmy.id)"
-              >
-                Une frontière
-              </button>
-              <button
-                title="Posez les points du trait (clics, puis Entrée ou « Valider »), ou dessinez-le d'un geste"
-                data-testid="advance-line"
-                @click="game.startAdvance('line', selectedArmy.id)"
-              >
-                Un trait
-              </button>
-              <button
-                title="Cliquez sur le point à atteindre"
-                data-testid="advance-objective"
-                @click="game.startAdvance('objective', selectedArmy.id)"
-              >
-                Un objectif
-              </button>
-            </div>
+          <div class="sheet-bars">
             <div
-              v-else-if="missionView === 'defendPoints'"
-              class="group"
-              data-testid="defend-points-group"
+              v-for="g in [
+                { k: 'Effectifs', v: sheetSummary.strength },
+                { k: 'Matériel', v: sheetSummary.equipment },
+                { k: 'Organisation', v: sheetSummary.org },
+              ]"
+              :key="g.k"
             >
-              <span class="label">Points à défendre</span>
-              <label v-for="k in POINT_KINDS" :key="k.key" class="check">
-                <input
-                  v-model="pointKinds[k.key]"
-                  type="checkbox"
-                  :data-testid="`defend-kind-${k.key}`"
-                />
-                {{ k.label }}
-              </label>
-              <span class="label">Où</span>
-              <button
-                class="primary"
-                title="Tous les points cochés du pays, les plus importants d'abord"
-                data-testid="defend-country"
-                @click="game.defendPointsArmy(selectedArmy.id, null, { ...pointKinds })"
-              >
-                Tout le pays
-              </button>
-              <button
-                title="Cliquez ensuite sur le centre de la zone (cercle du rayon choisi)"
-                data-testid="defend-zone"
-                @click="game.startDefendZone(selectedArmy.id, { ...pointKinds }, zoneKm)"
-              >
-                Une zone
-              </button>
-              <select v-model.number="zoneKm" data-testid="defend-zone-km" title="Rayon de la zone">
-                <option v-for="km in [100, 200, 400]" :key="km" :value="km">{{ km }} km</option>
-              </select>
-            </div>
-            <div v-else-if="missionView === 'breach'" class="group" data-testid="breach-group">
-              <p v-if="!holdsLine(selectedArmy)" class="meta warn">
-                Assignez d'abord un front à l'armée, sinon les flancs restent découverts.
-              </p>
-              <button
-                class="primary"
-                title="Cliquez ensuite sur le point visé, chez l'ennemi"
-                data-testid="breach-target"
-                @click="game.startBreach(selectedArmy.id)"
-              >
-                {{
-                  missionOf(selectedArmy) === 'breach'
-                    ? 'Changer le point visé'
-                    : 'Viser sur la carte'
-                }}
-              </button>
-            </div>
-            <div v-else-if="missionView === 'retreat'" class="group" data-testid="retreat-group">
-              <span class="label">Viser sur la carte : se replier jusqu'à…</span>
-              <button
-                title="Posez les points de la ligne de repli, dans votre territoire (clics, puis Entrée ou « Valider »), ou dessinez-la d'un geste"
-                data-testid="retreat-line"
-                @click="game.startRetreat('line', selectedArmy.id)"
-              >
-                Un trait
-              </button>
-              <button
-                title="Cliquez ensuite sur un pays : l'armée se replie sur sa frontière avec lui, dans le territoire qu'elle tient"
-                data-testid="retreat-border"
-                @click="game.startRetreat('border', selectedArmy.id)"
-              >
-                Une frontière
-              </button>
-            </div>
-            <div v-else-if="selectedArmy.encirclement" class="group">
-              <span class="label">Encerclement de {{ selectedArmy.encirclement.targetName }}</span>
-              <button data-testid="end-encirclement" @click="game.endEncirclement(selectedArmy.id)">
-                Rejoindre l'armée
-              </button>
-            </div>
-            <div v-else class="group">
-              <button
-                class="primary"
-                title="L'armée détache un tiers de ses unités de ligne autour d'une cible ennemie et garde son front avec le reste"
-                data-testid="army-encircle"
-                @click="game.startTargetOrder('encircle', selectedArmy.id)"
-              >
-                Viser sur la carte
-              </button>
-            </div>
-            <div v-if="action && action.kind !== 'current'" class="row actions">
-              <button data-testid="mission-cancel" @click="cancelChoice">Annuler</button>
-              <button
-                v-if="action.kind === 'apply'"
-                class="primary"
-                data-testid="mission-apply"
-                @click="applyMission"
-              >
-                {{ action.label }}
-              </button>
+              <div class="bar-head">
+                <span>{{ g.k }}</span
+                ><span class="num">{{ pct(g.v) }}</span>
+              </div>
+              <div class="bar">
+                <i :style="{ width: cssPct(g.v), background: gaugeColor(g.v) }" />
+              </div>
             </div>
           </div>
-          <div class="posture-box" data-testid="army-posture">
-            <p class="kicker">Posture</p>
-            <div class="segs">
-              <button
-                v-for="p in POSTURE_ORDER"
-                :key="p"
-                class="seg"
-                :class="{ on: (selectedArmy.posture ?? 'balanced') === p }"
-                :aria-pressed="(selectedArmy.posture ?? 'balanced') === p"
-                :title="`${POSTURES[p].name} : ${POSTURES[p].description}`"
-                :data-testid="`army-posture-${p}`"
-                @click="game.setArmyPosture(selectedArmy.id, p)"
-              >
-                {{ POSTURE_SHORT[p] }}
-              </button>
-            </div>
-            <div class="stats" data-testid="posture-stats">
-              <div>
-                <span>Attaque</span><span class="num">{{ factor(armyPosture.attack) }}</span>
-              </div>
-              <div>
-                <span>Défense</span><span class="num">{{ factor(armyPosture.defense) }}</span>
-              </div>
-              <div>
-                <span>Décroche sous</span
-                ><span class="num">{{ pct(armyPosture.routOrg) }} org.</span>
-              </div>
-            </div>
-            <p class="meta">{{ armyPosture.reflex }}</p>
+          <p class="current" :title="`Étendue de commandement : ${armySpan}`">
+            <strong data-testid="mission-status">{{ missionStatus(selectedArmy) }}</strong>
+          </p>
+          <div class="chips">
+            <span class="chip"><span class="dot" />{{ sheetSummary.engaged }} au contact</span>
+            <span class="chip" :class="{ warn: sheetSummary.unsupplied }">{{
+              sheetSummary.unsupplied ? `${sheetSummary.unsupplied} coupée(s)` : 'Tout relié'
+            }}</span>
+            <span
+              class="chip"
+              data-testid="army-span"
+              :title="`Étendue de commandement : ${armySpan}`"
+              >Étendue : {{ armySpan }}</span
+            >
           </div>
-          <button class="danger" @click="game.disbandArmy(selectedArmy.id)">
-            Dissoudre l'armée
-          </button>
-        </template>
+          <div class="divider" />
+          <div class="tiles">
+            <button
+              class="tile"
+              :class="{ on: armyPanel === 'command' }"
+              :aria-expanded="armyPanel === 'command'"
+              data-testid="army-view-command"
+              @click="toggleArmyPanel('command')"
+            >
+              <span class="tk"><NkgIcon name="mission" :size="16" />Mission</span>
+              <span class="tv">{{ MISSION_NAMES[missionOf(selectedArmy)] }}</span>
+            </button>
+            <button
+              class="tile"
+              :class="{ on: armyPanel === 'posture' }"
+              :aria-expanded="armyPanel === 'posture'"
+              data-testid="army-tile-posture"
+              @click="toggleArmyPanel('posture')"
+            >
+              <span class="tk"><NkgIcon name="shield" :size="16" />Posture</span>
+              <span class="tv">{{ armyPosture.name }}</span>
+            </button>
+            <button
+              class="tile"
+              :class="{ on: armyPanel === 'composition' }"
+              :aria-expanded="armyPanel === 'composition'"
+              data-testid="army-view-composition"
+              @click="toggleArmyPanel('composition')"
+            >
+              <span class="tk"><NkgIcon name="forces" :size="16" />Composition</span>
+              <span class="tv">Bataillons, corps</span>
+            </button>
+            <button
+              class="tile"
+              :class="{ on: armyPanel === 'recruit' }"
+              :aria-expanded="armyPanel === 'recruit'"
+              data-testid="army-view-recruit"
+              @click="toggleArmyPanel('recruit')"
+            >
+              <span class="tk"
+                ><NkgIcon name="plus" :size="16" />Renforts<span
+                  v-if="freeBarracks > 0"
+                  class="tag"
+                  :title="`${freeBarracks} place(s) de formation libre(s)`"
+                  data-testid="free-barracks"
+                  >{{ freeBarracks }}</span
+                ></span
+              >
+              <span class="tv">Divisions, brigades</span>
+            </button>
+          </div>
+          <template v-if="armyCorps.length">
+            <div class="label">Échelon en dessous · {{ armyCorps.length }} corps</div>
+            <button
+              v-for="c in armyCorps"
+              :key="c.id"
+              class="sub-row"
+              title="Sélectionner ce corps"
+              data-testid="army-corps"
+              @click="pickCorps(c.id)"
+            >
+              <EchelonSymbol echelon="corps" kind="mech" :size="22" :color="playerColor" />
+              <span class="sname">{{ c.name }}</span>
+            </button>
+          </template>
+        </div>
+        <Teleport to="body" :disabled="!desktop">
+          <section
+            v-if="armyShown && !aiming"
+            class="flyout army-flyout"
+            :class="{ inline: !desktop }"
+            :data-testid="`army-flyout-${armyShown}`"
+          >
+            <header>
+              <h3>{{ ARMY_PANEL_TITLES[armyShown] }}</h3>
+              <button class="x" aria-label="Fermer le volet" @click="closeArmyPanel">
+                <NkgIcon name="close" :size="16" />
+              </button>
+            </header>
+            <ArmyRecruitment v-if="armyShown === 'recruit'" :army="selectedArmy" />
+            <ArmyComposition v-else-if="armyShown === 'composition'" :army="selectedArmy" />
+            <template v-else>
+              <div v-if="armyShown === 'command'" data-testid="army-mission">
+                <div v-for="g in visibleGroups" :key="g.label" class="mgroup">
+                  <p class="kicker">{{ g.label }}</p>
+                  <div class="mcards">
+                    <button
+                      v-for="k in g.kinds"
+                      :key="k"
+                      class="mcard"
+                      :class="{ on: missionView === k, cur: missionOf(selectedArmy) === k }"
+                      :aria-pressed="missionView === k"
+                      :disabled="!!selectedArmy.encirclement && k !== 'encircle'"
+                      :title="MISSION_HELP[k]"
+                      :data-testid="`mission-${k}`"
+                      @click="chooseMission(k)"
+                    >
+                      <span class="t"
+                        >{{ MISSION_NAMES[k]
+                        }}<span v-if="missionOf(selectedArmy) === k" class="tag"
+                          >en cours</span
+                        ></span
+                      >
+                      <span class="d">{{ MISSION_SHORT[k] }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-if="armyShown === 'command'" class="detail" data-testid="mission-detail">
+                <div class="row">
+                  <strong>{{ MISSION_NAMES[missionView] }}</strong>
+                  <span
+                    v-if="game.missionPreview && game.missionPreview.armyId === selectedArmy.id"
+                    class="tag preview"
+                    data-testid="mission-preview"
+                    >aperçu sur la carte</span
+                  >
+                  <span v-else-if="action?.kind === 'aim'" class="tag preview"
+                    >visée sur la carte</span
+                  >
+                </div>
+                <p class="meta" :data-testid="`mission-help-${missionView}`">
+                  {{ MISSION_TEXT[missionView] }}
+                </p>
+                <template v-if="isLineMission(missionView) && !selectedArmy.encirclement">
+                  <p
+                    v-if="!holdsLine(selectedArmy)"
+                    class="meta warn"
+                    data-testid="mission-no-front"
+                  >
+                    L'armée n'a pas de front : assignez-lui une portion, tout le front ou une
+                    frontière.
+                  </p>
+                  <div class="group">
+                    <span class="label">Front tenu</span>
+                    <button @click="game.startFront(selectedArmy.id)">Assigner une portion</button>
+                    <button @click="game.setWholeFront(selectedArmy.id)">Tout le front</button>
+                    <button @click="game.clearFront(selectedArmy.id)">Aucun</button>
+                  </div>
+                  <div class="group">
+                    <span class="label">Frontière tenue, en paix comme en guerre</span>
+                    <button
+                      title="Glissez le long de votre frontière (ou de votre côte, contre les débarquements) pour la peindre, ou cliquez sur un pays voisin : l'armée s'y déploie en défense, sans franchir ; si la guerre éclate avec ce voisin, la frontière devient son front"
+                      data-testid="border-paint"
+                      @click="game.startBorder(selectedArmy.id)"
+                    >
+                      Tenir une frontière
+                    </button>
+                    <button
+                      :disabled="!selectedArmy.border?.length"
+                      title="Toute la frontière avec chaque voisin déjà touché, retirée aux autres armées"
+                      data-testid="border-take-all"
+                      @click="game.takeWholeBorder(selectedArmy.id)"
+                    >
+                      Prendre toute la frontière
+                    </button>
+                  </div>
+                  <p v-if="selectedArmy.border?.length" class="meta" data-testid="border-summary">
+                    {{ borderText(selectedArmy) }}
+                  </p>
+                  <div v-if="action?.kind === 'current'" class="group">
+                    <span class="label">Offensive ponctuelle</span>
+                    <button
+                      title="Toutes les unités de ligne de l'armée participent"
+                      @click="game.startOffensive(selectedArmy.id)"
+                    >
+                      Planifier (toute l'armée)
+                    </button>
+                    <button
+                      :disabled="chosenInArmy === 0 || chosenInArmy === selectedArmy.unitIds.length"
+                      title="Seules les unités sélectionnées de cette armée attaquent ; les autres tiennent le front. Sélectionnez-les sur la carte (clic, Maj + clic ou sélection par zone)."
+                      data-testid="offensive-selection"
+                      @click="game.startOffensive(selectedArmy.id, true)"
+                    >
+                      Avec la sélection ({{ chosenInArmy }})
+                    </button>
+                    <button
+                      :disabled="!selectedArmy.offensive || selectedArmy.offensive.launched"
+                      @click="game.launchOffensive(selectedArmy.id)"
+                    >
+                      Lancer
+                    </button>
+                    <button
+                      :disabled="!selectedArmy.offensive"
+                      @click="game.cancelOffensive(selectedArmy.id)"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </template>
+                <div v-else-if="missionView === 'advance'" class="group">
+                  <span class="label">Viser sur la carte : avancer jusqu'à…</span>
+                  <button
+                    title="Cliquez ensuite sur un pays : l'armée reprend son territoire perdu le long de sa frontière, ou traverse l'ennemi jusqu'à elle"
+                    data-testid="advance-border"
+                    @click="game.startAdvance('border', selectedArmy.id)"
+                  >
+                    Une frontière
+                  </button>
+                  <button
+                    title="Posez les points du trait (clics, puis Entrée ou « Valider »), ou dessinez-le d'un geste"
+                    data-testid="advance-line"
+                    @click="game.startAdvance('line', selectedArmy.id)"
+                  >
+                    Un trait
+                  </button>
+                  <button
+                    title="Cliquez sur le point à atteindre"
+                    data-testid="advance-objective"
+                    @click="game.startAdvance('objective', selectedArmy.id)"
+                  >
+                    Un objectif
+                  </button>
+                </div>
+                <div
+                  v-else-if="missionView === 'defendPoints'"
+                  class="group"
+                  data-testid="defend-points-group"
+                >
+                  <span class="label">Points à défendre</span>
+                  <label v-for="k in POINT_KINDS" :key="k.key" class="check">
+                    <input
+                      v-model="pointKinds[k.key]"
+                      type="checkbox"
+                      :data-testid="`defend-kind-${k.key}`"
+                    />
+                    {{ k.label }}
+                  </label>
+                  <span class="label">Où</span>
+                  <button
+                    class="primary"
+                    title="Tous les points cochés du pays, les plus importants d'abord"
+                    data-testid="defend-country"
+                    @click="game.defendPointsArmy(selectedArmy.id, null, { ...pointKinds })"
+                  >
+                    Tout le pays
+                  </button>
+                  <button
+                    title="Cliquez ensuite sur le centre de la zone (cercle du rayon choisi)"
+                    data-testid="defend-zone"
+                    @click="game.startDefendZone(selectedArmy.id, { ...pointKinds }, zoneKm)"
+                  >
+                    Une zone
+                  </button>
+                  <select
+                    v-model.number="zoneKm"
+                    data-testid="defend-zone-km"
+                    title="Rayon de la zone"
+                  >
+                    <option v-for="km in [100, 200, 400]" :key="km" :value="km">{{ km }} km</option>
+                  </select>
+                </div>
+                <div v-else-if="missionView === 'breach'" class="group" data-testid="breach-group">
+                  <p v-if="!holdsLine(selectedArmy)" class="meta warn">
+                    Assignez d'abord un front à l'armée, sinon les flancs restent découverts.
+                  </p>
+                  <button
+                    class="primary"
+                    title="Cliquez ensuite sur le point visé, chez l'ennemi"
+                    data-testid="breach-target"
+                    @click="game.startBreach(selectedArmy.id)"
+                  >
+                    {{
+                      missionOf(selectedArmy) === 'breach'
+                        ? 'Changer le point visé'
+                        : 'Viser sur la carte'
+                    }}
+                  </button>
+                </div>
+                <div
+                  v-else-if="missionView === 'retreat'"
+                  class="group"
+                  data-testid="retreat-group"
+                >
+                  <span class="label">Viser sur la carte : se replier jusqu'à…</span>
+                  <button
+                    title="Posez les points de la ligne de repli, dans votre territoire (clics, puis Entrée ou « Valider »), ou dessinez-la d'un geste"
+                    data-testid="retreat-line"
+                    @click="game.startRetreat('line', selectedArmy.id)"
+                  >
+                    Un trait
+                  </button>
+                  <button
+                    title="Cliquez ensuite sur un pays : l'armée se replie sur sa frontière avec lui, dans le territoire qu'elle tient"
+                    data-testid="retreat-border"
+                    @click="game.startRetreat('border', selectedArmy.id)"
+                  >
+                    Une frontière
+                  </button>
+                </div>
+                <div v-else-if="selectedArmy.encirclement" class="group">
+                  <span class="label"
+                    >Encerclement de {{ selectedArmy.encirclement.targetName }}</span
+                  >
+                  <button
+                    data-testid="end-encirclement"
+                    @click="game.endEncirclement(selectedArmy.id)"
+                  >
+                    Rejoindre l'armée
+                  </button>
+                </div>
+                <div v-else class="group">
+                  <button
+                    class="primary"
+                    title="L'armée détache un tiers de ses unités de ligne autour d'une cible ennemie et garde son front avec le reste"
+                    data-testid="army-encircle"
+                    @click="game.startTargetOrder('encircle', selectedArmy.id)"
+                  >
+                    Viser sur la carte
+                  </button>
+                </div>
+                <div v-if="action && action.kind !== 'current'" class="row actions">
+                  <button data-testid="mission-cancel" @click="cancelChoice">Annuler</button>
+                  <button
+                    v-if="action.kind === 'apply'"
+                    class="primary"
+                    data-testid="mission-apply"
+                    @click="applyMission"
+                  >
+                    {{ action.label }}
+                  </button>
+                </div>
+              </div>
+              <div v-if="armyShown === 'posture'" class="posture-box" data-testid="army-posture">
+                <p class="kicker">Posture</p>
+                <div class="segs">
+                  <button
+                    v-for="p in POSTURE_ORDER"
+                    :key="p"
+                    class="seg"
+                    :class="{ on: (selectedArmy.posture ?? 'balanced') === p }"
+                    :aria-pressed="(selectedArmy.posture ?? 'balanced') === p"
+                    :title="`${POSTURES[p].name} : ${POSTURES[p].description}`"
+                    :data-testid="`army-posture-${p}`"
+                    @click="game.setArmyPosture(selectedArmy.id, p)"
+                  >
+                    {{ POSTURE_SHORT[p] }}
+                  </button>
+                </div>
+                <div class="stats" data-testid="posture-stats">
+                  <div>
+                    <span>Attaque</span><span class="num">{{ factor(armyPosture.attack) }}</span>
+                  </div>
+                  <div>
+                    <span>Défense</span><span class="num">{{ factor(armyPosture.defense) }}</span>
+                  </div>
+                  <div>
+                    <span>Décroche sous</span
+                    ><span class="num">{{ pct(armyPosture.routOrg) }} org.</span>
+                  </div>
+                </div>
+                <p class="meta">{{ armyPosture.reflex }}</p>
+              </div>
+              <button
+                v-if="armyShown === 'command'"
+                class="danger"
+                @click="game.disbandArmy(selectedArmy.id)"
+              >
+                Dissoudre l'armée
+              </button>
+            </template>
+          </section>
+        </Teleport>
       </section>
     </template>
   </div>
@@ -1616,5 +1892,397 @@ h3 {
   padding-left: 16px;
   font-size: 12px;
   color: #cbd5e1;
+}
+/* Fiche compacte de la sélection (grand écran, charte : docs/charte.md). */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.forces .sheet .up.up {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: #1d1a15;
+  border-color: #4a4030;
+  text-align: left;
+  color: var(--nkg-brass-light);
+}
+.up-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  color: var(--nkg-text);
+}
+.up-k {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a99a7a;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0;
+}
+.sheet-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sheet-title h3 {
+  margin: 0;
+  font-family: var(--nkg-serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.sheet-title .sub {
+  font-size: 13px;
+  color: var(--nkg-text-muted);
+}
+.faint {
+  color: var(--nkg-text-faint);
+}
+.small {
+  font-size: 12px;
+}
+.sheet .faint.sub {
+  font-size: 12px;
+  color: var(--nkg-text-faint);
+}
+.sheet-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bar-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+  font-size: 12px;
+  color: var(--nkg-text-muted);
+}
+.bar-head .num {
+  color: var(--nkg-text);
+}
+.bar {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: #2b333e;
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+}
+.bar.mini {
+  width: 44px;
+  flex: none;
+  height: 5px;
+}
+.sheet .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sheet .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border: 1px solid #3a4452;
+  border-radius: 999px;
+  background: #1a212a;
+  font-size: 12px;
+  color: var(--nkg-text-soft);
+}
+.sheet .chip.warn {
+  color: var(--nkg-warn-text);
+}
+.sheet .chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nkg-good);
+}
+.sheet .divider {
+  height: 1px;
+  background: var(--nkg-divider);
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.forces .sheet .tiles .tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 58px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-align: left;
+}
+.forces .sheet .tiles .tile.on,
+.forces .sheet .tiles .tile.on:hover:not(:disabled) {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+}
+.tk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.tk .nkg-icon {
+  color: var(--nkg-brass);
+}
+.tile.on .tk {
+  color: var(--nkg-brass-light);
+}
+.tv {
+  font-size: 13px;
+  color: var(--nkg-text);
+}
+.sheet .label {
+  margin: 4px 0 -4px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.forces .sheet .sub-row.sub-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 13px;
+}
+.forces .sheet .sub-row.nested {
+  margin-left: 12px;
+}
+.forces .sheet .sub-row.group-row {
+  background: none;
+  border-color: transparent;
+  color: var(--nkg-brass-light);
+}
+.sname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.subs li {
+  padding: 6px 10px;
+  border: 1px solid var(--nkg-line);
+  border-radius: 4px;
+  background: var(--nkg-surface);
+  font-size: 13px;
+}
+
+/* Volet accolé à gauche de la fiche (option B). */
+.flyout {
+  position: fixed;
+  top: 70px;
+  right: 366px;
+  z-index: 12;
+  width: 300px;
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 14px 14px;
+  box-sizing: border-box;
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-right-color: var(--nkg-brass-light);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  color: var(--nkg-text);
+  font: 13px/1.4 var(--nkg-sans);
+}
+.flyout header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 -14px 4px;
+  padding: 10px 10px 8px 14px;
+  border-bottom: 1px solid var(--nkg-brass-line);
+}
+.flyout h3 {
+  margin: 0;
+  font-family: var(--nkg-serif);
+  font-size: 20px;
+  font-weight: 600;
+}
+.flyout button {
+  background: var(--nkg-tile-bg);
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+}
+.flyout button:hover:not(:disabled) {
+  background: var(--nkg-tile-bg);
+  border-color: var(--nkg-brass);
+}
+.flyout .x {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+.flyout .label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.cmds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.flyout .cmd {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 62px;
+  padding: 6px 2px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.flyout .cmd .nkg-icon {
+  color: var(--nkg-brass);
+}
+.flyout .wide {
+  height: 34px;
+  margin-top: 4px;
+}
+.flyout .cancel {
+  color: #f0b0a5;
+}
+.opts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.flyout .opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  text-align: left;
+}
+.flyout .opt.on,
+.flyout .opt.on:hover:not(:disabled) {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+}
+.ot {
+  font-weight: 600;
+}
+.od {
+  font-size: 12px;
+  color: var(--nkg-text-muted);
+}
+.detail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 340px;
+  overflow: auto;
+}
+.detail-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--nkg-line);
+  border-radius: 4px;
+  background: var(--nkg-surface);
+}
+.detail-list .warn {
+  color: var(--nkg-warn-text);
+}
+.flyout .create input,
+.flyout .create select {
+  background: #12171d;
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+  color: inherit;
+}
+.army-head.sheet .current {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--nkg-text-soft);
+}
+.forces .sheet .tiles .tile .tag {
+  margin-left: 4px;
+}
+.army-flyout {
+  width: 340px;
+}
+/* Téléphone : le volet s'insère dans la fiche, sous ses tuiles. */
+.flyout.inline {
+  position: static;
+  width: auto;
+  max-height: none;
+  margin-top: 4px;
+  box-shadow: none;
+  border-right-color: var(--nkg-brass-dark);
+}
+.army-flyout .mcards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.army-flyout .mcard.on,
+.army-flyout .seg.on {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
+}
+.army-flyout .danger {
+  margin-top: 6px;
+  border-color: var(--nkg-danger-line);
+  color: #f0b0a5;
+}
+.army-head.sheet {
+  padding: 0;
+  margin: 0;
+  background: none;
+}
+.army-flyout .mcard.cur {
+  box-shadow: inset 3px 0 0 var(--nkg-brass);
+}
+.army-flyout .tag {
+  background: var(--nkg-brass-bg-bottom);
+  color: var(--nkg-brass-light);
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { STANCE_COLORS } from '@/map/territoryImage'
 import { isMobile } from '@/composables/layout'
@@ -70,6 +70,29 @@ function menuAction(fn: () => unknown): void {
   menuOpen.value = false
   void fn()
 }
+
+// Le menu est une fenêtre « En pause » qui arrête le temps et le relance en partant.
+let resumeOnClose = false
+watch(menuOpen, (open) => {
+  if (open) {
+    resumeOnClose = !game.paused
+    if (resumeOnClose) void game.togglePause()
+  } else if (resumeOnClose) {
+    resumeOnClose = false
+    if (game.paused && game.snapshot) void game.togglePause()
+  }
+})
+function quitFromPause(): void {
+  if (!confirm('Revenir au menu ? La partie est sauvegardée automatiquement.')) return
+  resumeOnClose = false
+  menuOpen.value = false
+  void game.quitToMenu()
+}
+function onKey(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && menuOpen.value) menuOpen.value = false
+}
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
@@ -176,6 +199,25 @@ async function onFile(event: Event): Promise<void> {
 
         <div class="files">
           <button
+            class="icon-btn bell"
+            :class="{ on: game.alerts.length && !game.alertsFolded }"
+            :disabled="!game.alerts.length"
+            :aria-label="`Alertes : ${game.alerts.length}`"
+            :aria-pressed="game.alerts.length > 0 && !game.alertsFolded"
+            :title="
+              game.alerts.length
+                ? game.alertsFolded
+                  ? 'Afficher les alertes'
+                  : 'Masquer les alertes'
+                : 'Aucune alerte'
+            "
+            data-testid="alerts-bell"
+            @click="game.alertsFolded = !game.alertsFolded"
+          >
+            <NkgIcon name="bell" />
+            <span v-if="game.alerts.length" class="badge">{{ game.alerts.length }}</span>
+          </button>
+          <button
             class="icon-btn menu-btn"
             :aria-expanded="menuOpen"
             aria-label="Menu"
@@ -184,15 +226,6 @@ async function onFile(event: Event): Promise<void> {
           >
             <NkgIcon name="menu" />
           </button>
-          <div v-if="menuOpen" class="menu" role="menu">
-            <div class="menu-actions">
-              <button @click="menuAction(() => game.saveLocal())">Sauver</button>
-              <button @click="menuAction(game.exportToFile)">Exporter</button>
-              <button @click="menuAction(() => fileInput?.click())">Importer</button>
-              <button data-testid="menu-help" @click="menuAction(() => openHelp())">Aide</button>
-              <button @click="menuAction(quit)">Menu principal</button>
-            </div>
-          </div>
         </div>
       </div>
     </template>
@@ -211,7 +244,12 @@ async function onFile(event: Event): Promise<void> {
           :aria-label="game.paused ? 'Reprendre' : 'Pause'"
           @click="game.togglePause()"
         >
-          {{ game.paused ? '▶' : '❚❚' }}
+          <svg v-if="game.paused" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 4l13 8-13 8z" />
+          </svg>
+          <svg v-else width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+          </svg>
         </button>
         <span class="date" :class="{ paused: game.paused }">{{ shortDate }}</span>
         <button class="speed" aria-label="Vitesse suivante" @click="nextSpeed">
@@ -219,17 +257,21 @@ async function onFile(event: Event): Promise<void> {
         </button>
       </div>
       <button
-        class="menu-btn"
+        class="icon-btn menu-btn"
         :aria-expanded="menuOpen"
         aria-label="Menu"
         data-testid="menu-button"
         @click="menuOpen = !menuOpen"
       >
-        ☰
+        <NkgIcon name="menu" />
       </button>
-      <div v-if="menuOpen" class="menu" role="menu">
-        <div class="menu-country">{{ game.playerCountry?.name }}</div>
-        <div v-if="gauges" class="menu-gauges">
+    </template>
+    <div v-if="menuOpen" class="pause-veil" @click.self="menuOpen = false">
+      <div class="pause-menu" role="dialog" aria-label="Menu" data-testid="pause-menu">
+        <h2>En pause</h2>
+        <p class="pause-sub">{{ game.playerCountry?.name }} · {{ game.dateLabel }}</p>
+        <!-- Téléphone : les jauges de la barre du haut, faute de place, sont ici. -->
+        <div v-if="isMobile && gauges" class="menu-gauges">
           <button
             v-for="g in gauges"
             :key="g.id"
@@ -238,45 +280,52 @@ async function onFile(event: Event): Promise<void> {
             :data-testid="g.id === 'army' ? 'sustain-mobile' : `gauge-${g.id}-mobile`"
             @click="menuAction(() => (game.gaugeOpen = g.id))"
           >
+            <NkgIcon :name="GAUGE_ICONS[g.id]" :size="14" class="ricon" />
             <span class="rlabel">{{ g.label }}</span>
             <span class="rvalue">
               {{ g.value }} <span v-if="g.trend" class="delta">{{ g.trend }}</span>
             </span>
           </button>
+          <button v-if="game.playerPolitics" class="menu-gauge" @click="menuAction(openCountry)">
+            <NkgIcon name="flag" :size="14" class="ricon" />
+            <span class="rlabel">Stabilité · soutien</span>
+            <span class="rvalue"
+              >{{ pctOf(game.playerPolitics.stability) }} ·
+              {{ pctOf(game.playerPolitics.warSupport) }}</span
+            >
+          </button>
         </div>
-        <dl v-if="game.playerPolitics" class="menu-resources">
-          <dt>Stabilité</dt>
-          <dd>{{ pctOf(game.playerPolitics.stability) }}</dd>
-          <dt>Soutien à la guerre</dt>
-          <dd>{{ pctOf(game.playerPolitics.warSupport) }}</dd>
-        </dl>
-        <div class="menu-actions">
-          <button @click="menuAction(() => game.step(24))">+24 h</button>
-          <button @click="menuAction(openCountry)">Diplomatie</button>
-          <button @click="menuAction(() => game.saveLocal())">Sauver</button>
-          <button @click="menuAction(game.exportToFile)">Exporter</button>
-          <button @click="menuAction(() => fileInput?.click())">Importer</button>
-          <button data-testid="menu-help" @click="menuAction(() => openHelp())">Aide</button>
-          <button @click="menuAction(quit)">Menu principal</button>
-        </div>
+        <button class="mi gold" @click="menuOpen = false">Reprendre</button>
+        <button v-if="isMobile" class="mi" @click="menuAction(() => game.step(24))">
+          Avancer d'un jour
+        </button>
+        <button class="mi" @click="menuAction(() => game.saveLocal())">Sauvegarder</button>
+        <button class="mi" @click="menuAction(() => fileInput?.click())">
+          Importer une partie
+        </button>
+        <button class="mi" @click="menuAction(game.exportToFile)">Exporter la partie</button>
+        <button class="mi" data-testid="menu-help" @click="menuAction(() => openHelp())">
+          Règles du jeu
+        </button>
+        <div class="pause-rule" />
+        <button class="mi quit" @click="quitFromPause">Quitter vers l'écran de départ</button>
       </div>
-    </template>
+    </div>
     <input ref="fileInput" type="file" accept="application/json" hidden @change="onFile" />
   </header>
 </template>
 
 <style scoped>
-/* ---------- Téléphone : barre compacte (inchangée) ---------- */
+/* ---------- Téléphone : barre compacte, à la charte ---------- */
 .topbar.compact {
   padding: calc(6px + env(safe-area-inset-top)) 8px 6px;
   gap: 8px;
   flex-wrap: nowrap;
-  background: rgba(20, 24, 31, 0.92);
-  color: #e8eaed;
-  font:
-    14px/1.2 system-ui,
-    sans-serif;
-  border-bottom: 1px solid #2c323c;
+  background: linear-gradient(180deg, #1c232d, #12171d);
+  color: var(--nkg-text);
+  font: 14px/1.2 var(--nkg-sans);
+  border-bottom: 1px solid var(--nkg-brass-dark);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 .compact .country {
   display: flex;
@@ -287,97 +336,110 @@ async function onFile(event: Event): Promise<void> {
 .compact .time {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  padding: 2px;
+  background: #14110c;
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
 }
 .compact .date {
   min-width: 0;
-  font-size: 13px;
+  padding: 0 4px;
+  font: 14px/1 var(--nkg-serif);
+  color: var(--nkg-brass-pale);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 .compact .date.paused {
-  color: #f2b84b;
+  color: var(--nkg-warn-text);
 }
 .compact .flag {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  width: 22px;
+  height: 15px;
+  border: 1px solid var(--nkg-brass);
 }
 .compact .held {
   font-weight: 400;
-  color: #b8bec8;
+  color: #a99a7a;
   font-variant-numeric: tabular-nums;
 }
 .compact button {
-  background: #2c323c;
   color: inherit;
-  border: 1px solid #3b4250;
-  border-radius: 6px;
-  padding: 6px 10px;
   cursor: pointer;
   font: inherit;
 }
-.compact button:hover {
-  background: #363d49;
-}
+.compact .pause,
 .compact .speed {
-  min-width: 42px;
-}
-.compact .menu-btn {
-  font-size: 16px;
-}
-.compact .menu {
-  background: #14181f;
-  border: 1px solid #2c323c;
-  border-radius: 8px;
-}
-.menu-country {
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.menu-resources {
+  min-width: 34px;
+  height: 30px;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 10px;
-  margin: 0 0 10px;
-  font-variant-numeric: tabular-nums;
+  place-items: center;
+  padding: 0 6px;
+  background: #2a2418;
+  border: none;
+  border-radius: 3px;
+  color: var(--nkg-brass-light);
 }
-.menu-resources dt {
-  color: #9aa3af;
-}
-.menu-resources dd {
-  margin: 0;
+.compact .icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--nkg-chip);
+  border: 1px solid #2e3540;
+  border-radius: 4px;
+  color: var(--nkg-text-soft);
 }
 .menu-gauges {
   display: grid;
   gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .menu-gauge {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  border-bottom-width: 2px;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--nkg-chip);
+  color: inherit;
+  border: 1px solid #2e3540;
+  border-bottom: 2px solid #2e3540;
+  border-radius: 4px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
   text-align: left;
+  cursor: pointer;
 }
-.menu-gauge .rlabel,
+.menu-gauge .ricon {
+  color: var(--nkg-brass-light);
+}
+.menu-gauge .rlabel {
+  flex: 1;
+  color: var(--nkg-text-muted);
+}
+.menu-gauge .rvalue {
+  font-weight: 600;
+}
 .menu-gauge .delta {
-  color: #9aa3af;
+  font-weight: 400;
+  color: var(--nkg-text-faint);
 }
 .menu-gauge.ok {
-  border-bottom-color: #22c55e;
+  border-bottom-color: var(--nkg-good);
 }
 .menu-gauge.warning {
-  border-bottom-color: #f2a33a;
+  border-bottom-color: var(--nkg-warn);
 }
 .menu-gauge.critical {
-  border-bottom-color: #ef4444;
+  border-bottom-color: var(--nkg-bad);
 }
 .menu-gauge.warning .rvalue {
-  color: #f2a33a;
+  color: var(--nkg-warn-text);
 }
 .menu-gauge.critical .rvalue {
-  color: #fca5a5;
+  color: var(--nkg-bad-text);
 }
 
 /* ---------- Commun ---------- */
@@ -394,20 +456,6 @@ async function onFile(event: Event): Promise<void> {
 }
 .topbar * {
   white-space: nowrap;
-}
-.menu {
-  position: absolute;
-  top: 100%;
-  right: 8px;
-  margin-top: 4px;
-  width: min(300px, calc(100vw - 16px));
-  padding: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-.menu-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
 }
 
 /* ---------- Grand écran (charte : docs/charte.md) ---------- */
@@ -623,20 +671,102 @@ async function onFile(event: Event): Promise<void> {
 .topbar:not(.compact) .icon-btn:hover {
   border-color: var(--nkg-brass-dark);
 }
-.topbar:not(.compact) .menu {
+/* Cloche des alertes. */
+.topbar:not(.compact) .files {
+  display: flex;
+  gap: 8px;
+}
+.bell {
+  position: relative;
+}
+.topbar:not(.compact) .bell:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.topbar:not(.compact) .bell.on {
+  border-color: var(--nkg-brass-dark);
+  color: var(--nkg-brass-light);
+}
+.bell .badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: #d9822b;
+  color: #14110c;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+/* Fenêtre « En pause ». */
+.pause-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 10, 14, 0.6);
+}
+.pause-menu {
+  width: min(340px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
   background: var(--nkg-panel-bg);
   border: 1px solid var(--nkg-brass-dark);
   border-radius: 4px;
   box-shadow: var(--nkg-panel-shadow);
 }
-.topbar:not(.compact) .menu-actions button {
-  height: 34px;
+.pause-menu h2 {
+  margin: 0;
+  font-family: var(--nkg-serif);
+  font-size: 26px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--nkg-brass-pale);
+}
+.pause-sub {
+  margin: -6px 0 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #a99a7a;
+}
+.topbar .pause-menu .mi {
+  height: 40px;
+  padding: 0 14px;
   background: var(--nkg-tile-bg);
   border: 1px solid var(--nkg-line-strong);
   border-radius: 4px;
+  color: var(--nkg-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
 }
-.topbar:not(.compact) .menu-actions button:hover {
+.topbar .pause-menu .mi:hover {
   border-color: var(--nkg-brass);
+}
+.topbar .pause-menu .mi.gold {
+  background: var(--nkg-gold-bg);
+  border-color: var(--nkg-brass-pale);
+  color: #1a140a;
+  font-weight: 600;
+}
+.topbar .pause-menu .mi.quit {
+  color: #f0b0a5;
+}
+.pause-rule {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--nkg-divider);
 }
 /* Écrans moyens : on retire d'abord les libellés, puis les tendances, puis le soutien. */
 @media (max-width: 1480px) {

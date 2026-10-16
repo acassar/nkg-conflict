@@ -6,6 +6,7 @@ import { stanceColor } from '@/map/territoryImage'
 import { AID_LEVEL_NAMES, AID_MONEY_SHARE, AID_SHARE } from '@/sim/politics/aidLevels'
 import { money } from '@/composables/budget'
 import type { AidLevel } from '@/sim/politics/types'
+import NkgIcon from './NkgIcon.vue'
 
 const game = useGameStore()
 
@@ -165,6 +166,33 @@ const relationLabel = (v: number): string =>
           ? 'Tendues'
           : 'Hostiles'
 
+// ---------- Fiche ----------
+
+const swatch = computed(() =>
+  country.value ? `rgb(${stanceColor(stance.value, country.value.color).join(',')})` : '',
+)
+/** Sous-titre de la fiche : camp, alliances et organisations. */
+const subtitle = computed(() =>
+  [
+    STANCE_LABELS[stance.value],
+    ...alliances.value.map((a) => a.name),
+    ...organizations.value.map((o) => o.name),
+  ].join(' · '),
+)
+/** Position du repère sur l'échelle des relations (−100 à +100). */
+const relationPos = computed(() => `${Math.max(0, Math.min(100, (relation.value + 100) / 2))}%`)
+const gaugeColor = (v: number): string =>
+  v >= 0.7 ? 'var(--nkg-good)' : v >= 0.4 ? 'var(--nkg-warn)' : 'var(--nkg-bad)'
+const forcesText = computed(() =>
+  offMap.value
+    ? 'Hors du théâtre'
+    : pol.value?.mobilized
+      ? `${unitCount.value} unités`
+      : `${pol.value?.forceSize ?? 0} unités non mobilisées`,
+)
+const involvesMeWar = (w: { attackers: string[]; defenders: string[] }): boolean =>
+  w.attackers.includes(me.value) || w.defenders.includes(me.value)
+
 function confirmLeave(a: { id: string; name: string }): void {
   if (confirm(`Quitter ${a.name} ? Ses membres ne vous défendront plus.`)) {
     void game.leaveAlliance(a.id)
@@ -183,19 +211,21 @@ function confirmWar(): void {
 </script>
 
 <template>
-  <div v-if="country && pol" class="country-tab" :data-testid="own ? 'country-own' : 'country-tab'">
-    <div class="head">
-      <span
-        class="swatch"
-        :style="{ background: `rgb(${stanceColor(stance, country.color).join(',')})` }"
-      />
-      <div>
-        <div class="title">{{ country.name }}</div>
-        <div class="stance" :class="stance">{{ STANCE_LABELS[stance] }}</div>
+  <!-- Grand écran : fiche compacte, actions en tuiles, explications en infobulle. -->
+  <div
+    v-if="country && pol"
+    class="country-tab desk"
+    :data-testid="own ? 'country-own' : 'country-tab'"
+  >
+    <div class="ident">
+      <span class="flag" :style="{ background: swatch }" />
+      <div class="who">
+        <div v-if="own" class="name">{{ country.name }}</div>
+        <div class="sub" :class="stance">{{ subtitle }}</div>
       </div>
       <button
         v-if="!isMe"
-        class="small"
+        class="mine"
         title="Revenir à votre pays"
         @click="game.selectCountry(me)"
       >
@@ -203,223 +233,280 @@ function confirmWar(): void {
       </button>
     </div>
 
-    <dl class="gauges">
-      <dt title="Multiplie la production et la construction">Stabilité</dt>
-      <dd>
-        <meter min="0" max="1" low="0.4" optimum="1" :value="pol.stability" />
-        {{ pct(pol.stability) }}
-      </dd>
-      <dt title="Main-d'œuvre, récupération des unités, volonté de poursuivre la guerre">
-        Soutien à la guerre
-      </dt>
-      <dd>
-        <meter min="0" max="1" low="0.3" optimum="1" :value="pol.warSupport" />
-        {{ pct(pol.warSupport) }}
-      </dd>
-      <dt>Forces</dt>
-      <dd>
-        {{
-          offMap
-            ? 'Hors du théâtre : aide et diplomatie seulement'
-            : pol.mobilized
-              ? `${unitCount} unités sur la carte`
-              : `${pol.forceSize} unités, non mobilisées`
-        }}
-      </dd>
-      <dt v-if="owned !== null && wars.length">Territoire tenu</dt>
-      <dd v-if="owned !== null && wars.length">{{ owned }} % du territoire de départ</dd>
-      <template v-if="!isMe">
-        <dt>Relations</dt>
-        <dd :class="{ bad: relation <= -20, good: relation >= 20 }">
-          {{ relationLabel(relation) }} ({{ relation > 0 ? '+' : '' }}{{ Math.round(relation) }})
-        </dd>
-      </template>
-      <dt>Alliances</dt>
-      <dd>{{ alliances.map((a) => a.name).join(', ') || 'Aucune' }}</dd>
-      <template v-if="organizations.length">
-        <dt>Organisations</dt>
-        <dd>{{ organizations.map((o) => o.name).join(', ') }}</dd>
-      </template>
-      <template v-if="passagesHeld.length">
-        <dt>Droit de passage chez</dt>
-        <dd>{{ names(passagesHeld) }}</dd>
-      </template>
-      <template v-if="passagesGiven.length">
-        <dt>Passage accordé à</dt>
-        <dd>{{ names(passagesGiven) }}</dd>
-      </template>
-      <template v-if="sanctionsAgainst">
-        <dt>Sanctions subies</dt>
-        <dd class="bad">{{ sanctionsAgainst }} pays</dd>
-      </template>
-    </dl>
+    <div class="bars">
+      <div title="Multiplie la production et la construction">
+        <div class="bar-head">
+          <span>Stabilité</span><span class="num">{{ pct(pol.stability) }}</span>
+        </div>
+        <div class="bar">
+          <i :style="{ width: pct(pol.stability), background: gaugeColor(pol.stability) }" />
+        </div>
+      </div>
+      <div title="Main-d'œuvre, récupération des unités, volonté de poursuivre la guerre">
+        <div class="bar-head">
+          <span>Soutien à la guerre</span><span class="num">{{ pct(pol.warSupport) }}</span>
+        </div>
+        <div class="bar">
+          <i :style="{ width: pct(pol.warSupport), background: gaugeColor(pol.warSupport) }" />
+        </div>
+      </div>
+    </div>
+
+    <div v-if="!isMe" class="relation">
+      <div class="bar-head">
+        <span>Relations</span>
+        <span :class="{ bad: relation <= -20, good: relation >= 20 }"
+          >{{ relationLabel(relation) }} · {{ relation > 0 ? '+' : ''
+          }}{{ Math.round(relation) }}</span
+        >
+      </div>
+      <div class="scale"><span :style="{ left: relationPos }" /></div>
+    </div>
+
+    <div class="chips">
+      <span
+        class="chip"
+        :title="offMap ? 'Hors du théâtre : aide et diplomatie seulement' : 'Forces armées'"
+        >{{ forcesText }}</span
+      >
+      <span v-if="owned !== null && wars.length" class="chip" title="Part du territoire de départ"
+        >{{ owned }} % du territoire</span
+      >
+      <span v-if="!wars.length" class="chip">En paix</span>
+      <span
+        v-if="passagesHeld.length"
+        class="chip"
+        :title="`Droit de passage chez ${names(passagesHeld)}`"
+        >Passage chez {{ passagesHeld.length }} pays</span
+      >
+      <span
+        v-if="passagesGiven.length"
+        class="chip"
+        :title="`Passage accordé à ${names(passagesGiven)}`"
+        >Passage accordé à {{ passagesGiven.length }} pays</span
+      >
+      <span v-if="sanctionsAgainst" class="chip bad"
+        >Sanctionné par {{ sanctionsAgainst }} pays</span
+      >
+    </div>
+
+    <div class="divider" />
 
     <!-- Actions sur un autre pays -->
-    <div v-if="!isMe" class="actions">
-      <button
-        v-if="!atWarWithMe && !offMap"
-        class="danger"
-        :disabled="sameAlliance"
-        @click="confirmWar"
-      >
-        Déclarer la guerre
-      </button>
+    <div v-if="!isMe" class="acts">
       <button
         v-if="!atWarWithMe"
+        class="act"
         title="+10 de relations, une fois par mois et par pays"
         @click="game.improveRelations(country.id)"
       >
-        Améliorer les relations
-      </button>
-      <button @click="game.toggleSanction(country.id)">
-        {{ sanctioned ? 'Lever les sanctions' : 'Sanctionner' }}
+        <NkgIcon name="heart" :size="22" />Améliorer les relations
       </button>
       <button
         v-if="!sameAlliance && !atWarWithMe"
+        class="act"
         title="Il faut des relations d'au moins +60"
         @click="game.proposeAlliance(country.id)"
       >
-        Proposer une alliance
+        <NkgIcon name="handshake" :size="22" />Proposer une alliance
       </button>
       <button
         v-if="canAskJoin"
+        class="act"
         data-testid="ask-join"
         title="L'allié décide selon vos relations, vos ennemis communs, la distance de la guerre et son soutien à la guerre"
         @click="game.askToJoin(country.id)"
       >
-        Demander de participer à la guerre
+        <NkgIcon name="call" :size="22" />Demander de participer à la guerre
       </button>
       <button
         v-if="canAskPassage"
+        class="act"
         data-testid="ask-passage"
         title="Vos unités pourront traverser son territoire et s'y ravitailler pendant vos guerres"
         @click="game.askPassage(country.id)"
       >
-        Demander le droit de passage
+        <NkgIcon name="road" :size="22" />Demander le droit de passage
       </button>
       <button
         v-if="passageToMe"
+        class="act"
         title="Vos unités quittent son territoire"
         @click="game.renouncePassage(country.id)"
       >
-        Renoncer au droit de passage
+        <NkgIcon name="road" :size="22" />Renoncer au droit de passage
+      </button>
+      <button
+        class="act"
+        :class="{ on: sanctioned }"
+        :title="
+          sanctioned
+            ? 'Lever les sanctions contre ce pays'
+            : 'Freine son économie ; dégrade vos relations'
+        "
+        @click="game.toggleSanction(country.id)"
+      >
+        <NkgIcon name="ban" :size="22" />{{ sanctioned ? 'Lever les sanctions' : 'Sanctionner' }}
+      </button>
+      <button
+        v-if="!atWarWithMe && !offMap"
+        class="act war"
+        :disabled="sameAlliance"
+        :title="
+          sameAlliance
+            ? 'Impossible contre un membre de votre alliance'
+            : 'Ses alliés peuvent entrer en guerre contre vous'
+        "
+        @click="confirmWar"
+      >
+        <NkgIcon name="forces" :size="22" />Déclarer la guerre
       </button>
     </div>
 
     <!-- Actions sur son propre pays -->
-    <div v-else class="actions">
+    <div
+      v-else-if="!pol.mobilized || (wars.length && myAlliances.length) || myAlliances.length"
+      class="acts"
+    >
       <button
         v-if="!pol.mobilized"
+        class="act"
         title="Lève les forces armées ; coûte un peu de stabilité en temps de paix"
         @click="game.mobilize()"
       >
-        Mobiliser
+        <NkgIcon name="shield" :size="22" />Mobiliser
       </button>
-      <button v-if="wars.length && myAlliances.length" @click="game.callAllies()">
-        Appeler les alliés
+      <button
+        v-if="wars.length && myAlliances.length"
+        class="act"
+        title="Demande à vos alliés d'entrer en guerre à vos côtés"
+        @click="game.callAllies()"
+      >
+        <NkgIcon name="call" :size="22" />Appeler les alliés
       </button>
-      <button v-for="a in myAlliances" :key="a.id" class="danger" @click="confirmLeave(a)">
-        Quitter {{ a.name }}
+      <button
+        v-for="a in myAlliances"
+        :key="a.id"
+        class="act war"
+        title="Ses membres ne vous défendront plus"
+        @click="confirmLeave(a)"
+      >
+        <NkgIcon name="exit" :size="22" />Quitter {{ a.name }}
       </button>
     </div>
 
-    <h3>{{ wars.length ? 'Guerres' : 'En paix' }}</h3>
-    <ul class="wars">
-      <li v-for="w in wars" :key="w.id">
-        <div class="war-name">{{ w.name }}</div>
-        <div class="sides">
-          <span>{{ names(w.attackers) }}</span>
-          <span class="vs">contre</span>
-          <span>{{ names(w.defenders) }}</span>
-        </div>
-        <div v-if="w.attackers.includes(me) || w.defenders.includes(me)" class="peace">
-          <button
-            title="Chaque camp retrouve ses frontières d'avant-guerre ; l'adversaire refuse s'il gagne du terrain"
-            @click="game.proposePeace(w.id, 'white')"
-          >
-            Paix blanche
-          </button>
-          <button
-            title="Chacun garde ce qu'il tient ; l'adversaire refuse s'il a perdu du terrain"
-            @click="game.proposePeace(w.id, 'lines')"
-          >
-            Paix sur les lignes
-          </button>
-        </div>
-      </li>
-    </ul>
-    <h3>Aide étrangère</h3>
+    <template v-if="wars.length">
+      <div class="label">{{ wars.length > 1 ? 'Guerres' : 'Guerre' }}</div>
+      <ul class="wars">
+        <li v-for="w in wars" :key="w.id" :class="{ mine: involvesMeWar(w) }">
+          <div class="war-name">{{ w.name }}</div>
+          <div class="sides">{{ names(w.attackers) }} contre {{ names(w.defenders) }}</div>
+          <div v-if="involvesMeWar(w)" class="peace">
+            <button
+              title="Chaque camp retrouve ses frontières d'avant-guerre ; l'adversaire refuse s'il gagne du terrain"
+              @click="game.proposePeace(w.id, 'white')"
+            >
+              <NkgIcon name="dove" :size="16" />Paix blanche
+            </button>
+            <button
+              title="Chacun garde ce qu'il tient ; l'adversaire refuse s'il a perdu du terrain"
+              @click="game.proposePeace(w.id, 'lines')"
+            >
+              Paix sur les lignes
+            </button>
+          </div>
+        </li>
+      </ul>
+    </template>
+
     <div class="aid" data-testid="aid-section">
+      <div class="label">Aide étrangère</div>
       <!-- Entre le joueur et ce pays -->
       <template v-if="!isMe && !atWarWithMe">
-        <div v-if="myAidFrom" class="aid-row">
-          <div>
-            Vous aide (<strong>{{ LEVEL_NAMES[myAidFrom.level] }}</strong
-            >), {{ myAidFrom.unitsDelivered }} unité(s) livrée(s)
-            <div class="meta">{{ flow(myAidFrom) }}</div>
-          </div>
+        <div v-if="myAidFrom" class="row" :title="flow(myAidFrom)">
+          <span class="who-row">Vous aide · {{ myAidFrom.unitsDelivered }} unité(s) livrée(s)</span>
+          <span class="chip">{{ LEVEL_NAMES[myAidFrom.level] }}</span>
           <button class="small" @click="game.revokeAid(myAidFrom.id)">Renoncer</button>
         </div>
         <button
           v-else
+          class="wide"
           title="Le pays décide selon vos relations, vos alliances et vos ennemis communs"
           @click="game.requestAid(country.id)"
         >
-          Demander une aide
+          <NkgIcon name="aid" :size="18" />Demander une aide
         </button>
-        <div v-if="myAidTo" class="aid-row">
-          <div>
-            Vous l'aidez (<strong>{{ LEVEL_NAMES[myAidTo.level] }}</strong
-            >)
-            <div class="meta">{{ flow(myAidTo) }}</div>
-          </div>
-          <div class="levels">
+        <div v-if="myAidTo" class="give" :title="flow(myAidTo)">
+          <span class="give-label">Vous l'aidez</span>
+          <div class="segs">
             <button
               v-for="l in LEVELS"
               :key="l"
-              :class="{ active: myAidTo.level === l }"
+              class="seg"
+              :class="{ on: myAidTo.level === l }"
               @click="game.setAidLevel(myAidTo.id, l)"
             >
               {{ LEVEL_NAMES[l] }}
             </button>
-            <button class="danger" @click="game.revokeAid(myAidTo.id)">Arrêter</button>
           </div>
+          <button class="small danger" @click="game.revokeAid(myAidTo.id)">Arrêter</button>
         </div>
-        <div v-else-if="!offMap" class="levels">
-          <span class="label">Accorder une aide :</span>
-          <button
-            v-for="l in LEVELS"
-            :key="l"
-            :title="`Prélève chaque jour ${Math.round(AID_SHARE[l] * 100)} % de votre production militaire et de vos munitions, et ${Math.round(AID_MONEY_SHARE[l] * 100)} % de votre budget en argent`"
-            @click="game.grantAid(country.id, l)"
-          >
-            {{ LEVEL_NAMES[l] }}
-          </button>
+        <div v-else-if="!offMap" class="give">
+          <span class="give-label">Accorder une aide</span>
+          <div class="segs">
+            <button
+              v-for="l in LEVELS"
+              :key="l"
+              class="seg"
+              :title="`Prélève chaque jour ${Math.round(AID_SHARE[l] * 100)} % de votre production militaire et de vos munitions, et ${Math.round(AID_MONEY_SHARE[l] * 100)} % de votre budget en argent`"
+              @click="game.grantAid(country.id, l)"
+            >
+              {{ LEVEL_NAMES[l] }}
+            </button>
+          </div>
         </div>
       </template>
 
       <!-- Aides du pays affiché -->
-      <ul class="aid-list">
-        <li v-for="a in received" :key="`r${a.id}`">
-          <span
-            >Reçue de <strong>{{ name(a.from) }}</strong> ({{ LEVEL_NAMES[a.level] }})</span
+      <ul class="aid-rows">
+        <li v-for="a in received" :key="`r${a.id}`" class="row" :title="flow(a)">
+          <span class="who-row"
+            ><span class="dir">de</span> <b>{{ name(a.from) }}</b></span
           >
-          <span class="meta">{{ flow(a) }}</span>
-          <button v-if="isMe" class="small" @click="game.revokeAid(a.id)">Renoncer</button>
-        </li>
-        <li v-for="a in given" :key="`g${a.id}`">
-          <span
-            >Accordée à <strong>{{ name(a.to) }}</strong> ({{ LEVEL_NAMES[a.level] }})</span
+          <span class="chip">{{ LEVEL_NAMES[a.level] }}</span>
+          <button
+            v-if="isMe"
+            class="icon-btn"
+            :aria-label="`Renoncer à l'aide de ${name(a.from)}`"
+            title="Renoncer"
+            @click="game.revokeAid(a.id)"
           >
-          <span class="meta">{{ flow(a) }}</span>
-          <button v-if="isMe" class="small danger" @click="game.revokeAid(a.id)">Arrêter</button>
+            <NkgIcon name="close" :size="14" />
+          </button>
         </li>
-        <li v-if="received.length + given.length === 0" class="meta">Aucune aide en cours</li>
+        <li v-for="a in given" :key="`g${a.id}`" class="row" :title="flow(a)">
+          <span class="who-row"
+            ><span class="dir">à</span> <b>{{ name(a.to) }}</b></span
+          >
+          <span class="chip">{{ LEVEL_NAMES[a.level] }}</span>
+          <button
+            v-if="isMe"
+            class="icon-btn"
+            :aria-label="`Arrêter l'aide à ${name(a.to)}`"
+            title="Arrêter"
+            @click="game.revokeAid(a.id)"
+          >
+            <NkgIcon name="close" :size="14" />
+          </button>
+        </li>
+        <li v-if="received.length + given.length === 0" class="none">Aucune aide en cours</li>
       </ul>
     </div>
 
     <template v-if="offMapCountries.length">
-      <h3>Pays hors carte</h3>
+      <div class="label" title="Pays hors de la carte : aide et diplomatie seulement">
+        Pays hors carte
+      </div>
       <div class="offmap" data-testid="offmap-list">
         <button
           v-for="c in offMapCountries"
@@ -432,10 +519,6 @@ function confirmWar(): void {
         </button>
       </div>
     </template>
-
-    <p v-if="isMe" class="tip">
-      Cliquez sur un pays, une de ses villes ou un de ses pions pour ouvrir sa fiche.
-    </p>
   </div>
 </template>
 
@@ -591,5 +674,306 @@ h3 {
 .small {
   padding: 2px 8px;
   font-size: 12px;
+}
+/* Grand écran (charte : docs/charte.md). */
+.desk {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.desk .ident {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.desk .flag {
+  width: 42px;
+  height: 28px;
+  flex: none;
+  border: 1px solid var(--nkg-brass);
+}
+.desk .who {
+  flex: 1;
+  min-width: 0;
+}
+.desk .name {
+  font-family: var(--nkg-serif);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.desk .sub {
+  font-size: 12px;
+  color: var(--nkg-text-muted);
+}
+.desk .sub.player {
+  color: var(--nkg-player-line);
+}
+.desk .sub.enemy {
+  color: var(--nkg-bad-text);
+}
+.desk .sub.ally {
+  color: var(--nkg-good-text);
+}
+.desk .sub.war {
+  color: var(--nkg-warn-text);
+}
+.desk .bars {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.desk .bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--nkg-text-muted);
+}
+.desk .bar-head > span:last-child {
+  color: var(--nkg-text);
+  font-variant-numeric: tabular-nums;
+}
+.desk .bar-head > span.good {
+  color: var(--nkg-good-text);
+  font-weight: 600;
+}
+.desk .bar-head > span.bad {
+  color: var(--nkg-bad-text);
+  font-weight: 600;
+}
+.desk .bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #2b333e;
+  overflow: hidden;
+}
+.desk .bar i {
+  display: block;
+  height: 100%;
+}
+.desk .scale {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #a8473c, var(--nkg-line-strong) 50%, var(--nkg-good));
+}
+.desk .scale span {
+  position: absolute;
+  top: -4px;
+  width: 4px;
+  height: 16px;
+  margin-left: -2px;
+  border-radius: 1px;
+  background: var(--nkg-brass-pale);
+}
+.desk .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.desk .chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border: 1px solid #3a4452;
+  border-radius: 999px;
+  background: #1a212a;
+  font-size: 12px;
+  color: var(--nkg-text-soft);
+  white-space: nowrap;
+}
+.desk .chip.bad {
+  color: var(--nkg-bad-text);
+}
+.desk .divider {
+  height: 1px;
+  background: var(--nkg-divider);
+}
+.desk .label {
+  margin: 2px 0 -4px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nkg-label);
+}
+.desk .acts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.country-tab.desk .acts .act {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 74px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: center;
+}
+.desk .act .nkg-icon {
+  color: var(--nkg-brass);
+}
+.country-tab.desk .acts .act.on {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
+}
+.country-tab.desk .acts .act.war {
+  border-color: var(--nkg-danger-line);
+  background: linear-gradient(180deg, #2a1a18, #1c1514);
+  color: #f0b0a5;
+}
+.country-tab.desk .acts .act.war:hover:not(:disabled) {
+  background: linear-gradient(180deg, #2a1a18, #1c1514);
+  border-color: var(--nkg-bad-text);
+}
+.country-tab.desk .acts .act.on:hover:not(:disabled),
+.country-tab.desk .segs .seg.on:hover:not(:disabled) {
+  background: var(--nkg-tile-on-bg);
+}
+.desk .act.war .nkg-icon {
+  color: var(--nkg-bad-text);
+}
+.desk .wars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.desk .wars li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--nkg-line);
+  border-radius: 6px;
+  background: var(--nkg-surface);
+}
+.desk .wars li.mine {
+  border-color: var(--nkg-danger-line);
+  background: linear-gradient(180deg, #2a1a18, #1c1514);
+}
+.desk .war-name {
+  font-family: var(--nkg-serif);
+  font-size: 16px;
+  font-weight: 600;
+}
+.desk .sides {
+  font-size: 12.5px;
+  color: #c9b5ad;
+}
+.desk .peace {
+  display: flex;
+  gap: 6px;
+}
+.country-tab.desk .peace button,
+.country-tab.desk .aid .wide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+}
+.desk .peace .nkg-icon,
+.desk .aid .wide .nkg-icon {
+  color: var(--nkg-brass);
+}
+.desk .aid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.desk .aid .wide {
+  align-self: stretch;
+}
+.desk .aid-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+.desk .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--nkg-line);
+  border-radius: 5px;
+  background: var(--nkg-surface);
+  font-size: 13px;
+}
+.desk .who-row {
+  flex: 1;
+  min-width: 0;
+}
+.desk .who-row b {
+  font-weight: 600;
+}
+.desk .dir {
+  color: var(--nkg-text-faint);
+}
+.desk .none {
+  font-size: 12px;
+  color: var(--nkg-text-faint);
+}
+.country-tab.desk .row .icon-btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+.desk .give {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.desk .give-label {
+  font-size: 12.5px;
+  color: var(--nkg-text-muted);
+  white-space: nowrap;
+}
+.desk .segs {
+  display: flex;
+  flex: 1;
+}
+.country-tab.desk .segs .seg {
+  flex: 1;
+  height: 30px;
+  padding: 0 4px;
+  border-radius: 0;
+  font-size: 12px;
+}
+.country-tab.desk .segs .seg:first-child {
+  border-radius: 4px 0 0 4px;
+}
+.country-tab.desk .segs .seg:last-child {
+  border-radius: 0 4px 4px 0;
+}
+.country-tab.desk .segs .seg + .seg {
+  border-left: none;
+}
+.country-tab.desk .segs .seg.on {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
+}
+.desk .offmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 </style>

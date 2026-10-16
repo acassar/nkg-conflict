@@ -135,9 +135,9 @@ try {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)
   check(!overflow, 'la page déborde horizontalement')
 
-  // Menu : ressources et fichiers.
+  // Menu « En pause » : jauges et fichiers.
   await page.getByTestId('menu-button').tap()
-  await page.getByRole('menu').waitFor()
+  await page.getByTestId('pause-menu').waitFor()
   const sustainMobile = await page.getByTestId('sustain-mobile').innerText()
   step('soutenabilité (menu)', { valeur: sustainMobile })
   check(sustainMobile.trim().length > 0, 'soutenabilité absente du menu')
@@ -257,6 +257,9 @@ try {
   check(selected > 0, 'la sélection par zone ne sélectionne rien')
   check(drawer === 'half', `le tiroir devrait s'ouvrir à mi-hauteur (${drawer})`)
   await shot('m03-selection')
+  // Volet des ordres, sous les tuiles de la fiche.
+  await page.getByTestId('tile-order').tap()
+  await page.getByTestId('flyout-order').waitFor()
   // Marine provisoire : bouton « Débarquer » (l'Ukraine tient Odessa), dans la largeur de l'écran.
   const landingBox = await page.getByTestId('order-landing').boundingBox()
   step('bouton Débarquer (mobile)', { boite: landingBox })
@@ -290,6 +293,7 @@ try {
   check(after === 'half', `le tiroir devrait revenir à mi-hauteur (${after})`)
 
   // Mission « Avancer » d'un groupe : trait dessiné d'un geste du doigt.
+  await page.getByTestId('tile-mission').tap()
   await page.getByTestId('group-mission').getByRole('button', { name: 'Trait' }).tap()
   await page.getByTestId('draw-layer').waitFor()
   await page.mouse.move(120, 330)
@@ -381,7 +385,7 @@ try {
   )
   await shot('m04b2-vue-forces')
 
-  // Recrutement par armée au doigt : sous-onglet de l'armée, deux infanteries, validation.
+  // Recrutement par armée au doigt : tuile Renforts de l'armée, deux infanteries, validation.
   await store(() => {
     const g = window.__nkg
     const army = g.armies.find((a) => !a.encirclement && a.unitIds.length > 2)
@@ -467,8 +471,9 @@ try {
   check(full === 'full', `le tiroir devrait être plein écran (${full})`)
   await shot('m06-tiroir-plein')
 
-  // Tiroir Production : file unique, boutons de la file au doigt et dans l'écran.
+  // Tiroir Production, onglet Chantiers : file unique, boutons de la file au doigt et dans l'écran.
   await page.getByTestId('rail-production').tap()
+  await page.getByTestId('production-tab-build').tap()
   await page.getByTestId('production-queue').waitFor()
   await store(() => {
     window.__nkg.queueConstruction('Lviv', 'depot')
@@ -492,7 +497,8 @@ try {
   )
   check(headAfter !== headBefore, 'chantier non descendu dans la file')
   await shot('m06a-file-production')
-  // Budget national : bloc lisible dans la largeur de l'écran.
+  // Onglet Budget : bloc lisible dans la largeur de l'écran.
+  await page.getByTestId('production-tab-budget').tap()
   const budget = page.getByTestId('budget')
   await budget.scrollIntoViewIfNeeded()
   const budgetBox = await budget.boundingBox()
@@ -515,7 +521,8 @@ try {
   await shot('m06a2-budget')
   await page.getByTestId('budget-auto').tap()
   await page.waitForTimeout(300)
-  // Construire « quoi, puis où » au doigt : usine civile, conseils dans l'écran.
+  // Onglet Chantiers : construire « quoi, puis où » au doigt, usine civile, conseils dans l'écran.
+  await page.getByTestId('production-tab-build').tap()
   await page.getByTestId('build-kind-civ').scrollIntoViewIfNeeded()
   await page.getByTestId('build-kind-civ').tap()
   await page.getByTestId('build-advice').first().waitFor()
@@ -529,10 +536,10 @@ try {
   )
   await shot('m06b0-construire-ou')
 
-  // Retour au menu par le menu ☰, puis écran de départ.
+  // Retour à l'écran de départ par le menu « En pause ».
   await page.getByTestId('menu-button').tap()
   page.once('dialog', (d) => d.accept())
-  await page.getByRole('button', { name: 'Menu principal' }).tap()
+  await page.getByRole('button', { name: "Quitter vers l'écran de départ" }).tap()
   await page.getByTestId('start-screen').waitFor({ timeout: 15_000 })
   step('retour au menu', { ok: true })
   await shot('m06b-menu')

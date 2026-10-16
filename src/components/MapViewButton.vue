@@ -48,8 +48,8 @@ function toggleCountries(): void {
 <template>
   <template v-if="!(layout === 'portrait' && game.drawer === 'full')">
     <button
-      class="mode"
-      :class="{ active, desk: layout === 'desktop' }"
+      class="mode desk"
+      :class="{ active }"
       :style="style"
       :aria-pressed="active"
       title="Carte logistique : ravitaillement, portée des dépôts et des QG, poches (L)"
@@ -70,8 +70,8 @@ function toggleCountries(): void {
       </svg>
     </button>
     <button
-      class="mode"
-      :class="{ active: countries, desk: layout === 'desktop' }"
+      class="mode desk"
+      :class="{ active: countries }"
       :style="countriesStyle"
       :aria-pressed="countries"
       title="Filtre « Pays » : une teinte par pays (P)"
@@ -89,13 +89,7 @@ function toggleCountries(): void {
         />
       </svg>
     </button>
-    <div
-      v-if="countries"
-      class="legend"
-      :class="{ desk: layout === 'desktop' }"
-      :style="legendStyle"
-      data-testid="countries-legend"
-    >
+    <div v-if="countries" class="legend desk" :style="legendStyle" data-testid="countries-legend">
       <strong>Pays</strong>
       <p class="note">Une teinte par pays ; deux voisins n'ont jamais la même.</p>
       <ul>
@@ -103,13 +97,7 @@ function toggleCountries(): void {
         <li><span class="line border-war" />Frontière entre pays en guerre</li>
       </ul>
     </div>
-    <div
-      v-if="active"
-      class="legend"
-      :class="{ desk: layout === 'desktop' }"
-      :style="legendStyle"
-      data-testid="logistics-legend"
-    >
+    <div v-if="active" class="legend desk" :style="legendStyle" data-testid="logistics-legend">
       <strong>Logistique</strong>
       <p v-if="view && !view.atWar" class="peace">En paix : tout le territoire est ravitaillé.</p>
       <ul>

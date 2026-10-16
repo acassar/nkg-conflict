@@ -49,6 +49,28 @@ page.on('console', (m) => {
 })
 
 const shot = (name) => page.screenshot({ path: path.join(out, `${name}.png`) })
+/** Fiche de la sélection (grand écran) : ouvre le volet accolé s'il ne l'est pas déjà. */
+/** Fiche d'armée (grand écran) : ouvre le volet Mission, Composition ou Renforts. */
+const openArmy = async (kind) => {
+  if (
+    !(await page
+      .getByTestId(`army-flyout-${kind}`)
+      .isVisible()
+      .catch(() => false))
+  )
+    await page.getByTestId(`army-view-${kind}`).click()
+  await page.getByTestId(`army-flyout-${kind}`).waitFor({ timeout: 5000 })
+}
+const openFlyout = async (kind) => {
+  if (
+    !(await page
+      .getByTestId(`flyout-${kind}`)
+      .isVisible()
+      .catch(() => false))
+  )
+    await page.getByTestId(`tile-${kind}`).click()
+  await page.getByTestId(`flyout-${kind}`).waitFor({ timeout: 5000 })
+}
 const state = () =>
   page.evaluate(() => {
     const g = window.__nkg
@@ -441,8 +463,9 @@ try {
   if (clicked !== 'POL') report.errors.push(`clic sur Varsovie : fiche ${clicked} au lieu de POL`)
 
   // Production : jauges de capacité et casernes sur la carte.
+  // Deux onglets sur grand écran : Budget (économie de guerre, budget, soutenabilité) et Chantiers.
   await page.getByTestId('rail-production').click()
-  await page.getByTestId('production-capacity').waitFor()
+  await page.getByTestId('production-tab-budget').click()
   // Économie de guerre : mobilisation partielle choisie depuis le panneau.
   await page
     .getByTestId('war-economy')
@@ -460,7 +483,7 @@ try {
   const sectors = await budget.locator('[data-sector]').count()
   const budgetText = await budget.innerText()
   step('budget national', { secteurs: sectors })
-  if (sectors !== 4 || !/usines militaires à \d+ %/.test(budgetText))
+  if (sectors !== 4 || !/usines militaires à \d+ %/i.test(budgetText))
     report.errors.push(`bloc budget incomplet (${sectors} secteurs) : ${budgetText.slice(0, 120)}`)
   // Économie réelle : entretien de l'armée, réserve mobilisable et conscription.
   const upkeepLine = await page
@@ -499,6 +522,8 @@ try {
     window.__nkg.queueConstruction('Odessa', 'depot')
   })
   await page.waitForTimeout(400)
+  await page.getByTestId('production-tab-build').click()
+  await page.getByTestId('production-capacity').waitFor()
   const queueRows = await page.getByTestId('production-queue').locator('li').count()
   const firstCity = () => page.evaluate(() => window.__nkg.snapshot.economy.construction[0]?.city)
   const headBefore = await firstCity()
@@ -578,6 +603,7 @@ try {
     report.errors.push('la fiche de la ville propose encore le recrutement')
   }
   // Soutenabilité de l'armée : bloc du tiroir Production et indicateur de la barre du haut.
+  await page.getByTestId('production-tab-budget').click()
   await page.getByTestId('sustain-panel').waitFor()
   // Deux journées économiques : la première mesure sert de référence.
   await page.evaluate(() => window.__nkg.step(48))
@@ -650,6 +676,7 @@ try {
   })
   await page.waitForTimeout(800)
   await page.getByTestId('inspector-units').waitFor()
+  await openFlyout('order')
   await page.getByTestId('order-pursue').click()
   const at = await page.evaluate(
     ([lon, lat]) => {
@@ -678,6 +705,7 @@ try {
   if (stillPursuing !== 0) report.errors.push("l'ordre n'a pas été annulé")
 
   // Posture : « Dégâts max » pour la sélection.
+  await openFlyout('posture')
   await page.getByTestId('posture').getByRole('button', { name: 'Dégâts max' }).click()
   await page.waitForTimeout(500)
   const postures = await page.evaluate(() => [
@@ -690,6 +718,7 @@ try {
   await shot('02g1-posture')
 
   // Encerclement par la même sélection, puis retour à l'armée sur ordre.
+  await openFlyout('order')
   await page.getByTestId('order-encircle').click()
   const at2 = await page.evaluate(
     ([lon, lat]) => {
@@ -710,6 +739,7 @@ try {
   )
   await page.getByTestId('army-sheet').waitFor()
   await shot('02g2-encerclement')
+  await openArmy('command')
   await page.getByTestId('end-encirclement').click()
   await page.waitForTimeout(500)
   const left = await page.evaluate(() => window.__nkg.armies.filter((a) => a.encirclement).length)
@@ -724,6 +754,7 @@ try {
     return army.id
   })
   await page.getByTestId('army-sheet').waitFor()
+  await openArmy('command')
   await page.getByTestId('mission-advance').click()
   await page.getByTestId('advance-line').click()
   // Deux points à gauche du panneau, dans le territoire visible (la carte est zoomée sur l'armée).
@@ -742,6 +773,7 @@ try {
   step('mission avancer', { mission, statut: missionText })
   if (mission !== 'advance') report.errors.push(`mission « Avancer » non lancée (${mission})`)
   await shot('02g3-mission-avancer')
+  await openArmy('command')
   await page.getByTestId('mission-hold').click()
   await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
@@ -753,6 +785,7 @@ try {
 
   // Mission « Tenir les points clés » : carte choisie, aperçu sur la carte (postes et points clés) sans
   // effet sur l'armée, puis « Appliquer ».
+  await openArmy('command')
   await page.getByTestId('mission-keyPoints').click()
   await page.getByTestId('mission-preview').waitFor()
   const keyPreview = await page.evaluate((id) => {
@@ -788,6 +821,7 @@ try {
     ['depth', '02g3c-profondeur'],
     ['reserve', '02g3d-reserve'],
   ]) {
+    await openArmy('command')
     await page.getByTestId(`mission-${kind}`).click()
     await page.getByTestId('mission-preview').waitFor()
     const lines = await page.evaluate(() => window.__nkg.missionPreview?.lines.length ?? 0)
@@ -806,6 +840,7 @@ try {
   }
 
   // Mission « Défendre des points » : villes cochées par défaut, tout le pays, puis retour à « Tenir ».
+  await openArmy('command')
   await page.getByTestId('mission-defendPoints').click()
   await page.getByTestId('defend-points-group').waitFor()
   await page.getByTestId('defend-country').click()
@@ -823,11 +858,13 @@ try {
     report.errors.push(`mission « Défendre des points » non appliquée (${defended.mission})`)
   }
   await shot('02g3e-defendre-points')
+  await openArmy('command')
   await page.getByTestId('mission-hold').click()
   await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
 
   // Mission « Percée sur un axe » : point visé sur l'unité ennemie la plus proche de l'armée.
+  await openArmy('command')
   await page.getByTestId('mission-breach').click()
   await page.getByTestId('breach-target').click()
   const breachAt = await page.evaluate((id) => {
@@ -882,6 +919,7 @@ try {
   await shot('02g3e-percee')
 
   // Mission « Retraite ordonnée » : ligne de repli tracée en deux clics derrière les unités de l'armée.
+  await openArmy('command')
   await page.getByTestId('mission-retreat').click()
   await page.getByTestId('retreat-line').click()
   const rearPoints = await page.evaluate((id) => {
@@ -916,13 +954,14 @@ try {
   if (retreat !== 'retreat')
     report.errors.push(`mission « Retraite ordonnée » non lancée (${retreat})`)
   await shot('02g3f-retraite')
+  await openArmy('command')
   await page.getByTestId('mission-hold').click()
   await page.getByTestId('mission-apply').click()
   await page.waitForTimeout(500)
 
   // Recrutement par armée, par modèle : 3 brigades d'infanterie légère au clic, 2 d'artillerie
   // saisies, une division entière.
-  await page.getByTestId('army-view-recruit').click()
+  await openArmy('recruit')
   for (let k = 0; k < 3; k++) await page.getByTestId('recruit-add-infanterie_legere').click()
   await page.getByTestId('recruit-count-artillerie').fill('2')
   await page.getByTestId('recruit-count-artillerie').press('Enter')
@@ -960,7 +999,7 @@ try {
   await shot('02g5-recrutement-commandes')
 
   // Onglet « Composition » : une ligne par type d'unité de l'armée.
-  await page.getByTestId('army-view-composition').click()
+  await openArmy('composition')
   await page.getByTestId('army-composition').waitFor()
   const compoRows = await page
     .getByTestId('army-composition')
@@ -1019,18 +1058,19 @@ try {
   await shot('04g-pions-corps')
   await page.evaluate((id) => window.__nkg.selectArmy(id), missionArmy)
   await page.waitForTimeout(300)
-  await page.getByTestId('army-view-command').click()
+  await openArmy('command')
 
   // Sauvegarde dans le navigateur, retour au menu, reprise.
   await page.evaluate(() => window.__nkg.step(24))
   await page.waitForTimeout(500)
   await page.getByTestId('menu-button').click()
-  await page.getByRole('menu').getByRole('button', { name: 'Sauver' }).click()
+  await shot('02h0-menu-pause')
+  await page.getByTestId('pause-menu').getByRole('button', { name: 'Sauvegarder' }).click()
   await page.waitForTimeout(1500)
   const savedTick = await page.evaluate(() => window.__nkg.snapshot.tick)
   page.once('dialog', (d) => d.accept())
   await page.getByTestId('menu-button').click()
-  await page.getByRole('button', { name: 'Menu principal' }).click()
+  await page.getByRole('button', { name: "Quitter vers l'écran de départ" }).click()
   await page.getByTestId('saves').waitFor({ timeout: 15_000 })
   await shot('02h-menu-reprendre')
   await page.locator('[data-slot="manual"]').click()
@@ -1258,7 +1298,7 @@ try {
   // Théâtre Ukraine – Russie : donneurs hors carte, avec leur fiche.
   page.once('dialog', (d) => d.accept())
   await page.getByTestId('menu-button').click()
-  await page.getByRole('button', { name: 'Menu principal' }).click()
+  await page.getByRole('button', { name: "Quitter vers l'écran de départ" }).click()
   await page.getByTestId('start-screen').waitFor({ timeout: 15_000 })
   await page.locator('[data-scenario="ukraine-2026"]').click()
   await page.locator('[data-country="UKR"]').click()
@@ -1283,7 +1323,7 @@ try {
   // Options de départ : « Monde 2026 » sans affiliations ni guerres.
   page.once('dialog', (d) => d.accept())
   await page.getByTestId('menu-button').click()
-  await page.getByRole('button', { name: 'Menu principal' }).click()
+  await page.getByRole('button', { name: "Quitter vers l'écran de départ" }).click()
   await page.getByTestId('start-screen').waitFor({ timeout: 15_000 })
   await page.locator('[data-scenario="ukraine-2026"]').click()
   const ukrOptions = await page.locator('[data-option]').count()
@@ -1330,6 +1370,7 @@ try {
   await page.evaluate((ids) => window.__nkg.selectUnits(ids, false), nearNice)
   await page.evaluate(() => window.__nkgMap.jumpTo({ center: [1.5, 46.2], zoom: 4.6 }))
   await page.waitForTimeout(500)
+  await openFlyout('order')
   await page.getByTestId('order-landing').click()
   const brest = await page.evaluate(() => {
     const p = window.__nkgMap.project([-4.45, 48.4])
@@ -1367,6 +1408,7 @@ try {
   )
   await page.evaluate((ids) => window.__nkg.selectUnits(ids, false), eastIds)
   await page.waitForTimeout(300)
+  await openFlyout('order')
   await page.getByTestId('order-transport').click()
   const bordeaux = await page.evaluate(() => {
     const p = window.__nkgMap.project([-0.58, 44.84])
@@ -1457,8 +1499,9 @@ try {
     g.selectArmy(a)
     return { a, b }
   })
-  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [7.8, 48.3], zoom: 6.5 }))
+  await page.evaluate(() => window.__nkgMap.jumpTo({ center: [9.5, 48.3], zoom: 6.5 }))
   await page.getByTestId('army-sheet').waitFor()
+  await openArmy('command')
   await page.getByTestId('border-paint').click()
   await page.getByTestId('border-paint-layer').waitFor()
   const rhine = await page.evaluate(() =>
@@ -1487,6 +1530,7 @@ try {
   const summary = (await page.getByTestId('border-summary').textContent())?.trim() ?? ''
   await shot('06f-frontiere-tenue')
   await page.evaluate((id) => window.__nkg.selectArmy(id), borderArmies.b)
+  await openArmy('command')
   await page.getByTestId('border-paint').click()
   const germany = await page.evaluate(() => {
     const q = window.__nkgMap.project([9.0, 48.6])
@@ -1563,6 +1607,7 @@ try {
   await page.evaluate(() => window.__nkg.step(24))
   await page.waitForTimeout(800)
   await page.getByTestId('rail-production').click()
+  await page.getByTestId('production-tab-budget').click()
   const aidLine = page.getByTestId('budget-aid')
   await aidLine.waitFor({ timeout: 10_000 }).catch(() => {})
   const aidText = (await aidLine.count()) ? await aidLine.innerText() : ''
@@ -1572,6 +1617,19 @@ try {
   await aidLine.scrollIntoViewIfNeeded().catch(() => {})
   await shot('07c-aide-argent')
   await page.getByTestId('rail-production').click()
+
+  // Journal : événements groupés par jour, filtre par catégorie.
+  await page.getByTestId('rail-log').click()
+  const journal = page.getByTestId('journal')
+  await journal.waitFor({ timeout: 10_000 }).catch(() => {})
+  const allEvents = await journal.locator('.e').count()
+  await page.getByTestId('journal-filter-combat').click()
+  const combatEvents = await journal.locator('.e').count()
+  step('journal', { tout: allEvents, combats: combatEvents })
+  if (allEvents === 0 || combatEvents > allEvents)
+    report.errors.push(`journal : filtre incohérent (${combatEvents} combats sur ${allEvents})`)
+  await shot('07d-journal')
+  await page.getByTestId('rail-log').click()
 
   // WebGL indisponible : la page affiche un message clair avec « Réessayer ».
   const noGl = await browser.newPage({ viewport: { width: 1440, height: 900 } })

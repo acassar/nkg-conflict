@@ -6,11 +6,11 @@
 /** Domaines du rail : chacun ouvre son tiroir. */
 export type Domain = 'forces' | 'production' | 'country' | 'log'
 
-export const DOMAINS: ReadonlyArray<{ id: Domain; name: string; short: string; icon: string }> = [
-  { id: 'forces', name: 'Forces', short: 'Forces', icon: '⚔' },
-  { id: 'production', name: 'Production', short: 'Prod.', icon: '⚙' },
-  { id: 'country', name: 'Diplomatie', short: 'Diplo.', icon: '⚑' },
-  { id: 'log', name: 'Journal', short: 'Journal', icon: '☰' },
+export const DOMAINS: ReadonlyArray<{ id: Domain; name: string; short: string }> = [
+  { id: 'forces', name: 'Forces', short: 'Forces' },
+  { id: 'production', name: 'Production', short: 'Prod.' },
+  { id: 'country', name: 'Diplomatie', short: 'Diplo.' },
+  { id: 'log', name: 'Journal', short: 'Journal' },
 ]
 
 /** Ce que montre l'inspecteur : la dernière chose sélectionnée sur la carte ou dans un tiroir. */

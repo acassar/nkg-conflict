@@ -4,6 +4,15 @@ import { useGameStore } from '@/stores/game'
 import FrameContent from './FrameContent.vue'
 import { isTouch, layout } from '@/composables/layout'
 import { DOMAINS, mobileSheet, type Domain, type InspectKind } from '@/stores/frame'
+import NkgIcon, { type IconName } from './NkgIcon.vue'
+
+/** Icônes du rail sur grand écran (le téléphone garde ses symboles). */
+const RAIL_ICONS: Record<Domain, IconName> = {
+  forces: 'forces',
+  production: 'factory',
+  country: 'flag',
+  log: 'journal',
+}
 
 /**
  * Cadre de la partie (concept A) :
@@ -167,7 +176,7 @@ watch(
         :data-testid="`rail-${d.id}`"
         @click="game.openDomain(d.id, true)"
       >
-        <span class="icon" aria-hidden="true">{{ d.icon }}</span>
+        <NkgIcon :name="RAIL_ICONS[d.id]" :size="22" class="icon" />
         <span class="name">{{ d.name }}</span>
         <span v-if="d.id === 'forces'" class="count">{{ game.armies.length }}</span>
       </button>
@@ -180,7 +189,9 @@ watch(
     >
       <header>
         <h2>{{ domainName(game.panelTab) }}</h2>
-        <button class="close" aria-label="Fermer le tiroir" @click="game.panelTab = null">×</button>
+        <button class="close" aria-label="Fermer le tiroir" @click="game.panelTab = null">
+          <NkgIcon name="close" :size="16" />
+        </button>
       </header>
       <div class="body">
         <FrameContent kind="domain" :view="game.panelTab" />
@@ -194,7 +205,9 @@ watch(
     >
       <header>
         <h2>{{ inspectorTitle(game.inspector) }}</h2>
-        <button class="close" aria-label="Fermer l'inspecteur" @click="closeInspector">×</button>
+        <button class="close" aria-label="Fermer l'inspecteur" @click="closeInspector">
+          <NkgIcon name="close" :size="16" />
+        </button>
       </header>
       <div class="body" data-testid="inspector">
         <FrameContent kind="inspector" :view="game.inspector" />
@@ -548,5 +561,107 @@ header .back {
 .frame-panel.side .body {
   flex: 1;
   min-height: 0;
+}
+
+/* ---------- Grand écran : charte (docs/charte.md) ---------- */
+.rail {
+  top: 70px;
+  left: 14px;
+  gap: 6px;
+  padding: 6px;
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  font-family: var(--nkg-sans);
+}
+.rail button {
+  width: 64px;
+  height: 60px;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  color: #b9c0c9;
+  border-radius: 4px;
+  font: 500 9px/1.1 var(--nkg-sans);
+  letter-spacing: 0.05em;
+}
+.rail button:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--nkg-text);
+}
+.rail button.active {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
+}
+.rail .count {
+  top: 3px;
+  right: 3px;
+  background: var(--nkg-brass-deep);
+  color: var(--nkg-brass-pale);
+}
+.frame-panel:not(.mobile) {
+  top: 70px;
+  width: 360px;
+  max-height: calc(100% - 150px);
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  color: var(--nkg-text);
+  font: 13px/1.4 var(--nkg-sans);
+}
+.frame-panel.drawer-left {
+  left: 104px;
+}
+.frame-panel.inspector {
+  right: 18px;
+  width: 340px;
+  border-top: 1px solid var(--nkg-brass-dark);
+}
+.frame-panel:not(.mobile) header {
+  padding: 10px 10px 10px 14px;
+  border-bottom-color: var(--nkg-brass-line);
+}
+.frame-panel:not(.mobile) h2 {
+  font: 600 20px/1.2 var(--nkg-serif);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.frame-panel:not(.mobile) header .close {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--nkg-surface);
+  border-color: #3a4452;
+  border-radius: 5px;
+}
+.frame-panel:not(.mobile) header .close:hover {
+  border-color: var(--nkg-brass);
+  color: var(--nkg-text);
+}
+.frame-panel:not(.mobile) .body {
+  padding: 12px 14px;
+}
+.frame-panel:not(.mobile) .body :deep(button) {
+  background: var(--nkg-tile-bg);
+  border-color: var(--nkg-line-strong);
+  border-radius: 4px;
+}
+.frame-panel:not(.mobile) .body :deep(button:hover:not(:disabled)) {
+  background: var(--nkg-tile-bg);
+  border-color: var(--nkg-brass);
+}
+.frame-panel:not(.mobile) .body :deep(button.active) {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
+}
+.frame-panel:not(.mobile) .body :deep(button.danger) {
+  border-color: var(--nkg-danger-line);
+  color: #f0b0a5;
 }
 </style>

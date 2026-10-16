@@ -1,0 +1,80 @@
+/*
+ * Charte de l'interface (voir docs/charte.md) : panneaux sombres à filet doré, titres en serif.
+ * Les composants lisent ces variables ; aucune autre couleur de fond ou de bordure ne devrait être
+ * écrite en dur dans un nouveau composant.
+ */
+:root {
+  /* Fonds */
+  --nkg-bg: #0e1217;
+  --nkg-panel-top: #1b222c;
+  --nkg-panel-bottom: #141920;
+  --nkg-surface: #1a2029;
+  --nkg-surface-raised: #232c38;
+  --nkg-surface-sunken: #12161c;
+  --nkg-chip: #161b22;
+
+  /* Lignes */
+  --nkg-line: #333c49;
+  --nkg-line-strong: #4a5363;
+  --nkg-line-soft: #262d37;
+
+  /* Laiton */
+  --nkg-brass: #c9a65f;
+  --nkg-brass-dark: #8a7146;
+  --nkg-brass-deep: #5a4a2e;
+  --nkg-brass-light: #e0c27a;
+  --nkg-brass-pale: #f0dca8;
+  --nkg-brass-bg-top: #3a3222;
+  --nkg-brass-bg-bottom: #241f16;
+  --nkg-brass-line: #3a3226;
+
+  /* Texte */
+  --nkg-text: #e9e4d8;
+  --nkg-text-soft: #c9cfd8;
+  --nkg-text-muted: #aeb6c0;
+  --nkg-text-faint: #8d97a3;
+  --nkg-label: #b9a67f;
+
+  /* États */
+  --nkg-good: #4caf7a;
+  --nkg-good-text: #7fd19f;
+  --nkg-warn: #e3a23b;
+  --nkg-warn-text: #f0a35a;
+  --nkg-bad: #c0392b;
+  --nkg-bad-text: #f08a7a;
+  --nkg-danger-line: #7a3a32;
+
+  /* Camps */
+  --nkg-player: #3b6fd8;
+  --nkg-player-line: #9cbcf5;
+
+  /* Typographie */
+  --nkg-serif: 'Spectral', Georgia, 'Times New Roman', serif;
+  --nkg-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --nkg-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Panneau : dégradé, filet doré, double anneau et ombre portée. */
+  --nkg-panel-bg: linear-gradient(180deg, var(--nkg-panel-top), var(--nkg-panel-bottom));
+  --nkg-panel-shadow:
+    0 0 0 3px #10141a, 0 0 0 4px var(--nkg-brass-deep), 0 18px 40px rgba(0, 0, 0, 0.55);
+  --nkg-tile-bg: linear-gradient(180deg, var(--nkg-surface-raised), var(--nkg-surface));
+  --nkg-tile-on-bg: linear-gradient(180deg, var(--nkg-brass-bg-top), var(--nkg-brass-bg-bottom));
+  --nkg-gold-bg: linear-gradient(180deg, #d8b66a, #a8843f);
+  --nkg-divider: linear-gradient(90deg, transparent, var(--nkg-brass-dark), transparent);
+}
+
+/* Boutons de zoom de MapLibre, aux couleurs des panneaux. */
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group {
+  background: var(--nkg-panel-bg);
+  border: 1px solid var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #10141a,
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button + button {
+  border-top-color: var(--nkg-brass-line);
+}
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(0.88) sepia(0.25);
+}

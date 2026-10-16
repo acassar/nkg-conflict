@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
+import './styles/theme.css'
 import { useGameStore } from './stores/game'
 
 const app = createApp(App).use(createPinia())

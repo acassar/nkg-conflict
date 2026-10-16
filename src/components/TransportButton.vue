@@ -45,7 +45,7 @@ const pct = (t: { departTick: number; arriveTick: number }): string =>
   <template v-if="inTransit.length > 0 && !(layout === 'portrait' && game.drawer === 'full')">
     <button
       class="transport"
-      :class="{ active: game.showTransports }"
+      :class="{ active: game.showTransports, desk: layout === 'desktop' }"
       :style="style"
       :aria-pressed="game.showTransports"
       :title="`${inTransit.length} unité(s) en route : afficher les trajets`"
@@ -67,6 +67,7 @@ const pct = (t: { departTick: number; arriveTick: number }): string =>
     <div
       v-if="game.showTransports"
       class="panel"
+      :class="{ desk: layout === 'desktop' }"
       :style="panelStyle"
       role="dialog"
       aria-label="Unités en route"
@@ -204,5 +205,33 @@ li:hover {
 .bar i {
   display: block;
   height: 100%;
+}
+
+/* Grand écran : charte (docs/charte.md). */
+.transport.desk {
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-text-soft);
+  border-color: var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #10141a,
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+.transport.desk:hover {
+  color: var(--nkg-text);
+  border-color: var(--nkg-brass);
+}
+.transport.desk.active {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+  color: var(--nkg-brass-pale);
+}
+.panel.desk {
+  background: var(--nkg-panel-bg);
+  color: var(--nkg-text);
+  border-color: var(--nkg-brass-dark);
+  border-radius: 4px;
+  box-shadow: var(--nkg-panel-shadow);
+  font-family: var(--nkg-sans);
 }
 </style>

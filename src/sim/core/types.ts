@@ -233,7 +233,23 @@ export interface FormationState {
   hq?: LonLat
   /** Division entière commandée : numéro de la commande, que ses brigades rejoignent à leur sortie. */
   batch?: number
+  /**
+   * Ordre de défense propre à la division (phase G2) : elle quitte la ligne de son armée pour tenir seule
+   * un tronçon de la frontière de l'armée, ou défendre des points (systems/divisionOrders.ts).
+   */
+  defense?: DivisionDefense
 }
+
+/** Tronçon de la frontière de son armée tenu par une seule division. */
+export interface DivisionBorder {
+  kind: 'border'
+  /** Cellules tenues, incluses dans la frontière de l'armée (triées). */
+  cells: number[]
+  /** En guerre avec un voisin du tronçon : portion de front qui en découle (rendue à la paix). */
+  front?: [LonLat, LonLat]
+}
+
+export type DivisionDefense = DivisionBorder | DefendPointsMission
 
 export interface ArmyState {
   id: number
@@ -769,6 +785,8 @@ export interface SimSnapshot {
   countries: CountryDef[]
   units: UnitSnapshot[]
   armies: ArmyState[]
+  /** Nom de chaque armée de tous les pays (pions d'armée sur la carte). */
+  armyNames: Array<[number, string]>
   /** Divisions et corps de tous les pays (affichage selon le zoom, ordre de bataille). */
   formations: FormationState[]
   cities: CityState[]

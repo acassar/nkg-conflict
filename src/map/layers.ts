@@ -10,6 +10,7 @@ import {
 } from '@deck.gl/layers'
 import type {
   ArmyState,
+  DefendPointsMission,
   CityState,
   FactorySite,
   LonLat,
@@ -94,6 +95,8 @@ export interface LayerInput {
   stances: Map<string, Stance>
   selection: Set<number>
   selectedArmy: ArmyState | null
+  /** Points défendus par la division sélectionnée (ordre de défense propre), à défaut ceux de l'armée. */
+  divisionPoints?: DefendPointsMission | null
   /** Premier point posé d'un tracé en cours (front ou offensive). */
   pendingPoint: LonLat | null
   /** Trait en cours de tracé (mission « Avancer », ou ligne de repli si `pendingRetreat`). */
@@ -830,7 +833,9 @@ export function buildLayers(input: LayerInput): Layer[] {
   }
   // Mission « Défendre des points » de l'armée sélectionnée : zone choisie, et points défendus (taille
   // selon le nombre d'unités envoyées), en orange.
-  const defend = selectedArmy?.mission?.kind === 'defendPoints' ? selectedArmy.mission : null
+  const defend =
+    input.divisionPoints ??
+    (selectedArmy?.mission?.kind === 'defendPoints' ? selectedArmy.mission : null)
   if (defend?.zone) {
     layers.push(
       new ScatterplotLayer({
@@ -1083,7 +1088,12 @@ export function buildLayers(input: LayerInput): Layer[] {
   )
   // Divisions, corps et armées : un pion par formation selon le zoom (clusters.ts).
   const formations = new Map(snapshot.formations.map((f) => [f.id, f]))
-  const armyNames = new Map(snapshot.armies.map((a) => [a.id, { name: a.name }]))
+  // Armées de tous les pays : l'ennemi aussi a des pions d'armée en vue large.
+  const armyNames = new Map(
+    (snapshot.armyNames ?? snapshot.armies.map((a): [number, string] => [a.id, a.name])).map(
+      ([id, name]) => [id, { name }],
+    ),
+  )
   // Secteur de front des divisions (ou du corps) choisies.
   const sectors = selectedSectors(snapshot.units, snapshot.formations, selection)
   if (sectors.length > 0) {

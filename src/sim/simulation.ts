@@ -83,6 +83,13 @@ import { updateCombat } from './systems/combat'
 import { updateCommand } from './systems/command'
 import { updateTerritory } from './systems/territory'
 import { defendPoints } from './systems/defendPoints'
+import {
+  assignDivisionDefense,
+  detachedDivisions,
+  giveDivisionBorder,
+  giveDivisionPoints,
+  updateDivisionBorders,
+} from './systems/divisionOrders'
 import { assignBorder, borderNeighbors, borderWith, updateBorderFronts } from './systems/frontiers'
 import {
   assignFront,
@@ -1228,6 +1235,66 @@ export class Simulation {
     return null
   }
 
+  /**
+   * Ordre de défense d'une division (phase G2) : tronçon de la frontière de son armée, peint (`paint`,
+   * pris aux autres divisions) ou le long d'un voisin (`country`, cellules libres) ; points à défendre
+   * (`points`) ; ou retour dans la ligne de l'armée (null). Renvoie un message d'erreur, ou null.
+   */
+  setDivisionDefense(
+    id: number,
+    choice:
+      | { paint: number[] }
+      | { country: CountryId }
+      | { points: { zone: DefendPointsMission['zone']; kinds: DefendPointKinds } }
+      | null,
+  ): string | null {
+    const ctx = this.ctx
+    const f = ctx.formations.get(id)
+    if (!f || f.kind !== 'division' || f.owner !== this.playerCountry) return 'Division inconnue'
+    const army = this.playerArmy(f.armyId)
+    if (army.encirclement)
+      return "Une division d'un groupe d'encerclement ne peut pas recevoir cet ordre"
+    if (choice === null) {
+      if (!f.defense) return null
+      delete f.defense
+      ctx.log(`${f.name} rejoint la ligne de ${army.name}`, army.owner)
+      if (holdsLine(army)) assignFront(ctx, army)
+      return null
+    }
+    let text: string
+    if ('points' in choice) {
+      const { zone, kinds } = choice.points
+      if (!Object.values(kinds).some(Boolean)) return 'Cochez au moins un type de point'
+      if (defendPoints(ctx, army, zone, kinds).length === 0)
+        return zone ? 'Aucun point de ce type dans la zone' : 'Aucun point de ce type dans le pays'
+      giveDivisionPoints(f, zone, kinds)
+      text = `${f.name} défend des points${zone ? ' dans une zone' : ''}`
+    } else {
+      let error: string | null
+      if ('country' in choice) {
+        const side = sideIndex(ctx, army.owner)
+        const other = sideIndex(ctx, choice.country)
+        if (other === side) return 'Cliquez sur un pays voisin, pas sur le vôtre'
+        const cells = other > 0 ? borderWith(ctx.grid, side, other) : []
+        if (cells.length === 0)
+          return `Pas de frontière terrestre avec ${countryName(ctx, choice.country)}`
+        error = giveDivisionBorder(ctx, f, cells, 'free')
+      } else error = giveDivisionBorder(ctx, f, choice.paint, 'paint')
+      if (error) return error
+      text = `${f.name} tient seule un tronçon de la frontière de ${army.name}`
+    }
+    // L'ordre reprend les brigades de la division, même sous ordre direct.
+    for (const uid of army.unitIds) {
+      const u = ctx.units.get(uid)
+      if (u?.divisionId === f.id) delete u.direct
+    }
+    updateDivisionBorders(ctx)
+    if (holdsLine(army)) assignFront(ctx, army)
+    for (const d of detachedDivisions(ctx, army)) assignDivisionDefense(ctx, d)
+    ctx.log(text, army.owner)
+    return null
+  }
+
   /** Planifie une offensive ; `unitIds` limite les unités engagées (le reste de l'armée tient le front). */
   planOffensive(id: number, from: LonLat, to: LonLat, unitIds?: number[]): void {
     const army = this.playerArmy(id)
@@ -1537,6 +1604,7 @@ export class Simulation {
           }
           return copy
         }),
+      armyNames: [...ctx.armies.values()].map((a): [number, string] => [a.id, a.name]),
       formations: [...ctx.formations.values()].map((f) => ({ ...f })),
       cities,
       economy: economy ? structuredClone(economy) : null,

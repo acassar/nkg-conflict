@@ -52,10 +52,17 @@ function itemUnits(item: MapUnit): UnitSnapshot[] {
 }
 
 /**
- * Regroupe les pions (ou pions de formation) d'un même camp distants de moins de `radiusPx` à l'écran.
- * Deux pions de formation qui se chevauchent deviennent une pile ordinaire.
+ * Regroupe les pions (ou pions de division) d'un même camp distants de moins de `radiusPx` à l'écran.
+ * Deux pions de division qui se chevauchent deviennent une pile ordinaire ; les pions de corps et
+ * d'armée restent toujours affichés tels quels (la vue large montre des corps et des armées, pas des
+ * piles).
  * Regroupement glouton, suffisant pour quelques centaines d'unités.
  */
+/** Pion de corps ou d'armée : jamais mis en pile. */
+function highPawn(item: MapUnit): boolean {
+  return isStack(item) && (item.formation?.kind === 'corps' || item.formation?.kind === 'army')
+}
+
 export function stackUnits(items: MapUnit[], zoom: number, radiusPx = 38): MapUnit[] {
   const pos = items.map((u) => toPixels(u.lon, u.lat, zoom))
   const used = new Uint8Array(items.length)
@@ -72,7 +79,7 @@ export function stackUnits(items: MapUnit[], zoom: number, radiusPx = 38): MapUn
     for (let j = i + 1; j < items.length; j++) {
       const v = items[j]
       const q = pos[j]
-      if (used[j] || !v || !q || v.owner !== u.owner) continue
+      if (used[j] || !v || !q || v.owner !== u.owner || highPawn(u) || highPawn(v)) continue
       const dx = q[0] - p[0]
       const dy = q[1] - p[1]
       if (dx * dx + dy * dy <= r2) {
@@ -102,6 +109,13 @@ export function stackUnits(items: MapUnit[], zoom: number, radiusPx = 38): MapUn
 
 /** Rayon, en pixels, dans lequel les pions d'un corps ou d'une armée sont réunis en un seul pion. */
 export const FORMATION_RADIUS_PX = 60
+/** En deçà de ce zoom (vue large), les divisions d'un corps sont toujours réunies en un pion de corps. */
+export const CORPS_ZOOM = 6
+/** En deçà de ce zoom, les pions d'une armée sont toujours réunis en un pion d'armée. */
+export const ARMY_ZOOM = 4.5
+/** Écart à l'écran en deçà duquel deux pions d'une même formation se chevauchent : ils sont réunis. */
+const OVERLAP_PX = 38
+
 /** Une brigade à plus de cette distance du centre de sa division (riposte, relève) a son propre pion. */
 export const DETACHED_KM = 60
 
@@ -110,7 +124,10 @@ export const DETACHED_KM = 60
  * (les brigades écartées de plus de DETACHED_KM gardent le leur). Les divisions d'un corps sont réunies
  * en un pion de corps quand elles tiennent toutes dans un rayon de `radiusPx` à l'écran, puis les pions
  * d'une armée (`armies`) en un pion d'armée de la même façon : division de près, corps à zoom moyen,
- * armée de loin. Les brigades ne s'affichent une à une qu'à la sélection (brigadeSpots).
+ * armée de loin. En vue large (sous CORPS_ZOOM, puis ARMY_ZOOM), ou dès que deux de leurs pions se
+ * chevauchent, corps et armées sont réunis même étalés sur un long front : la carte montre des corps et
+ * des armées plutôt que des piles de divisions. Les brigades ne s'affichent une à une qu'à la sélection
+ * (brigadeSpots).
  */
 export function formationPawns(
   units: UnitSnapshot[],
@@ -146,7 +163,12 @@ export function formationPawns(
   interface Pawn {
     stack: UnitStack
     armyId: number
+    /** Brigades écartées du centre de la division : leur propre pion, sauf dans un pion de corps ou d'armée. */
+    away: UnitSnapshot[]
   }
+  /** Brigades d'un pion réuni : celles des pions et leurs brigades écartées. */
+  const merged = (list: Pawn[]): UnitSnapshot[] =>
+    list.flatMap((p) => [...p.stack.units, ...p.away])
   const divisionPawns = new Map<number | null, Pawn[]>()
   for (const [id, list] of byDivision) {
     const f = formations.get(id) as FormationState
@@ -158,11 +180,15 @@ export function formationPawns(
       const n = around(u)
       if (n.length > near.length) near = n
     }
-    out.push(...list.filter((u) => !near.includes(u)))
-    if (near.length === 0) continue
+    const away = list.filter((u) => !near.includes(u))
+    if (near.length === 0) {
+      out.push(...away)
+      continue
+    }
     const p = {
       stack: pawn(`f${f.id}`, { id: f.id, kind: f.kind, name: f.name }, near),
       armyId: f.armyId,
+      away,
     }
     const group = divisionPawns.get(f.parentId)
     if (group) group.push(p)
@@ -176,6 +202,16 @@ export function formationPawns(
     const cy = pos.reduce((s, q) => s + q[1], 0) / pos.length
     return pos.every((q) => (q[0] - cx) ** 2 + (q[1] - cy) ** 2 <= r2)
   }
+  /** Deux des pions se chevauchent à l'écran (ils feraient une pile). */
+  const o2 = OVERLAP_PX * OVERLAP_PX
+  const overlaps = (list: Pawn[]): boolean => {
+    const pos = list.map((p) => toPixels(p.stack.lon, p.stack.lat, zoom))
+    return pos.some((a, i) =>
+      pos.some((b, j) => j > i && (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 <= o2),
+    )
+  }
+  const merges = (list: Pawn[], below: number): boolean =>
+    list.length >= 2 && (zoom < below || fits(list) || overlaps(list))
   // Corps : réunis quand toutes leurs divisions tiennent dans le rayon.
   const byArmy = new Map<number, Pawn[]>()
   const toArmy = (p: Pawn): void => {
@@ -185,29 +221,24 @@ export function formationPawns(
   }
   for (const [corpsId, list] of divisionPawns) {
     const corps = corpsId === null ? undefined : formations.get(corpsId)
-    if (corps && list.length >= 2 && fits(list)) {
+    if (corps && merges(list, CORPS_ZOOM)) {
       toArmy({
         stack: pawn(
           `f${corps.id}`,
           { id: corps.id, kind: corps.kind, name: corps.name },
-          list.flatMap((p) => p.stack.units),
+          merged(list),
         ),
         armyId: corps.armyId,
+        away: [],
       })
     } else list.forEach(toArmy)
   }
   // Armées : réunies quand tous leurs pions de corps et de division tiennent dans le rayon.
   for (const [armyId, list] of byArmy) {
     const army = armies.get(armyId)
-    if (army && list.length >= 2 && fits(list)) {
-      out.push(
-        pawn(
-          `a${armyId}`,
-          { id: armyId, kind: 'army', name: army.name },
-          list.flatMap((p) => p.stack.units),
-        ),
-      )
-    } else out.push(...list.map((p) => p.stack))
+    if (army && merges(list, ARMY_ZOOM)) {
+      out.push(pawn(`a${armyId}`, { id: armyId, kind: 'army', name: army.name }, merged(list)))
+    } else for (const p of list) out.push(p.stack, ...p.away)
   }
   return out
 }

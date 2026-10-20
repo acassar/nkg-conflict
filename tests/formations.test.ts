@@ -324,7 +324,7 @@ describe('affichage et ordre de bataille', () => {
     // De près aussi : un pion par division ; une brigade partie au loin a le sien.
     expect(names(formationPawns(units, byId, 9))).toEqual(['1re division', '2e division'])
     const away = units.map((u) => (u.id === 1 ? { ...u, lon: 28 } : u))
-    expect(names(formationPawns(away, byId, 9))).toEqual(['brigade', '1re division', '2e division'])
+    expect(names(formationPawns(away, byId, 9))).toEqual(['1re division', 'brigade', '2e division'])
     // Rien de choisi : pas de brigades affichées ; une brigade choisie : toute sa division, reliée au pion.
     const pawns = formationPawns(units, byId, 6)
     expect(brigadeSpots(pawns, 6, new Set())).toEqual([])
@@ -359,6 +359,14 @@ describe('affichage et ordre de bataille', () => {
     // Sans armée connue, ou de plus près : corps et division.
     expect(formationPawns(more, all, 3)).toHaveLength(2)
     expect(formationPawns(more, all, 6, undefined, armies)).toHaveLength(3)
+    // Vue large : corps et armée réunis même étalés sur un long front (plus de 5° ici), pas de piles de divisions.
+    const wide = more.map((u) => ({ ...u, lon: 28 + (u.id - 1) * 0.8 }))
+    expect(formationPawns(wide, all, 7, undefined, armies)).toHaveLength(3)
+    const corps = formationPawns(wide, all, 5, undefined, armies)
+    expect(corps.map((m) => isStack(m) && m.formation?.kind)).toEqual(['corps', 'division'])
+    const army = formationPawns(wide, all, 4, undefined, armies)
+    expect(army).toHaveLength(1)
+    expect(isStack(army[0]!) && army[0].formation?.kind).toBe('army')
 
     const withSectors = formations.map((f) => ({
       ...f,

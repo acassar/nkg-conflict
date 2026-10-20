@@ -1,4 +1,5 @@
 import { countryName, runtimeOf, sideIndex, type SimContext } from '../context'
+import { detachedDivision } from './divisionOrders'
 import type {
   AdvanceGoal,
   AdvanceMission,
@@ -65,6 +66,8 @@ function missionUnits(ctx: SimContext, army: ArmyState): UnitState[] {
       if (!u) return false
       const rt = runtimeOf(ctx, u.id)
       if (rt.routed || rt.reaction) return false
+      // Division sous ordre de défense propre : elle reste à son ordre (divisionOrders.ts).
+      if (detachedDivision(ctx, u)) return false
       if (u.direct) {
         // Ordre direct du joueur : l'unité est laissée jusqu'à la fin de l'ordre (comme pour le front).
         if (u.direct.doneAt === undefined || u.direct.doneAt >= ctx.tick) return false
@@ -307,7 +310,7 @@ export function holdMission(
   }
   for (const id of army.unitIds) {
     const u = ctx.units.get(id)
-    if (!u || u.direct || runtimeOf(ctx, u.id).reaction) continue
+    if (!u || u.direct || runtimeOf(ctx, u.id).reaction || detachedDivision(ctx, u)) continue
     if (u.order.kind === 'attack' || u.order.kind === 'move') {
       u.order = { kind: 'hold' }
       u.path = []

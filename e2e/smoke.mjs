@@ -1028,6 +1028,26 @@ try {
     )
     step('renforts de division', { division: divisionId, commandes: forDivision })
     if (forDivision < 1) report.errors.push('renforts de division non lancés')
+    // Défense de la division : « Défendre des points » seule, puis retour dans la ligne de l'armée.
+    await openFlyout('defense')
+    await page.getByTestId('division-defend-country').click()
+    await page.waitForTimeout(600)
+    const defense = await page.evaluate(
+      (d) => window.__nkg.snapshot.formations.find((f) => f.id === d)?.defense?.kind ?? null,
+      divisionId,
+    )
+    const status = await page.getByTestId('division-defense-status').textContent()
+    await shot('02g7-defense-division')
+    step('défense de division', { ordre: defense, tuile: status })
+    if (defense !== 'defendPoints' || !/point/.test(status ?? ''))
+      report.errors.push(`défense de division non donnée (${defense}, ${status})`)
+    await page.getByTestId('division-defense-clear').click()
+    await page.waitForTimeout(600)
+    const cleared = await page.evaluate(
+      (d) => window.__nkg.snapshot.formations.find((f) => f.id === d)?.defense ?? null,
+      divisionId,
+    )
+    if (cleared) report.errors.push('la division ne rejoint pas la ligne de son armée')
   }
   await page.evaluate((id) => window.__nkg.selectArmy(id), missionArmy)
   await page.getByTestId('army-sheet').waitFor()

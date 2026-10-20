@@ -485,7 +485,7 @@ const unitsOfArmy = computed(() => {
 const desktop = computed(() => layout.value === 'desktop')
 /** Visée sur la carte en cours : le volet s'efface pour la dégager, puis revient (sauf frontière). */
 const aiming = computed(() => game.mode.kind !== 'select' && game.mode.kind !== 'border')
-type Flyout = 'order' | 'posture' | 'mission' | 'details' | 'recruit'
+type Flyout = 'order' | 'posture' | 'mission' | 'details' | 'recruit' | 'defense'
 /** Volet ouvert à gauche de la fiche, ou aucun. */
 const flyout = ref<Flyout | null>(null)
 function toggleFlyout(f: Flyout): void {
@@ -497,6 +497,7 @@ const FLYOUT_TITLES: Record<Flyout, string> = {
   mission: 'Mission « Avancer »',
   details: 'Détails',
   recruit: 'Renforts',
+  defense: 'Défense de la division',
 }
 /** Division entière sélectionnée et son armée : ses renforts se commandent depuis sa fiche. */
 const recruitDivision = computed(() => {
@@ -513,8 +514,34 @@ const divisionPending = computed(() => {
     : (game.economy?.recruitment.filter((q) => q.divisionId === d).length ?? 0)
 })
 watch(recruitDivision, (r) => {
-  if (!r && flyout.value === 'recruit') flyout.value = null
+  if (!r && (flyout.value === 'recruit' || flyout.value === 'defense')) flyout.value = null
 })
+/** Ordre de défense propre de la division sélectionnée (phase G2), tel que la simulation l'a gardé. */
+const divisionDefense = computed(() => {
+  const d = recruitDivision.value?.division.id
+  return d === undefined ? undefined : game.snapshot?.formations.find((f) => f.id === d)?.defense
+})
+/** Ordre de défense de la division, en clair (tuile et volet). */
+const divisionDefenseText = computed(() => {
+  const d = divisionDefense.value
+  const g = game.grid
+  const r = recruitDivision.value
+  if (!d || !r) return 'Avec son armée'
+  if (d.kind === 'defendPoints') {
+    const n = d.points.length
+    return `${n} point${n > 1 ? 's' : ''} défendu${n > 1 ? 's' : ''}${d.zone ? ' (zone)' : ''}`
+  }
+  const km = g ? borderSummary(g, g.sides.indexOf(r.army.owner), d.cells).km : 0
+  return `${d.front ? 'Front' : 'Tronçon'} d'environ ${Math.max(10, Math.round(km / 10) * 10)} km`
+})
+/** Types de points et rayon de la zone pour l'ordre « Défendre des points » d'une division. */
+const divisionKinds = ref<DefendPointKinds>({
+  cities: true,
+  ports: true,
+  bases: true,
+  airfields: true,
+})
+const divisionZoneKm = ref(100)
 /** Ordre commun de la sélection, en clair. */
 const selectionOrder = computed(() => {
   const set = new Set(selectedUnits.value.map((u) => u.order))
@@ -776,6 +803,17 @@ async function createArmy(): Promise<void> {
           <button
             v-if="recruitDivision"
             class="tile span"
+            :class="{ on: flyout === 'defense' }"
+            :aria-expanded="flyout === 'defense'"
+            data-testid="tile-defense"
+            @click="toggleFlyout('defense')"
+          >
+            <span class="tk"><NkgIcon name="shield" :size="16" />Défense</span>
+            <span class="tv" data-testid="division-defense-status">{{ divisionDefenseText }}</span>
+          </button>
+          <button
+            v-if="recruitDivision"
+            class="tile span"
             :class="{ on: flyout === 'recruit' }"
             :aria-expanded="flyout === 'recruit'"
             data-testid="tile-recruit"
@@ -887,6 +925,100 @@ async function createArmy(): Promise<void> {
               <button class="opt" @click="game.startAdvance('objective')">
                 <span class="ot">Objectif</span>
                 <span class="od">Jusqu'au point cliqué</span>
+              </button>
+            </div>
+            <div
+              v-else-if="flyout === 'defense' && recruitDivision"
+              class="opts"
+              data-testid="division-defense"
+            >
+              <p class="faint small">
+                La division quitte la ligne de {{ recruitDivision.army.name }} et tient seule cet
+                ordre, en paix comme en guerre. Le reste de l'armée garde sa ligne et sa mission.
+              </p>
+              <div class="label">Tronçon de frontière</div>
+              <button
+                class="opt"
+                :class="{ on: divisionDefense?.kind === 'border' }"
+                :disabled="!recruitDivision.army.border?.length"
+                title="Glissez le long de la frontière tenue par l'armée pour peindre le tronçon (pris aux autres divisions), ou cliquez sur un pays voisin pour sa frontière encore libre"
+                data-testid="division-border-paint"
+                @click="
+                  game.startDivisionBorder(recruitDivision.division.id, recruitDivision.army.id)
+                "
+              >
+                <span class="ot">{{
+                  divisionDefense?.kind === 'border' ? 'Étendre le tronçon' : 'Peindre un tronçon'
+                }}</span>
+                <span class="od">{{
+                  recruitDivision.army.border?.length
+                    ? "Dans la frontière tenue par l'armée ; en guerre, il devient le front de la division"
+                    : "L'armée ne tient pas de frontière : donnez-lui-en une (Mission de l'armée)"
+                }}</span>
+              </button>
+              <div class="label">Défendre des points</div>
+              <div class="checks">
+                <label v-for="k in POINT_KINDS" :key="k.key" class="check">
+                  <input
+                    v-model="divisionKinds[k.key]"
+                    type="checkbox"
+                    :data-testid="`division-kind-${k.key}`"
+                  />
+                  {{ k.label }}
+                </label>
+              </div>
+              <div class="row">
+                <button
+                  :class="{ on: divisionDefense?.kind === 'defendPoints' && !divisionDefense.zone }"
+                  title="Tous les points cochés du pays, les plus importants d'abord"
+                  data-testid="division-defend-country"
+                  @click="
+                    game.defendPointsDivision(recruitDivision.division.id, null, {
+                      ...divisionKinds,
+                    })
+                  "
+                >
+                  Tout le pays
+                </button>
+                <button
+                  :class="{
+                    on: divisionDefense?.kind === 'defendPoints' && !!divisionDefense.zone,
+                  }"
+                  title="Cliquez ensuite sur le centre de la zone (cercle du rayon choisi)"
+                  data-testid="division-defend-zone"
+                  @click="
+                    game.startDivisionZone(
+                      recruitDivision.division.id,
+                      recruitDivision.army.id,
+                      { ...divisionKinds },
+                      divisionZoneKm,
+                    )
+                  "
+                >
+                  Une zone
+                </button>
+                <select
+                  v-model.number="divisionZoneKm"
+                  title="Rayon de la zone"
+                  data-testid="division-zone-km"
+                >
+                  <option v-for="km in [50, 100, 200]" :key="km" :value="km">{{ km }} km</option>
+                </select>
+              </div>
+              <button
+                v-if="divisionDefense"
+                class="wide cancel"
+                title="La division reprend sa place dans la ligne et la mission de son armée"
+                data-testid="division-defense-clear"
+                @click="
+                  game.divisionDefense(
+                    recruitDivision.division.id,
+                    null,
+                    'La division rejoint la ligne de son armée',
+                  )
+                "
+              >
+                Rejoindre la ligne de l'armée
               </button>
             </div>
             <ArmyRecruitment
@@ -2224,6 +2356,37 @@ h3 {
 }
 .flyout .cancel {
   color: #f0b0a5;
+}
+.flyout .checks {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12.5px;
+}
+.flyout .check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.flyout .row {
+  display: flex;
+  gap: 6px;
+}
+.flyout .row button {
+  flex: 1;
+  height: 32px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.flyout .row button.on {
+  background: var(--nkg-tile-on-bg);
+  border-color: var(--nkg-brass-light);
+}
+.flyout .row select {
+  background: #12171d;
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+  color: inherit;
 }
 .opts {
   display: flex;

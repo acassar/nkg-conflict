@@ -1,5 +1,6 @@
 import { createNamedFormation, updateFormations } from '../systems/formations'
 import { type CountryForces, type ForceArmy, type ForceDivision } from '../scenarios/forces'
+import { detachedDivision } from '../systems/divisionOrders'
 import { BRIGADE_TEMPLATES } from '../units/templates'
 import { runtimeOf, sideIndex, type SimContext } from '../context'
 import type { ArmyState, CountryDef, LonLat, UnitKind, UnitState } from '../core/types'
@@ -190,7 +191,11 @@ export function returnToGarrison(ctx: SimContext, army: ArmyState): number {
     .map((id) => ctx.units.get(id))
     .filter(
       (u): u is UnitState =>
-        !!u && (!u.direct || u.direct.doneAt !== undefined) && !runtimeOf(ctx, u.id).routed,
+        !!u &&
+        (!u.direct || u.direct.doneAt !== undefined) &&
+        !runtimeOf(ctx, u.id).routed &&
+        // Divisions sous ordre de défense propre : elles restent à leur ordre.
+        !detachedDivision(ctx, u),
     )
   if (units.length === 0) return 0
   const spots = garrisons(ctx, country, units.length, new Set(units.map((u) => u.id)))

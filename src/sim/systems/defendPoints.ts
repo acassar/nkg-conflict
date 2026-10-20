@@ -13,6 +13,7 @@ import { planPath } from './movement'
 import { portNames } from './naval'
 import { AIRFIELD_POP } from './transport'
 import { LARGE_GRID_CELLS } from './armies'
+import { detachedDivision } from './divisionOrders'
 
 /**
  * Mission « Défendre des points » (phase G2) : les brigades de ligne d'une armée se répartissent entre
@@ -111,18 +112,25 @@ function sendTo(ctx: SimContext, u: UnitState, target: LonLat, teleport: boolean
  * Répartit l'armée sur ses points : chaque brigade de ligne va au point le plus proche qui a encore une
  * place (paires triées par distance), sur un anneau de POINT_RING_KM autour de la ville ; l'appui
  * (artillerie, logistique, QG) rejoint le point le plus proche. Met à jour les points affichés.
+ * `division` : ordre d'une division (`army` ne contient alors que ses unités) ; sinon, les divisions
+ * sous ordre de défense propre sont laissées (divisionOrders.ts).
  */
 export function assignDefendPoints(
   ctx: SimContext,
   army: ArmyState,
   m: DefendPointsMission,
   teleport = false,
+  division?: number,
 ): void {
   const members = army.unitIds
     .map((id) => ctx.units.get(id))
     .filter(
       (u): u is UnitState =>
-        !!u && !u.direct && !isOffensiveOrder(u.order.kind) && !runtimeOf(ctx, u.id).routed,
+        !!u &&
+        !u.direct &&
+        !isOffensiveOrder(u.order.kind) &&
+        !runtimeOf(ctx, u.id).routed &&
+        (division !== undefined || !detachedDivision(ctx, u)),
     )
   const line = members.filter((u) => isLineUnit(u.kind))
   const points = defendPoints(ctx, army, m.zone, m.kinds)

@@ -53,9 +53,19 @@ export type MapMode =
    * Frontière tenue par une armée : on glisse le long de la frontière pour la peindre (portion prise,
    * colorée au fur et à mesure), ou on clique sur un pays voisin pour toute la frontière avec lui.
    */
-  | { kind: 'border'; armyId: number }
-  /** Mission « Défendre des points » dans une zone : clic sur le centre du cercle. */
-  | { kind: 'defendZone'; armyId: number; kinds: DefendPointKinds; km: number }
+  | {
+      kind: 'border'
+      armyId: number
+      /** Tronçon d'une division, dans la frontière de son armée. */ divisionId?: number
+    }
+  /** Mission « Défendre des points » dans une zone (armée, ou division seule) : clic sur le centre du cercle. */
+  | {
+      kind: 'defendZone'
+      armyId: number
+      kinds: DefendPointKinds
+      km: number
+      divisionId?: number
+    }
   | { kind: 'offensive'; armyId: number; first: LonLat | null; unitIds?: number[] }
   /** Ordre qui vise une unité ennemie (poursuite, assaut, encerclement par la sélection ou une armée). */
   | { kind: 'target'; action: TargetAction; armyId?: number }
@@ -505,6 +515,8 @@ export const useGameStore = defineStore('game', () => {
         ? 'Portion de front : cliquez sur la seconde extrémité'
         : 'Portion de front : cliquez sur la première extrémité'
     }
+    if (m.kind === 'border' && m.divisionId !== undefined)
+      return 'Tronçon de la division : glissez le long de la frontière de son armée pour le peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
     if (m.kind === 'border')
       return 'Frontière : glissez le long de votre frontière ou de votre côte pour la peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
     if (m.kind === 'defendZone')
@@ -821,10 +833,53 @@ export const useGameStore = defineStore('game', () => {
     mode.value = { kind: 'border', armyId }
   }
 
+  /** Tronçon de frontière tenu par une division seule : peint ou désigné par un pays voisin sur la carte. */
+  function startDivisionBorder(divisionId: number, armyId: number): void {
+    mode.value = { kind: 'border', armyId, divisionId }
+  }
+
+  /** Ordre de défense d'une division (null : elle rejoint la ligne de son armée). */
+  async function divisionDefense(
+    divisionId: number,
+    choice: Parameters<typeof sim.setDivisionDefense>[1],
+    success?: string,
+  ): Promise<void> {
+    report(await sim.setDivisionDefense(divisionId, choice), success)
+  }
+
+  /** « Défendre des points » pour une division : tout le pays (`zone` nulle) ou un cercle. */
+  function defendPointsDivision(
+    divisionId: number,
+    zone: { center: LonLat; km: number } | null,
+    kinds: DefendPointKinds,
+  ): Promise<void> {
+    const z = zone ? { center: lonLat(zone.center), km: zone.km } : null
+    return divisionDefense(divisionId, { points: { zone: z, kinds: { ...kinds } } })
+  }
+
+  /** Zone des points défendus par une division : son centre se désigne d'un clic. */
+  function startDivisionZone(
+    divisionId: number,
+    armyId: number,
+    kinds: DefendPointKinds,
+    km: number,
+  ): void {
+    mode.value = { kind: 'defendZone', armyId, kinds: { ...kinds }, km, divisionId }
+  }
+
   /** Cellules de frontière peintes d'un geste (ou d'un toucher) : ajoutées à l'armée, prises aux autres. */
   function paintBorder(cells: number[]): void {
     const m = mode.value
     if (m.kind !== 'border') return
+    if (m.divisionId !== undefined) {
+      void divisionDefense(
+        m.divisionId,
+        { paint: [...cells] },
+        'Tronçon assigné : la division le tient seule',
+      )
+      cancelMode()
+      return
+    }
     void (async () =>
       report(
         await sim.setArmyBorder(m.armyId, { paint: [...cells] }),
@@ -975,6 +1030,11 @@ export const useGameStore = defineStore('game', () => {
       cancelMode()
       return true
     }
+    if (m.kind === 'defendZone' && m.divisionId !== undefined) {
+      void defendPointsDivision(m.divisionId, { center: lonLat(point), km: m.km }, m.kinds)
+      cancelMode()
+      return true
+    }
     if (m.kind === 'defendZone') {
       void defendPointsArmy(m.armyId, { center: lonLat(point), km: m.km }, m.kinds)
       cancelMode()
@@ -986,6 +1046,15 @@ export const useGameStore = defineStore('game', () => {
         showNotice(
           'Cliquez sur un pays voisin, ou glissez le long de la frontière (Échap pour annuler)',
         )
+        return true
+      }
+      if (m.divisionId !== undefined) {
+        void divisionDefense(
+          m.divisionId,
+          { country },
+          'Tronçon assigné : la division le tient seule',
+        )
+        cancelMode()
         return true
       }
       void (async () =>
@@ -1482,6 +1551,10 @@ export const useGameStore = defineStore('game', () => {
     setWholeFront,
     clearFront,
     startBorder,
+    startDivisionBorder,
+    divisionDefense,
+    defendPointsDivision,
+    startDivisionZone,
     paintBorder,
     defendPointsArmy,
     startDefendZone,

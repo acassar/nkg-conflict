@@ -48,7 +48,8 @@ const AUTOSAVE_TICKS = 24 * 30
 export type MapMode =
   | { kind: 'select' }
   | { kind: 'order'; order: Exclude<PlayerOrder, 'hold'> }
-  | { kind: 'front'; armyId: number; first: LonLat | null }
+  /** Portion de front d'une armée, ou d'une division seule (`divisionId`) : deux clics. */
+  | { kind: 'front'; armyId: number; first: LonLat | null; divisionId?: number }
   /**
    * Frontière tenue par une armée : on glisse le long de la frontière pour la peindre (portion prise,
    * colorée au fur et à mesure), ou on clique sur un pays voisin pour toute la frontière avec lui.
@@ -511,12 +512,14 @@ export const useGameStore = defineStore('game', () => {
     if (m.kind === 'order')
       return `${ORDER_LABELS[m.order]} : cliquez sur la carte (Échap pour annuler)`
     if (m.kind === 'front') {
+      const who =
+        m.divisionId !== undefined ? 'Portion de front de la division' : 'Portion de front'
       return m.first
-        ? 'Portion de front : cliquez sur la seconde extrémité'
-        : 'Portion de front : cliquez sur la première extrémité'
+        ? `${who} : cliquez sur la seconde extrémité`
+        : `${who} : cliquez sur la première extrémité`
     }
     if (m.kind === 'border' && m.divisionId !== undefined)
-      return 'Tronçon de la division : glissez le long de la frontière de son armée pour le peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
+      return 'Tronçon de la division : glissez le long d’une frontière ou d’une côte du pays pour le peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
     if (m.kind === 'border')
       return 'Frontière : glissez le long de votre frontière ou de votre côte pour la peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
     if (m.kind === 'defendZone')
@@ -838,6 +841,11 @@ export const useGameStore = defineStore('game', () => {
     mode.value = { kind: 'border', armyId, divisionId }
   }
 
+  /** Portion de front tenue par une division seule : deux extrémités cliquées sur la carte. */
+  function startDivisionFront(divisionId: number, armyId: number): void {
+    mode.value = { kind: 'front', armyId, first: null, divisionId }
+  }
+
   /** Ordre de défense d'une division (null : elle rejoint la ligne de son armée). */
   async function divisionDefense(
     divisionId: number,
@@ -1120,7 +1128,13 @@ export const useGameStore = defineStore('game', () => {
         mode.value = { ...m, first: point }
         return true
       }
-      if (m.kind === 'front') void sim.setArmyFront(m.armyId, [lonLat(m.first), point])
+      if (m.kind === 'front' && m.divisionId !== undefined)
+        void divisionDefense(
+          m.divisionId,
+          { front: [lonLat(m.first), point] },
+          'Portion assignée : la division la tient seule',
+        )
+      else if (m.kind === 'front') void sim.setArmyFront(m.armyId, [lonLat(m.first), point])
       else
         void sim.planOffensive(
           m.armyId,
@@ -1552,6 +1566,7 @@ export const useGameStore = defineStore('game', () => {
     clearFront,
     startBorder,
     startDivisionBorder,
+    startDivisionFront,
     divisionDefense,
     defendPointsDivision,
     startDivisionZone,

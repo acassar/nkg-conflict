@@ -531,8 +531,14 @@ const divisionDefenseText = computed(() => {
     const n = d.points.length
     return `${n} point${n > 1 ? 's' : ''} défendu${n > 1 ? 's' : ''}${d.zone ? ' (zone)' : ''}`
   }
+  const round = (km: number): number => Math.max(10, Math.round(km / 10) * 10)
+  if (d.kind === 'front') {
+    const [[lon1, lat1], [lon2, lat2]] = d.front
+    const k = Math.cos((((lat1 + lat2) / 2) * Math.PI) / 180)
+    return `Portion de front d'environ ${round(111 * Math.hypot((lon2 - lon1) * k, lat2 - lat1))} km`
+  }
   const km = g ? borderSummary(g, g.sides.indexOf(r.army.owner), d.cells).km : 0
-  return `${d.front ? 'Front' : 'Tronçon'} d'environ ${Math.max(10, Math.round(km / 10) * 10)} km`
+  return `${d.front ? 'Front' : 'Tronçon'} d'environ ${round(km)} km`
 })
 /** Types de points et rayon de la zone pour l'ordre « Défendre des points » d'une division. */
 const divisionKinds = ref<DefendPointKinds>({
@@ -936,12 +942,28 @@ async function createArmy(): Promise<void> {
                 La division quitte la ligne de {{ recruitDivision.army.name }} et tient seule cet
                 ordre, en paix comme en guerre. Le reste de l'armée garde sa ligne et sa mission.
               </p>
-              <div class="label">Tronçon de frontière</div>
+              <div class="label">Ligne tenue</div>
+              <button
+                class="opt"
+                :class="{ on: divisionDefense?.kind === 'front' }"
+                :disabled="!atWar"
+                title="Cliquez les deux extrémités de la portion sur la carte : elles s'accrochent au front réel"
+                data-testid="division-front"
+                @click="
+                  game.startDivisionFront(recruitDivision.division.id, recruitDivision.army.id)
+                "
+              >
+                <span class="ot">Portion du front</span>
+                <span class="od">{{
+                  atWar
+                    ? 'Deux clics sur la carte ; la division la tient seule, le reste de l’armée garde le reste'
+                    : 'Seulement en guerre'
+                }}</span>
+              </button>
               <button
                 class="opt"
                 :class="{ on: divisionDefense?.kind === 'border' }"
-                :disabled="!recruitDivision.army.border?.length"
-                title="Glissez le long de la frontière tenue par l'armée pour peindre le tronçon (pris aux autres divisions), ou cliquez sur un pays voisin pour sa frontière encore libre"
+                title="Glissez le long d'une frontière ou d'une côte du pays pour peindre le tronçon (pris aux autres divisions), ou cliquez sur un pays voisin pour sa frontière encore libre"
                 data-testid="division-border-paint"
                 @click="
                   game.startDivisionBorder(recruitDivision.division.id, recruitDivision.army.id)
@@ -950,11 +972,10 @@ async function createArmy(): Promise<void> {
                 <span class="ot">{{
                   divisionDefense?.kind === 'border' ? 'Étendre le tronçon' : 'Peindre un tronçon'
                 }}</span>
-                <span class="od">{{
-                  recruitDivision.army.border?.length
-                    ? "Dans la frontière tenue par l'armée ; en guerre, il devient le front de la division"
-                    : "L'armée ne tient pas de frontière : donnez-lui-en une (Mission de l'armée)"
-                }}</span>
+                <span class="od"
+                  >N'importe quelle frontière ou côte du pays ; en guerre avec ce voisin, il devient
+                  le front de la division</span
+                >
               </button>
               <div class="label">Défendre des points</div>
               <div class="checks">

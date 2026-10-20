@@ -381,8 +381,10 @@ export function defenseTag(
     d.kind === 'border'
       ? d.front
         ? 'tient seule son tronçon, devenu son front'
-        : 'tient seule un tronçon de la frontière de son armée'
-      : `défend ${d.points.length} point${d.points.length > 1 ? 's' : ''}${d.zone ? ' dans une zone' : ''}`
+        : 'tient seule un tronçon de frontière'
+      : d.kind === 'front'
+        ? 'tient seule une portion du front'
+        : `défend ${d.points.length} point${d.points.length > 1 ? 's' : ''}${d.zone ? ' dans une zone' : ''}`
   return {
     label: 'Ordre propre',
     title: `La division ${what}, hors de l'ordre de son armée`,

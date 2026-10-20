@@ -86,9 +86,7 @@ describe('ordres de frontière et de défense des divisions', () => {
     expect(d.defense?.kind === 'border' && d.defense.cells.length).toBe(piece.length - 3)
     // Hors de la frontière de l'armée : refusé.
     const inland = sim.ctx.grid.cellAt(2.35, 48.86)
-    expect(sim.setDivisionDefense(d.id, { paint: [inland] })).toContain(
-      "l'intérieur de la frontière",
-    )
+    expect(sim.setDivisionDefense(d.id, { paint: [inland] })).toContain('Aucune frontière ni côte')
     // Retour dans la ligne de l'armée.
     expect(sim.setDivisionDefense(d.id, null)).toBe(null)
     expect(d.defense).toBeUndefined()
@@ -97,11 +95,20 @@ describe('ordres de frontière et de défense des divisions', () => {
     expect(other.defense?.kind).toBe('border')
   })
 
-  it('sans frontière tenue par l’armée : pas de tronçon ; changement d’armée : l’ordre tombe', () => {
+  it('frontière libre sans frontière d’armée ; portion de front seulement en guerre ; changement d’armée : l’ordre tombe', () => {
     const { sim, army, divisions } = france()
     const d = divisions[0] as FormationState
     sim.setArmyFront(army.id, null)
-    expect(sim.setDivisionDefense(d.id, { country: 'DEU' })).toContain('ne tient pas de frontière')
+    expect(sim.setDivisionDefense(d.id, { country: 'ESP' })).toBe(null)
+    expect(d.defense?.kind === 'border' && d.defense.cells.length).toBeGreaterThan(5)
+    expect(
+      sim.setDivisionDefense(d.id, {
+        front: [
+          [6, 46],
+          [7, 47],
+        ],
+      }),
+    ).toContain("n'est en guerre")
     expect(
       sim.setDivisionDefense(d.id, {
         points: {
@@ -180,11 +187,26 @@ describe('ordres de frontière et de défense des divisions', () => {
     expect(ctx.matrix.atWar[fra]).toBe(1)
     expect(army.borderFront).toBe(true)
     expect(d.defense?.kind === 'border' && d.defense.front).toBeTruthy()
+    // Portion du front tracée par une autre division : deux points accrochés au front.
+    const g = ctx.grid
+    const ends = swiss.slice(Math.ceil(swiss.length / 2))
+    const p = (c: number): [number, number] => [g.lonOf(c), g.latOf(c)]
+    const e = divisions[1] as FormationState
+    expect(sim.setDivisionDefense(e.id, { front: [p(ends[0]!), p(ends[ends.length - 1]!)] })).toBe(
+      null,
+    )
+    expect(e.defense?.kind).toBe('front')
+    for (const u of brigades(sim, e).filter((x) => isLineUnit(x.kind))) {
+      const t = target(u)
+      expect(t && nearCells(sim, t, ends, 60)).toBe(true)
+    }
     const war = ctx.politics.wars.find((w) => w.attackers.includes('FRA'))!
     makePeace(ctx, war.id, 'FRA', 'white')
     updateArmies(ctx)
     expect(d.defense?.kind === 'border' && d.defense.front).toBeFalsy()
     expect(d.defense?.kind).toBe('border')
+    // Paix : la portion de front prend fin, la division rejoint son armée.
+    expect(e.defense).toBeUndefined()
   })
 
   it('gardé dans la sauvegarde', async () => {

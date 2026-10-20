@@ -1030,6 +1030,11 @@ try {
     if (forDivision < 1) report.errors.push('renforts de division non lancés')
     // Défense de la division : « Défendre des points » seule, puis retour dans la ligne de l'armée.
     await openFlyout('defense')
+    // En guerre : portion du front et tronçon de frontière disponibles pour la division.
+    for (const id of ['division-front', 'division-border-paint']) {
+      if (await page.getByTestId(id).isDisabled())
+        report.errors.push(`bouton ${id} grisé sur la fiche de division en guerre`)
+    }
     await page.getByTestId('division-defend-country').click()
     await page.waitForTimeout(600)
     const defense = await page.evaluate(

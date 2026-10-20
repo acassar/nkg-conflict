@@ -235,21 +235,27 @@ export interface FormationState {
   batch?: number
   /**
    * Ordre de défense propre à la division (phase G2) : elle quitte la ligne de son armée pour tenir seule
-   * un tronçon de la frontière de l'armée, ou défendre des points (systems/divisionOrders.ts).
+   * un tronçon de frontière, une portion du front, ou défendre des points (systems/divisionOrders.ts).
    */
   defense?: DivisionDefense
 }
 
-/** Tronçon de la frontière de son armée tenu par une seule division. */
+/** Tronçon de frontière (ou de côte) du pays tenu par une seule division. */
 export interface DivisionBorder {
   kind: 'border'
-  /** Cellules tenues, incluses dans la frontière de l'armée (triées). */
+  /** Cellules de frontière ou de côte tenues (triées). */
   cells: number[]
   /** En guerre avec un voisin du tronçon : portion de front qui en découle (rendue à la paix). */
   front?: [LonLat, LonLat]
 }
 
-export type DivisionDefense = DivisionBorder | DefendPointsMission
+/** Portion du front tenue par une seule division, en guerre (deux extrémités accrochées au front). */
+export interface DivisionFront {
+  kind: 'front'
+  front: [LonLat, LonLat]
+}
+
+export type DivisionDefense = DivisionBorder | DivisionFront | DefendPointsMission
 
 export interface ArmyState {
   id: number

@@ -602,7 +602,8 @@ export function assignFront(
     return
   }
   const own = division !== undefined ? ctx.formations.get(division)?.defense : undefined
-  const all = own?.kind === 'border' ? divisionLineCells(ctx, army, own) : lineCells(ctx, army)
+  const all =
+    own && own.kind !== 'defendPoints' ? divisionLineCells(ctx, army, own) : lineCells(ctx, army)
   army.frontLine = traceFront(ctx, all)
   // Tronçons tenus par des divisions sous ordre propre : retirés de la ligne du reste de l'armée.
   const reserved = division === undefined ? reservedCells(ctx, army) : null

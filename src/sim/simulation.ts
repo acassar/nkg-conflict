@@ -87,6 +87,7 @@ import {
   assignDivisionDefense,
   detachedDivisions,
   giveDivisionBorder,
+  giveDivisionFront,
   giveDivisionPoints,
   updateDivisionBorders,
 } from './systems/divisionOrders'
@@ -1245,6 +1246,7 @@ export class Simulation {
     choice:
       | { paint: number[] }
       | { country: CountryId }
+      | { front: [LonLat, LonLat] }
       | { points: { zone: DefendPointsMission['zone']; kinds: DefendPointKinds } }
       | null,
   ): string | null {
@@ -1269,6 +1271,10 @@ export class Simulation {
         return zone ? 'Aucun point de ce type dans la zone' : 'Aucun point de ce type dans le pays'
       giveDivisionPoints(f, zone, kinds)
       text = `${f.name} défend des points${zone ? ' dans une zone' : ''}`
+    } else if ('front' in choice) {
+      const error = giveDivisionFront(ctx, f, choice.front)
+      if (error) return error
+      text = `${f.name} tient seule une portion du front`
     } else {
       let error: string | null
       if ('country' in choice) {
@@ -1281,7 +1287,7 @@ export class Simulation {
         error = giveDivisionBorder(ctx, f, cells, 'free')
       } else error = giveDivisionBorder(ctx, f, choice.paint, 'paint')
       if (error) return error
-      text = `${f.name} tient seule un tronçon de la frontière de ${army.name}`
+      text = `${f.name} tient seule un tronçon de frontière`
     }
     // L'ordre reprend les brigades de la division, même sous ordre direct.
     for (const uid of army.unitIds) {

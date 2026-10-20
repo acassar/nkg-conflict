@@ -554,14 +554,7 @@ const selectionOrder = computed(() => {
   return set.size === 1 ? ORDER_NAMES[[...set][0] as OrderKind] : 'Ordres mêlés'
 })
 /** Libellé du bouton « Échelon au-dessus » : la formation que la touche U sélectionnerait. */
-const upTarget = computed(() => {
-  const info = game.selectionInfo
-  if (!info || info.echelon === 'army') return null
-  if (info.echelon === 'brigade' && info.division) return info.division.name
-  if ((info.echelon === 'brigade' || info.echelon === 'division') && info.corps)
-    return info.corps.name
-  return info.army?.name ?? null
-})
+const upTarget = computed(() => game.upLevel?.name ?? null)
 /** Sous-titre de la fiche : modèle d'une brigade seule, sinon nombre de brigades. */
 const sheetSubtitle = computed(() => {
   const list = selectedUnits.value

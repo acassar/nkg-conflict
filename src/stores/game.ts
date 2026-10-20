@@ -727,35 +727,59 @@ export const useGameStore = defineStore('game', () => {
     )
   })
 
-  /** Sélectionne toute la division, tout le corps ou toute l'armée de la sélection. */
-  function selectFormation(level: 'division' | 'corps' | 'army'): void {
+  /** Brigades de la division, du corps ou de l'armée de la sélection (vide si elle n'en a pas). */
+  function formationUnitIds(level: 'division' | 'corps' | 'army'): number[] {
     const s = snapshot.value
     const info = selectionInfo.value
-    if (!s || !info) return
+    if (!s || !info) return []
+    if (level === 'army') return armies.value.find((a) => a.id === info.army?.id)?.unitIds ?? []
+    const f = level === 'division' ? info.division : info.corps
+    if (!f) return []
+    const divisions = new Set(
+      s.formations.filter((x) => x.id === f.id || x.parentId === f.id).map((x) => x.id),
+    )
+    return s.units
+      .filter((u) => u.divisionId !== null && divisions.has(u.divisionId))
+      .map((u) => u.id)
+  }
+
+  /** Sélectionne toute la division, tout le corps ou toute l'armée de la sélection. */
+  function selectFormation(level: 'division' | 'corps' | 'army'): void {
+    const info = selectionInfo.value
+    if (!info) return
     if (level === 'army') {
       if (info.army) selectArmy(info.army.id)
       return
     }
-    const f = level === 'division' ? info.division : info.corps
-    if (!f) return
-    const divisions = new Set(
-      s.formations.filter((x) => x.id === f.id || x.parentId === f.id).map((x) => x.id),
-    )
-    selectUnits(
-      s.units.filter((u) => u.divisionId !== null && divisions.has(u.divisionId)).map((u) => u.id),
-      false,
-    )
+    const ids = formationUnitIds(level)
+    if (ids.length > 0) selectUnits(ids, false)
   }
+
+  /**
+   * Échelon au-dessus de la sélection (touche U) : la première formation, de la division à l'armée,
+   * qui contient plus que la sélection. Une division d'une seule brigade, ou un corps d'une seule
+   * division, est sautée : la choisir ne changerait rien.
+   */
+  const upLevel = computed((): { level: 'division' | 'corps' | 'army'; name: string } | null => {
+    const info = selectionInfo.value
+    if (!info || info.echelon === 'army') return null
+    const order = ['brigade', 'division', 'corps', 'army'] as const
+    const from = order.indexOf(info.echelon ?? 'brigade')
+    const chosen = new Set(selection.value)
+    for (const level of ['division', 'corps', 'army'] as const) {
+      if (order.indexOf(level) <= from) continue
+      const f = level === 'army' ? info.army : level === 'division' ? info.division : info.corps
+      if (!f) continue
+      const ids = formationUnitIds(level)
+      if (ids.some((id) => !chosen.has(id))) return { level, name: f.name }
+    }
+    return null
+  })
 
   /** Remonte d'un échelon (touche U) : brigade → division → corps → armée. */
   function selectUp(): void {
-    const info = selectionInfo.value
-    if (!info) return
-    const e = info.echelon
-    if (e === 'army') return
-    if (e === 'brigade' && info.division) selectFormation('division')
-    else if ((e === 'brigade' || e === 'division') && info.corps) selectFormation('corps')
-    else if (info.army) selectFormation('army')
+    const up = upLevel.value
+    if (up) selectFormation(up.level)
   }
 
   function clearSelection(): void {
@@ -1490,6 +1514,7 @@ export const useGameStore = defineStore('game', () => {
     selectionInfo,
     selectFormation,
     selectUp,
+    upLevel,
     terrainNameAt,
     ownerAt,
     clearSelection,

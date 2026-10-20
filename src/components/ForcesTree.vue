@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { isMobile } from '@/composables/layout'
 import {
+  defenseTag,
   forcesCrumbs,
   forcesRows,
   openRow,
@@ -83,6 +84,9 @@ function selectPath(p: ForcesPath): void {
     if (r) game.selectUnits(r.unitIds, false)
   } else if (p.army !== undefined) game.selectArmy(p.army)
 }
+/** Ordre propre d'une division (ligne de l'arbre), ou null. */
+const tagOf = (r: ForcesRow): ReturnType<typeof defenseTag> =>
+  r.echelon === 'division' ? defenseTag(mine.value.formations.find((f) => f.id === r.id)) : null
 const cssPct = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) * 100)}%`
 const pct = (v: number): string => `${Math.round(v * 100)} %`
 const selected = (r: ForcesRow): boolean =>
@@ -175,6 +179,19 @@ watch(
                 >{{ r.unitIds.length }} brigade{{ r.unitIds.length > 1 ? 's' : '' }}</span
               >
               <span v-if="r.open" class="chev" aria-hidden="true">›</span>
+            </span>
+            <span v-if="tagOf(r)" class="line" data-testid="forces-defense-tag">
+              <span class="chip own" :title="tagOf(r)?.title">{{ tagOf(r)?.label }}</span>
+              <button
+                class="rejoin"
+                title="La division reprend sa place dans la ligne et l'ordre de son armée"
+                data-testid="forces-defense-rejoin"
+                @click.stop="
+                  game.divisionDefense(r.id, null, 'La division rejoint la ligne de son armée')
+                "
+              >
+                Réintégrer l'armée
+              </button>
             </span>
             <span class="line">
               <span class="gauge" :title="`Effectifs ${pct(r.strength)}`"
@@ -315,6 +332,14 @@ button.crumb {
   padding: 0 5px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.1);
+}
+.chip.own {
+  background: rgba(250, 204, 21, 0.2);
+  color: #fde68a;
+}
+.rejoin {
+  font-size: 11px;
+  padding: 1px 6px;
 }
 .chip.warn {
   background: rgba(249, 115, 22, 0.25);

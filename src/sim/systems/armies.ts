@@ -13,6 +13,13 @@ import { planPath } from './movement'
 import { updateFormations } from './formations'
 import { borderFrontCells, pruneBorder, updateBorderFronts } from './frontiers'
 import { assignDefendPoints } from './defendPoints'
+import {
+  assignDivisionOrders,
+  detachedDivision,
+  divisionLineCells,
+  reservedCells,
+  updateDivisionBorders,
+} from './divisionOrders'
 import { returnToGarrison } from '../politics/mobilization'
 import { REST_KM, RELIEF_MAX_SHARE, selectRelief } from './fatigue'
 import { assaultFireFactor } from './obstacles'
@@ -571,9 +578,16 @@ function underDirectOrder(ctx: SimContext, u: UnitState): boolean {
  * le contact, artillerie, logistique et QG plus en arrière. Les unités en attaque ou en déroute sont laissées.
  * En posture défensive ou défense max, les unités de ligne prennent les postes les plus favorables de
  * leur secteur (voir `favorableSlots`) au lieu de postes régulièrement espacés.
- * `teleport` sert au déploiement initial.
+ * `teleport` sert au déploiement initial. `division` : répartition d'une division sous ordre de défense
+ * propre (divisionOrders.ts, `army` ne contient alors que ses unités) ; sinon, les divisions sous ordre
+ * propre sont laissées et leur tronçon est retiré de la ligne de l'armée.
  */
-export function assignFront(ctx: SimContext, army: ArmyState, teleport = false): void {
+export function assignFront(
+  ctx: SimContext,
+  army: ArmyState,
+  teleport = false,
+  division?: number,
+): void {
   const side = sideIndex(ctx, army.owner)
   if (!holdsLine(army)) {
     army.frontLine = undefined
@@ -587,8 +601,12 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
     assignDefendPoints(ctx, army, army.mission, teleport)
     return
   }
-  const cells = lineCells(ctx, army)
-  army.frontLine = traceFront(ctx, cells)
+  const own = division !== undefined ? ctx.formations.get(division)?.defense : undefined
+  const all = own?.kind === 'border' ? divisionLineCells(ctx, army, own) : lineCells(ctx, army)
+  army.frontLine = traceFront(ctx, all)
+  // Tronçons tenus par des divisions sous ordre propre : retirés de la ligne du reste de l'armée.
+  const reserved = division === undefined ? reservedCells(ctx, army) : null
+  const cells = reserved?.size ? all.filter((c) => !reserved.has(c.cell)) : all
   // Mission « Tenir les points clés » : postes concentrés sur les villes, passages de fleuve et nœuds
   // routiers, simple écran ailleurs.
   const keyPoints = army.mission?.kind === 'keyPoints'
@@ -612,7 +630,9 @@ export function assignFront(ctx: SimContext, army: ArmyState, teleport = false):
         // Unités parties riposter à une percée : elles reprennent leur poste ensuite.
         !runtimeOf(ctx, u.id).reaction &&
         // Unités sous ordre direct du joueur : reprises seulement après la fin de l'ordre.
-        !underDirectOrder(ctx, u),
+        !underDirectOrder(ctx, u) &&
+        // Divisions sous ordre de défense propre : placées à part (divisionOrders.ts).
+        (division !== undefined || !detachedDivision(ctx, u)),
     )
   // Unités qui décrochent vers la ligne suivante : elles gardent leur poste réservé (sans ordre),
   // pour que leur départ ne décale pas les postes de toute l'armée.
@@ -1171,7 +1191,11 @@ export function launchOffensive(ctx: SimContext, army: ArmyState): void {
   const members = army.unitIds
     .filter((id) => !chosen || chosen.has(id))
     .map((id) => ctx.units.get(id))
-    .filter((u): u is UnitState => !!u && !runtimeOf(ctx, u.id).routed)
+    // Sans choix explicite, les divisions sous ordre de défense propre gardent leur ordre.
+    .filter(
+      (u): u is UnitState =>
+        !!u && !runtimeOf(ctx, u.id).routed && (!!chosen || !detachedDivision(ctx, u)),
+    )
   // Unités choisies : toutes participent (y compris hors ligne) ; sinon les unités de ligne.
   const line = chosen
     ? members.filter((u) => u.kind !== 'art')
@@ -1230,6 +1254,8 @@ export function updateArmies(ctx: SimContext): void {
   // Frontières tenues : cellules perdues retirées ; guerre avec un voisin, la frontière devient le front.
   for (const army of ctx.armies.values()) if (!army.borderFront) pruneBorder(ctx, army)
   updateBorderFronts(ctx)
+  // Tronçons des divisions sous ordre propre : suivent la frontière de leur armée, et la guerre.
+  updateDivisionBorders(ctx)
   for (const army of ctx.armies.values()) peaceReturn(ctx, army)
   for (const army of ctx.armies.values()) {
     // Missions « Avancer » et « Retraite ordonnée » : les unités suivent leur ligne (voir missions.ts),
@@ -1244,4 +1270,5 @@ export function updateArmies(ctx: SimContext): void {
     }
     if (holdsLine(army)) assignFront(ctx, army)
   }
+  assignDivisionOrders(ctx)
 }

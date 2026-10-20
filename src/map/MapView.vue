@@ -228,27 +228,64 @@ function onPaintUp(): void {
   else game.showNotice('Touchez la frontière ou la côte, ou un pays voisin (Échap pour annuler)')
 }
 
-/** Carrés des cellules de frontière : armée sélectionnée, autres armées (pendant la peinture), geste. */
+/**
+ * Division concernée par son ordre de défense : celle dont on peint le tronçon, à défaut la division
+ * entière sélectionnée.
+ */
+const defenseDivision = computed(() => {
+  const s = snapshot.value
+  const m = mode.value
+  const id =
+    m.kind === 'border' || m.kind === 'defendZone'
+      ? m.divisionId
+      : game.selectionInfo?.echelon === 'division'
+        ? game.selectionInfo.division?.id
+        : undefined
+  return id === undefined ? null : (s?.formations.find((f) => f.id === id) ?? null)
+})
+
+/**
+ * Carrés des cellules de frontière : armée sélectionnée, autres armées (pendant la peinture), geste.
+ * Division sous ordre de tronçon : son tronçon, et le reste de la frontière de son armée pendant la
+ * peinture.
+ */
 let borderCache: { key: string; shapes: BorderShapes } | null = null
 function borderShapes(): BorderShapes | null {
   const g = grid.value
   const s = snapshot.value
   if (!g || !s) return null
-  const army = selectedArmy.value
-  const others = painting.value ? s.armies.filter((a) => a.id !== army?.id && a.border?.length) : []
+  const division = defenseDivision.value
+  const m = mode.value
+  const forDivision = m.kind === 'border' && m.divisionId !== undefined
+  const army = forDivision
+    ? (s.armies.find((a) => a.id === m.armyId) ?? null)
+    : division?.defense?.kind === 'border'
+      ? null
+      : selectedArmy.value
+  const own = division?.defense?.kind === 'border' ? division.defense.cells : []
+  const mine = new Set(own)
+  const others =
+    painting.value && !forDivision
+      ? s.armies.filter((a) => a.id !== army?.id && a.border?.length)
+      : []
   const key = [
     army?.id,
     army?.border?.length,
     army?.border?.[0],
     army?.border?.[army.border.length - 1],
+    division?.id,
+    own.length,
+    own[0],
     ...others.map((a) => `${a.id}:${a.border?.length}:${a.border?.[0]}`),
     painted.value.size,
   ].join('|')
   if (borderCache?.key === key) return borderCache.shapes
   const square = (c: number): LonLat[] => cellSquare(g, c)
   const shapes: BorderShapes = {
-    held: (army?.border ?? []).map(square),
-    others: others.flatMap((a) => (a.border ?? []).map(square)),
+    held: (own.length ? own : forDivision ? [] : (army?.border ?? [])).map(square),
+    others: forDivision
+      ? (army?.border ?? []).filter((c) => !mine.has(c)).map(square)
+      : others.flatMap((a) => (a.border ?? []).map(square)),
     painting: [...painted.value].map(square),
   }
   borderCache = { key, shapes }
@@ -443,6 +480,10 @@ function refresh(): void {
       stances: stances.value.map,
       selection: new Set(selection.value),
       selectedArmy: selectedArmy.value,
+      divisionPoints:
+        defenseDivision.value?.defense?.kind === 'defendPoints'
+          ? defenseDivision.value.defense
+          : null,
       pendingPoint: m.kind === 'front' || m.kind === 'offensive' ? m.first : null,
       pendingLine:
         freehand.value.length > 1

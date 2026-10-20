@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '@/stores/game'
-import { armyComposition, orderOfBattle, strengthTone } from '@/composables/composition'
+import { armyComposition, defenseTag, orderOfBattle, strengthTone } from '@/composables/composition'
 import type { ArmyState } from '@/sim/core/types'
 
 /**
@@ -17,6 +17,9 @@ const members = computed(() => {
 })
 const rows = computed(() => armyComposition(members.value))
 const oob = computed(() => orderOfBattle(members.value, game.snapshot?.formations ?? []))
+/** Ordre propre d'une division de l'ordre de bataille, ou null. */
+const tagOf = (id: number): ReturnType<typeof defenseTag> =>
+  defenseTag(game.snapshot?.formations.find((f) => f.id === id))
 const pct = (v: number): string => `${Math.round(v * 100)} %`
 const width = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) * 100)}%`
 </script>
@@ -68,6 +71,17 @@ const width = (v: number): string => `${Math.round(Math.max(0, Math.min(1, v)) *
           <span class="bar"
             ><i :class="strengthTone(d.strength)" :style="{ width: width(d.strength) }"
           /></span>
+          <div v-if="tagOf(d.id)" class="own-row" data-testid="oob-defense-tag">
+            <span class="own" :title="tagOf(d.id)?.title">{{ tagOf(d.id)?.label }}</span>
+            <button
+              class="rejoin"
+              title="La division reprend sa place dans la ligne et l'ordre de son armée"
+              data-testid="oob-defense-rejoin"
+              @click="game.divisionDefense(d.id, null, 'La division rejoint la ligne de son armée')"
+            >
+              Réintégrer l'armée
+            </button>
+          </div>
         </li>
       </ul>
     </div>
@@ -152,6 +166,29 @@ li {
 }
 .formation:disabled {
   cursor: default;
+}
+.own-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+.own {
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.2);
+  color: #fde68a;
+}
+.composition .own-row .rejoin {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--nkg-line-strong);
+  border-radius: 4px;
+  background: var(--nkg-tile-bg);
+  color: inherit;
+  cursor: pointer;
 }
 .corps-name {
   font-weight: 600;

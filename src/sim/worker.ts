@@ -246,6 +246,16 @@ const api = {
   ): string | null | undefined {
     return act((s) => s.defendPointsArmy(id, zone, kinds))
   },
+  setDivisionDefense(
+    id: number,
+    choice:
+      | { paint: number[] }
+      | { country: CountryId }
+      | { points: { zone: { center: LonLat; km: number } | null; kinds: DefendPointKinds } }
+      | null,
+  ): string | null | undefined {
+    return act((s) => s.setDivisionDefense(id, choice))
+  },
   planOffensive(id: number, from: LonLat, to: LonLat, unitIds?: number[]): void {
     act((s) => s.planOffensive(id, from, to, unitIds))
   },

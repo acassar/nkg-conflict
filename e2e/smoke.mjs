@@ -1028,6 +1028,21 @@ try {
     )
     step('renforts de division', { division: divisionId, commandes: forDivision })
     if (forDivision < 1) report.errors.push('renforts de division non lancés')
+    // Défense de la division : « Défendre des points » seule, puis retour dans la ligne de l'armée.
+    await openFlyout('defense')
+    await page.getByTestId('division-defend-country').click()
+    await page.waitForTimeout(600)
+    const defense = await page.evaluate(
+      (d) => window.__nkg.snapshot.formations.find((f) => f.id === d)?.defense?.kind ?? null,
+      divisionId,
+    )
+    const status = await page.getByTestId('division-defense-status').textContent()
+    await shot('02g7-defense-division')
+    step('défense de division', { ordre: defense, tuile: status })
+    if (defense !== 'defendPoints' || !/point/.test(status ?? ''))
+      report.errors.push(`défense de division non donnée (${defense}, ${status})`)
+    if ((await page.getByTestId('division-defense-clear').count()) !== 1)
+      report.errors.push('pas de bouton « Rejoindre la ligne de l’armée » sur la fiche de division')
   }
   await page.evaluate((id) => window.__nkg.selectArmy(id), missionArmy)
   await page.getByTestId('army-sheet').waitFor()
@@ -1046,6 +1061,22 @@ try {
       .size
   }, missionArmy)
   step('composition', { lignes: compoRows, types: kinds })
+  // Division sous ordre propre : étiquette dans l'ordre de bataille, et réintégration dans l'armée.
+  if (divisionId !== null) {
+    const tags = await page.getByTestId('oob-defense-tag').count()
+    if (tags !== 1) report.errors.push(`étiquette « Ordre propre » : ${tags} dans la composition`)
+    else {
+      await shot('02g8-ordre-propre')
+      await page.getByTestId('oob-defense-rejoin').click()
+      await page.waitForTimeout(600)
+      const cleared = await page.evaluate(
+        (d) => window.__nkg.snapshot.formations.find((f) => f.id === d)?.defense ?? null,
+        divisionId,
+      )
+      step('réintégration de la division', { ordre: cleared?.kind ?? null })
+      if (cleared) report.errors.push('la division ne rejoint pas la ligne de son armée')
+    }
+  }
   if (compoRows !== kinds)
     report.errors.push(`composition : ${compoRows} lignes pour ${kinds} types`)
   await shot('02g6-composition')

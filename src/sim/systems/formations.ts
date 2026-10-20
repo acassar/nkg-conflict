@@ -264,6 +264,8 @@ export function updateFormations(ctx: SimContext, only?: ArmyState): void {
     if (army !== d.armyId) {
       d.armyId = army
       d.parentId = null
+      // Changement d'armée : l'ordre de défense propre de la division tombe.
+      delete d.defense
     }
   }
   // 2. Dissolutions : divisions sans brigade, corps sans division.

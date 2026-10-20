@@ -965,13 +965,14 @@ try {
   for (let k = 0; k < 3; k++) await page.getByTestId('recruit-add-infanterie_legere').click()
   await page.getByTestId('recruit-count-artillerie').fill('2')
   await page.getByTestId('recruit-count-artillerie').press('Enter')
-  await page.locator('[data-testid^="recruit-division-add-"]').first().click()
-  await page.getByTestId('recruit-preview').waitFor()
-  const sites = await page.getByTestId('recruit-sites').locator('li').count()
   // Défense territoriale : commandée depuis l'armée, comme les autres modèles.
   if ((await page.getByTestId('recruit-add-defense_territoriale').count()) !== 1) {
     report.errors.push('défense territoriale absente des renforts de l’armée')
   }
+  await page.getByTestId('recruit-tab-divisions').click()
+  await page.locator('[data-testid^="recruit-division-add-"]').first().click()
+  await page.getByTestId('recruit-preview').waitFor()
+  const sites = await page.getByTestId('recruit-sites').locator('li').count()
   const eta = await page.getByTestId('recruit-eta').textContent()
   if (!/j/.test(eta ?? '')) report.errors.push(`délai d'arrivée au front absent (${eta})`)
   await shot('02g4-recrutement-armee')
@@ -997,6 +998,39 @@ try {
     )
   }
   await shot('02g5-recrutement-commandes')
+
+  // Renforts depuis la fiche d'une division : les brigades commandées rejoignent cette division.
+  // La commande de l'armée est annulée d'abord, pour lui rendre ses hommes.
+  const divisionId = await page.evaluate(async (id) => {
+    const g = window.__nkg
+    for (const q of g.economy?.recruitment.filter((x) => x.armyId === id) ?? []) {
+      await g.cancelRecruit(q.id)
+    }
+    const army = g.armies.find((a) => a.id === id)
+    const u = g.snapshot.units.find((x) => army.unitIds.includes(x.id) && x.divisionId !== null)
+    if (!u) return null
+    g.selectUnits([u.id], false)
+    g.selectFormation('division')
+    return u.divisionId
+  }, missionArmy)
+  if (divisionId === null) report.errors.push('aucune division dans l’armée pour les renforts')
+  else {
+    await openFlyout('recruit')
+    await page.getByTestId('recruit-for').waitFor()
+    await page.getByTestId('recruit-add-infanterie_legere').click()
+    await page.getByTestId('recruit-preview').waitFor()
+    await shot('02g6-renforts-division')
+    await page.getByTestId('recruit-submit').click()
+    await page.waitForTimeout(600)
+    const forDivision = await page.evaluate(
+      (d) => window.__nkg.economy?.recruitment.filter((q) => q.divisionId === d).length ?? 0,
+      divisionId,
+    )
+    step('renforts de division', { division: divisionId, commandes: forDivision })
+    if (forDivision < 1) report.errors.push('renforts de division non lancés')
+  }
+  await page.evaluate((id) => window.__nkg.selectArmy(id), missionArmy)
+  await page.getByTestId('army-sheet').waitFor()
 
   // Onglet « Composition » : une ligne par type d'unité de l'armée.
   await openArmy('composition')

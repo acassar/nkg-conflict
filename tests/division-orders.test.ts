@@ -200,3 +200,24 @@ describe('ordres de frontière et de défense des divisions', () => {
     expect(loaded.ctx.formations.get(d.id)?.defense).toEqual(d.defense)
   })
 })
+
+describe('étiquette « Ordre propre »', () => {
+  it('absente sans ordre, décrit le tronçon ou les points', async () => {
+    const { defenseTag } = await import('@/composables/composition')
+    expect(defenseTag({})).toBe(null)
+    expect(defenseTag({ defense: { kind: 'border', cells: [1, 2] } })?.title).toContain('tronçon')
+    const tag = defenseTag({
+      defense: {
+        kind: 'defendPoints',
+        zone: null,
+        kinds: { cities: true, ports: false, bases: false, airfields: false },
+        points: [
+          { name: 'Paris', at: [2.35, 48.86], weight: 5, units: 1 },
+          { name: 'Lyon', at: [4.83, 45.77], weight: 2, units: 1 },
+        ],
+      },
+    })
+    expect(tag?.label).toBe('Ordre propre')
+    expect(tag?.title).toContain('défend 2 points')
+  })
+})

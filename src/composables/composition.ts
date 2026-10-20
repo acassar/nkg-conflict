@@ -367,3 +367,24 @@ export function selectionEchelon(
   }
   return { echelon, name, division, corps, army: army ? { id: army.id, name: army.name } : null }
 }
+
+/**
+ * Ordre de défense propre d'une division (phase G2), en clair : étiquette « Ordre propre » et infobulle,
+ * ou null quand elle suit l'ordre de son armée.
+ */
+export function defenseTag(
+  f: Pick<FormationState, 'defense'> | undefined,
+): { label: string; title: string } | null {
+  const d = f?.defense
+  if (!d) return null
+  const what =
+    d.kind === 'border'
+      ? d.front
+        ? 'tient seule son tronçon, devenu son front'
+        : 'tient seule un tronçon de la frontière de son armée'
+      : `défend ${d.points.length} point${d.points.length > 1 ? 's' : ''}${d.zone ? ' dans une zone' : ''}`
+  return {
+    label: 'Ordre propre',
+    title: `La division ${what}, hors de l'ordre de son armée`,
+  }
+}

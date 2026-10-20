@@ -485,7 +485,7 @@ const unitsOfArmy = computed(() => {
 const desktop = computed(() => layout.value === 'desktop')
 /** Visée sur la carte en cours : le volet s'efface pour la dégager, puis revient (sauf frontière). */
 const aiming = computed(() => game.mode.kind !== 'select' && game.mode.kind !== 'border')
-type Flyout = 'order' | 'posture' | 'mission' | 'details'
+type Flyout = 'order' | 'posture' | 'mission' | 'details' | 'recruit'
 /** Volet ouvert à gauche de la fiche, ou aucun. */
 const flyout = ref<Flyout | null>(null)
 function toggleFlyout(f: Flyout): void {
@@ -496,7 +496,25 @@ const FLYOUT_TITLES: Record<Flyout, string> = {
   posture: 'Posture',
   mission: 'Mission « Avancer »',
   details: 'Détails',
+  recruit: 'Renforts',
 }
+/** Division entière sélectionnée et son armée : ses renforts se commandent depuis sa fiche. */
+const recruitDivision = computed(() => {
+  const info = game.selectionInfo
+  if (info?.echelon !== 'division' || !info.division || !info.army) return null
+  const army = armies.value.find((a) => a.id === info.army?.id)
+  return army ? { division: info.division, army } : null
+})
+/** Brigades déjà commandées pour la division sélectionnée. */
+const divisionPending = computed(() => {
+  const d = recruitDivision.value?.division.id
+  return d === undefined
+    ? 0
+    : (game.economy?.recruitment.filter((q) => q.divisionId === d).length ?? 0)
+})
+watch(recruitDivision, (r) => {
+  if (!r && flyout.value === 'recruit') flyout.value = null
+})
 /** Ordre commun de la sélection, en clair. */
 const selectionOrder = computed(() => {
   const set = new Set(selectedUnits.value.map((u) => u.order))
@@ -755,13 +773,28 @@ async function createArmy(): Promise<void> {
             <span class="tk"><NkgIcon name="info" :size="16" />Détails</span>
             <span class="tv">État, armée</span>
           </button>
+          <button
+            v-if="recruitDivision"
+            class="tile span"
+            :class="{ on: flyout === 'recruit' }"
+            :aria-expanded="flyout === 'recruit'"
+            data-testid="tile-recruit"
+            @click="toggleFlyout('recruit')"
+          >
+            <span class="tk"><NkgIcon name="plus" :size="16" />Renforts</span>
+            <span class="tv">{{
+              divisionPending
+                ? `${divisionPending} brigade${divisionPending > 1 ? 's' : ''} commandée${divisionPending > 1 ? 's' : ''}`
+                : 'Nouvelles brigades'
+            }}</span>
+          </button>
         </div>
 
         <Teleport to="body" :disabled="!desktop">
           <section
             v-if="flyout && !aiming"
             class="flyout"
-            :class="{ inline: !desktop }"
+            :class="{ inline: !desktop, 'army-flyout': flyout === 'recruit' }"
             :aria-label="FLYOUT_TITLES[flyout]"
             :data-testid="`flyout-${flyout}`"
           >
@@ -856,6 +889,11 @@ async function createArmy(): Promise<void> {
                 <span class="od">Jusqu'au point cliqué</span>
               </button>
             </div>
+            <ArmyRecruitment
+              v-else-if="flyout === 'recruit' && recruitDivision"
+              :army="recruitDivision.army"
+              :division="recruitDivision.division"
+            />
             <template v-else>
               <ul class="detail-list">
                 <li v-for="u in selectedUnits" :key="u.id">
@@ -2028,6 +2066,9 @@ h3 {
   padding: 8px 10px;
   border-radius: 6px;
   text-align: left;
+}
+.forces .sheet .tiles .tile.span {
+  grid-column: 1 / -1;
 }
 .forces .sheet .tiles .tile.on,
 .forces .sheet .tiles .tile.on:hover:not(:disabled) {

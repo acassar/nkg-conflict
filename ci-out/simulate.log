@@ -1,0 +1,32 @@
+
+> nkg-conflict@0.1.0 simulate /home/runner/work/nkg-conflict/nkg-conflict
+> tsx scripts/simulate.ts 30
+
+Chargement : 226 ms
+J3 · UKR 184u 99.7 % · RUS 169u 100.1 % · unités 353 · guerres RUS→UKR
+J6 · UKR 184u 99.1 % · RUS 169u 100.4 % · unités 353 · guerres RUS→UKR
+J9 · UKR 184u 99.0 % · RUS 169u 100.4 % · unités 353 · guerres RUS→UKR
+J12 · UKR 184u 98.3 % · RUS 170u 100.8 % · unités 354 · guerres RUS→UKR
+J15 · UKR 184u 97.8 % · RUS 171u 101.0 % · unités 355 · guerres RUS→UKR
+J18 · UKR 184u 97.4 % · RUS 171u 101.2 % · unités 355 · guerres RUS→UKR
+J21 · UKR 184u 97.1 % · RUS 171u 101.3 % · unités 355 · guerres RUS→UKR
+J24 · UKR 184u 96.6 % · RUS 172u 101.5 % · unités 356 · guerres RUS→UKR
+J27 · UKR 184u 96.3 % · RUS 173u 101.6 % · unités 357 · guerres RUS→UKR
+J30 · UKR 184u 96.3 % · RUS 174u 101.6 % · unités 358 · guerres RUS→UKR
+720 ticks en 4207 ms (5843 µs/tick, pire journée J1 8.3 ms/h)
+Derniers événements :
+  [h710] Décrochage : Brigade Spartan
+  [h710] Décrochage : 121e brigade de défense territoriale
+  [h712] Décrochage : 45e régiment opérationnel de la Garde nationale
+  [h712] Décrochage : 115e brigade de défense territoriale
+  [h714] Forces opérationnelles et tactiques Centre contre-attaque près de Kharkiv
+  [h714] Groupement de forces interarmées bloque une percée près de Kharkiv
+  [h714] Forces terrestres ukrainiennes contre-attaque près de Kharkiv
+  [h714] Garde nationale d'Ukraine contre-attaque près de Kharkiv
+  [h714] Alerte : Poche en formation près de Belgorod : 1 unité presque entourée
+  [h716] Décrochage : 123e brigade de fusiliers motorisés
+  [h717] Décrochage : 53e brigade mécanisée
+  [h717] Décrochage : 153e brigade mécanisée
+  [h718] Décrochage : 52e brigade d'artillerie
+  [h720] 44e brigade mécanisée décroche (rapport de force défavorable)
+  [h720] Offensive (Russie) près de Kherson

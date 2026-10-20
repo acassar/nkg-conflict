@@ -1,0 +1,245 @@
+{
+  "url": "http://localhost:4173",
+  "ok": true,
+  "errors": [],
+  "console": [
+    "warning: deck: Attribute instanceColors is normalized"
+  ],
+  "steps": [
+    {
+      "name": "option de départ au doigt",
+      "cochee": true,
+      "decochee": true
+    },
+    {
+      "name": "alerte centrée",
+      "selection": [
+        5827
+      ],
+      "center": [
+        37.549999999999955,
+        49.849999999999994
+      ]
+    },
+    {
+      "name": "alertes repliées",
+      "folded": true
+    },
+    {
+      "name": "barre du haut",
+      "hauteur": 51
+    },
+    {
+      "name": "soutenabilité (menu)",
+      "valeur": "Armée\n…"
+    },
+    {
+      "name": "aide (mobile)",
+      "boite": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "name": "jauge (mobile)",
+      "boite": {
+        "x": 8,
+        "y": 52,
+        "width": 374,
+        "height": 426.203125
+      }
+    },
+    {
+      "name": "carte logistique",
+      "legende": {
+        "x": 10,
+        "y": 97.75,
+        "width": 272,
+        "height": 278.25
+      }
+    },
+    {
+      "name": "filtre Pays",
+      "bouton": {
+        "x": 114,
+        "y": 384,
+        "width": 44,
+        "height": 44
+      },
+      "legende": {
+        "x": 10,
+        "y": 267.0625,
+        "width": 272,
+        "height": 108.9375
+      }
+    },
+    {
+      "name": "appui prolongé",
+      "texte": "Plaine : vitesse 0 %, défense 0 %",
+      "boite": {
+        "x": 10,
+        "y": 351.8125,
+        "width": 370,
+        "height": 24.1875
+      },
+      "afterPress": {
+        "selection": 0,
+        "mode": "select",
+        "tab": null
+      }
+    },
+    {
+      "name": "sélection par zone",
+      "unites": 92,
+      "tiroir": "half"
+    },
+    {
+      "name": "bouton Débarquer (mobile)",
+      "boite": {
+        "x": 140.65625,
+        "y": 1020.75,
+        "width": 108.671875,
+        "height": 55.796875
+      }
+    },
+    {
+      "name": "bouton Transporter (mobile)",
+      "boite": {
+        "x": 26,
+        "y": 1020.75,
+        "width": 108.65625,
+        "height": 55.796875
+      }
+    },
+    {
+      "name": "ordre au doigt",
+      "ordre": "move",
+      "tiroir": "half"
+    },
+    {
+      "name": "mission au doigt",
+      "avance": true
+    },
+    {
+      "name": "bataille (mobile)",
+      "boite": {
+        "x": 6,
+        "y": 52,
+        "width": 378,
+        "height": 465.40625
+      }
+    },
+    {
+      "name": "bloc Aviation (mobile)",
+      "boite": {
+        "x": 11,
+        "y": 508.484375,
+        "width": 368,
+        "height": 30.796875
+      }
+    },
+    {
+      "name": "vue Forces (mobile)",
+      "arbre": {
+        "x": 11,
+        "y": 547.28125,
+        "width": 368,
+        "height": 750.15625
+      },
+      "echelon": {
+        "x": 11,
+        "y": 574.484375,
+        "width": 368,
+        "height": 72.28125
+      }
+    },
+    {
+      "name": "recrutement par armée (mobile)",
+      "avant": 0,
+      "apres": 2
+    },
+    {
+      "name": "points clés (mobile)",
+      "mission": "keyPoints"
+    },
+    {
+      "name": "barre du bas",
+      "boite": {
+        "x": 1,
+        "y": 788,
+        "width": 388,
+        "height": 56
+      },
+      "entrees": 4
+    },
+    {
+      "name": "tiroir glissé",
+      "etat": "full"
+    },
+    {
+      "name": "file de production (mobile)",
+      "bouton": {
+        "x": 313,
+        "y": 308.21875,
+        "width": 26,
+        "height": 36
+      },
+      "tete": [
+        10120,
+        10121
+      ]
+    },
+    {
+      "name": "budget (mobile)",
+      "boite": {
+        "x": 11,
+        "y": 274.78125,
+        "width": 368,
+        "height": 450.828125
+      }
+    },
+    {
+      "name": "curseurs du budget (mobile)",
+      "boite": {
+        "x": 133,
+        "y": 395.265625,
+        "width": 174,
+        "height": 16
+      }
+    },
+    {
+      "name": "construire quoi puis où (mobile)",
+      "conseils": 3,
+      "boite": {
+        "x": 11,
+        "y": 308.015625,
+        "width": 368,
+        "height": 58.96875
+      }
+    },
+    {
+      "name": "retour au menu",
+      "ok": true
+    },
+    {
+      "name": "paysage",
+      "panneau": {
+        "x": 516,
+        "y": 48,
+        "width": 322,
+        "height": 336
+      }
+    },
+    {
+      "name": "WebGL indisponible (mobile)",
+      "message": {
+        "x": 16,
+        "y": 64,
+        "width": 358,
+        "height": 319.234375
+      }
+    }
+  ]
+}

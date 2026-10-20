@@ -1030,6 +1030,11 @@ try {
     if (forDivision < 1) report.errors.push('renforts de division non lancés')
     // Défense de la division : « Défendre des points » seule, puis retour dans la ligne de l'armée.
     await openFlyout('defense')
+    // En guerre : portion du front et tronçon de frontière disponibles pour la division.
+    for (const id of ['division-front', 'division-border-paint']) {
+      if (await page.getByTestId(id).isDisabled())
+        report.errors.push(`bouton ${id} grisé sur la fiche de division en guerre`)
+    }
     await page.getByTestId('division-defend-country').click()
     await page.waitForTimeout(600)
     const defense = await page.evaluate(
@@ -1044,6 +1049,27 @@ try {
     if ((await page.getByTestId('division-defense-clear').count()) !== 1)
       report.errors.push('pas de bouton « Rejoindre la ligne de l’armée » sur la fiche de division')
   }
+  // Échelon au-dessus depuis une division d'une seule brigade : la sélection s'agrandit.
+  const climb = await page.evaluate(async () => {
+    const g = window.__nkg
+    const me = g.snapshot.playerCountry
+    const count = new Map()
+    for (const u of g.snapshot.units)
+      if (u.owner === me && u.divisionId !== null)
+        count.set(u.divisionId, (count.get(u.divisionId) ?? 0) + 1)
+    const solo = [...count].find(([, n]) => n === 1)?.[0]
+    if (solo === undefined) return null
+    const u = g.snapshot.units.find((x) => x.divisionId === solo)
+    g.selectUnits([u.id], false)
+    await new Promise((r) => setTimeout(r, 50))
+    const before = g.selection.length
+    g.selectUp()
+    await new Promise((r) => setTimeout(r, 50))
+    return { before, after: g.selection.length }
+  })
+  step('échelon au-dessus, division d’une brigade', climb ?? { division: 'aucune' })
+  if (climb && climb.after <= climb.before)
+    report.errors.push(`échelon au-dessus sans effet (${climb.before} → ${climb.after})`)
   await page.evaluate((id) => window.__nkg.selectArmy(id), missionArmy)
   await page.getByTestId('army-sheet').waitFor()
 

@@ -48,7 +48,8 @@ const AUTOSAVE_TICKS = 24 * 30
 export type MapMode =
   | { kind: 'select' }
   | { kind: 'order'; order: Exclude<PlayerOrder, 'hold'> }
-  | { kind: 'front'; armyId: number; first: LonLat | null }
+  /** Portion de front d'une armée, ou d'une division seule (`divisionId`) : deux clics. */
+  | { kind: 'front'; armyId: number; first: LonLat | null; divisionId?: number }
   /**
    * Frontière tenue par une armée : on glisse le long de la frontière pour la peindre (portion prise,
    * colorée au fur et à mesure), ou on clique sur un pays voisin pour toute la frontière avec lui.
@@ -511,12 +512,14 @@ export const useGameStore = defineStore('game', () => {
     if (m.kind === 'order')
       return `${ORDER_LABELS[m.order]} : cliquez sur la carte (Échap pour annuler)`
     if (m.kind === 'front') {
+      const who =
+        m.divisionId !== undefined ? 'Portion de front de la division' : 'Portion de front'
       return m.first
-        ? 'Portion de front : cliquez sur la seconde extrémité'
-        : 'Portion de front : cliquez sur la première extrémité'
+        ? `${who} : cliquez sur la seconde extrémité`
+        : `${who} : cliquez sur la première extrémité`
     }
     if (m.kind === 'border' && m.divisionId !== undefined)
-      return 'Tronçon de la division : glissez le long de la frontière de son armée pour le peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
+      return 'Tronçon de la division : glissez le long d’une frontière ou d’une côte du pays pour le peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
     if (m.kind === 'border')
       return 'Frontière : glissez le long de votre frontière ou de votre côte pour la peindre, ou cliquez sur un pays voisin (Échap pour annuler)'
     if (m.kind === 'defendZone')
@@ -724,35 +727,59 @@ export const useGameStore = defineStore('game', () => {
     )
   })
 
-  /** Sélectionne toute la division, tout le corps ou toute l'armée de la sélection. */
-  function selectFormation(level: 'division' | 'corps' | 'army'): void {
+  /** Brigades de la division, du corps ou de l'armée de la sélection (vide si elle n'en a pas). */
+  function formationUnitIds(level: 'division' | 'corps' | 'army'): number[] {
     const s = snapshot.value
     const info = selectionInfo.value
-    if (!s || !info) return
+    if (!s || !info) return []
+    if (level === 'army') return armies.value.find((a) => a.id === info.army?.id)?.unitIds ?? []
+    const f = level === 'division' ? info.division : info.corps
+    if (!f) return []
+    const divisions = new Set(
+      s.formations.filter((x) => x.id === f.id || x.parentId === f.id).map((x) => x.id),
+    )
+    return s.units
+      .filter((u) => u.divisionId !== null && divisions.has(u.divisionId))
+      .map((u) => u.id)
+  }
+
+  /** Sélectionne toute la division, tout le corps ou toute l'armée de la sélection. */
+  function selectFormation(level: 'division' | 'corps' | 'army'): void {
+    const info = selectionInfo.value
+    if (!info) return
     if (level === 'army') {
       if (info.army) selectArmy(info.army.id)
       return
     }
-    const f = level === 'division' ? info.division : info.corps
-    if (!f) return
-    const divisions = new Set(
-      s.formations.filter((x) => x.id === f.id || x.parentId === f.id).map((x) => x.id),
-    )
-    selectUnits(
-      s.units.filter((u) => u.divisionId !== null && divisions.has(u.divisionId)).map((u) => u.id),
-      false,
-    )
+    const ids = formationUnitIds(level)
+    if (ids.length > 0) selectUnits(ids, false)
   }
+
+  /**
+   * Échelon au-dessus de la sélection (touche U) : la première formation, de la division à l'armée,
+   * qui contient plus que la sélection. Une division d'une seule brigade, ou un corps d'une seule
+   * division, est sautée : la choisir ne changerait rien.
+   */
+  const upLevel = computed((): { level: 'division' | 'corps' | 'army'; name: string } | null => {
+    const info = selectionInfo.value
+    if (!info || info.echelon === 'army') return null
+    const order = ['brigade', 'division', 'corps', 'army'] as const
+    const from = order.indexOf(info.echelon ?? 'brigade')
+    const chosen = new Set(selection.value)
+    for (const level of ['division', 'corps', 'army'] as const) {
+      if (order.indexOf(level) <= from) continue
+      const f = level === 'army' ? info.army : level === 'division' ? info.division : info.corps
+      if (!f) continue
+      const ids = formationUnitIds(level)
+      if (ids.some((id) => !chosen.has(id))) return { level, name: f.name }
+    }
+    return null
+  })
 
   /** Remonte d'un échelon (touche U) : brigade → division → corps → armée. */
   function selectUp(): void {
-    const info = selectionInfo.value
-    if (!info) return
-    const e = info.echelon
-    if (e === 'army') return
-    if (e === 'brigade' && info.division) selectFormation('division')
-    else if ((e === 'brigade' || e === 'division') && info.corps) selectFormation('corps')
-    else if (info.army) selectFormation('army')
+    const up = upLevel.value
+    if (up) selectFormation(up.level)
   }
 
   function clearSelection(): void {
@@ -836,6 +863,11 @@ export const useGameStore = defineStore('game', () => {
   /** Tronçon de frontière tenu par une division seule : peint ou désigné par un pays voisin sur la carte. */
   function startDivisionBorder(divisionId: number, armyId: number): void {
     mode.value = { kind: 'border', armyId, divisionId }
+  }
+
+  /** Portion de front tenue par une division seule : deux extrémités cliquées sur la carte. */
+  function startDivisionFront(divisionId: number, armyId: number): void {
+    mode.value = { kind: 'front', armyId, first: null, divisionId }
   }
 
   /** Ordre de défense d'une division (null : elle rejoint la ligne de son armée). */
@@ -1120,7 +1152,13 @@ export const useGameStore = defineStore('game', () => {
         mode.value = { ...m, first: point }
         return true
       }
-      if (m.kind === 'front') void sim.setArmyFront(m.armyId, [lonLat(m.first), point])
+      if (m.kind === 'front' && m.divisionId !== undefined)
+        void divisionDefense(
+          m.divisionId,
+          { front: [lonLat(m.first), point] },
+          'Portion assignée : la division la tient seule',
+        )
+      else if (m.kind === 'front') void sim.setArmyFront(m.armyId, [lonLat(m.first), point])
       else
         void sim.planOffensive(
           m.armyId,
@@ -1476,6 +1514,7 @@ export const useGameStore = defineStore('game', () => {
     selectionInfo,
     selectFormation,
     selectUp,
+    upLevel,
     terrainNameAt,
     ownerAt,
     clearSelection,
@@ -1552,6 +1591,7 @@ export const useGameStore = defineStore('game', () => {
     clearFront,
     startBorder,
     startDivisionBorder,
+    startDivisionFront,
     divisionDefense,
     defendPointsDivision,
     startDivisionZone,

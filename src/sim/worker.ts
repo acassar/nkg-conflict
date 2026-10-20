@@ -251,6 +251,7 @@ const api = {
     choice:
       | { paint: number[] }
       | { country: CountryId }
+      | { front: [LonLat, LonLat] }
       | { points: { zone: { center: LonLat; km: number } | null; kinds: DefendPointKinds } }
       | null,
   ): string | null | undefined {

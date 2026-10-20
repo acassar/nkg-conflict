@@ -1,0 +1,4 @@
+4.0K	/tmp/results/BRANCH
+4.0K	/tmp/results/SHA
+26M	/tmp/results/ci-out
+3.6M	/tmp/results/dist
